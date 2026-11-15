@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ontyra"
+dynamic = ["version"]
+description = "Structured, typed, layered memory for agents."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = [
+    "surrealdb>=3.0.0,<4",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.16.3",
+]
+
+[project.optional-dependencies]
+# In-process SurrealDB engine (mem://, file://, surrealkv://). Needs a platform wheel.
+embedded = ["surrealdb[embedded]>=3.0.0,<4"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+    "testcontainers>=4.15.0",
+    "pytest-cov>=7.1.0",
+    "surrealdb[embedded]>=3.0.0,<4",
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/ontyra/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ontyra"]
+
+[tool.uv]
+# Always use uv-managed CPython so "latest 3.12" is the same everywhere.
+python-preference = "only-managed"
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["spikes"]
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# pydantic copies mutable defaults per instance, so `x: list[str] = []` is safe in models.
+"src/ontyra/models/*" = ["RUF012"]
+"tests/**" = ["RUF012", "E501"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+# Source is held to strict mode; tests use standard (fixtures and parametrisation are loosely typed).
+strict = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# Default run is unit tests only. Other suites are run by path:
+#   uv run pytest tests/integration_test   (embedded engine; server mode needs Docker)
+#   uv run pytest tests/benchmark_test     (explicit; see its README)
+testpaths = ["tests/unit_test"]

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.pyright/
+dist/
+build/
+*.egg-info/
+src/ontyra/_version.py
+.env
+# local working docs and research PDFs are not committed
+references/papers/

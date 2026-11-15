@@ -1,0 +1,17 @@
+# Development dependencies only: SurrealDB. Run the app from the source tree with uv.
+#   docker compose -f compose.dev.yaml up -d
+# Host port defaults to 8000; override with ONTYRA_DB_PORT if it is taken.
+name: ontyra-dev
+
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v4.0.1
+    command: start --user root --pass root --bind 0.0.0.0:8000 surrealkv:/data/ontyra.db
+    user: root
+    ports:
+      - "${ONTYRA_DB_PORT:-8000}:8000"
+    volumes:
+      - surrealdb-data:/data
+
+volumes:
+  surrealdb-data:
