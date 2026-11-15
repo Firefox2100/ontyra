@@ -213,16 +213,39 @@ class SchemaGenerator:
         return stmts
 
 
-class SchemaManager:
-    """Applies the generated schema to a database."""
+def search_ddl(embedding_dim: int | None) -> list[str]:
+    """Index definitions the model registry cannot express: full-text and vector search."""
+    stmts = [
+        "DEFINE ANALYZER OVERWRITE ontyra_text TOKENIZERS class, punct "
+        "FILTERS lowercase, ascii, snowball(english)",
+        "DEFINE INDEX OVERWRITE search_doc_text_ft ON search_doc FIELDS text "
+        "FULLTEXT ANALYZER ontyra_text BM25",
+    ]
+    if embedding_dim:
+        stmts.append(
+            "DEFINE INDEX OVERWRITE embedding_vector_hnsw ON embedding FIELDS vector "
+            f"HNSW DIMENSION {int(embedding_dim)} DIST COSINE TYPE F32 EFC 150 M 12"
+        )
+    return stmts
 
-    def __init__(self, db: Database, reg: Registry | None = None) -> None:
+
+class SchemaManager:
+    """Applies the generated schema to a database.
+
+    `embedding_dim` creates the vector index; changing it needs the `embedding` table to be
+    emptied first (pre-release: wipe and re-embed).
+    """
+
+    def __init__(
+        self, db: Database, reg: Registry | None = None, *, embedding_dim: int | None = None
+    ) -> None:
         self.db = db
         self.generator = SchemaGenerator(reg)
+        self.embedding_dim = embedding_dim
 
     async def apply(self) -> None:
         """Create/update every registered table (atomic, idempotent, keeps data)."""
-        await self.db.run_atomic(self.generator.ddl())
+        await self.db.run_atomic([*self.generator.ddl(), *search_ddl(self.embedding_dim)])
 
     async def drift(self) -> list[str]:
         info = await self.db.info_db()

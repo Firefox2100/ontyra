@@ -32,3 +32,14 @@ def to_content(model: BaseModel) -> dict[str, Any]:
 
 def record_id(value: RecordId) -> RecordID:
     return RecordID(value.table, value.id)
+
+
+def decode(value: Any) -> Any:
+    """Recursively convert the SDK's record ids into `RecordId`."""
+    if isinstance(value, RecordID):
+        return RecordId.parse(value)
+    if isinstance(value, Mapping):
+        return {k: decode(v) for k, v in value.items()}  # pyright: ignore[reportUnknownVariableType]
+    if isinstance(value, (list, tuple)):
+        return [decode(v) for v in value]  # pyright: ignore[reportUnknownVariableType]
+    return value

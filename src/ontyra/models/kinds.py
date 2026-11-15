@@ -5,7 +5,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from ontyra.models.base import Model, Record, Ref
+from ontyra.models.anchors import Anchor, Qualifier
+from ontyra.models.base import (
+    ActorRef,
+    ConceptRef,
+    EpisodeRef,
+    MemoryRef,
+    Model,
+    Record,
+    SubjectRef,
+)
 from ontyra.models.registry import LifecyclePolicy, registry
 
 KindName = Literal["fact", "directive", "decision", "event", "procedure", "task", "lesson"]
@@ -14,20 +23,23 @@ KindName = Literal["fact", "directive", "decision", "event", "procedure", "task"
 class RevisionBase(Record):
     """Fields common to every kind's revision. All content is write-once."""
 
-    memory: Ref("memory")  # type: ignore[valid-type]
+    memory: MemoryRef
     seq: int
     text: str
     recorded_at: datetime
-    proposed_by: Ref("actor")  # type: ignore[valid-type]
+    proposed_by: ActorRef
     confidence: float = 1.0
     expires_at: datetime | None = None
+    about: list[ConceptRef] = []  # concepts this is about (ontology links)
+    anchors: list[Anchor] = []  # where it applies; empty = everywhere the owner is active
+    qualifiers: list[Qualifier] = []  # under which circumstances (roles: plans/01)
 
 
 @registry.kind("fact", LifecyclePolicy(supersedes_by_edge=True))
 class FactRev(RevisionBase):
-    subject: Ref("concept", "resource")  # type: ignore[valid-type]
+    subject: SubjectRef
     predicate: str
-    object: str | Ref("concept", "resource")  # type: ignore[valid-type]
+    object: str | SubjectRef
 
 
 @registry.kind("directive", LifecyclePolicy(evidence_gated=True))
@@ -76,4 +88,4 @@ class LessonRev(RevisionBase):
     situation: str
     insight: str
     do_instead: str | None = None
-    evidence: list[Ref("episode")] = []  # type: ignore[valid-type]
+    evidence: list[EpisodeRef] = []

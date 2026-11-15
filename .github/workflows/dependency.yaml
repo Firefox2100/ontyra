@@ -1,0 +1,95 @@
+name: Dependency Analysis with Dependency-Track
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Reached over Tailscale rather than the public hostname: Cloudflare's bot challenge
+  # blocks GitHub-hosted runners. Traffic is encrypted by WireGuard, hence plain http.
+  DT_HOSTNAME: 100.86.189.45
+  DT_PORT: "9080"
+  DT_PROTOCOL: http
+  # Must still match the audience configured on the workload identity provider.
+  DT_AUDIENCE: https://dependency.firefox2100.co.uk
+  DT_PROVIDER: github-actions
+  DT_SERVICE_ACCOUNT: github-ontyra
+
+jobs:
+  analysis:
+    name: Generate and upload SBOM for analysis
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      # The version is derived from git tags (hatch-vcs), and the repository has none
+      # that CI can rely on, so use the tag name on releases and the branch otherwise.
+      - name: Determine version
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$GITHUB_REF_NAME"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      # Export the locked runtime dependency set (no dev group) and convert it to CycloneDX.
+      - name: Generate SBOM
+        run: |
+          pip install uv==0.13.8 cyclonedx-bom==8.0.1
+          uv export --locked --no-dev --no-emit-project --no-hashes \
+            --format requirements-txt \
+            --extra embedded -o requirements.lock
+          cyclonedx-py requirements requirements.lock \
+            --pyproject pyproject.toml \
+            --sv 1.6 --of JSON -o bom.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom
+          path: bom.json
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: ${{ env.DT_HOSTNAME }}
+
+      - name: Upload SBOM to Dependency-Track
+        uses: DependencyTrack/gh-upload-sbom@331f980a6eba119842052f447c54b09e4888b4c6 # v4.3.0
+        with:
+          server-hostname: ${{ env.DT_HOSTNAME }}
+          port: ${{ env.DT_PORT }}
+          protocol: ${{ env.DT_PROTOCOL }}
+          workload-identity-provider: ${{ env.DT_PROVIDER }}
+          service-account: ${{ env.DT_SERVICE_ACCOUNT }}
+          oidc-audience: ${{ env.DT_AUDIENCE }}
+          project-name: ontyra
+          project-version: ${{ env.VERSION }}
+          project-tags: python
+          bom-filename: bom.json
+          auto-create: true
+          is-latest: ${{ github.ref == 'refs/heads/main' }}

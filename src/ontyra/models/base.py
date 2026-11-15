@@ -7,6 +7,7 @@ SDK's own record id type.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, Any, cast
 
@@ -69,6 +70,15 @@ class RecordId:
         return hash((self._table, self._id))
 
     @classmethod
+    def __get_pydantic_json_schema__(cls, schema: Any, handler: Any) -> dict[str, Any]:
+        return {
+            "type": "string",
+            "examples": ["memory:0194f3a1b2c3d4e5f6a7"],
+            "title": "RecordId",
+            "description": "A record id as `table:id`.",
+        }
+
+    @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: Any) -> core_schema.CoreSchema:
         return core_schema.no_info_plain_validator_function(
             cls.parse,
@@ -96,8 +106,8 @@ class Indexed:
     unique: bool = False
 
 
-def Ref(*tables: str) -> Any:
-    """Typed link to a record in one of `tables` (validated in Python and by the database)."""
+def check_link(tables: tuple[str, ...]) -> Callable[[RecordId], RecordId]:
+    """Validator: the record must live in one of `tables` (`*_rev` expands via the registry)."""
 
     def _check(value: RecordId) -> RecordId:
         from ontyra.models.registry import registry
@@ -107,7 +117,26 @@ def Ref(*tables: str) -> Any:
             raise ValueError(f"{value} must link to one of {sorted(allowed)}")
         return value
 
-    return Annotated[RecordId, LinksTo(tuple(tables)), AfterValidator(_check)]
+    return _check
+
+
+def Ref(*tables: str) -> Any:
+    """Ad-hoc typed link (type checkers see `Any`); prefer the typed aliases below."""
+    return Annotated[RecordId, LinksTo(tuple(tables)), AfterValidator(check_link(tables))]
+
+
+# Typed link aliases: valid type expressions, so type checkers see plain `RecordId`.
+ActorRef = Annotated[RecordId, LinksTo(("actor",)), AfterValidator(check_link(("actor",)))]
+OwnerRef = Annotated[RecordId, LinksTo(("owner",)), AfterValidator(check_link(("owner",)))]
+MemoryRef = Annotated[RecordId, LinksTo(("memory",)), AfterValidator(check_link(("memory",)))]
+ConceptRef = Annotated[RecordId, LinksTo(("concept",)), AfterValidator(check_link(("concept",)))]
+EpisodeRef = Annotated[RecordId, LinksTo(("episode",)), AfterValidator(check_link(("episode",)))]
+RevRef = Annotated[RecordId, LinksTo(("*_rev",)), AfterValidator(check_link(("*_rev",)))]
+SubjectRef = Annotated[
+    RecordId,
+    LinksTo(("concept", "resource")),
+    AfterValidator(check_link(("concept", "resource"))),
+]
 
 
 class Model(BaseModel):

@@ -42,3 +42,20 @@ def test_dotenv_file_is_read_but_environment_wins(
     clean_env.setenv("ONTYRA_DB__DATABASE", "from_env")
     s = load_settings(env_file=str(env_file))
     assert (s.db.database, s.db.namespace) == ("from_env", "from_file")
+
+
+def test_policy_and_trust_come_from_the_environment(clean_env: pytest.MonkeyPatch) -> None:
+    clean_env.setenv("ONTYRA_POLICY__DEFAULT", "auto_commit")
+    clean_env.setenv(
+        "ONTYRA_POLICY__RULES",
+        '[{"kinds": ["fact"], "actor_kinds": ["human"], "min_trust": 0.5, "decision": "auto_commit"}]',
+    )
+    clean_env.setenv("ONTYRA_ACTOR_TRUST__AGENT", "0.9")
+    s = load_settings(env_file=None)
+    assert s.policy.default == "auto_commit"
+    assert s.policy.rules[0].kinds == ["fact"] and s.policy.rules[0].min_trust == 0.5
+    assert s.actor_trust == {"agent": 0.9}
+
+
+def test_safe_policy_default_is_review(clean_env: pytest.MonkeyPatch) -> None:
+    assert load_settings(env_file=None).policy.default == "review"

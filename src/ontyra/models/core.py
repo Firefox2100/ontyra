@@ -5,7 +5,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from ontyra.models.base import Indexed, Record, Ref
+from ontyra.models.base import (
+    ActorRef,
+    Indexed,
+    MemoryRef,
+    OwnerRef,
+    Record,
+    RecordId,
+    RevRef,
+)
 from ontyra.models.kinds import KindName
 from ontyra.models.registry import REV_WILDCARD, registry
 
@@ -28,8 +36,8 @@ class Owner(Record):
 @registry.table("episode", immutable=True)
 class Episode(Record):
     occurred_at: datetime
-    actor: Ref("actor")  # type: ignore[valid-type]
-    owner: Ref("owner")  # type: ignore[valid-type]
+    actor: ActorRef
+    owner: OwnerRef
     session: str
     role: str
     content: str
@@ -41,8 +49,9 @@ class Memory(Record):
     """Item identity plus the mutable `current` pointer to a revision."""
 
     kind: KindName
-    owner: Ref("owner")  # type: ignore[valid-type]
-    current: Ref(REV_WILDCARD) | None = None  # type: ignore[valid-type]
+    owner: OwnerRef
+    current: RevRef | None = None
+    status: Literal["active", "superseded", "retracted", "expired"] = "active"
     created_at: datetime
 
 
@@ -50,13 +59,15 @@ class Memory(Record):
 class RevState(Record):
     """Mutable status/validity of one (immutable) revision."""
 
-    rev: Annotated[Ref(REV_WILDCARD), Indexed(unique=True)]  # type: ignore[valid-type]
+    rev: Annotated[RevRef, Indexed(unique=True)]
     state: Literal["proposed", "tentative", "committed", "rejected"]
     lifecycle: Literal["active", "superseded", "retracted", "expired"] = "active"
     valid_from: datetime
     valid_to: datetime | None = None
     retracted_at: datetime | None = None
     retract_reason: str | None = None
+    stale: bool = False  # a source it was derived from was retracted
+    stale_reason: str | None = None
 
 
 # ---- edges between revisions (immutable, reasoned) -----------------------
@@ -72,14 +83,14 @@ class Supersedes(Record):
         "corrected", "outdated", "refined", "merged", "resolved_contradiction", "source_retracted"
     ]
     reason: str | None = None
-    by: Ref("actor")  # type: ignore[valid-type]
+    by: ActorRef
     at: datetime
 
 
 @registry.table("contradicts", immutable=True, edge=(_REV, _REV))
 class Contradicts(Record):
     reason: str | None = None
-    by: Ref("actor")  # type: ignore[valid-type]
+    by: ActorRef
     at: datetime
 
 
@@ -88,14 +99,14 @@ class Overrides(Record):
     """Narrower-anchor item wins over a broader one without invalidating it."""
 
     reason: str | None = None
-    by: Ref("actor")  # type: ignore[valid-type]
+    by: ActorRef
     at: datetime
 
 
 @registry.table("refines", immutable=True, edge=(_REV, _REV))
 class Refines(Record):
     reason: str | None = None
-    by: Ref("actor")  # type: ignore[valid-type]
+    by: ActorRef
     at: datetime
 
 
@@ -110,5 +121,79 @@ class DerivedFrom(Record):
     "promoted_to", immutable=True, edge=(("lesson_rev",), ("directive_rev", "procedure_rev"))
 )
 class PromotedTo(Record):
-    by: Ref("actor")  # type: ignore[valid-type]
+    by: ActorRef
     at: datetime
+
+
+# ---- workflow and side data ----------------------------------------------
+
+
+@registry.table("proposal")
+class Proposal(Record):
+    """An atomic batch of operations submitted by one actor (see plans/01, plans/10)."""
+
+    actor: ActorRef
+    owner: OwnerRef
+    status: Literal["pending", "committed", "rejected"]
+    decision: Literal["auto_commit", "review", "reject"]  # policy outcome at submission
+    decision_reason: str | None = None
+    submitted_at: datetime
+    decided_at: datetime | None = None
+    decided_by: ActorRef | None = None
+    idempotency_key: Annotated[str | None, Indexed()] = None
+    note: str | None = None
+    ops: list[dict[str, Any]]
+    findings: list[dict[str, Any]] = []
+    result: dict[str, Any] = {}
+
+
+@registry.table("annotation")
+class Annotation(Record):
+    """Freely mutable commentary on any record (comments, tags, flags)."""
+
+    target: RecordId
+    kind: Literal["comment", "tag", "flag"]
+    text: str
+    by: ActorRef
+    at: datetime
+
+
+@registry.table("usage")
+class Usage(Record):
+    """Recall statistics for one memory (feeds relevance, never touches revisions)."""
+
+    memory: Annotated[MemoryRef, Indexed(unique=True)]
+    recalls: int = 0
+    last_recalled_at: datetime | None = None
+    helpful: int = 0
+    unhelpful: int = 0
+
+
+TaskKind = Literal[
+    "review_proposal",
+    "review_stale_dependent",
+    "review_contradiction",
+    "review_ontology_change",
+    "review_concept_drift",
+    "consolidate",
+    "summarize",
+    "refresh_index",
+    "expire_check",
+    "resolve_mention",
+]
+
+
+@registry.table("task")
+class Task(Record):
+    """Work that needs judgment: queued by the service, performed by a human or agent."""
+
+    kind: TaskKind
+    status: Literal["pending", "claimed", "done", "failed", "parked"] = "pending"
+    target: RecordId | None = None
+    payload: dict[str, Any] = {}
+    result: dict[str, Any] = {}
+    min_tier: int | None = None
+    created_by: ActorRef
+    claimed_by: ActorRef | None = None
+    created_at: datetime
+    updated_at: datetime | None = None

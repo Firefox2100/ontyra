@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ontyra.ports.errors import StoreConflictError
+
 
 class StorageError(Exception):
     """Base class for all errors raised by the storage layer."""
@@ -29,3 +31,7 @@ class TransactionAbortedError(StorageError):
 
 class UnsupportedByModeError(StorageError):
     """The operation is not available in this connection mode (see `Capabilities`)."""
+
+
+class ConflictError(StorageError, StoreConflictError):
+    """An optimistic-concurrency guard failed: the data changed since it was read."""

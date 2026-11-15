@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from surrealdb import AsyncSurreal
@@ -46,20 +46,37 @@ def capabilities_for(url: str) -> Capabilities:
     raise ValueError(f"unsupported database url scheme: {url!r}")
 
 
-def _map_error(exc: Exception) -> errors.StorageError:
-    msg = str(exc)
-    low = msg.lower()
-    if isinstance(exc, sdk_errors.ConnectionUnavailableError):
-        return errors.StorageUnavailableError(msg)
+def _classify(kind: str, message: str) -> errors.StorageError:
+    """Map a SurrealDB error (kind + message) to a storage error."""
+    low = message.lower()
+    if "ontyra:conflict" in low or "write conflict" in low or "can be retried" in low:
+        return errors.ConflictError(message)  # our guard, or the engine's optimistic commit
     if "readonly" in low or "is immutable" in low:
-        return errors.ImmutableViolationError(msg)
+        return errors.ImmutableViolationError(message)
     if "already contains" in low:
-        return errors.UniqueViolationError(msg)
-    if isinstance(exc, sdk_errors.ValidationError) or "no such field" in low:
-        return errors.SchemaViolationError(msg)
-    if "failed transaction" in low or ("transaction" in low and "cancel" in low):
-        return errors.TransactionAbortedError(msg)
-    return errors.StorageError(f"{type(exc).__name__}: {msg}")
+        return errors.UniqueViolationError(message)
+    if kind.lower() == "validation" or "no such field" in low:
+        return errors.SchemaViolationError(message)
+    if "failed transaction" in low or "cancelled transaction" in low:
+        return errors.TransactionAbortedError(message)
+    return errors.StorageError(f"{kind or 'error'}: {message}")
+
+
+def _map_error(exc: Exception) -> errors.StorageError:
+    if isinstance(exc, sdk_errors.ConnectionUnavailableError):
+        return errors.StorageUnavailableError(str(exc))
+    return _classify(str(getattr(exc, "kind", type(exc).__name__)), str(exc))
+
+
+_NOT_ROOT_CAUSE = {"NotExecuted", "Cancelled"}
+
+
+def _detail_kind(statement: dict[str, Any]) -> str | None:
+    details: Any = statement.get("details")
+    if not isinstance(details, dict):
+        return None
+    kind: Any = cast("dict[str, Any]", details).get("kind")
+    return None if kind is None else str(kind)
 
 
 class Database:
@@ -104,12 +121,22 @@ class Database:
         return str(await self._conn.version())
 
     async def query(self, sql: str, vars: dict[str, Any] | None = None) -> list[Any]:
-        """Run SurrealQL; returns one result per statement. Values are SDK-encoded."""
+        """Run SurrealQL; returns one result per statement. Values are SDK-encoded.
+
+        On failure the *root cause* is raised: inside a transaction every statement reports
+        "not executed", and the SDK would surface the first of those instead of the real error.
+        """
         try:
             params = encode(vars) if vars else None
-            return await (self._conn.query(sql, params) if params else self._conn.query(sql))
+            raw = await (self._conn.query_raw(sql, params) if params else self._conn.query_raw(sql))
         except Exception as exc:
             raise _map_error(exc) from exc
+        statements = cast("list[dict[str, Any]]", raw["result"] if isinstance(raw, dict) else raw)
+        failed = [st for st in statements if st.get("status") != "OK"]
+        if failed:
+            root = next((st for st in failed if _detail_kind(st) not in _NOT_ROOT_CAUSE), failed[0])
+            raise _classify(str(root.get("kind", "")), str(root.get("result")))
+        return [st["result"] for st in statements]
 
     async def run_atomic(
         self, statements: Sequence[str], vars: dict[str, Any] | None = None

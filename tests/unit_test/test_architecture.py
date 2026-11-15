@@ -17,10 +17,10 @@ ALLOWED_INTERNAL: dict[str, set[str]] = {
     "models": set(),
     "ports": {"models"},
     "storage": {"models", "ports"},
-    "adapters": {"models", "ports"},
+    "adapters": {"models", "ports", "config"},
     "services": {"models", "ports"},
     "transports": {"models", "ports", "services"},
-    "config": set(),
+    "config": {"models"},
 }
 # layers that may import any internal layer (composition root, entry points)
 ROOT_LEVEL = {"app", "cli", "__main__", "__init__", "_version"}
@@ -31,8 +31,8 @@ CONFINED_THIRD_PARTY: dict[str, set[str]] = {
     "langchain_core": {"adapters"},
     "langchain": {"adapters"},
     "langchain_openai": {"adapters"},
-    "fastapi": {"transports"},
-    "starlette": {"transports"},
+    "fastapi": {"transports", "app"},  # the composition root returns the ASGI app
+    "starlette": {"transports", "app"},
     "fastmcp": {"transports"},
     "uvicorn": {"transports", "app", "cli"},
     "dotenv": {"config"},
@@ -79,7 +79,10 @@ def test_imports_respect_the_layering(layer: str, path: Path) -> None:
         top = name.split(".")[0]
 
         target = _layer_of(name)
-        crosses_layers = target is not None and layer not in ROOT_LEVEL and target != layer
+        # `import ontyra` (the package root: `__version__`) is allowed everywhere
+        crosses_layers = (
+            target not in (None, "__init__") and layer not in ROOT_LEVEL and target != layer
+        )
         if crosses_layers and target not in ALLOWED_INTERNAL.get(layer, set()):
             problems.append(f"{where} (layer '{layer}' may not depend on '{target}')")
 

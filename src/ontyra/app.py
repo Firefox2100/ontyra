@@ -1,0 +1,129 @@
+"""Composition root: the only module that wires concrete implementations together."""
+
+from __future__ import annotations
+
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import UTC, datetime
+
+from fastapi import FastAPI
+
+from ontyra.adapters import build_embedder, build_reranker
+from ontyra.config import Settings, load_settings
+from ontyra.ports import Embedder
+from ontyra.services import (
+    ActorService,
+    AnchorService,
+    ExplorationService,
+    IndexService,
+    MemoryService,
+    OntologyService,
+    PolicyEngine,
+    RecallService,
+)
+from ontyra.storage import Database, SchemaManager, SurrealStore
+from ontyra.transports.rest import create_app
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+@dataclass
+class Application:
+    """The wired object graph a transport serves."""
+
+    settings: Settings
+    db: Database
+    actors: ActorService
+    memory: MemoryService
+    ontology: OntologyService
+    anchors: AnchorService
+    indexer: IndexService
+    recall: RecallService
+    explore: ExplorationService
+    embedder: Embedder | None
+
+    @classmethod
+    def from_database(
+        cls,
+        db: Database,
+        settings: Settings,
+        *,
+        now: Callable[[], datetime] = utc_now,
+    ) -> Application:
+        store = SurrealStore(db)
+        embedder = build_embedder(settings.embedding)
+        reranker = build_reranker(settings.rerank)
+        ontology = OntologyService(store, now)
+        anchors = AnchorService(store, now, ontology, settings.recall.machine)
+        indexer = IndexService(store, embedder, now)
+        memory = MemoryService(
+            store, PolicyEngine(settings.policy), now, ontology, anchors, on_commit=indexer.embed
+        )
+        recall = RecallService(
+            store,
+            ontology,
+            anchors,
+            settings.recall,
+            now,
+            embedder=embedder,
+            reranker=reranker,
+            rerank_top_n=settings.rerank.top_n,
+        )
+        return cls(
+            settings=settings,
+            db=db,
+            actors=ActorService(store, now, settings.actor_trust),
+            memory=memory,
+            ontology=ontology,
+            anchors=anchors,
+            indexer=indexer,
+            recall=recall,
+            explore=ExplorationService(store, memory, ontology, recall, now),
+            embedder=embedder,
+        )
+
+    def schema(self) -> SchemaManager:
+        """The schema manager matching this configuration (vector index dimension)."""
+        return SchemaManager(
+            self.db, embedding_dim=self.embedder.dimension if self.embedder else None
+        )
+
+    async def close(self) -> None:
+        await self.db.close()
+
+
+async def create_application(
+    settings: Settings, *, apply_schema: bool = True, now: Callable[[], datetime] = utc_now
+) -> Application:
+    """Connect, make sure the schema and the global owner exist, and wire the services."""
+    db = await Database.connect(
+        settings.db.url,
+        namespace=settings.db.namespace,
+        database=settings.db.database,
+        username=settings.db.username,
+        password=settings.db.password.get_secret_value(),
+        timeout=settings.db.timeout,
+    )
+    app = Application.from_database(db, settings, now=now)
+    if apply_schema:
+        await app.schema().apply()
+    await app.actors.ensure_owner()
+    return app
+
+
+@asynccontextmanager
+async def open_application(settings: Settings) -> AsyncGenerator[Application]:
+    application = await create_application(settings)
+    try:
+        yield application
+    finally:
+        await application.close()
+
+
+def create_rest_app(settings: Settings | None = None) -> FastAPI:
+    """The REST daemon as an ASGI app (`uvicorn ontyra.app:create_rest_app --factory`)."""
+    cfg = settings or load_settings()
+    return create_app(open_services=lambda: open_application(cfg))
