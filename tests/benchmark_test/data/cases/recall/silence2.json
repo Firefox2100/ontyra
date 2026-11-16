@@ -1,0 +1,176 @@
+[
+ {
+  "id": "sl-joke",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "tell me a joke about penguins",
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-peru",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "what is the capital of Peru",
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-thanks-fin",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "thanks!",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-morning",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "good morning",
+  "context": {
+   "uris": [
+    "place:home/kitchen"
+   ]
+  },
+  "silent": true,
+  "split": "holdout"
+ },
+ {
+  "id": "sl-japanese",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "translate hello into Japanese",
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-football",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "who won the football match yesterday",
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-poem",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "write a poem about autumn leaves",
+  "context": {
+   "uris": [
+    "place:home/garden"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-meaning",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "what is the meaning of life",
+  "silent": true,
+  "split": "holdout"
+ },
+ {
+  "id": "sl-ok-phy",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "ok",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-octopus",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "tell me a fun fact about octopuses",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-sorting",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "implement quicksort in Rust",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "sl-movie",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated to anything stored: nothing is injected",
+  "mode": "recall",
+  "query": "recommend a movie from the nineties",
+  "silent": true,
+  "split": "holdout"
+ }
+]

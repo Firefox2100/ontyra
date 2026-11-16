@@ -1,0 +1,15 @@
+[
+  {"name": "hash"},
+  {
+    "name": "qwen3-4b",
+    "url": "http://localhost:8081/v1", "model": "qwen3-embedding-4b", "dim": 2560,
+    "query_prefix": "Instruct: Given a task or message from a developer, retrieve the stored notes that apply\nQuery:",
+    "sweep": {"vector_floor": [0.3, 0.5, 0.65, 0.8]}
+  },
+  {
+    "name": "nomic-v1.5",
+    "url": "http://localhost:8081/v1", "model": "nomic-embed-text-v1.5", "dim": 768,
+    "query_prefix": "search_query: ", "document_prefix": "search_document: ",
+    "sweep": {"vector_floor": [0.3, 0.5, 0.65, 0.8]}
+  }
+]

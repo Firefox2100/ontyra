@@ -1,0 +1,284 @@
+[
+ {
+  "id": "lc-holiday-active",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the holiday rule has not expired yet",
+  "mode": "recall",
+  "query": "can you schedule a meeting with Alex on 18 November",
+  "include": [
+   "dl-holiday",
+   "dl-no-early"
+  ],
+  "allow": [
+   "dl-weekday-focus",
+   "dl-weekend",
+   "dl-calls-sun",
+   "dl-calls-no"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "lc-antibiotics-expired",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the course ended on 8 November",
+  "mode": "recall",
+  "query": "Pixel antibiotics tablet",
+  "exclude": [
+   "dl-antibiotics"
+  ],
+  "allow": [
+   "dl-pixel",
+   "dl-pixel-vet",
+   "dh-meds"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "lc-old-portal",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the old portal rule expired on 30 September",
+  "mode": "recall",
+  "query": "which portal do I use for expense claims",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-exp-proc"
+  ],
+  "exclude": [
+   "fi-old-portal"
+  ],
+  "allow": [
+   "fi-exp-receipt"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "lc-car-park",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "closure expired on 31 October: nothing is stored that applies",
+  "mode": "recall",
+  "query": "can I park in the north car park",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "exclude": [
+   "ad-north-park"
+  ],
+  "silent": true,
+  "split": "holdout"
+ },
+ {
+  "id": "lc-hall-closed",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the maintenance closure expired in August; the interlock rule stands",
+  "mode": "recall",
+  "query": "can I go into the detector hall",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-interlock"
+  ],
+  "exclude": [
+   "ph-hall-closed"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "lc-cost-center",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the retracted claim stays out",
+  "mode": "recall",
+  "query": "which cost center is marketing",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-cc"
+  ],
+  "exclude": [
+   "fi-cc-wrong"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "lc-plastic",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the retracted weekday stays out",
+  "mode": "recall",
+  "query": "when is plastic collected",
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  },
+  "include": [
+   "dh-recycle"
+  ],
+  "exclude": [
+   "dh-trash-wrong"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "lc-r-version",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "current version",
+  "mode": "recall",
+  "query": "which R version do the analyses use",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-r"
+  ],
+  "exclude": [
+   "st-r-old"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "lc-pml-python",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "current version",
+  "mode": "recall",
+  "query": "which python version does pipeline-ml use",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ]
+  },
+  "include": [
+   "dm-py-new"
+  ],
+  "exclude": [
+   "dm-py-old"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "lc-refund-window",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the 30-day window applies now",
+  "mode": "recall",
+  "query": "a customer asks for a refund after 20 days",
+  "include": [
+   "ad-refund"
+  ],
+  "exclude": [
+   "ad-refund-old"
+  ],
+  "allow": [
+   "ad-support-tone"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "lc-marketing-budget",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "current figure",
+  "mode": "recall",
+  "query": "what is the marketing budget this year",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-budget"
+  ],
+  "exclude": [
+   "fi-budget-old"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "lc-session-repeat",
+  "world": "commons",
+  "tags": [
+   "lifecycle",
+   "session"
+  ],
+  "why": "delivered once in the session, not repeated",
+  "mode": "recall",
+  "query": "which database does production use",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "f-db"
+  ],
+  "allow": [
+   "e-pg16",
+   "l-pgdata",
+   "dec-sqlite-cache"
+  ],
+  "then": [
+   {
+    "mode": "recall",
+    "query": "which database does production use",
+    "context": {
+     "uris": [
+      "file:///home/mira/src/tidewatch/src/api/routes.py"
+     ]
+    },
+    "exclude": [
+     "f-db"
+    ],
+    "silent": true
+   }
+  ],
+  "split": "holdout"
+ }
+]

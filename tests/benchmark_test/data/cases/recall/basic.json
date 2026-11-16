@@ -1,0 +1,262 @@
+[
+ {
+  "id": "tests-in-tidewatch",
+  "world": "commons",
+  "tags": [
+   "anchor",
+   "lexical"
+  ],
+  "why": "the project's own test directive comes back, the other project's does not",
+  "mode": "recall",
+  "query": "write tests for the new endpoint",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-pytest"
+  ],
+  "exclude": [
+   "d-vitest"
+  ],
+  "top": 3,
+  "split": "tune"
+ },
+ {
+  "id": "tests-in-lanternkit",
+  "world": "commons",
+  "tags": [
+   "anchor",
+   "lexical"
+  ],
+  "why": "same question in the other project gives the other directive",
+  "mode": "recall",
+  "query": "write tests for this component",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/lanternkit/src/button.ts"
+   ]
+  },
+  "include": [
+   "d-vitest"
+  ],
+  "exclude": [
+   "d-pytest"
+  ],
+  "top": 3,
+  "split": "tune"
+ },
+ {
+  "id": "tests-no-location",
+  "world": "commons",
+  "tags": [
+   "anchor",
+   "lexical"
+  ],
+  "why": "without a location both candidates are kept (location unknown)",
+  "mode": "recall",
+  "query": "which test runner do we use",
+  "include": [
+   "d-pytest",
+   "d-vitest"
+  ],
+  "allow": [
+   "f-ci"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "add-dependency",
+  "world": "commons",
+  "tags": [
+   "lexical"
+  ],
+  "why": "a directive and the decision behind it",
+  "mode": "recall",
+  "query": "how do I add a dependency",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-uv"
+  ],
+  "allow": [
+   "dec-uv"
+  ],
+  "top": 2,
+  "split": "holdout"
+ },
+ {
+  "id": "production-db",
+  "world": "commons",
+  "tags": [
+   "lifecycle",
+   "lexical"
+  ],
+  "why": "the current fact; the superseded and the retracted one stay out",
+  "mode": "recall",
+  "query": "which database does production use",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "f-db"
+  ],
+  "exclude": [
+   "f-db-old",
+   "f-mysql"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "dev-port",
+  "world": "commons",
+  "tags": [
+   "lexical"
+  ],
+  "why": "a plain fact lookup",
+  "mode": "recall",
+  "query": "what port does the dev server listen on",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "f-port"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "cut-release",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "anchor"
+  ],
+  "why": "the project's procedure, not the other project's",
+  "mode": "recall",
+  "query": "how do I cut a release",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "p-release"
+  ],
+  "exclude": [
+   "p-lk-release"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "npm-publish",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "anchor"
+  ],
+  "why": "the other project's procedure",
+  "mode": "recall",
+  "query": "publish a new version to npm",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/lanternkit/src/button.ts"
+   ]
+  },
+  "include": [
+   "p-lk-release"
+  ],
+  "exclude": [
+   "p-release"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "ship-service",
+  "world": "commons",
+  "tags": [
+   "semantic"
+  ],
+  "why": "no shared words with the procedure: needs meaning, not text",
+  "mode": "recall",
+  "query": "ship a new version of the service",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "p-release"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "datetime-ci",
+  "world": "commons",
+  "tags": [
+   "semantic",
+   "lexical"
+  ],
+  "why": "a lesson found by symptom",
+  "mode": "recall",
+  "query": "why do datetime tests fail only on CI",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "l-utc-flaky"
+  ],
+  "allow": [
+   "f-ci"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cache-decision",
+  "world": "commons",
+  "tags": [
+   "lexical"
+  ],
+  "why": "a decision found by topic",
+  "mode": "recall",
+  "query": "what did we decide about the cache",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "dec-sqlite-cache"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "ci-disk-full",
+  "world": "commons",
+  "tags": [
+   "lexical"
+  ],
+  "why": "an event found by what happened",
+  "mode": "recall",
+  "query": "the disk is full and CI stalled",
+  "include": [
+   "e-disk"
+  ],
+  "top": 1,
+  "split": "holdout"
+ }
+]

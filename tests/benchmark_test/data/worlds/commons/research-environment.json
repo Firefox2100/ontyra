@@ -1,0 +1,27 @@
+{
+  "concepts": [
+    {"label": "University network", "aliases": ["campus network", "university internet"]},
+    {"label": "UDP", "aliases": ["quic", "http/3", "udp traffic"]},
+    {"label": "blocked domain", "aliases": ["blocked website", "site blocked"]},
+    {"label": "Microsoft Defender", "aliases": ["defender", "antivirus", "endpoint protection"]},
+    {"label": "Zotero library", "aliases": ["my zotero", "paper library"]},
+    {"label": "paper retrieval", "aliases": ["get a paper", "find a paper", "fetch a paper"]},
+    {"label": "paywalled article", "aliases": ["publisher access", "journal subscription"]}
+  ],
+  "relations": [
+    {"source": "zotero library", "relation": "same_as", "target": "reference manager"}
+  ],
+  "resources": [],
+  "memories": [
+    {"key": "rs-uni-fact", "kind": "fact", "text": "The user's system reaches the internet only through the university network: archives, publishers and other educational resources are accessible, UDP traffic does not work, and some domains may be blocked.", "fields": {"subject": "university_network", "predicate": "properties", "object": "archives and publishers reachable; no UDP; some domains blocked"}, "about": ["university_network", "udp", "blocked_domain"], "note": "user case 6"},
+    {"key": "rs-no-udp", "scope": "universal", "kind": "directive", "text": "Avoid UDP-based protocols and tools such as QUIC, HTTP/3 or UDP tunnels, because UDP does not work on the university network; use TCP alternatives.", "about": ["udp", "university_network"], "strength": "must", "polarity": "avoid"},
+    {"key": "rs-blocked", "kind": "directive", "text": "When a website or download fails, consider that the university network may be blocking that domain before debugging further.", "about": ["blocked_domain", "university_network"]},
+    {"key": "rs-access", "kind": "directive", "text": "For papers behind a paywall, try the publisher's site or the archive directly from the university network before looking for other copies.", "about": ["paywalled_article", "university_network"], "strength": "prefer"},
+    {"key": "rs-defender-fact", "kind": "fact", "text": "Microsoft Defender Edge runs on the user's system and may restrict certain sensitive activities.", "fields": {"subject": "microsoft_defender", "predicate": "effect", "object": "may restrict sensitive activities"}, "about": ["microsoft_defender"], "note": "user case 7"},
+    {"key": "rs-defender-dir", "scope": "universal", "kind": "directive", "text": "If a sensitive action is blocked, do not retry it: the block may come from Microsoft Defender Edge; report what was blocked and ask the user.", "about": ["microsoft_defender"], "strength": "must", "polarity": "avoid"},
+    {"key": "rs-zotero-fact", "kind": "fact", "text": "Zotero runs locally on the user's system and holds the user's paper library.", "fields": {"subject": "zotero_library", "predicate": "location", "object": "runs locally on the user's system"}, "about": ["zotero_library"], "note": "user case 8"},
+    {"key": "rs-zotero-save", "kind": "directive", "text": "Collect every paper found during research and send it to the user's Zotero running on the system.", "about": ["zotero_library", "paper_retrieval"], "strength": "must"},
+    {"key": "rs-zotero-first", "scope": "universal", "kind": "directive", "text": "When a paper is wanted, look in Zotero first to see whether it is already there, and search elsewhere only if it is not.", "about": ["zotero_library", "paper_retrieval"], "strength": "must"},
+    {"key": "rs-paper-proc", "kind": "procedure", "text": "Get a paper: search Zotero by title, DOI or author; if it is missing find it online, add it to Zotero, then use the copy from Zotero.", "fields": {"trigger": "a paper is needed", "steps": ["search Zotero by title, DOI or author", "if it is missing find it online", "add it to Zotero", "use the copy from Zotero"]}, "about": ["zotero_library", "paper_retrieval"]}
+  ]
+}

@@ -9,19 +9,22 @@ from datetime import UTC, datetime
 
 from fastapi import FastAPI
 
-from ontyra.adapters import build_embedder, build_reranker
+from ontyra.adapters import build_decider, build_embedder, build_reranker
 from ontyra.config import Settings, load_settings
 from ontyra.ports import Embedder
 from ontyra.services import (
     ActorService,
     AnchorService,
     ExplorationService,
+    FeedbackService,
     IndexService,
     MemoryService,
     OntologyService,
     PolicyEngine,
     RecallService,
+    RerankTrainingService,
 )
+from ontyra.services.recall_fusion import FusionRecallService
 from ontyra.storage import Database, SchemaManager, SurrealStore
 from ontyra.transports.rest import create_app
 
@@ -43,6 +46,8 @@ class Application:
     indexer: IndexService
     recall: RecallService
     explore: ExplorationService
+    feedback: FeedbackService
+    reranking: RerankTrainingService
     embedder: Embedder | None
 
     @classmethod
@@ -62,16 +67,34 @@ class Application:
         memory = MemoryService(
             store, PolicyEngine(settings.policy), now, ontology, anchors, on_commit=indexer.embed
         )
-        recall = RecallService(
-            store,
-            ontology,
-            anchors,
-            settings.recall,
-            now,
-            embedder=embedder,
-            reranker=reranker,
-            rerank_top_n=settings.rerank.top_n,
-        )
+        decider = build_decider(settings.decision)
+        recall: RecallService
+        if settings.recall.engine == "fusion":
+            recall = FusionRecallService(
+                store,
+                ontology,
+                anchors,
+                settings.recall,
+                now,
+                embedder=embedder,
+                reranker=reranker,
+                rerank_top_n=settings.rerank.top_n,
+                decider=decider,
+            )
+        elif decider is not None:
+            raise ValueError("a decision model needs ONTYRA_RECALL__ENGINE=fusion")
+        else:
+            recall = RecallService(
+                store,
+                ontology,
+                anchors,
+                settings.recall,
+                now,
+                embedder=embedder,
+                reranker=reranker,
+                rerank_top_n=settings.rerank.top_n,
+            )
+        feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
         return cls(
             settings=settings,
             db=db,
@@ -82,6 +105,10 @@ class Application:
             indexer=indexer,
             recall=recall,
             explore=ExplorationService(store, memory, ontology, recall, now),
+            feedback=feedback,
+            reranking=RerankTrainingService(
+                store, feedback, reranker, now, settings.rerank.min_examples
+            ),
             embedder=embedder,
         )
 

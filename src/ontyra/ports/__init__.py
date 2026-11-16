@@ -1,7 +1,7 @@
 """Protocols (ports) that services depend on and storage/adapters implement."""
 
-from ontyra.ports.adapters import Embedder, Reranker
-from ontyra.ports.errors import StoreConflictError
+from ontyra.ports.adapters import Decider, Embedder, PromotionGate, Reranker
+from ontyra.ports.errors import DecisionError, StoreConflictError
 from ontyra.ports.storage import Hit, Store
 from ontyra.ports.writes import (
     Create,
@@ -16,10 +16,13 @@ from ontyra.ports.writes import (
 
 __all__ = [
     "Create",
+    "Decider",
+    "DecisionError",
     "Delete",
     "Embedder",
     "ExpectCurrent",
     "Hit",
+    "PromotionGate",
     "Relate",
     "Reranker",
     "Store",

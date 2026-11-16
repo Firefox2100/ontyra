@@ -1,0 +1,1250 @@
+[
+ {
+  "id": "fin-expense-how",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office"
+  ],
+  "why": "the procedure, with its receipt rule; the superseded limit stays out",
+  "mode": "recall",
+  "query": "how do I file an expense report",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-exp-proc"
+  ],
+  "allow": [
+   "fi-exp-receipt",
+   "fi-limit"
+  ],
+  "exclude": [
+   "fi-limit-old",
+   "fi-old-portal"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "fin-vat-rate",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "lifecycle"
+  ],
+  "why": "the current rate, not the old one",
+  "mode": "recall",
+  "query": "what is the standard VAT rate",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-vat"
+  ],
+  "allow": [
+   "fi-vat-calc",
+   "fi-vat-return"
+  ],
+  "exclude": [
+   "fi-vat-old"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "fin-close",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office"
+  ],
+  "why": "month-end procedure",
+  "mode": "recall",
+  "query": "steps to close the month",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-close"
+  ],
+  "allow": [
+   "fi-late-inv",
+   "fi-q4-freeze",
+   "fi-forecast"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "fin-margin",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "opposite"
+  ],
+  "why": "margin divides by revenue; markup divides by cost: the wrong formula must not come back",
+  "mode": "recall",
+  "query": "how do I calculate gross margin percent",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-margin"
+  ],
+  "exclude": [
+   "fi-markup"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "fin-markup",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "opposite"
+  ],
+  "why": "markup divides by cost",
+  "mode": "recall",
+  "query": "how do I compute the markup on a product",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-markup"
+  ],
+  "exclude": [
+   "fi-margin"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "fin-depr",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "lifecycle"
+  ],
+  "why": "current useful life",
+  "mode": "recall",
+  "query": "how many years do we depreciate laptops",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-depr"
+  ],
+  "exclude": [
+   "fi-depr-old"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "fin-limit-400",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "lifecycle"
+  ],
+  "why": "the 500 EUR limit applies now; under the old 300 limit a director was needed",
+  "mode": "recall",
+  "query": "who has to approve a 400 EUR expense claim",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-limit"
+  ],
+  "exclude": [
+   "fi-limit-old"
+  ],
+  "allow": [
+   "fi-exp-proc",
+   "fi-exp-receipt"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hr-leave-how",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office"
+  ],
+  "why": "the procedure",
+  "mode": "recall",
+  "query": "how do I request annual leave",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-leave"
+  ],
+  "allow": [
+   "ad-leave-days",
+   "ad-sick"
+  ],
+  "exclude": [
+   "ad-leave-days-old"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "hr-leave-days",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "lifecycle"
+  ],
+  "why": "current entitlement",
+  "mode": "recall",
+  "query": "how many days of annual leave do I get",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-leave-days"
+  ],
+  "exclude": [
+   "ad-leave-days-old"
+  ],
+  "allow": [
+   "ad-leave"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hr-incident",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office"
+  ],
+  "why": "procedure plus the facts-only rule",
+  "mode": "recall",
+  "query": "someone slipped in the corridor, how do I file the incident report",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-incident",
+   "ad-incident-facts"
+  ],
+  "exclude": [
+   "fi-report-dates"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ops-minutes-shared",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "precedence"
+  ],
+  "why": "outside the board scope the general rule applies",
+  "mode": "recall",
+  "query": "where do I store the meeting minutes",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/admin"
+   ]
+  },
+  "include": [
+   "ad-minutes-shared"
+  ],
+  "exclude": [
+   "ad-minutes-board"
+  ],
+  "allow": [
+   "ad-minutes",
+   "ad-minutes-fmt"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ops-minutes-board",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office",
+   "precedence"
+  ],
+  "why": "in the board scope the confidential rule overrides the general one",
+  "mode": "recall",
+  "query": "where do I store the meeting minutes",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/board/q4"
+   ]
+  },
+  "include": [
+   "ad-minutes-board"
+  ],
+  "exclude": [
+   "ad-minutes-shared"
+  ],
+  "allow": [
+   "ad-minutes",
+   "ad-minutes-fmt"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "ops-hotel",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office"
+  ],
+  "why": "a plain fact",
+  "mode": "recall",
+  "query": "what is the hotel limit per night",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-hotel"
+  ],
+  "allow": [
+   "ad-flight",
+   "ad-flight-long"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "ops-visitor",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "office"
+  ],
+  "why": "visitor rule",
+  "mode": "recall",
+  "query": "a visitor is coming tomorrow, what do I need to do",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-badge"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "phy-uncert",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "homonym"
+  ],
+  "why": "physics rule; chemistry's rounding rule shares the words but is global",
+  "mode": "recall",
+  "query": "how many significant figures should the uncertainty have",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-uncert"
+  ],
+  "allow": [
+   "ph-units",
+   "ch-sigfig"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "chem-sigfig",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "homonym"
+  ],
+  "why": "chemistry rule; the physics rule is anchored to another project",
+  "mode": "recall",
+  "query": "how many significant figures in the final result",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-sigfig"
+  ],
+  "exclude": [
+   "ph-uncert"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "phy-sigma",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "significance threshold",
+  "mode": "recall",
+  "query": "is three sigma enough to claim a discovery",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-sigma"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "phy-calib",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "procedure; the drift lesson is related",
+  "mode": "recall",
+  "query": "how do I calibrate the detector",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-calib"
+  ],
+  "allow": [
+   "ph-drift"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "chem-titration",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "procedure",
+  "mode": "recall",
+  "query": "how do I do a titration",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-titration"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "chem-yield",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "procedure",
+  "mode": "recall",
+  "query": "calculate the percent yield of the reaction",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-yield"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "chem-ph",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "procedure",
+  "mode": "recall",
+  "query": "calibrate the pH meter",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-ph"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "bio-pcr",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "procedure and the controls rule",
+  "mode": "recall",
+  "query": "set up a PCR",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-pcr"
+  ],
+  "allow": [
+   "bi-control"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "bio-protocol",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "lifecycle"
+  ],
+  "why": "current protocol, not the expired one",
+  "mode": "recall",
+  "query": "which animal protocol number goes on the cage card",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-protocol"
+  ],
+  "exclude": [
+   "bi-protocol-old"
+  ],
+  "allow": [
+   "bi-renew"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "bio-genome",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "lifecycle"
+  ],
+  "why": "current assembly",
+  "mode": "recall",
+  "query": "which reference genome should I align zebrafish reads to",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-genome"
+  ],
+  "exclude": [
+   "bi-genome-old"
+  ],
+  "allow": [
+   "bi-data"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "bio-replicates",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "replicate definition",
+  "mode": "recall",
+  "query": "how many replicates count towards n",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-replicate"
+  ],
+  "allow": [
+   "st-multi"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cs-seeds",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "twin"
+  ],
+  "why": "this project's rule; the other project's seed rule is anchored elsewhere",
+  "mode": "recall",
+  "query": "how many random seeds should I run",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-seeds"
+  ],
+  "exclude": [
+   "dm-seed"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "cs-leak",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "the leakage lesson",
+  "mode": "recall",
+  "query": "the test accuracy looks too good to be true",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-leak"
+  ],
+  "allow": [
+   "cr-testset"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cs-metric",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "macro-F1",
+  "mode": "recall",
+  "query": "which metric for imbalanced classes",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-f1"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "lit-chicago",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "twin"
+  ],
+  "why": "Chicago for the manuscript; MLA is for course essays only",
+  "mode": "recall",
+  "query": "how do I cite the novel in the book chapter",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-chicago"
+  ],
+  "exclude": [
+   "li-mla"
+  ],
+  "allow": [
+   "li-primary"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "lit-mla",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "twin"
+  ],
+  "why": "MLA for course essays; the manuscript's style is anchored to the other project",
+  "mode": "recall",
+  "query": "how do I cite the novel in my course essay",
+  "context": {
+   "uris": [
+    "file:///home/mira/teaching/essay-course/essay1.md"
+   ]
+  },
+  "include": [
+   "li-mla"
+  ],
+  "exclude": [
+   "li-chicago"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "lit-archive",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "archive access",
+  "mode": "recall",
+  "query": "how do I get to see the manuscripts",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-archive"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "soc-sample",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "sampling report rule",
+  "mode": "recall",
+  "query": "what must I report about the survey sample",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-sampling"
+  ],
+  "allow": [
+   "so-weight",
+   "so-panel-bias"
+  ],
+  "top": 2,
+  "split": "holdout"
+ },
+ {
+  "id": "soc-consent",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "consent rule",
+  "mode": "recall",
+  "query": "do I need consent before interviews",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-consent"
+  ],
+  "allow": [
+   "so-anon"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "soc-coding",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "coding procedure",
+  "mode": "recall",
+  "query": "how do I code the interview transcripts",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-coding"
+  ],
+  "allow": [
+   "so-kappa"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "psy-power",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research",
+   "twin"
+  ],
+  "why": "power analysis in the psychology project",
+  "mode": "recall",
+  "query": "how big should the sample be for the sleep study",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-power"
+  ],
+  "exclude": [
+   "so-sampling"
+  ],
+  "allow": [
+   "ps-prereg",
+   "ps-within",
+   "ps-recruit"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "psy-effect",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "effect size rule",
+  "mode": "recall",
+  "query": "which effect size should I report for an ANOVA",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-effect"
+  ],
+  "allow": [
+   "ps-cohen"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "stat-test",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "test choice",
+  "mode": "recall",
+  "query": "which test for two groups with non-normal data",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-choice"
+  ],
+  "allow": [
+   "st-assume"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "stat-multi",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "multiple comparisons",
+  "mode": "recall",
+  "query": "I tested twenty hypotheses, is a correction needed",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-multi"
+  ],
+  "allow": [
+   "st-bh"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "wr-structure",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "IMRaD",
+  "mode": "recall",
+  "query": "how should I organise an empirical paper",
+  "include": [
+   "wr-imrad"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "wr-reviewers",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "response procedure",
+  "mode": "recall",
+  "query": "how do I answer the reviewer comments",
+  "include": [
+   "wr-response"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "data-climate",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "research"
+  ],
+  "why": "data source",
+  "mode": "recall",
+  "query": "where can I get climate data",
+  "include": [
+   "da-climate"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "home-sour",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "procedure in the kitchen",
+  "mode": "recall",
+  "query": "how do I bake sourdough",
+  "context": {
+   "uris": [
+    "place:home/kitchen"
+   ]
+  },
+  "include": [
+   "dh-sour"
+  ],
+  "allow": [
+   "dh-oven",
+   "dh-allergen"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "home-boiler",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "procedure",
+  "mode": "recall",
+  "query": "the boiler shows low pressure",
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  },
+  "include": [
+   "dh-boiler"
+  ],
+  "allow": [
+   "dh-boiler-service"
+  ],
+  "exclude": [
+   "dh-tyre"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "home-ev",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "electric car charging",
+  "mode": "recall",
+  "query": "how much should I charge the car",
+  "context": {
+   "uris": [
+    "place:car"
+   ]
+  },
+  "include": [
+   "dh-ev"
+  ],
+  "exclude": [
+   "ph-charge"
+  ],
+  "allow": [
+   "dh-tyre"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "home-tyre",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily",
+   "lifecycle"
+  ],
+  "why": "current pressures; the retracted value stays out",
+  "mode": "recall",
+  "query": "what should the tyre pressure be",
+  "context": {
+   "uris": [
+    "place:car"
+   ]
+  },
+  "include": [
+   "dh-tyre"
+  ],
+  "exclude": [
+   "dh-tyre-old",
+   "dh-boiler"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "daily-diet",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "personal constraints: vegetarian, no peanuts",
+  "mode": "recall",
+  "query": "suggest a dinner for tonight",
+  "include": [
+   "dh-allergen",
+   "dl-veg",
+   "dl-peanut"
+  ],
+  "allow": [
+   "dh-curry",
+   "dl-alex-fish",
+   "dl-coffee"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "daily-dog",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily",
+   "twin"
+  ],
+  "why": "the dog, not the cat",
+  "mode": "recall",
+  "query": "when does Pixel need to be fed",
+  "include": [
+   "dl-pixel"
+  ],
+  "exclude": [
+   "dl-luna"
+  ],
+  "allow": [
+   "dl-pixel-vet"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "daily-address",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily",
+   "lifecycle"
+  ],
+  "why": "current address",
+  "mode": "recall",
+  "query": "what is my home address",
+  "include": [
+   "dl-addr"
+  ],
+  "exclude": [
+   "dl-addr-old"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "daily-phone",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily",
+   "lifecycle"
+  ],
+  "why": "nothing valid is stored: the only entry was retracted",
+  "mode": "recall",
+  "query": "what is my phone number",
+  "exclude": [
+   "dl-phone-wrong"
+  ],
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "daily-units",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "standing unit preference",
+  "mode": "recall",
+  "query": "convert five miles and 70 degrees Fahrenheit",
+  "include": [
+   "dl-metric"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "daily-train",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "the connection lesson",
+  "mode": "recall",
+  "query": "plan my trip to Utrecht with a train change",
+  "include": [
+   "dl-train-lesson"
+  ],
+  "allow": [
+   "dl-commute"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "misc-dutch",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "learning rule",
+  "mode": "recall",
+  "query": "help me practise Dutch",
+  "include": [
+   "mh-dutch"
+  ],
+  "allow": [
+   "mh-dutch-plan"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "misc-chess",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "daily"
+  ],
+  "why": "analysis rule",
+  "mode": "recall",
+  "query": "analyse my last chess game",
+  "include": [
+   "mh-chess-open"
+  ],
+  "allow": [
+   "mh-chess"
+  ],
+  "top": 1,
+  "split": "tune"
+ }
+]

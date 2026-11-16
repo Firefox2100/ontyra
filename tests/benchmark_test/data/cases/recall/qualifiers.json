@@ -1,0 +1,290 @@
+[
+ {
+  "id": "apt-on-ubuntu",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "ontology"
+  ],
+  "why": "Ubuntu entails the Debian family the directive requires",
+  "mode": "recall",
+  "query": "install system packages",
+  "context": {
+   "signals": [
+    {
+     "concept": "ubuntu"
+    }
+   ]
+  },
+  "include": [
+   "d-apt"
+  ],
+  "exclude": [
+   "d-windows-ps"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "apt-on-fedora",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "ontology"
+  ],
+  "why": "Fedora is a Red Hat family system, which is disjoint with the Debian family",
+  "mode": "recall",
+  "query": "install the system packages",
+  "context": {
+   "signals": [
+    {
+     "concept": "fedora"
+    }
+   ]
+  },
+  "exclude": [
+   "d-apt"
+  ],
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "apt-unknown-os",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "unknown OS: kept, with a caveat",
+  "mode": "recall",
+  "query": "install the system packages",
+  "include": [
+   "d-apt"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "powershell-on-windows",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "a Windows-only directive on Windows",
+  "mode": "recall",
+  "query": "run the PowerShell setup script",
+  "context": {
+   "signals": [
+    {
+     "concept": "windows"
+    }
+   ]
+  },
+  "include": [
+   "d-windows-ps"
+  ],
+  "exclude": [
+   "d-apt"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "powershell-on-ubuntu",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "Windows is disjoint with Linux, so it is excluded",
+  "mode": "recall",
+  "query": "run the PowerShell setup script",
+  "context": {
+   "signals": [
+    {
+     "concept": "ubuntu"
+    }
+   ]
+  },
+  "exclude": [
+   "d-windows-ps"
+  ],
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "tomllib-py312",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "version"
+  ],
+  "why": "Python 3.12 satisfies >= 3.11",
+  "mode": "recall",
+  "query": "parse configuration with tomllib",
+  "context": {
+   "signals": [
+    {
+     "concept": "python",
+     "value": "3.12"
+    }
+   ]
+  },
+  "include": [
+   "d-tomllib"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "tomllib-py39",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "version"
+  ],
+  "why": "Python 3.9 does not satisfy >= 3.11",
+  "mode": "recall",
+  "query": "parse configuration with tomllib",
+  "context": {
+   "signals": [
+    {
+     "concept": "python",
+     "value": "3.9"
+    }
+   ]
+  },
+  "exclude": [
+   "d-tomllib"
+  ],
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "xdist-small-machine",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "unit"
+  ],
+  "why": "8 GB satisfies RAM < 16 GB",
+  "mode": "recall",
+  "query": "run the tidewatch test suite in parallel",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ],
+   "signals": [
+    {
+     "concept": "ram",
+     "value": 8,
+     "unit": "GB"
+    }
+   ]
+  },
+  "include": [
+   "d-low-ram"
+  ],
+  "allow": [
+   "d-pytest"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "xdist-big-machine",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "unit"
+  ],
+  "why": "32 GB does not satisfy RAM < 16 GB",
+  "mode": "recall",
+  "query": "run the tidewatch test suite in parallel",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ],
+   "signals": [
+    {
+     "concept": "ram",
+     "value": 32,
+     "unit": "GB"
+    }
+   ]
+  },
+  "exclude": [
+   "d-low-ram"
+  ],
+  "allow": [
+   "d-pytest"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "notebook-prerequisite",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "prerequisite"
+  ],
+  "why": "a prerequisite never filters; it attaches a check",
+  "mode": "recall",
+  "query": "run the notebook",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/notebooks/tides.ipynb"
+   ]
+  },
+  "include": [
+   "d-conda"
+  ],
+  "checks": {
+   "d-conda": [
+    "conda"
+   ]
+  },
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "crlf-on-windows",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "a Windows-only lesson on Windows",
+  "mode": "recall",
+  "query": "shell script line endings broke after checkout",
+  "context": {
+   "signals": [
+    {
+     "concept": "windows"
+    }
+   ]
+  },
+  "include": [
+   "l-crlf"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "crlf-on-ubuntu",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "the same lesson does not apply on Linux",
+  "mode": "recall",
+  "query": "shell script line endings broke after checkout",
+  "context": {
+   "signals": [
+    {
+     "concept": "ubuntu"
+    }
+   ]
+  },
+  "exclude": [
+   "l-crlf"
+  ],
+  "silent": true,
+  "split": "holdout"
+ }
+]

@@ -1,0 +1,271 @@
+{
+ "concepts": [
+  {
+   "label": "IMRaD structure",
+   "aliases": [
+    "paper structure",
+    "introduction methods results discussion"
+   ]
+  },
+  {
+   "label": "abstract"
+  },
+  {
+   "label": "IEEE style",
+   "aliases": [
+    "ieee citation",
+    "numbered references"
+   ]
+  },
+  {
+   "label": "figure caption",
+   "aliases": [
+    "figures"
+   ]
+  },
+  {
+   "label": "table formatting",
+   "aliases": [
+    "results table"
+   ]
+  },
+  {
+   "label": "paper title"
+  },
+  {
+   "label": "cover letter",
+   "aliases": [
+    "letter to the editor"
+   ]
+  },
+  {
+   "label": "reviewer response",
+   "aliases": [
+    "rebuttal",
+    "response to reviewers"
+   ]
+  },
+  {
+   "label": "desk rejection"
+  },
+  {
+   "label": "double-blind review",
+   "aliases": [
+    "anonymous submission"
+   ]
+  },
+  {
+   "label": "LaTeX template",
+   "aliases": [
+    "latex",
+    "biblatex"
+   ]
+  },
+  {
+   "label": "authorship",
+   "aliases": [
+    "author order",
+    "credit roles"
+   ]
+  },
+  {
+   "label": "reference manager",
+   "aliases": [
+    "zotero",
+    "bibliography"
+   ]
+  },
+  {
+   "label": "grammatical tense",
+   "aliases": [
+    "verb tense"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "source": "ieee style",
+   "relation": "alternative_to",
+   "target": "apa style"
+  },
+  {
+   "source": "ieee style",
+   "relation": "alternative_to",
+   "target": "chicago style"
+  }
+ ],
+ "resources": [],
+ "memories": [
+  {
+   "key": "wr-imrad",
+   "kind": "directive",
+   "text": "Structure empirical papers as Introduction, Methods, Results and Discussion.",
+   "about": [
+    "imrad_structure"
+   ]
+  },
+  {
+   "key": "wr-abstract",
+   "kind": "directive",
+   "text": "Write abstracts of about 150 words that state the question, method, main result and implication, with no citations.",
+   "about": [
+    "abstract"
+   ]
+  },
+  {
+   "key": "wr-ieee",
+   "kind": "fact",
+   "text": "IEEE style numbers references in square brackets in order of first appearance.",
+   "fields": {
+    "subject": "ieee_style",
+    "predicate": "format",
+    "object": "numbered in square brackets"
+   },
+   "about": [
+    "ieee_style"
+   ],
+   "trap": [
+    "twin",
+    "opposite"
+   ]
+  },
+  {
+   "key": "wr-tense",
+   "kind": "directive",
+   "text": "Write methods in the past tense and general truths in the present tense.",
+   "about": [
+    "grammatical_tense"
+   ]
+  },
+  {
+   "key": "wr-figure",
+   "kind": "directive",
+   "text": "Every figure needs a self-contained caption and axis labels with units.",
+   "about": [
+    "figure_caption"
+   ]
+  },
+  {
+   "key": "wr-table",
+   "kind": "directive",
+   "text": "Format tables without vertical lines, put units in the column headers, and align numbers on the decimal point.",
+   "about": [
+    "table_formatting"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "wr-title",
+   "kind": "directive",
+   "text": "A paper title states the finding or the object studied, in under 15 words.",
+   "about": [
+    "paper_title"
+   ],
+   "strength": "prefer"
+  },
+  {
+   "key": "wr-cover",
+   "kind": "procedure",
+   "text": "Write the cover letter: state the contribution in two sentences, suggest three reviewers, and declare conflicts of interest.",
+   "fields": {
+    "trigger": "submit a manuscript to a journal",
+    "steps": [
+     "state the contribution in two sentences",
+     "suggest three reviewers",
+     "declare conflicts of interest",
+     "confirm the paper is not under review elsewhere"
+    ]
+   },
+   "about": [
+    "cover_letter"
+   ]
+  },
+  {
+   "key": "wr-response",
+   "kind": "procedure",
+   "text": "Answer reviewers point by point: quote each comment, say what changed and where, and be polite when disagreeing.",
+   "fields": {
+    "trigger": "respond to reviewer comments",
+    "steps": [
+     "quote each reviewer comment",
+     "answer it directly",
+     "say what changed and where in the manuscript",
+     "explain politely when you disagree"
+    ]
+   },
+   "about": [
+    "reviewer_response"
+   ]
+  },
+  {
+   "key": "wr-desk",
+   "kind": "lesson",
+   "text": "A manuscript was desk-rejected for exceeding the word limit; read the author guidelines before writing.",
+   "fields": {
+    "situation": "a paper is rejected immediately without review",
+    "insight": "it exceeded the journal's word limit",
+    "do_instead": "read the author guidelines first"
+   },
+   "about": [
+    "desk_rejection"
+   ]
+  },
+  {
+   "key": "wr-blind",
+   "kind": "directive",
+   "text": "For double-blind submissions remove author names and citations that identify yourself.",
+   "about": [
+    "double_blind_review"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "wr-latex",
+   "kind": "fact",
+   "text": "Use the journal's LaTeX template and manage the bibliography with biblatex in the journal's style.",
+   "fields": {
+    "subject": "latex_template",
+    "predicate": "practice",
+    "object": "journal template, biblatex"
+   },
+   "about": [
+    "latex_template"
+   ]
+  },
+  {
+   "key": "wr-authors",
+   "kind": "directive",
+   "text": "Order authors by contribution and agree it at the start of the project using the CRediT roles.",
+   "about": [
+    "authorship"
+   ]
+  },
+  {
+   "key": "wr-zotero",
+   "kind": "directive",
+   "text": "Keep all references in Zotero with the DOI filled in; never type a bibliography by hand.",
+   "about": [
+    "reference_manager"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "wr-limit",
+   "kind": "task",
+   "text": "Check the journal's word limit before submitting the manuscript.",
+   "fields": {
+    "due": "2026-11-16T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "desk_rejection",
+    "abstract"
+   ],
+   "note": "due tomorrow"
+  }
+ ]
+}

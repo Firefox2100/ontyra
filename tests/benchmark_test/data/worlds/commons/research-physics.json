@@ -1,0 +1,331 @@
+{
+ "concepts": [
+  {
+   "label": "Neutrino detector",
+   "definition": "The physics experiment Mira's group runs."
+  },
+  {
+   "label": "SI units",
+   "aliases": [
+    "metric units",
+    "si"
+   ]
+  },
+  {
+   "label": "measurement uncertainty",
+   "aliases": [
+    "error bar",
+    "uncertainty"
+   ]
+  },
+  {
+   "label": "sigma significance",
+   "aliases": [
+    "5 sigma",
+    "discovery threshold"
+   ]
+  },
+  {
+   "label": "detector calibration",
+   "aliases": [
+    "calibrating the detector"
+   ]
+  },
+  {
+   "label": "background subtraction"
+  },
+  {
+   "label": "Geant4",
+   "aliases": [
+    "monte carlo simulation"
+   ]
+  },
+  {
+   "label": "elementary charge"
+  },
+  {
+   "label": "chi-square fit",
+   "aliases": [
+    "chi2",
+    "least squares fit"
+   ]
+  },
+  {
+   "label": "beam interlock"
+  },
+  {
+   "label": "cryostat"
+  }
+ ],
+ "relations": [],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/neutrino-detector",
+   "kind": "project",
+   "label": "neutrino detector analysis",
+   "instance_of": [
+    "neutrino_detector"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "ph-units",
+   "kind": "directive",
+   "text": "Report every physical quantity in SI units, with a space between number and unit; convert before plotting.",
+   "about": [
+    "si_units"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ph-uncert",
+   "kind": "directive",
+   "text": "Quote a measurement with its uncertainty to one significant figure (two if the leading digit is 1) and the same decimal places in the value.",
+   "about": [
+    "measurement_uncertainty"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-sigma",
+   "kind": "fact",
+   "text": "In particle physics a discovery claim needs five sigma; three sigma counts only as evidence.",
+   "fields": {
+    "subject": "sigma_significance",
+    "predicate": "threshold",
+    "object": "5 sigma discovery, 3 sigma evidence"
+   },
+   "about": [
+    "sigma_significance"
+   ]
+  },
+  {
+   "key": "ph-calib",
+   "kind": "procedure",
+   "text": "Calibrate the detector: warm up for 30 minutes, run the reference source, fit the gain, and enter it in the calibration log.",
+   "fields": {
+    "trigger": "calibrate the detector",
+    "steps": [
+     "warm up the electronics for 30 minutes",
+     "run the reference source for 10 minutes",
+     "fit the gain constant",
+     "record gain and temperature in the calibration log"
+    ]
+   },
+   "about": [
+    "detector_calibration"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-drift",
+   "kind": "lesson",
+   "text": "The calibration drifted with room temperature; log the temperature with every run.",
+   "fields": {
+    "situation": "gain values drift between calibration days",
+    "insight": "the electronics depend on room temperature",
+    "do_instead": "log the temperature with every run"
+   },
+   "about": [
+    "detector_calibration"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-bkg",
+   "kind": "directive",
+   "text": "Subtract the background measured with the beam off, using the same live time as the signal run.",
+   "about": [
+    "background_subtraction"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-geant-old",
+   "kind": "fact",
+   "text": "The detector response model is a Geant4 simulation, version 11.1.",
+   "fields": {
+    "subject": "geant4",
+    "predicate": "version",
+    "object": "11.1"
+   },
+   "about": [
+    "geant4"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ],
+   "trap": [
+    "stale",
+    "superseded",
+    "homonym"
+   ]
+  },
+  {
+   "key": "ph-geant",
+   "kind": "fact",
+   "text": "The detector response model is a Geant4 simulation, version 11.2 since the September upgrade.",
+   "fields": {
+    "subject": "geant4",
+    "predicate": "version",
+    "object": "11.2"
+   },
+   "about": [
+    "geant4"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ],
+   "supersedes": "ph-geant-old",
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "ph-charge",
+   "kind": "fact",
+   "text": "The elementary charge is exactly 1.602176634e-19 coulomb in the SI since 2019.",
+   "fields": {
+    "subject": "elementary_charge",
+    "predicate": "value",
+    "object": "1.602176634e-19 C"
+   },
+   "about": [
+    "elementary_charge"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "ph-mev-gev",
+   "kind": "lesson",
+   "text": "A factor-1000 error came from mixing MeV and GeV in one table; put the energy unit in every column header.",
+   "fields": {
+    "situation": "numbers in a results table look off by a power of ten",
+    "insight": "MeV and GeV were mixed in one table",
+    "do_instead": "label units in the column headers"
+   },
+   "about": [
+    "si_units"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "ph-fit",
+   "kind": "directive",
+   "text": "Fit counting histograms with a chi-square using Poisson errors; use an unbinned likelihood when bins hold fewer than 10 counts.",
+   "about": [
+    "chi_square_fit",
+    "statistics"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-vacuum",
+   "kind": "event",
+   "text": "On 2026-09-08 the cryostat lost vacuum and run 412 was discarded.",
+   "fields": {
+    "occurred_at": "2026-09-08T03:00:00Z"
+   },
+   "about": [
+    "cryostat"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-interlock",
+   "kind": "directive",
+   "text": "Never enter the detector hall during a beam run; check that the interlock lamp is green before opening the door.",
+   "about": [
+    "beam_interlock"
+   ],
+   "strength": "must",
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-pdg",
+   "kind": "fact",
+   "text": "Reference values for particle properties come from the Particle Data Group review at pdg.lbl.gov.",
+   "fields": {
+    "subject": "neutrino_detector",
+    "predicate": "reference data",
+    "object": "PDG review"
+   },
+   "about": [
+    "neutrino_detector"
+   ]
+  },
+  {
+   "key": "ph-blind",
+   "kind": "decision",
+   "text": "Chose to blind the analysis by shuffling run labels until the selection cuts were frozen.",
+   "fields": {
+    "chosen": "blinded analysis",
+    "alternatives": [
+     "open analysis"
+    ],
+    "rationale": "avoids tuning cuts on the signal region",
+    "decided_at": "2026-02-11T09:00:00Z"
+   },
+   "about": [
+    "background_subtraction"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ]
+  },
+  {
+   "key": "ph-recal",
+   "kind": "task",
+   "text": "Re-run the calibration after the cryostat repair.",
+   "fields": {
+    "due": "2026-11-18T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "detector_calibration",
+    "cryostat"
+   ],
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ],
+   "note": "due in days"
+  },
+  {
+   "key": "ph-hall-closed",
+   "kind": "directive",
+   "text": "The detector hall is closed for maintenance until 31 August; no access without the safety officer.",
+   "at": [
+    "file:///home/mira/research/neutrino-detector"
+   ],
+   "fields": {
+    "expires_at": "2026-08-31T00:00:00Z"
+   },
+   "strength": "must",
+   "trap": [
+    "expired"
+   ]
+  }
+ ]
+}

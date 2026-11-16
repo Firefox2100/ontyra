@@ -1,0 +1,65 @@
+[
+ {
+  "id": "weather",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "unrelated chat stays silent",
+  "mode": "recall",
+  "query": "what is the weather like today",
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "thanks",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "a pleasantry in a project stays silent",
+  "mode": "recall",
+  "query": "thanks, that looks good",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "recipe",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "an unrelated task stays silent",
+  "mode": "recall",
+  "query": "convert this recipe from cups to grams",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "volcano",
+  "world": "commons",
+  "tags": [
+   "silence"
+  ],
+  "why": "an unrelated task in the other project stays silent",
+  "mode": "recall",
+  "query": "summarise this article about volcanoes",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/lanternkit/src/button.ts"
+   ]
+  },
+  "silent": true,
+  "split": "holdout"
+ }
+]

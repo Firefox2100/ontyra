@@ -176,8 +176,12 @@ def clock() -> TickClock:
 async def make_app(database: Database, schema: SchemaManager, clock: TickClock):
     """Factory for a fully wired `Application` on the test database with a given policy."""
 
-    async def _make(policy: PolicyConfig | None = None) -> Application:
-        settings = Settings(_env_file=None, policy=policy or PolicyConfig(default="auto_commit"))  # type: ignore[call-arg]
+    async def _make(policy: PolicyConfig | None = None, **overrides: object) -> Application:
+        settings = Settings(
+            _env_file=None,  # type: ignore[call-arg]
+            policy=policy or PolicyConfig(default="auto_commit"),
+            **overrides,  # type: ignore[arg-type]
+        )
         app = Application.from_database(database, settings, now=clock)
         await app.actors.ensure_owner()
         return app

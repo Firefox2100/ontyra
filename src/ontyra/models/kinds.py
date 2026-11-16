@@ -33,6 +33,11 @@ class RevisionBase(Record):
     about: list[ConceptRef] = []  # concepts this is about (ontology links)
     anchors: list[Anchor] = []  # where it applies; empty = everywhere the owner is active
     qualifiers: list[Qualifier] = []  # under which circumstances (roles: plans/01)
+    # `universal`: holds whatever the context (a standing preference, a global prohibition) and
+    # is always part of a briefing or check. `contextual` (default): holds where its anchors,
+    # qualifiers or subject (`about`) tie it to the context; with none of those it is unscoped
+    # (flagged when written) and reaches an agent only through recall of its text.
+    scope: Literal["contextual", "universal"] = "contextual"
 
 
 @registry.kind("fact", LifecyclePolicy(supersedes_by_edge=True))

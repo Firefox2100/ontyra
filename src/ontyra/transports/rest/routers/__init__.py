@@ -6,10 +6,12 @@ from ontyra.transports.rest.routers import (
     concepts,
     episodes,
     explore,
+    feedback,
     health,
     memories,
     proposals,
     recall,
+    reranker,
     resources,
 )
 
@@ -22,6 +24,8 @@ VERSIONED: list[APIRouter] = [
     explore.router,
     concepts.router,
     resources.router,
+    feedback.router,
+    reranker.router,
 ]
 UNVERSIONED: list[APIRouter] = [health.router]
 

@@ -1,0 +1,27 @@
+{
+  "concepts": [
+    {"label": "Dutch language learning", "aliases": ["learning dutch", "dutch lessons"]},
+    {"label": "chess"},
+    {"label": "photography", "aliases": ["camera"]},
+    {"label": "books to read", "aliases": ["reading list"]},
+    {"label": "language exchange"},
+    {"label": "guitar practice", "aliases": ["guitar"]},
+    {"label": "film night", "aliases": ["movie night"]},
+    {"label": "RAW photo workflow", "aliases": ["raw editing"]},
+    {"label": "tax return", "aliases": ["annual tax declaration"]}
+  ],
+  "relations": [],
+  "resources": [],
+  "memories": [
+    {"key": "mh-dutch", "kind": "directive", "text": "When the user practises Dutch, answer in simple Dutch first and add an English translation underneath; correct mistakes gently.", "about": ["dutch_language_learning"], "trap": ["opposite"]},
+    {"key": "mh-dutch-plan", "kind": "decision", "text": "Chose a twice-weekly conversation class over the app because speaking was the weak point.", "fields": {"chosen": "twice-weekly conversation class", "alternatives": ["language app"], "rationale": "speaking was the weak point", "decided_at": "2026-05-02T09:00:00Z"}, "about": ["dutch_language_learning"]},
+    {"key": "mh-chess", "kind": "fact", "text": "The user's online chess rating is about 1650 and they prefer slow time controls.", "fields": {"subject": "chess", "predicate": "rating", "object": "about 1650, slow controls"}, "about": ["chess"]},
+    {"key": "mh-chess-open", "kind": "directive", "text": "When analysing chess games, focus on the opening mistakes first and explain the plan behind each move.", "about": ["chess"]},
+    {"key": "mh-camera", "kind": "fact", "text": "The camera is a mirrorless body with a 35 mm prime lens; shoot RAW and keep the ISO under 3200.", "fields": {"subject": "photography", "predicate": "equipment", "object": "mirrorless, 35 mm prime"}, "about": ["photography"]},
+    {"key": "mh-raw", "kind": "procedure", "text": "Process photos: import RAW files, cull to the best 10%, adjust exposure and white balance, export as JPEG at 2048 pixels.", "fields": {"trigger": "edit photos after a shoot", "steps": ["import the RAW files", "cull to the best 10%", "adjust exposure and white balance", "export JPEG at 2048 pixels"]}, "about": ["raw_photo_workflow"]},
+    {"key": "mh-books", "kind": "directive", "text": "Suggest books by translated fiction authors and avoid thrillers; the user reads about 20 pages every evening.", "about": ["books_to_read"], "trap": ["opposite"]},
+    {"key": "mh-guitar", "kind": "event", "text": "On 2026-10-10 the user played at the open mic for the first time and plans to play again in spring.", "fields": {"occurred_at": "2026-10-10T20:00:00Z"}, "about": ["guitar_practice"]},
+    {"key": "mh-film", "kind": "directive", "text": "For Friday film night pick films under two hours with subtitles that both Alex and the user have not seen.", "about": ["film_night", "alex"], "q": ["necessary:day_type = weekday"], "trap": ["qualifier"]},
+    {"key": "mh-tax", "kind": "lesson", "text": "The tax declaration was late because the employer statement arrived in March; ask for it in January.", "fields": {"situation": "preparing the annual tax declaration", "insight": "the employer statement arrives late", "do_instead": "ask for it in January"}, "about": ["tax_return"]}
+  ]
+}

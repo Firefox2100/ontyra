@@ -119,6 +119,38 @@ def assess(rev: RevisionBase, ctx: Resolved) -> Assessment:
     return a
 
 
+def in_scope(rev: RevisionBase, assessment: Assessment, ctx: Resolved, topics: str = "") -> bool:
+    """Is there positive evidence that this memory belongs in a briefing or check here?
+
+    `scope: universal` always does. Otherwise it needs a tie to the context: an anchor that
+    matched, a qualifier that was satisfied (not merely unknown), or a subject (`about`) that
+    the context touches, directly or through the ontology. The context is its signals, the
+    concepts of the resources in its anchor chain and, for a check, the concepts mentioned in
+    the intent (`topics`). A directive with no tie at all is unscoped and is reached by recall
+    of its text only; other kinds without a subject keep the older, permissive behaviour.
+    """
+    if rev.scope == "universal":
+        return True
+    if assessment.distance is not None or assessment.outcome.matched:
+        return True
+    if not rev.about:
+        return not isinstance(rev, DirectiveRev)
+    onto = ctx.ontology
+    seen = [o.concept for o in ctx.observations]
+    seen += [m.concept for m in onto.mentions(topics)] if topics else []
+    return any(
+        onto.entails(concept, about) or onto.entails(about, concept)
+        for about in rev.about
+        for concept in seen
+    )
+
+
+def _firm(c: Candidate) -> bool:
+    """A candidate applies for certain: no unknown necessary qualifier, no unknown location."""
+    a = c.assessment
+    return a is None or (not a.outcome.demote and "location_unknown" not in a.flags)
+
+
 def _detail(rev: RevisionBase) -> dict[str, Any]:
     data = rev.model_dump(mode="json", exclude=_BOOKKEEPING)
     return {k: v for k, v in data.items() if v not in (None, [], "", {})}
@@ -183,6 +215,36 @@ class RecallService:
             c.lanes[lane] = max(c.lanes.get(lane, 0.0), score)
             c.ranks[lane] = min(c.ranks.get(lane, rank), rank)
 
+    async def concept_lane(
+        self,
+        text: str,
+        ctx: Resolved,
+        owners: Sequence[RecordId],
+        kinds: Sequence[str],
+        limit: int,
+    ) -> list[tuple[float, SearchDoc, str]]:
+        """Concept lane: mentions, ontology expansion, memories about those concepts
+        (best weight first, as `(weight, doc, why)`)."""
+        weights: dict[RecordId, tuple[float, str]] = {}
+        for m in ctx.ontology.mentions(text):
+            for cid, (w, why) in ctx.ontology.expand(m.concept).items():
+                if cid not in weights or weights[cid][0] < w:
+                    weights[cid] = (
+                        w,
+                        f"about {ctx.ontology.concepts[cid].label} ({why})"
+                        if cid in ctx.ontology.concepts
+                        else why,
+                    )
+        if not weights:
+            return []
+        docs = await self.store.docs(owners, kinds=kinds, about=list(weights), limit=limit * 3 // 2)
+        ranked: list[tuple[float, SearchDoc, str]] = []
+        for d in docs:
+            best = max((weights[c] for c in d.about if c in weights), key=lambda t: t[0])
+            ranked.append((best[0], d, best[1]))
+        ranked.sort(key=lambda t: -t[0])
+        return ranked[:limit]
+
     async def query_candidates(
         self, caller: Caller, text: str, ctx: Resolved, kinds: Sequence[str]
     ) -> dict[RecordId, Candidate]:
@@ -202,31 +264,15 @@ class RecallService:
                 "vector",
                 self._vector_score,
             )
-        # concept lane: mentions → expansion → memories about those concepts
-        weights: dict[RecordId, tuple[float, str]] = {}
-        for m in ctx.ontology.mentions(text):
-            for cid, (w, why) in ctx.ontology.expand(m.concept).items():
-                if cid not in weights or weights[cid][0] < w:
-                    weights[cid] = (
-                        w,
-                        f"about {ctx.ontology.concepts[cid].label} ({why})"
-                        if cid in ctx.ontology.concepts
-                        else why,
-                    )
-        if weights:
-            docs = await self.store.docs(owners, kinds=kinds, about=list(weights), limit=n * 3)
-            ranked: list[tuple[float, SearchDoc, str]] = []
-            for d in docs:
-                best = max((weights[c] for c in d.about if c in weights), key=lambda t: t[0])
-                ranked.append((best[0], d, best[1]))
-            ranked.sort(key=lambda t: -t[0])
-            for rank, (w, d, why) in enumerate(ranked[: n * 2], start=1):
-                c = cands.setdefault(d.rev, Candidate(d.rev))
-                c.doc = d
-                c.lanes["concept"] = max(c.lanes.get("concept", 0.0), w)
-                c.ranks["concept"] = min(c.ranks.get("concept", rank), rank)
-                if why not in c.why:
-                    c.why.append(why)
+        for rank, (w, d, why) in enumerate(
+            await self.concept_lane(text, ctx, owners, kinds, n * 2), start=1
+        ):
+            c = cands.setdefault(d.rev, Candidate(d.rev))
+            c.doc = d
+            c.lanes["concept"] = max(c.lanes.get("concept", 0.0), w)
+            c.ranks["concept"] = min(c.ranks.get("concept", rank), rank)
+            if why not in c.why:
+                c.why.append(why)
         return cands
 
     # ---- stages 3-4: hydrate, visibility, qualifiers ----------------------------------------
@@ -326,6 +372,8 @@ class RecallService:
         overridden: dict[RecordId, RecordId] = {}  # candidate rev -> memory that overrides it
         for e in await self.store.memory_edges("overrides", mems):
             if e["in_memory"] in by_memory and e["out_memory"] in by_memory:
+                if not _firm(by_memory[e["in_memory"]]):
+                    continue  # an overrider whose own conditions are unknown does not win yet
                 overridden[by_memory[e["out_memory"]].rev] = e["in_memory"]
         seen: set[frozenset[RecordId]] = set()
         for e in await self.store.memory_edges("contradicts", mems):
@@ -560,8 +608,10 @@ class RecallService:
                 )
         return await self._finish(caller, request, "recall", relevant, [], ctx, dropped)
 
-    async def briefing(self, caller: Caller, request: RecallRequest) -> RecallPack:
-        """Path C: what applies here, with no question. Complete for directives."""
+    async def briefing_candidates(
+        self, caller: Caller, request: RecallRequest, topics: str = ""
+    ) -> tuple[Resolved, list[Candidate]]:
+        """The memories a briefing would carry before ranking and packing (see `in_scope`)."""
         ctx = await self.resolve_context(request.context)
         owners = caller.visible_owners()
         docs = await self.store.docs(
@@ -578,6 +628,8 @@ class RecallService:
             assert c.doc is not None and c.revision is not None and c.assessment is not None
             a = c.assessment
             anchored_here = a.distance is not None
+            if not in_scope(c.revision, a, ctx, topics):
+                continue
             if (
                 c.doc.kind == "directive"
                 or a.outcome.triggered
@@ -592,6 +644,14 @@ class RecallService:
                 )
             ):
                 keep.append(c)
+        return ctx, keep
+
+    async def briefing(
+        self, caller: Caller, request: RecallRequest, topics: str = ""
+    ) -> RecallPack:
+        """Path C: what applies here, with no question. Complete for directives that are in
+        scope: unanchored ones that are about something else are left out."""
+        ctx, keep = await self.briefing_candidates(caller, request, topics)
         ranked = await self.rank(keep, query=None, ranked_by_text=False)
         return await self._finish(caller, request, "briefing", ranked, [], ctx, [])
 
@@ -609,19 +669,22 @@ class RecallService:
         briefing = await self.briefing(
             caller,
             RecallRequest(context=context, kinds=["directive"], profile="compact", redeliver=True),
+            topics=intent,
         )
-        musts = [
-            i for i in briefing.must_follow if i.memory not in {x.memory for x in pack.items()}
-        ]
+        relevant = pack.items()  # what the intent itself matched, before the standing musts
+        has_checks = any(i.checks for i in relevant)
+        known = {x.memory for x in relevant}
+        musts = [i for i in briefing.must_follow if i.memory not in known]
         pack.must_follow = [*pack.must_follow, *musts]
         pack.path = "check"
         pack.silent = not pack.items()
-        has_checks = any(i.checks for i in pack.items())
-        verdict: Literal["clear", "caution"] = "caution" if pack.items() or has_checks else "clear"
+        # the verdict reflects what matches this intent; standing musts are listed, not judged
+        verdict: Literal["clear", "caution"] = "caution" if relevant or has_checks else "clear"
         summary = (
-            f"{len(pack.items())} applicable item(s) to review before acting"
-            if pack.items()
-            else "nothing in memory applies to this action here"
+            f"{len(relevant)} item(s) match this action; review them before acting"
+            if relevant
+            else "nothing in memory is specific to this action here"
+            + (f" ({len(musts)} standing must-follow rule(s) listed)" if musts else "")
         )
         return CheckResult(verdict=verdict, summary=summary, pack=pack)
 

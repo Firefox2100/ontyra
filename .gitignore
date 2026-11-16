@@ -11,3 +11,7 @@ src/ontyra/_version.py
 .env
 # local working docs and research PDFs are not committed
 references/papers/
+
+# benchmark run results (immutable files named by run label)
+tests/benchmark_test/results/*
+!tests/benchmark_test/results/.gitkeep

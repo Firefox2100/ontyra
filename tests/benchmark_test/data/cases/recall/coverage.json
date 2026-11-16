@@ -1,0 +1,1208 @@
+[
+ {
+  "id": "cv-dm-docstring",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-docstring",
+  "mode": "recall",
+  "query": "which docstring style do we use",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ]
+  },
+  "include": [
+   "dm-docstring"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-tf-plan",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-tf-plan",
+  "mode": "recall",
+  "query": "I want to apply the terraform changes",
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra/modules"
+   ]
+  },
+  "include": [
+   "dm-tf-plan"
+  ],
+  "allow": [
+   "dm-staging-first"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-tf-state",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-tf-state",
+  "mode": "recall",
+  "query": "where is the terraform state stored",
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra/modules"
+   ]
+  },
+  "include": [
+   "dm-tf-state"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-staging-first",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-staging-first",
+  "mode": "recall",
+  "query": "deploy the new service to production",
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra/modules"
+   ]
+  },
+  "include": [
+   "dm-staging-first"
+  ],
+  "allow": [
+   "dm-tf-plan",
+   "dm-probe"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-dm-probe",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-probe",
+  "mode": "recall",
+  "query": "the rolling update is stuck",
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra/modules"
+   ]
+  },
+  "include": [
+   "dm-probe"
+  ],
+  "allow": [
+   "dm-staging-first"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-hooks",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-hooks",
+  "mode": "recall",
+  "query": "I have a fresh checkout of a repository, what should I install first",
+  "include": [
+   "dm-hooks"
+  ],
+  "allow": [
+   "dm-secrets"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-hooks-fn",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-hooks-fn",
+  "mode": "recall",
+  "query": "write a new component for the shop",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/App.tsx"
+   ]
+  },
+  "include": [
+   "dm-hooks-fn"
+  ],
+  "allow": [
+   "dm-a11y",
+   "dm-eslint"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-eslint",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-eslint",
+  "mode": "recall",
+  "query": "I am ready to open a pull request",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/App.tsx"
+   ]
+  },
+  "include": [
+   "dm-eslint"
+  ],
+  "allow": [
+   "dm-review",
+   "dm-a11y"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-dm-a11y",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-a11y",
+  "mode": "recall",
+  "query": "add a button that shows only an icon",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/App.tsx"
+   ]
+  },
+  "include": [
+   "dm-a11y"
+  ],
+  "allow": [
+   "dm-hooks-fn"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-ts-strict",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-ts-strict",
+  "mode": "recall",
+  "query": "why is TypeScript strict mode on",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/App.tsx"
+   ]
+  },
+  "include": [
+   "dm-ts-strict"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-bundle",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-bundle",
+  "mode": "recall",
+  "query": "the bundle size grew a lot",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/App.tsx"
+   ]
+  },
+  "include": [
+   "dm-bundle"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-dm-review",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-review",
+  "mode": "recall",
+  "query": "I was asked to review a pull request",
+  "include": [
+   "dm-review"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-dm-node22",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for dm-node22",
+  "mode": "recall",
+  "query": "what CI upgrades are pending",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/App.tsx"
+   ]
+  },
+  "include": [
+   "dm-node22"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-bi-blind",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for bi-blind",
+  "mode": "recall",
+  "query": "how should phenotypes be scored",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-blind"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-bi-blot",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for bi-blot",
+  "mode": "recall",
+  "query": "run a western blot",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-blot"
+  ],
+  "allow": [
+   "bi-control"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-bi-6dpf",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for bi-6dpf",
+  "mode": "recall",
+  "query": "which larval stage for the behaviour assay",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-6dpf"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-cr-compute",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-compute",
+  "mode": "recall",
+  "query": "how many GPU hours may I use",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-compute"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-cr-ogb",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-ogb",
+  "mode": "recall",
+  "query": "where do graph benchmarks come from",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-ogb"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-cr-ablation",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-ablation",
+  "mode": "recall",
+  "query": "write the ablation study",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-ablation"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-cr-release",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-release",
+  "mode": "recall",
+  "query": "release the code with the paper",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-release"
+  ],
+  "allow": [
+   "cr-arxiv"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-cr-arxiv",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-arxiv",
+  "mode": "recall",
+  "query": "post the preprint",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-arxiv"
+  ],
+  "allow": [
+   "cr-release"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-cr-rebuttal",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-rebuttal",
+  "mode": "recall",
+  "query": "what happened in the June rebuttal",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-rebuttal"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-cr-sage",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for cr-sage",
+  "mode": "recall",
+  "query": "why did we choose GraphSAGE",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-sage"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-da-health",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for da-health",
+  "mode": "recall",
+  "query": "where to find public health statistics",
+  "include": [
+   "da-health"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-da-text",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for da-text",
+  "mode": "recall",
+  "query": "where to get text datasets",
+  "include": [
+   "da-text"
+  ],
+  "allow": [
+   "da-licence"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-da-econ",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for da-econ",
+  "mode": "recall",
+  "query": "which source for economic time series",
+  "include": [
+   "da-econ"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-da-astro",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for da-astro",
+  "mode": "recall",
+  "query": "where are telescope observations archived",
+  "include": [
+   "da-astro"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-da-units",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for da-units",
+  "mode": "recall",
+  "query": "the downloaded dataset has strange magnitudes",
+  "include": [
+   "da-units"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-li-close",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-close",
+  "mode": "recall",
+  "query": "write a close reading of this passage",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-close"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-li-thesis",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-thesis",
+  "mode": "recall",
+  "query": "how to state the thesis",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-thesis"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-li-digital",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-digital",
+  "mode": "recall",
+  "query": "where do I find a digital copy of the novel",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-digital"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-li-plag",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-plag",
+  "mode": "recall",
+  "query": "can I copy this sentence from a critic",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-plag"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-li-theme",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-theme",
+  "mode": "recall",
+  "query": "why is the chapter organised by theme",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-theme"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-li-length",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-length",
+  "mode": "recall",
+  "query": "how long can a journal essay be",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-length"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-li-symposium",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-symposium",
+  "mode": "recall",
+  "query": "what did the respondent say at the symposium",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-symposium"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-li-corpus",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for li-corpus",
+  "mode": "recall",
+  "query": "add a new novel to the corpus",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-corpus"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-ph-fit",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for ph-fit",
+  "mode": "recall",
+  "query": "how to fit a histogram with few counts",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-fit"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-ph-vacuum",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for ph-vacuum",
+  "mode": "recall",
+  "query": "what happened to run 412",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-vacuum"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-ph-pdg",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for ph-pdg",
+  "mode": "recall",
+  "query": "where do I find particle properties",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-pdg"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-ph-blind",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for ph-blind",
+  "mode": "recall",
+  "query": "should the analysis be blinded",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-blind"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-ph-recal",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for ph-recal",
+  "mode": "recall",
+  "query": "what is waiting after the cryostat repair",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-recal"
+  ],
+  "allow": [
+   "ph-calib"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-so-likert",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-likert",
+  "mode": "recall",
+  "query": "how to design the Likert items",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-likert"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-so-ethics",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-ethics",
+  "mode": "recall",
+  "query": "how long does ethics approval take",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-ethics"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-so-sources",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-sources",
+  "mode": "recall",
+  "query": "where do I get European social data",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-sources"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-so-causal",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-causal",
+  "mode": "recall",
+  "query": "can I say the policy causes lower trust",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-causal"
+  ],
+  "allow": [
+   "st-corr"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-so-pilot",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-pilot",
+  "mode": "recall",
+  "query": "what went wrong in the pilot",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-pilot"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-so-mixed",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-mixed",
+  "mode": "recall",
+  "query": "why did we use web plus phone",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-mixed"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-so-amend",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for so-amend",
+  "mode": "recall",
+  "query": "what is overdue for the ethics board",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-amend"
+  ],
+  "allow": [
+   "so-ethics"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-st-log",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for st-log",
+  "mode": "recall",
+  "query": "the data are strongly right-skewed",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-log"
+  ],
+  "allow": [
+   "st-assume"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-st-corr",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for st-corr",
+  "mode": "recall",
+  "query": "how to report a correlation",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-corr"
+  ],
+  "allow": [
+   "so-causal"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-st-vif",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for st-vif",
+  "mode": "recall",
+  "query": "the sign of my regression coefficient flipped",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-vif"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-wr-abstract",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-abstract",
+  "mode": "recall",
+  "query": "write the abstract",
+  "include": [
+   "wr-abstract"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-wr-tense",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-tense",
+  "mode": "recall",
+  "query": "which tense in the methods",
+  "include": [
+   "wr-tense"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-wr-figure",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-figure",
+  "mode": "recall",
+  "query": "what does a figure need",
+  "include": [
+   "wr-figure"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-wr-title",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-title",
+  "mode": "recall",
+  "query": "how to word the paper title",
+  "include": [
+   "wr-title"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-wr-cover",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-cover",
+  "mode": "recall",
+  "query": "write the cover letter to the editor",
+  "include": [
+   "wr-cover"
+  ],
+  "allow": [],
+  "split": "holdout"
+ },
+ {
+  "id": "cv-wr-authors",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-authors",
+  "mode": "recall",
+  "query": "how do we decide author order",
+  "include": [
+   "wr-authors"
+  ],
+  "allow": [],
+  "split": "tune"
+ },
+ {
+  "id": "cv-wr-zotero",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-zotero",
+  "mode": "recall",
+  "query": "where do I keep my references",
+  "include": [
+   "wr-zotero"
+  ],
+  "allow": [
+   "rs-paper-proc",
+   "rs-zotero-fact",
+   "rs-zotero-first",
+   "rs-zotero-save"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "cv-wr-limit",
+  "world": "commons",
+  "tags": [
+   "lexical",
+   "coverage"
+  ],
+  "why": "a plain lookup for wr-limit",
+  "mode": "recall",
+  "query": "what must be checked before submitting",
+  "include": [
+   "wr-limit"
+  ],
+  "allow": [
+   "wr-desk"
+  ],
+  "split": "tune"
+ }
+]

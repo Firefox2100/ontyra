@@ -1,0 +1,671 @@
+{
+ "concepts": [
+  {
+   "label": "dietary preference",
+   "aliases": [
+    "diet",
+    "food preference"
+   ]
+  },
+  {
+   "label": "vegetarian"
+  },
+  {
+   "label": "allergy",
+   "aliases": [
+    "food allergy"
+   ]
+  },
+  {
+   "label": "reply style",
+   "aliases": [
+    "answer format",
+    "response length"
+   ]
+  },
+  {
+   "label": "unit preference",
+   "aliases": [
+    "measurement units"
+   ]
+  },
+  {
+   "label": "time format",
+   "aliases": [
+    "clock format"
+   ]
+  },
+  {
+   "label": "scheduling preference",
+   "aliases": [
+    "meeting times",
+    "calendar rules"
+   ]
+  },
+  {
+   "label": "email sending",
+   "aliases": [
+    "sending messages"
+   ]
+  },
+  {
+   "label": "Alex",
+   "aliases": [
+    "partner"
+   ],
+   "definition": "The user's partner."
+  },
+  {
+   "label": "Pixel",
+   "aliases": [
+    "the dog"
+   ]
+  },
+  {
+   "label": "Luna",
+   "aliases": [
+    "the cat"
+   ]
+  },
+  {
+   "label": "pet feeding",
+   "aliases": [
+    "feeding schedule"
+   ]
+  },
+  {
+   "label": "commute",
+   "aliases": [
+    "travel to work"
+   ]
+  },
+  {
+   "label": "caffeine",
+   "aliases": [
+    "coffee"
+   ]
+  },
+  {
+   "label": "exercise routine",
+   "aliases": [
+    "workout",
+    "running"
+   ]
+  },
+  {
+   "label": "birthday"
+  },
+  {
+   "label": "home address",
+   "aliases": [
+    "address",
+    "where I live"
+   ]
+  },
+  {
+   "label": "phone number"
+  },
+  {
+   "label": "timezone",
+   "aliases": [
+    "time zone"
+   ]
+  },
+  {
+   "label": "summarising papers",
+   "aliases": [
+    "paper summary"
+   ]
+  },
+  {
+   "label": "language preference",
+   "aliases": [
+    "spelling",
+    "british english"
+   ]
+  },
+  {
+   "label": "morning routine"
+  },
+  {
+   "label": "sleep schedule",
+   "aliases": [
+    "bedtime"
+   ]
+  },
+  {
+   "label": "reminder"
+  }
+ ],
+ "relations": [
+  {
+   "source": "vegetarian",
+   "relation": "is_a",
+   "target": "dietary preference"
+  },
+  {
+   "source": "luna",
+   "relation": "alternative_to",
+   "target": "pixel"
+  }
+ ],
+ "resources": [
+  {
+   "uri": "place:home",
+   "kind": "other",
+   "label": "home"
+  },
+  {
+   "uri": "place:car",
+   "kind": "other",
+   "label": "the car"
+  }
+ ],
+ "memories": [
+  {
+   "key": "dl-programmer",
+   "kind": "fact",
+   "text": "The user is a programmer by training and now leads a research group.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "occupation",
+    "object": "programmer, research group lead"
+   },
+   "about": [
+    "the_user"
+   ]
+  },
+  {
+   "key": "dl-veg",
+   "kind": "fact",
+   "text": "The user is vegetarian and eats fish only on special occasions.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "diet",
+    "object": "vegetarian"
+   },
+   "about": [
+    "vegetarian",
+    "dietary_preference"
+   ]
+  },
+  {
+   "key": "dl-peanut",
+   "kind": "fact",
+   "text": "The user is allergic to peanuts; check ingredients and restaurant menus.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "allergy",
+    "object": "peanuts"
+   },
+   "about": [
+    "allergy",
+    "the_user"
+   ]
+  },
+  {
+   "key": "dl-alex-fish",
+   "kind": "fact",
+   "text": "Alex eats fish and meat and does not like mushrooms.",
+   "fields": {
+    "subject": "alex",
+    "predicate": "diet",
+    "object": "eats meat and fish, dislikes mushrooms"
+   },
+   "about": [
+    "alex",
+    "dietary_preference"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "dl-concise", "scope": "universal",
+   "kind": "directive",
+   "text": "Reply concisely: lead with the answer, then at most three short supporting points.",
+   "about": [
+    "reply_style"
+   ],
+   "strength": "prefer"
+  },
+  {
+   "key": "dl-teach",
+   "kind": "directive",
+   "text": "When the user asks to learn a topic, explain step by step with an example and define every technical term.",
+   "about": [
+    "reply_style"
+   ],
+   "trap": [
+    "opposite",
+    "overridden"
+   ],
+   "note": "opposite of dl-concise: the user is learning",
+   "links": [
+    {
+     "relation": "overrides",
+     "target": "dl-concise"
+    }
+   ]
+  },
+  {
+   "key": "dl-metric", "scope": "universal",
+   "kind": "directive",
+   "text": "Always give measurements in metric units, and temperatures in Celsius.",
+   "about": [
+    "unit_preference"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dl-24h", "scope": "universal",
+   "kind": "directive",
+   "text": "Write clock times in 24-hour format, with the timezone when it differs from Central European Time.",
+   "about": [
+    "time_format",
+    "timezone"
+   ]
+  },
+  {
+   "key": "dl-tz",
+   "kind": "fact",
+   "text": "The user lives in Central European Time and usually works 8:30 to 17:00.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "timezone",
+    "object": "Central European Time"
+   },
+   "about": [
+    "timezone",
+    "the_user"
+   ]
+  },
+  {
+   "key": "dl-no-early", "scope": "universal",
+   "kind": "directive",
+   "text": "Never schedule meetings before 9:00 or after 17:30.",
+   "about": [
+    "scheduling_preference"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dl-weekend",
+   "kind": "directive",
+   "text": "On weekends do not propose work meetings or deadlines; keep suggestions to personal plans.",
+   "about": [
+    "scheduling_preference"
+   ],
+   "q": [
+    "necessary:day_type = weekend"
+   ],
+   "trap": [
+    "qualifier",
+    "opposite"
+   ]
+  },
+  {
+   "key": "dl-weekday-focus",
+   "kind": "directive",
+   "text": "On weekdays keep Tuesday and Thursday mornings free for focused research work.",
+   "about": [
+    "scheduling_preference"
+   ],
+   "q": [
+    "necessary:day_type = weekday"
+   ],
+   "trap": [
+    "qualifier",
+    "opposite"
+   ],
+   "note": "opposite of dl-weekend by day type"
+  },
+  {
+   "key": "dl-ask-send", "scope": "universal",
+   "kind": "directive",
+   "text": "Ask for confirmation before sending any email or message on the user's behalf; drafts are fine.",
+   "about": [
+    "email_sending"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dl-pixel",
+   "kind": "fact",
+   "text": "Pixel is a dog, fed twice a day at 7:30 and 18:00, and walked before breakfast.",
+   "fields": {
+    "subject": "pixel",
+    "predicate": "feeding",
+    "object": "twice a day"
+   },
+   "about": [
+    "pixel",
+    "pet_feeding"
+   ],
+   "trap": [
+    "twin"
+   ]
+  },
+  {
+   "key": "dl-luna",
+   "kind": "fact",
+   "text": "Luna is a cat, fed three times a day with wet food at 7:00, 13:00 and 19:00.",
+   "fields": {
+    "subject": "luna",
+    "predicate": "feeding",
+    "object": "three times a day"
+   },
+   "about": [
+    "luna",
+    "pet_feeding"
+   ],
+   "trap": [
+    "twin"
+   ]
+  },
+  {
+   "key": "dl-pixel-vet",
+   "kind": "lesson",
+   "text": "Pixel got sick after eating grapes from the fruit bowl; keep grapes and chocolate out of the dog's reach.",
+   "fields": {
+    "situation": "the dog eats human food",
+    "insight": "grapes and chocolate are toxic to dogs",
+    "do_instead": "store them out of reach"
+   },
+   "about": [
+    "pixel"
+   ],
+   "at": [
+    "place:home"
+   ]
+  },
+  {
+   "key": "dl-commute",
+   "kind": "fact",
+   "text": "The commute is 25 minutes by train from Rotterdam Centraal; the 8:12 train is the usual one.",
+   "fields": {
+    "subject": "commute",
+    "predicate": "route",
+    "object": "train from Rotterdam Centraal, 8:12"
+   },
+   "about": [
+    "commute"
+   ]
+  },
+  {
+   "key": "dl-coffee", "scope": "universal",
+   "kind": "directive",
+   "text": "No coffee after 14:00; suggest tea or water when planning afternoon breaks.",
+   "about": [
+    "caffeine"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "dl-run",
+   "kind": "procedure",
+   "text": "Morning run routine: stretch for five minutes, run the 5 km river loop, drink water, and log the time in the fitness app.",
+   "fields": {
+    "trigger": "go for a morning run",
+    "steps": [
+     "stretch for five minutes",
+     "run the 5 km river loop",
+     "drink water",
+     "log the time in the fitness app"
+    ]
+   },
+   "about": [
+    "exercise_routine"
+   ]
+  },
+  {
+   "key": "dl-bday",
+   "kind": "fact",
+   "text": "The user's birthday is 12 March and Alex's birthday is 3 August.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "birthdays",
+    "object": "user 12 March, Alex 3 August"
+   },
+   "about": [
+    "birthday",
+    "alex"
+   ]
+  },
+  {
+   "key": "dl-addr-old",
+   "kind": "fact",
+   "text": "The user lives at Havenstraat 12 in Rotterdam.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "home address",
+    "object": "Havenstraat 12, Rotterdam"
+   },
+   "about": [
+    "home_address"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "dl-addr",
+   "kind": "fact",
+   "text": "Since the move in September the user lives at Kade 7 in Rotterdam.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "home address",
+    "object": "Kade 7, Rotterdam"
+   },
+   "about": [
+    "home_address"
+   ],
+   "supersedes": "dl-addr-old"
+  },
+  {
+   "key": "dl-phone-wrong",
+   "kind": "fact",
+   "text": "The user's phone number ends in 4471.",
+   "fields": {
+    "subject": "the_user",
+    "predicate": "phone number",
+    "object": "ends in 4471"
+   },
+   "about": [
+    "phone_number"
+   ],
+   "retracted": true,
+   "trap": [
+    "retracted"
+   ]
+  },
+  {
+   "key": "dl-brit", "scope": "universal",
+   "kind": "directive",
+   "text": "Use British spelling in all writing for the user.",
+   "about": [
+    "language_preference"
+   ],
+   "strength": "prefer"
+  },
+  {
+   "key": "dl-limits",
+   "kind": "directive",
+   "text": "When summarising a paper, always include its stated limitations and the sample size.",
+   "about": [
+    "summarising_papers"
+   ]
+  },
+  {
+   "key": "dl-morning",
+   "kind": "procedure",
+   "text": "Weekday morning routine: feed Pixel, run, shower, breakfast, then read the news summary and the calendar before 8:00.",
+   "fields": {
+    "trigger": "plan the weekday morning",
+    "steps": [
+     "feed and walk Pixel",
+     "shower and breakfast",
+     "read the news summary",
+     "check the day's calendar before 8:00"
+    ]
+   },
+   "about": [
+    "morning_routine"
+   ],
+   "q": [
+    "necessary:day_type = weekday"
+   ],
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "dl-sleep", "scope": "universal",
+   "kind": "directive",
+   "text": "Aim for bed by 23:00 on weeknights and suggest no screens in the last hour.",
+   "about": [
+    "sleep_schedule"
+   ],
+   "strength": "prefer"
+  },
+  {
+   "key": "dl-remind-dentist",
+   "kind": "task",
+   "text": "Book a dentist appointment for the six-month check-up.",
+   "fields": {
+    "due": "2026-11-20T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "reminder"
+   ],
+   "note": "due soon"
+  },
+  {
+   "key": "dl-remind-tax", "scope": "universal",
+   "kind": "task",
+   "text": "Send the annual tax declaration documents to the accountant.",
+   "fields": {
+    "due": "2026-11-08T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "reminder"
+   ],
+   "note": "overdue"
+  },
+  {
+   "key": "dl-remind-gift",
+   "kind": "task",
+   "text": "Buy a birthday present for Alex before the third of August.",
+   "fields": {
+    "due": "2027-07-25T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "reminder",
+    "alex",
+    "birthday"
+   ],
+   "note": "far in the future"
+  },
+  {
+   "key": "dl-train-lesson",
+   "kind": "lesson",
+   "text": "A seven-minute train connection in Utrecht was missed twice; allow at least fifteen minutes between trains.",
+   "fields": {
+    "situation": "planning a journey with a train change",
+    "insight": "short connections fail when trains run late",
+    "do_instead": "allow fifteen minutes between trains"
+   },
+   "about": [
+    "commute"
+   ]
+  },
+  {
+   "key": "dl-gym",
+   "kind": "decision",
+   "text": "Cancelled the gym membership and decided to run outdoors and use the home rower instead.",
+   "fields": {
+    "chosen": "run outdoors and use the home rower",
+    "alternatives": [
+     "keep the gym membership"
+    ],
+    "rationale": "the gym was used twice a month",
+    "decided_at": "2026-06-30T09:00:00Z"
+   },
+   "about": [
+    "exercise_routine"
+   ]
+  },
+  {
+   "key": "dl-antibiotics",
+   "kind": "directive",
+   "text": "Pixel is on antibiotics: give one tablet with breakfast until 8 November.",
+   "about": [
+    "pixel",
+    "medication"
+   ],
+   "fields": {
+    "expires_at": "2026-11-08T00:00:00Z"
+   },
+   "trap": [
+    "expired"
+   ]
+  },
+  {
+   "key": "dl-holiday", "scope": "universal",
+   "kind": "directive",
+   "text": "The user is on holiday until 20 November; do not schedule meetings before then.",
+   "about": [
+    "scheduling_preference"
+   ],
+   "fields": {
+    "expires_at": "2026-11-20T00:00:00Z"
+   },
+   "strength": "must",
+   "note": "still active at the benchmark's now"
+  },
+  {
+   "key": "dl-calls-sun",
+   "kind": "fact",
+   "text": "Alex likes a phone call on Sunday evenings.",
+   "fields": {
+    "subject": "alex",
+    "predicate": "calls",
+    "object": "Sunday evening calls welcome"
+   },
+   "about": [
+    "alex"
+   ],
+   "trap": [
+    "contradicted"
+   ]
+  },
+  {
+   "key": "dl-calls-no",
+   "kind": "fact",
+   "text": "Alex asked for no phone calls on Sunday evenings because of the band rehearsal.",
+   "fields": {
+    "subject": "alex",
+    "predicate": "calls",
+    "object": "no Sunday evening calls"
+   },
+   "about": [
+    "alex"
+   ],
+   "links": [
+    {
+     "relation": "contradicts",
+     "target": "dl-calls-sun"
+    }
+   ],
+   "trap": [
+    "contradicted"
+   ]
+  }
+ ]
+}

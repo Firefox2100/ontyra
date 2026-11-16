@@ -1,0 +1,338 @@
+{
+ "concepts": [
+  {
+   "label": "Polymer lab",
+   "definition": "The chemistry group's polymer synthesis lab."
+  },
+  {
+   "label": "personal protective equipment",
+   "aliases": [
+    "ppe",
+    "lab safety gear"
+   ]
+  },
+  {
+   "label": "solvent waste",
+   "aliases": [
+    "chemical waste"
+   ]
+  },
+  {
+   "label": "titration"
+  },
+  {
+   "label": "molarity",
+   "aliases": [
+    "molar concentration"
+   ]
+  },
+  {
+   "label": "molality"
+  },
+  {
+   "label": "percent yield",
+   "aliases": [
+    "reaction yield"
+   ]
+  },
+  {
+   "label": "significant figures",
+   "aliases": [
+    "sig figs"
+   ]
+  },
+  {
+   "label": "polymerisation",
+   "aliases": [
+    "polymerization"
+   ]
+  },
+  {
+   "label": "NMR",
+   "aliases": [
+    "nuclear magnetic resonance"
+   ]
+  },
+  {
+   "label": "pH meter"
+  },
+  {
+   "label": "peroxide former",
+   "aliases": [
+    "ether storage"
+   ]
+  },
+  {
+   "label": "lab notebook",
+   "aliases": [
+    "electronic lab notebook",
+    "eln"
+   ]
+  },
+  {
+   "label": "PubChem"
+  }
+ ],
+ "relations": [
+  {
+   "source": "molarity",
+   "relation": "alternative_to",
+   "target": "molality"
+  }
+ ],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/polymer-lab",
+   "kind": "project",
+   "label": "polymer lab",
+   "instance_of": [
+    "polymer_lab"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "ch-ppe",
+   "kind": "directive",
+   "text": "Wear safety goggles and nitrile gloves in the lab, and do all solvent work inside the fume hood.",
+   "about": [
+    "personal_protective_equipment"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ch-waste",
+   "kind": "procedure",
+   "text": "Dispose of solvent waste: halogenated and non-halogenated go in separate bins, labelled with date and contents, and never down the sink.",
+   "fields": {
+    "trigger": "dispose of solvent waste",
+    "steps": [
+     "separate halogenated from non-halogenated solvents",
+     "label the bin with date and contents",
+     "never pour solvents down the sink",
+     "request pickup when the bin is three quarters full"
+    ]
+   },
+   "about": [
+    "solvent_waste"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  {
+   "key": "ch-titration",
+   "kind": "procedure",
+   "text": "Run an acid-base titration: rinse the burette, note the starting volume, add titrant dropwise near the endpoint, and repeat until two titres agree within 0.10 mL.",
+   "fields": {
+    "trigger": "perform a titration",
+    "steps": [
+     "rinse the burette with the titrant",
+     "record the starting volume",
+     "add titrant dropwise near the endpoint",
+     "repeat until two titres agree within 0.10 mL"
+    ]
+   },
+   "about": [
+    "titration"
+   ]
+  },
+  {
+   "key": "ch-molarity",
+   "kind": "fact",
+   "text": "Molarity is moles of solute per litre of solution and changes with temperature.",
+   "fields": {
+    "subject": "molarity",
+    "predicate": "definition",
+    "object": "mol per litre of solution"
+   },
+   "about": [
+    "molarity"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "ch-molality",
+   "kind": "fact",
+   "text": "Molality is moles of solute per kilogram of solvent and does not change with temperature.",
+   "fields": {
+    "subject": "molality",
+    "predicate": "definition",
+    "object": "mol per kg of solvent"
+   },
+   "about": [
+    "molality"
+   ],
+   "trap": [
+    "opposite"
+   ],
+   "note": "same words as ch-molarity, different denominator"
+  },
+  {
+   "key": "ch-yield",
+   "kind": "procedure",
+   "text": "Percent yield is the actual yield divided by the theoretical yield times 100, with the theoretical yield taken from the limiting reagent.",
+   "fields": {
+    "trigger": "calculate percent yield",
+    "steps": [
+     "find the limiting reagent",
+     "compute the theoretical yield from it",
+     "divide the actual yield by the theoretical yield and multiply by 100"
+    ]
+   },
+   "about": [
+    "percent_yield"
+   ]
+  },
+  {
+   "key": "ch-sigfig",
+   "kind": "directive",
+   "text": "Round a final result to the significant figures of the least precise measurement that went into it.",
+   "about": [
+    "significant_figures"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "ch-inhibitor",
+   "kind": "lesson",
+   "text": "The polymerisation gelled because the inhibitor had not been removed from the monomer; pass it through an alumina column first.",
+   "fields": {
+    "situation": "a radical polymerisation gels or never starts",
+    "insight": "the stabiliser was still in the monomer",
+    "do_instead": "remove the inhibitor on an alumina column"
+   },
+   "about": [
+    "polymerisation"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  {
+   "key": "ch-nmr",
+   "kind": "fact",
+   "text": "In proton NMR the residual solvent peak sits at 7.26 ppm for CDCl3 and 2.50 ppm for DMSO-d6.",
+   "fields": {
+    "subject": "nmr",
+    "predicate": "solvent reference peaks",
+    "object": "CDCl3 7.26 ppm, DMSO-d6 2.50 ppm"
+   },
+   "about": [
+    "nmr"
+   ]
+  },
+  {
+   "key": "ch-ph",
+   "kind": "procedure",
+   "text": "Calibrate the pH meter at the start of each day with buffers 4.01, 7.00 and 10.01 and rinse the probe between them.",
+   "fields": {
+    "trigger": "use the pH meter",
+    "steps": [
+     "rinse the probe",
+     "calibrate with buffers 4.01, 7.00 and 10.01",
+     "rinse between buffers",
+     "store the probe in storage solution"
+    ]
+   },
+   "about": [
+    "ph_meter"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  {
+   "key": "ch-ether",
+   "kind": "directive",
+   "text": "Store peroxide-forming ethers under nitrogen, write the opening date on the bottle, and discard after six months.",
+   "about": [
+    "peroxide_former"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ch-spill",
+   "kind": "event",
+   "text": "On 2026-10-14 a mislabelled waste bottle caused a minor spill; all waste bins were relabelled.",
+   "fields": {
+    "occurred_at": "2026-10-14T11:00:00Z"
+   },
+   "about": [
+    "solvent_waste"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  {
+   "key": "ch-pubchem",
+   "kind": "fact",
+   "text": "Look up compound properties in PubChem and reference spectra in the SDBS database.",
+   "fields": {
+    "subject": "pubchem",
+    "predicate": "use",
+    "object": "compound properties; SDBS for spectra"
+   },
+   "about": [
+    "pubchem"
+   ]
+  },
+  {
+   "key": "ch-eln",
+   "kind": "directive",
+   "text": "Record every experiment in the electronic lab notebook on the same day, with batch numbers.",
+   "about": [
+    "lab_notebook"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  {
+   "key": "ch-ethyl",
+   "kind": "decision",
+   "text": "Chose ethyl acetate over dichloromethane for extractions because it is less toxic and easier to dispose of.",
+   "fields": {
+    "chosen": "ethyl acetate",
+    "alternatives": [
+     "dichloromethane"
+    ],
+    "rationale": "less toxic and easier waste handling",
+    "decided_at": "2026-01-20T09:00:00Z"
+   },
+   "about": [
+    "solvent_waste"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  {
+   "key": "ch-gloves",
+   "kind": "task",
+   "text": "Order a new batch of nitrile gloves in size M and L.",
+   "fields": {
+    "due": "2026-11-10T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "personal_protective_equipment"
+   ],
+   "at": [
+    "file:///home/mira/research/polymer-lab"
+   ],
+   "note": "overdue"
+  }
+ ]
+}

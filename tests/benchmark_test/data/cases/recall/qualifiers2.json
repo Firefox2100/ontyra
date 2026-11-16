@@ -1,0 +1,291 @@
+[
+ {
+  "id": "ql-q4-freeze",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "fourth fiscal quarter freeze applies",
+  "mode": "recall",
+  "query": "can I submit a new capital expenditure request",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ],
+   "signals": [
+    {
+     "concept": "fiscal_quarter",
+     "value": "q4"
+    }
+   ]
+  },
+  "include": [
+   "fi-q4-freeze"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "ql-q2-nofreeze",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "the freeze does not apply in the second quarter",
+  "mode": "recall",
+  "query": "can I submit a new capital expenditure request",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ],
+   "signals": [
+    {
+     "concept": "fiscal_quarter",
+     "value": "q2"
+    }
+   ]
+  },
+  "exclude": [
+   "fi-q4-freeze"
+  ],
+  "silent": true,
+  "split": "tune"
+ },
+ {
+  "id": "ql-usd",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "dollar invoices state the rate",
+  "mode": "recall",
+  "query": "the customer pays in dollars, what must the invoice show",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ],
+   "signals": [
+    {
+     "concept": "currency",
+     "value": "usd"
+    }
+   ]
+  },
+  "include": [
+   "fi-usd-inv"
+  ],
+  "allow": [
+   "fi-fx"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ql-eur",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "with euro as the working currency the dollar rule does not apply",
+  "mode": "recall",
+  "query": "the customer pays in dollars, what must the invoice show",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ],
+   "signals": [
+    {
+     "concept": "currency",
+     "value": "eur"
+    }
+   ]
+  },
+  "exclude": [
+   "fi-usd-inv"
+  ],
+  "allow": [
+   "fi-fx"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "ql-manager",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "manager appraisal duty",
+  "mode": "recall",
+  "query": "what do I still owe my team by mid December",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ],
+   "signals": [
+    {
+     "concept": "people_manager",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ad-appraisal"
+  ],
+  "allow": [
+   "ad-appraisal-task"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ql-not-manager",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "not a manager: the duty does not apply",
+  "mode": "recall",
+  "query": "what do I still owe my team by mid December",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ],
+   "signals": [
+    {
+     "concept": "people_manager",
+     "value": false
+    }
+   ]
+  },
+  "exclude": [
+   "ad-appraisal"
+  ],
+  "allow": [
+   "ad-appraisal-task"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ql-meal-abroad",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "opposite"
+  ],
+  "why": "abroad rate",
+  "mode": "recall",
+  "query": "what is the meal allowance on a trip abroad",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ],
+   "signals": [
+    {
+     "concept": "travelling",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "fi-meal-abroad"
+  ],
+  "exclude": [
+   "fi-meal-dom"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "ql-meal-domestic",
+  "world": "commons",
+  "tags": [
+   "qualifier",
+   "opposite"
+  ],
+  "why": "domestic rate",
+  "mode": "recall",
+  "query": "what is the meal allowance on a domestic trip",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "fi-meal-dom"
+  ],
+  "exclude": [
+   "fi-meal-abroad"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "ql-pack-travel",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "packing procedure when travelling",
+  "mode": "recall",
+  "query": "what do I pack for the trip",
+  "context": {
+   "signals": [
+    {
+     "concept": "travelling",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "dh-pack"
+  ],
+  "allow": [
+   "dh-passport",
+   "dh-meds"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ql-groceries-weekday",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "weekday rule",
+  "mode": "recall",
+  "query": "when do I order groceries",
+  "context": {
+   "signals": [
+    {
+     "concept": "day_type",
+     "value": "weekday"
+    }
+   ]
+  },
+  "include": [
+   "dh-grocery"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ql-groceries-weekend",
+  "world": "commons",
+  "tags": [
+   "qualifier"
+  ],
+  "why": "the rule is for weekdays",
+  "mode": "recall",
+  "query": "when do I order groceries",
+  "context": {
+   "signals": [
+    {
+     "concept": "day_type",
+     "value": "weekend"
+    }
+   ]
+  },
+  "exclude": [
+   "dh-grocery"
+  ],
+  "silent": true,
+  "split": "tune"
+ }
+]

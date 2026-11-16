@@ -60,10 +60,20 @@ class HashEmbedder:
 class LangChainEmbedder:
     """Wraps any LangChain `Embeddings` object (OpenAI-compatible APIs, Ollama, local HF…)."""
 
-    def __init__(self, embeddings: Any, *, name: str, dimension: int) -> None:
+    def __init__(
+        self,
+        embeddings: Any,
+        *,
+        name: str,
+        dimension: int,
+        query_prefix: str = "",
+        document_prefix: str = "",
+    ) -> None:
         self._emb = embeddings
         self._name = name
         self._dim = dimension
+        self._query_prefix = query_prefix
+        self._document_prefix = document_prefix
 
     @property
     def name(self) -> str:
@@ -74,11 +84,13 @@ class LangChainEmbedder:
         return self._dim
 
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
-        vectors: list[list[float]] = await self._emb.aembed_documents(list(texts))
+        vectors: list[list[float]] = await self._emb.aembed_documents(
+            [self._document_prefix + t for t in texts]
+        )
         return self._checked(vectors)
 
     async def embed_query(self, text: str) -> list[float]:
-        return self._checked([await self._emb.aembed_query(text)])[0]
+        return self._checked([await self._emb.aembed_query(self._query_prefix + text)])[0]
 
     def _checked(self, vectors: list[list[float]]) -> list[list[float]]:
         for v in vectors:

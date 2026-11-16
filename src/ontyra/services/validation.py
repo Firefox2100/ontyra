@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from ontyra.models import Record, RecordId, new_id, registry
 from ontyra.models.anchors import Anchor
 from ontyra.models.core import Episode, Memory, RevState
-from ontyra.models.kinds import RevisionBase
+from ontyra.models.kinds import DirectiveRev, RevisionBase
 from ontyra.models.proposals import (
     AddMemory,
     Annotate,
@@ -225,6 +225,21 @@ class _Ctx:
 
     # ---- ops -----------------------------------------------------------------
 
+    def _unscoped(self, i: int, model: Any) -> None:
+        """A directive tied to nothing is neither universal nor contextual: say so when written."""
+        if (
+            getattr(model, "scope", "contextual") == "contextual"
+            and isinstance(model, DirectiveRev)
+            and not (model.anchors or model.qualifiers or model.about)
+        ):
+            self.warn(
+                i,
+                "unscoped_directive",
+                "this directive has no anchors, qualifiers or `about` and is not "
+                "`scope: universal`: it will not appear in briefings or checks. Say where or "
+                "when it applies, or set `scope: universal` if it holds everywhere",
+            )
+
     async def add(self, i: int, op: AddMemory, mem: RecordId, rev: RecordId) -> None:
         reserved = RESERVED_FIELDS & op.fields.keys()
         if reserved:
@@ -246,6 +261,7 @@ class _Ctx:
             src = await self._resolve(i, token)
             if src is not None:
                 sources.append(src[1])
+        self._unscoped(i, model)
         await self._similar(i, op.kind, model)
         self.v.prepared.append(
             PreparedAdd(

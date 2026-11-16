@@ -1,0 +1,75 @@
+[
+ {
+  "id": "scripts-override",
+  "world": "commons",
+  "tags": [
+   "precedence",
+   "anchor"
+  ],
+  "why": "the narrower directive overrides the general one inside scripts/",
+  "mode": "recall",
+  "query": "do I need type hints for this function",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/scripts/cleanup.py"
+   ]
+  },
+  "include": [
+   "d-scripts-notypes"
+  ],
+  "exclude": [
+   "d-types"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "src-no-override",
+  "world": "commons",
+  "tags": [
+   "precedence",
+   "anchor"
+  ],
+  "why": "outside scripts/ the general directive applies",
+  "mode": "recall",
+  "query": "do I need type hints for this function",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-types"
+  ],
+  "exclude": [
+   "d-scripts-notypes"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "friday-contradiction",
+  "world": "commons",
+  "tags": [
+   "precedence"
+  ],
+  "why": "a contradiction surfaces both sides with a caution",
+  "mode": "recall",
+  "query": "can I deploy tidewatch on Friday",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-no-friday-deploy",
+   "d-friday-ok"
+  ],
+  "exclude": [
+   "d-freeze"
+  ],
+  "min_cautions": 1,
+  "allow": [
+   "p-release"
+  ],
+  "split": "tune"
+ }
+]

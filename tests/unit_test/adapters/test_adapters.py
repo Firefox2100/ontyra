@@ -95,3 +95,70 @@ async def test_langchain_reranker_maps_scores_back_to_input_order() -> None:
     scores = await rr.rerank("q", ["drop me", "keep best", "keep ok"])
     assert scores == [0.0, 0.9, 0.4]
     assert Document  # imported to prove langchain_core is available
+
+
+async def test_langchain_embedder_applies_prefixes_to_queries_and_documents() -> None:
+    seen: list[str] = []
+
+    class Recording:
+        async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
+            seen.extend(texts)
+            return [[0.0] * 4 for _ in texts]
+
+        async def aembed_query(self, text: str) -> list[float]:
+            seen.append(text)
+            return [0.0] * 4
+
+    emb = LangChainEmbedder(
+        Recording(), name="r", dimension=4, query_prefix="Q: ", document_prefix="D: "
+    )
+    await emb.embed_query("hello")
+    await emb.embed_documents(["a", "b"])
+    assert seen == ["Q: hello", "D: a", "D: b"]
+
+
+async def test_http_reranker_posts_to_rerank_and_maps_scores_by_index() -> None:
+    import httpx
+
+    from ontyra.adapters import HttpReranker
+
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["body"] = request.read().decode()
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"index": 1, "relevance_score": 3.5},
+                    {"index": 0, "relevance_score": -2.0},
+                ]
+            },
+        )
+
+    rr = HttpReranker("http://x/v1/", "m", api_key="k", transport=httpx.MockTransport(handler))
+    assert await rr.rerank("q", ["a", "b"]) == [-2.0, 3.5]
+    assert seen["url"] == "http://x/v1/rerank" and '"top_n":2' in str(seen["body"]).replace(" ", "")
+    assert await rr.rerank("q", []) == []
+    assert rr.name == "http:m"
+
+
+def test_a_hosted_reranker_is_not_trainable_and_the_local_one_is() -> None:
+    from ontyra.adapters import CrossEncoderReranker, HttpReranker
+    from ontyra.ports.adapters import TrainableReranker
+
+    assert not isinstance(HttpReranker("http://x", "m"), TrainableReranker)
+    assert isinstance(CrossEncoderReranker(), TrainableReranker)  # lazy: nothing is loaded
+
+
+def test_factory_builds_each_reranker_provider() -> None:
+    from ontyra.adapters import CrossEncoderReranker, HttpReranker
+
+    assert build_reranker(RerankSettings(provider="none")) is None
+    http = build_reranker(RerankSettings(provider="http", url="http://x/v1", model="m"))
+    assert isinstance(http, HttpReranker)
+    local = build_reranker(RerankSettings(provider="cross_encoder"))
+    assert isinstance(local, CrossEncoderReranker)
+    with pytest.raises(ValueError, match="URL"):
+        build_reranker(RerankSettings(provider="http"))

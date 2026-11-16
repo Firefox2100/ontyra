@@ -1,0 +1,265 @@
+[
+ {
+  "id": "bf-finance",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "office"
+  ],
+  "why": "finance wiki, fourth quarter, euro: the finance rules and the overdue task; not other fields' directives",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "signals": [
+    {
+     "concept": "fiscal_quarter",
+     "value": "q4"
+    },
+    {
+     "concept": "currency",
+     "value": "eur"
+    }
+   ]
+  },
+  "include": [
+   "fi-exp-receipt",
+   "fi-four-eyes",
+   "fi-po",
+   "fi-q4-freeze",
+   "fi-fx",
+   "fi-pay-run",
+   "fi-no-hardcode",
+   "fi-round-bank",
+   "fi-petty"
+  ],
+  "allow_prefix": [
+   "fi-",
+   "dl-"
+  ],
+  "exclude": [
+   "fi-usd-inv",
+   "fi-old-portal",
+   "fi-limit-old",
+   "fi-cc-wrong",
+   "fi-vat-old",
+   "dm-secrets",
+   "d-no-force-push",
+   "cr-testset",
+   "bi-control",
+   "st-multi",
+   "ph-bkg"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "bf-hr-manager",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "office"
+  ],
+  "why": "HR wiki as a manager: manager duties and the overdue task",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr"
+   ],
+   "signals": [
+    {
+     "concept": "people_manager",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ad-sick",
+   "ad-incident-facts",
+   "ad-appraisal",
+   "ad-appraisal-task"
+  ],
+  "allow_prefix": [
+   "ad-",
+   "dl-"
+  ],
+  "exclude": [
+   "ad-refund-old",
+   "ad-leave-days-old",
+   "ad-wfh",
+   "dm-secrets",
+   "d-no-force-push",
+   "cr-testset",
+   "fi-exp-receipt"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "bf-polymer-lab",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "research"
+  ],
+  "why": "polymer lab: its safety and recording rules, and the glove order that is overdue",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab"
+   ]
+  },
+  "include": [
+   "ch-ppe",
+   "ch-ether",
+   "ch-eln",
+   "ch-gloves"
+  ],
+  "allow_prefix": [
+   "ch-",
+   "dl-"
+  ],
+  "exclude": [
+   "ph-interlock",
+   "bi-ppe",
+   "bi-control",
+   "cr-testset",
+   "st-multi",
+   "dm-secrets",
+   "d-no-force-push"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "bf-sleep-study",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "research"
+  ],
+  "why": "sleep study: preregistration, power, debriefing",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  "include": [
+   "ps-power",
+   "ps-prereg",
+   "ps-debrief",
+   "ps-exclude",
+   "ps-scales"
+  ],
+  "allow_prefix": [
+   "ps-",
+   "dl-"
+  ],
+  "exclude": [
+   "so-sampling",
+   "so-consent",
+   "so-apa",
+   "li-chicago",
+   "dm-secrets",
+   "d-no-force-push",
+   "ch-ppe"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "bf-home-kitchen",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "daily"
+  ],
+  "why": "in the kitchen on a weekday in autumn: kitchen and home rules; winter garden rules do not apply",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "place:home/kitchen"
+   ],
+   "signals": [
+    {
+     "concept": "day_type",
+     "value": "weekday"
+    },
+    {
+     "concept": "season",
+     "value": "autumn"
+    }
+   ]
+  },
+  "include": [
+   "dh-knife",
+   "dh-allergen",
+   "dh-smoke",
+   "dh-garage-light"
+  ],
+  "allow_prefix": [
+   "dh-",
+   "dl-",
+   "mh-"
+  ],
+  "exclude": [
+   "dh-garden-winter",
+   "dh-garden-water",
+   "dh-tyre",
+   "dh-ev",
+   "dh-trash-wrong",
+   "dh-tyre-old",
+   "dm-secrets",
+   "d-no-force-push"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "bf-personal-weekday",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "daily"
+  ],
+  "why": "no location, a weekday: the standing personal instructions, the active holiday notice, the overdue tax task",
+  "mode": "briefing",
+  "context": {
+   "signals": [
+    {
+     "concept": "day_type",
+     "value": "weekday"
+    }
+   ]
+  },
+  "include": [
+   "dl-metric",
+   "dl-ask-send",
+   "dl-no-early",
+   "dl-concise",
+   "dl-24h",
+   "dl-brit",
+   "dl-coffee",
+   "dl-weekday-focus",
+   "dl-sleep",
+   "dl-holiday",
+   "dl-remind-tax"
+  ],
+  "allow_prefix": [
+   "dh-",
+   "dl-",
+   "dp-",
+   "mh-"
+  ],
+  "exclude": [
+   "dl-weekend",
+   "dl-antibiotics",
+   "dl-phone-wrong",
+   "dl-addr-old",
+   "dm-secrets",
+   "d-no-force-push",
+   "cr-testset",
+   "bi-control",
+   "st-multi",
+   "fi-exp-receipt"
+  ],
+  "split": "tune"
+ }
+]

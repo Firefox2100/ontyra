@@ -1,0 +1,332 @@
+{
+ "concepts": [
+  {
+   "label": "Survey 2026",
+   "definition": "The 2026 national attitudes survey project."
+  },
+  {
+   "label": "survey sampling",
+   "aliases": [
+    "sampling frame",
+    "response rate"
+   ]
+  },
+  {
+   "label": "informed consent",
+   "aliases": [
+    "consent form"
+   ]
+  },
+  {
+   "label": "anonymisation",
+   "aliases": [
+    "pseudonymisation",
+    "anonymization"
+   ]
+  },
+  {
+   "label": "Likert scale",
+   "aliases": [
+    "rating scale"
+   ]
+  },
+  {
+   "label": "survey weighting",
+   "aliases": [
+    "post-stratification"
+   ]
+  },
+  {
+   "label": "ethics board",
+   "aliases": [
+    "irb",
+    "ethics approval"
+   ]
+  },
+  {
+   "label": "social data sources",
+   "aliases": [
+    "official statistics"
+   ]
+  },
+  {
+   "label": "sampling bias",
+   "aliases": [
+    "selection bias",
+    "bias"
+   ]
+  },
+  {
+   "label": "interview coding",
+   "aliases": [
+    "thematic analysis",
+    "qualitative coding"
+   ]
+  },
+  {
+   "label": "intercoder agreement",
+   "aliases": [
+    "cohen's kappa",
+    "kappa"
+   ]
+  },
+  {
+   "label": "causal language"
+  },
+  {
+   "label": "APA style",
+   "aliases": [
+    "apa 7",
+    "apa citation"
+   ]
+  },
+  {
+   "label": "data retention",
+   "aliases": [
+    "gdpr deletion"
+   ]
+  }
+ ],
+ "relations": [],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/survey-2026",
+   "kind": "project",
+   "label": "survey 2026 project",
+   "instance_of": [
+    "survey_2026"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "so-sampling",
+   "kind": "directive",
+   "text": "Report the sampling frame, sample size, response rate and fieldwork dates for every survey.",
+   "about": [
+    "survey_sampling"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "so-consent",
+   "kind": "directive",
+   "text": "Obtain informed consent before any survey or interview, and store consent forms separately from responses.",
+   "about": [
+    "informed_consent"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "so-anon",
+   "kind": "directive",
+   "text": "Anonymise interview transcripts by replacing names and places with pseudonyms before sharing them.",
+   "about": [
+    "anonymisation"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ]
+  },
+  {
+   "key": "so-likert",
+   "kind": "fact",
+   "text": "Use five-point Likert scales labelled from strongly disagree to strongly agree, and reverse-code negatively worded items.",
+   "fields": {
+    "subject": "likert_scale",
+    "predicate": "format",
+    "object": "5 points, reverse-code negative items"
+   },
+   "about": [
+    "likert_scale"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ]
+  },
+  {
+   "key": "so-weight",
+   "kind": "procedure",
+   "text": "Weight survey data to the population margins for age, gender and region before computing national estimates.",
+   "fields": {
+    "trigger": "compute national estimates from the survey",
+    "steps": [
+     "get the population margins for age, gender and region",
+     "compute post-stratification weights",
+     "apply the weights to every estimate"
+    ]
+   },
+   "about": [
+    "survey_weighting"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ]
+  },
+  {
+   "key": "so-ethics",
+   "kind": "fact",
+   "text": "Ethics board approval takes six weeks, so submit before the pilot starts.",
+   "fields": {
+    "subject": "ethics_board",
+    "predicate": "turnaround",
+    "object": "six weeks"
+   },
+   "about": [
+    "ethics_board"
+   ]
+  },
+  {
+   "key": "so-sources",
+   "kind": "fact",
+   "text": "Social data come from Eurostat, the European Social Survey and the national statistics office.",
+   "fields": {
+    "subject": "social_data_sources",
+    "predicate": "where to find",
+    "object": "Eurostat, ESS, national statistics office"
+   },
+   "about": [
+    "social_data_sources"
+   ]
+  },
+  {
+   "key": "so-panel-bias",
+   "kind": "lesson",
+   "text": "The online panel over-represented young urban respondents; weight the data or state the limitation.",
+   "fields": {
+    "situation": "an online panel does not match the population",
+    "insight": "young urban respondents were over-represented",
+    "do_instead": "weight the data or state the limitation"
+   },
+   "about": [
+    "sampling_bias",
+    "survey_sampling"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "so-coding",
+   "kind": "procedure",
+   "text": "Code interview transcripts: open coding first, group the codes into themes, and have a second coder code 20% of them.",
+   "fields": {
+    "trigger": "code interview transcripts",
+    "steps": [
+     "open coding of every transcript",
+     "group codes into themes",
+     "a second coder codes 20% of the transcripts",
+     "resolve disagreements and finalise the codebook"
+    ]
+   },
+   "about": [
+    "interview_coding"
+   ]
+  },
+  {
+   "key": "so-kappa",
+   "kind": "fact",
+   "text": "Report Cohen's kappa for intercoder agreement and aim for at least 0.7.",
+   "fields": {
+    "subject": "intercoder_agreement",
+    "predicate": "threshold",
+    "object": "kappa >= 0.7"
+   },
+   "about": [
+    "intercoder_agreement"
+   ]
+  },
+  {
+   "key": "so-causal",
+   "kind": "directive",
+   "text": "Avoid causal wording for cross-sectional correlations; write associated with, not causes.",
+   "about": [
+    "causal_language",
+    "correlation"
+   ],
+   "trap": [
+    "twin"
+   ]
+  },
+  {
+   "key": "so-pilot",
+   "kind": "event",
+   "text": "In March the pilot showed that question 14 was misread, so it was reworded.",
+   "fields": {
+    "occurred_at": "2026-03-17T10:00:00Z"
+   },
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ]
+  },
+  {
+   "key": "so-apa",
+   "kind": "directive",
+   "text": "Social-science papers use APA 7 author-year citations.",
+   "about": [
+    "apa_style"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ],
+   "trap": [
+    "twin",
+    "opposite"
+   ]
+  },
+  {
+   "key": "so-retention",
+   "kind": "directive",
+   "text": "Delete raw personal data twelve months after the project ends and keep only anonymised files.",
+   "about": [
+    "data_retention",
+    "anonymisation"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "so-mixed",
+   "kind": "decision",
+   "text": "Chose a mixed-mode survey, web plus phone, to reach older respondents.",
+   "fields": {
+    "chosen": "web plus phone",
+    "alternatives": [
+     "web only"
+    ],
+    "rationale": "older respondents are under-represented online",
+    "decided_at": "2026-01-15T09:00:00Z"
+   },
+   "about": [
+    "survey_sampling"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ]
+  },
+  {
+   "key": "so-amend",
+   "kind": "task",
+   "text": "Submit the ethics amendment for the follow-up wave.",
+   "fields": {
+    "due": "2026-11-02T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "ethics_board"
+   ],
+   "at": [
+    "file:///home/mira/research/survey-2026"
+   ],
+   "note": "overdue"
+  }
+ ]
+}

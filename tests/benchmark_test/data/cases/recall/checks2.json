@@ -1,0 +1,255 @@
+[
+ {
+  "id": "ck-email-client",
+  "world": "commons",
+  "tags": [
+   "check",
+   "office"
+  ],
+  "why": "confirm before sending; formal register",
+  "mode": "check",
+  "query": "send the quarterly figures to the client by email",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "dl-ask-send",
+   "ad-ext-email"
+  ],
+  "verdict": "caution",
+  "allow_prefix": [
+   "dl-",
+   "fi-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ck-delete-recordings",
+  "world": "commons",
+  "tags": [
+   "check",
+   "research"
+  ],
+  "why": "retention rule",
+  "mode": "check",
+  "query": "delete the raw interview recordings",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-retention"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "so-anon",
+   "so-consent"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ck-sink",
+  "world": "commons",
+  "tags": [
+   "check",
+   "research"
+  ],
+  "why": "waste rule",
+  "mode": "check",
+  "query": "pour the leftover acetone down the sink",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-waste"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "ch-ppe",
+   "ch-ether",
+   "ch-ethyl"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "ck-friday-deploy",
+  "world": "commons",
+  "tags": [
+   "check",
+   "dev"
+  ],
+  "why": "contradicted Friday guidance surfaces with a caution",
+  "mode": "check",
+  "query": "deploy tidewatch to production on Friday afternoon",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-no-friday-deploy",
+   "d-friday-ok"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "d-pytest",
+   "d-no-force-push",
+   "p-release"
+  ],
+  "exclude": [
+   "d-freeze"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ck-commit-secrets",
+  "world": "commons",
+  "tags": [
+   "check",
+   "dev"
+  ],
+  "why": "secrets rule",
+  "mode": "check",
+  "query": "commit the .env file with the API keys",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "dm-secrets"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "d-pytest",
+   "d-no-force-push"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ck-train-no-gpu",
+  "world": "commons",
+  "tags": [
+   "check",
+   "dev"
+  ],
+  "why": "no GPU: only smoke tests",
+  "mode": "check",
+  "query": "run the full training on this laptop",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ],
+   "signals": [
+    {
+     "concept": "nvidia_gpu",
+     "value": false
+    }
+   ]
+  },
+  "include": [
+   "dm-smoke-only"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "dm-seed",
+   "dm-poetry",
+   "d-no-force-push"
+  ],
+  "exclude": [
+   "dm-bf16"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ck-dataset-licence",
+  "world": "commons",
+  "tags": [
+   "check",
+   "research"
+  ],
+  "why": "dataset rules",
+  "mode": "check",
+  "query": "publish the dataset without checking the licence",
+  "include": [
+   "da-licence"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "da-zenodo"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "ck-detector-hall",
+  "world": "commons",
+  "tags": [
+   "check",
+   "research"
+  ],
+  "why": "interlock rule",
+  "mode": "check",
+  "query": "enter the detector hall to check a cable",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-interlock"
+  ],
+  "verdict": "caution",
+  "exclude": [
+   "ph-hall-closed"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ck-grapes",
+  "world": "commons",
+  "tags": [
+   "check",
+   "daily"
+  ],
+  "why": "toxic to dogs",
+  "mode": "check",
+  "query": "give Pixel a few grapes",
+  "include": [
+   "dl-pixel-vet"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "dl-pixel"
+  ],
+  "allow_prefix": [
+   "dl-"
+  ],
+  "split": "tune"
+ }
+]

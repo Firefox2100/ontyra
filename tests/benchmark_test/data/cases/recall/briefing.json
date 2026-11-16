@@ -1,0 +1,146 @@
+[
+ {
+  "id": "tidewatch-session-start",
+  "world": "commons",
+  "tags": [
+   "briefing"
+  ],
+  "why": "the complete applicable directive set on Ubuntu, Python 3.12, 32 GB, Docker",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ],
+   "signals": [
+    {
+     "concept": "ubuntu"
+    },
+    {
+     "concept": "python",
+     "value": "3.12"
+    },
+    {
+     "concept": "ram",
+     "value": 32,
+     "unit": "GB"
+    },
+    {
+     "concept": "docker"
+    }
+   ]
+  },
+  "include": [
+   "d-no-force-push",
+   "d-pytest",
+   "d-uv",
+   "d-ruff",
+   "d-types",
+   "d-apt",
+   "d-tomllib",
+   "d-compose"
+  ],
+  "allow": [
+   "f-db",
+   "f-port",
+   "f-python",
+   "f-ci",
+   "dec-uv",
+   "dec-sqlite-cache",
+   "l-pgdata",
+   "l-utc-flaky",
+   "p-release",
+   "p-migrate",
+   "e-pg16",
+   "d-no-friday-deploy",
+   "d-friday-ok"
+  ],
+  "exclude": [
+   "d-vitest",
+   "d-windows-ps",
+   "d-low-ram",
+   "d-freeze",
+   "d-scripts-notypes",
+   "d-conda",
+   "f-db-old",
+   "f-mysql",
+   "l-crlf",
+   "p-lk-release",
+   "f-node",
+   "t-docs",
+   "e-disk",
+   "t-rotate-key"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "lanternkit-session-start",
+  "world": "commons",
+  "tags": [
+   "briefing"
+  ],
+  "why": "the other project's session sees only its own things",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/lanternkit/src/button.ts"
+   ]
+  },
+  "include": [
+   "d-vitest",
+   "d-no-force-push"
+  ],
+  "allow": [
+   "f-node",
+   "p-lk-release",
+   "t-docs",
+   "d-ruff",
+   "d-apt",
+   "d-tomllib",
+   "d-windows-ps"
+  ],
+  "exclude": [
+   "d-pytest",
+   "d-uv",
+   "d-types",
+   "f-db",
+   "f-ci",
+   "p-release",
+   "l-pgdata",
+   "d-compose"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "buildbox-overdue-task",
+  "world": "commons",
+  "tags": [
+   "briefing",
+   "lifecycle"
+  ],
+  "why": "an overdue task on the host comes with the briefing, a future one elsewhere does not",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "ssh://mira@buildbox"
+   ]
+  },
+  "include": [
+   "t-rotate-key"
+  ],
+  "allow": [
+   "d-no-force-push",
+   "d-ruff",
+   "d-apt",
+   "d-tomllib",
+   "d-windows-ps",
+   "e-disk",
+   "l-utc-flaky",
+   "f-ci"
+  ],
+  "exclude": [
+   "t-docs",
+   "d-pytest"
+  ],
+  "split": "tune"
+ }
+]

@@ -11,9 +11,11 @@ from ontyra.services import (
     AnchorService,
     Caller,
     ExplorationService,
+    FeedbackService,
     MemoryService,
     OntologyService,
     RecallService,
+    RerankTrainingService,
 )
 
 
@@ -37,6 +39,12 @@ class Services(Protocol):
 
     @property
     def explore(self) -> ExplorationService: ...
+
+    @property
+    def feedback(self) -> FeedbackService: ...
+
+    @property
+    def reranking(self) -> RerankTrainingService: ...
 
 
 def get_services(request: Request) -> Services:
@@ -80,6 +88,20 @@ def get_exploration_service(services: ServicesDep) -> ExplorationService:
 
 
 ExplorationServiceDep = Annotated[ExplorationService, Depends(get_exploration_service)]
+
+
+def get_feedback_service(services: ServicesDep) -> FeedbackService:
+    return services.feedback
+
+
+FeedbackServiceDep = Annotated[FeedbackService, Depends(get_feedback_service)]
+
+
+def get_reranking_service(services: ServicesDep) -> RerankTrainingService:
+    return services.reranking
+
+
+RerankingServiceDep = Annotated[RerankTrainingService, Depends(get_reranking_service)]
 
 
 async def get_caller(

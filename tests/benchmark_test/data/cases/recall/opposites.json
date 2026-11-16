@@ -1,0 +1,539 @@
+[
+ {
+  "id": "op-deps-pml",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "twin"
+  ],
+  "why": "this repository uses poetry; the other uses uv",
+  "mode": "recall",
+  "query": "add a new dependency to the project",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ]
+  },
+  "include": [
+   "dm-poetry"
+  ],
+  "exclude": [
+   "d-uv"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "op-deps-tw",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "twin"
+  ],
+  "why": "this repository uses uv; the other uses poetry",
+  "mode": "recall",
+  "query": "add a new dependency to the project",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-uv"
+  ],
+  "exclude": [
+   "dm-poetry"
+  ],
+  "allow": [
+   "dec-uv"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "op-gpu-present",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "a GPU is present: mixed precision applies, the smoke-only rule does not",
+  "mode": "recall",
+  "query": "start a training run",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ],
+   "signals": [
+    {
+     "concept": "nvidia_gpu",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "dm-bf16"
+  ],
+  "exclude": [
+   "dm-smoke-only"
+  ],
+  "allow": [
+   "dm-seed",
+   "dm-ckpt",
+   "dm-batch"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-gpu-absent",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "no GPU: only the smoke test runs, mixed precision does not apply",
+  "mode": "recall",
+  "query": "start a training run",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ],
+   "signals": [
+    {
+     "concept": "nvidia_gpu",
+     "value": false
+    }
+   ]
+  },
+  "include": [
+   "dm-smoke-only"
+  ],
+  "exclude": [
+   "dm-bf16"
+  ],
+  "allow": [
+   "dm-seed",
+   "dm-ckpt",
+   "dm-batch"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-molality",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "molality, not molarity",
+  "mode": "recall",
+  "query": "concentration per kilogram of solvent",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-molality"
+  ],
+  "exclude": [
+   "ch-molarity"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "op-molarity",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "molarity, not molality",
+  "mode": "recall",
+  "query": "concentration per litre of solution",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-molarity"
+  ],
+  "exclude": [
+   "ch-molality"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "op-weekend-meeting",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "on a weekend no work meetings are proposed",
+  "mode": "recall",
+  "query": "can we schedule a work meeting",
+  "context": {
+   "signals": [
+    {
+     "concept": "day_type",
+     "value": "weekend"
+    }
+   ]
+  },
+  "include": [
+   "dl-weekend"
+  ],
+  "exclude": [
+   "dl-weekday-focus"
+  ],
+  "allow": [
+   "dl-no-early",
+   "dl-holiday"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-weekday-meeting",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "on a weekday Tuesday and Thursday mornings are for focus",
+  "mode": "recall",
+  "query": "can we schedule a work meeting",
+  "context": {
+   "signals": [
+    {
+     "concept": "day_type",
+     "value": "weekday"
+    }
+   ]
+  },
+  "include": [
+   "dl-weekday-focus",
+   "dl-no-early"
+  ],
+  "exclude": [
+   "dl-weekend"
+  ],
+  "allow": [
+   "dl-holiday"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-wfh",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "remote day rule",
+  "mode": "recall",
+  "query": "when must I be reachable on chat today",
+  "context": {
+   "signals": [
+    {
+     "concept": "working_from_home",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ad-wfh"
+  ],
+  "exclude": [
+   "ad-desk"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "op-office-day",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "office day rule: book a desk",
+  "mode": "recall",
+  "query": "do I need to reserve anything before going in tomorrow",
+  "context": {
+   "signals": [
+    {
+     "concept": "working_from_home",
+     "value": false
+    }
+   ]
+  },
+  "include": [
+   "ad-desk"
+  ],
+  "exclude": [
+   "ad-wfh"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-long-flight",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "allowed over six hours with approval; the economy rule is related",
+  "mode": "recall",
+  "query": "may I book business class for a nine hour flight",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-flight-long"
+  ],
+  "allow": [
+   "ad-flight"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "op-short-flight",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "economy under six hours",
+  "mode": "recall",
+  "query": "which class for a two hour flight",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-flight"
+  ],
+  "allow": [
+   "ad-flight-long"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "op-learn",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "precedence"
+  ],
+  "why": "when learning, the teaching rule overrides the concise rule",
+  "mode": "recall",
+  "query": "explain how gradient descent works, I want to learn it step by step",
+  "include": [
+   "dl-teach"
+  ],
+  "exclude": [
+   "dl-concise"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "op-dinner-both",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "the user is vegetarian with a peanut allergy; Alex eats fish and meat",
+  "mode": "recall",
+  "query": "what should I cook for Alex and me",
+  "include": [
+   "dl-veg",
+   "dl-alex-fish",
+   "dh-allergen"
+  ],
+  "allow": [
+   "dl-peanut",
+   "dh-curry"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-client-email",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "formal register for external clients",
+  "mode": "recall",
+  "query": "write the email to the client about the delay",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-ext-email"
+  ],
+  "exclude": [
+   "ad-int-chat"
+  ],
+  "allow": [
+   "dl-ask-send"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-team-chat",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "informal chat, decisions in the thread",
+  "mode": "recall",
+  "query": "post an update in the team chat",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-int-chat"
+  ],
+  "exclude": [
+   "ad-ext-email"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-fx-invoice",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "transaction-date rate; the loan rule is a special case",
+  "mode": "recall",
+  "query": "convert the euro value of a foreign supplier invoice",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-fx"
+  ],
+  "exclude": [
+   "fi-fx-loan"
+  ],
+  "allow": [
+   "fi-usd-inv"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "op-fx-loan",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "the special case rule",
+  "mode": "recall",
+  "query": "revalue the intercompany loan at month end",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-fx-loan"
+  ],
+  "exclude": [
+   "fi-fx"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-garden-summer",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "summer rule",
+  "mode": "recall",
+  "query": "should I water the garden",
+  "context": {
+   "uris": [
+    "place:home/garden"
+   ],
+   "signals": [
+    {
+     "concept": "season",
+     "value": "summer"
+    }
+   ]
+  },
+  "include": [
+   "dh-garden-water"
+  ],
+  "exclude": [
+   "dh-garden-winter"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-garden-winter",
+  "world": "commons",
+  "tags": [
+   "opposite",
+   "qualifier"
+  ],
+  "why": "winter rule",
+  "mode": "recall",
+  "query": "what should I do in the garden",
+  "context": {
+   "uris": [
+    "place:home/garden"
+   ],
+   "signals": [
+    {
+     "concept": "season",
+     "value": "winter"
+    }
+   ]
+  },
+  "include": [
+   "dh-garden-winter"
+  ],
+  "exclude": [
+   "dh-garden-water"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "op-p-exact",
+  "world": "commons",
+  "tags": [
+   "opposite"
+  ],
+  "why": "exact p values, rounded to three decimals",
+  "mode": "recall",
+  "query": "how should I report the p value",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-pexact"
+  ],
+  "allow": [
+   "st-digits",
+   "ps-apa",
+   "ps-effect"
+  ],
+  "split": "holdout"
+ }
+]

@@ -1,0 +1,739 @@
+{
+ "concepts": [
+  {
+   "label": "expense report",
+   "aliases": [
+    "expense claim",
+    "expenses"
+   ]
+  },
+  {
+   "label": "VAT",
+   "aliases": [
+    "value added tax",
+    "sales tax"
+   ]
+  },
+  {
+   "label": "month-end close",
+   "aliases": [
+    "period close",
+    "closing the books"
+   ]
+  },
+  {
+   "label": "budget variance",
+   "aliases": [
+    "variance analysis"
+   ]
+  },
+  {
+   "label": "invoice",
+   "aliases": [
+    "supplier invoice"
+   ]
+  },
+  {
+   "label": "purchase order",
+   "aliases": [
+    "po"
+   ]
+  },
+  {
+   "label": "depreciation"
+  },
+  {
+   "label": "Currency",
+   "scheme": "qualifier",
+   "value_type": "enum",
+   "values": [
+    "eur",
+    "usd",
+    "gbp"
+   ]
+  },
+  {
+   "label": "Fiscal quarter",
+   "scheme": "qualifier",
+   "value_type": "enum",
+   "values": [
+    "q1",
+    "q2",
+    "q3",
+    "q4"
+   ]
+  },
+  {
+   "label": "approval limit",
+   "aliases": [
+    "signing authority"
+   ]
+  },
+  {
+   "label": "accounts payable",
+   "aliases": [
+    "ap"
+   ]
+  },
+  {
+   "label": "FX rate",
+   "aliases": [
+    "exchange rate"
+   ]
+  },
+  {
+   "label": "gross margin"
+  },
+  {
+   "label": "markup"
+  },
+  {
+   "label": "cost center",
+   "aliases": [
+    "cost centre"
+   ]
+  },
+  {
+   "label": "bank reconciliation"
+  },
+  {
+   "label": "forecast",
+   "aliases": [
+    "rolling forecast"
+   ]
+  },
+  {
+   "label": "audit"
+  },
+  {
+   "label": "petty cash"
+  },
+  {
+   "label": "Finance wiki",
+   "definition": "The finance department's wiki."
+  }
+ ],
+ "relations": [
+  {
+   "source": "gross margin",
+   "relation": "alternative_to",
+   "target": "markup"
+  },
+  {
+   "source": "invoice",
+   "relation": "depends_on",
+   "target": "purchase order"
+  }
+ ],
+ "resources": [
+  {
+   "uri": "https://wiki.northwind.example/finance",
+   "kind": "url",
+   "label": "finance wiki",
+   "instance_of": [
+    "finance_wiki"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "fi-exp-proc",
+   "kind": "procedure",
+   "text": "File an expense report: collect itemised receipts, upload them to the expense portal within 30 days, pick the cost center, and submit for approval.",
+   "fields": {
+    "trigger": "file an expense report",
+    "steps": [
+     "collect itemised receipts",
+     "upload them to the expense portal within 30 days of the purchase",
+     "choose the cost center",
+     "submit for manager approval"
+    ]
+   },
+   "about": [
+    "expense_report"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-exp-receipt",
+   "kind": "directive",
+   "text": "Every expense needs an itemised receipt; a card slip alone is rejected.",
+   "about": [
+    "expense_report"
+   ],
+   "strength": "must",
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-limit-old",
+   "kind": "fact",
+   "text": "Expense claims above 300 EUR need director approval.",
+   "fields": {
+    "subject": "approval_limit",
+    "predicate": "expense approval",
+    "object": "300 EUR director"
+   },
+   "about": [
+    "expense_report",
+    "approval_limit"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "fi-limit",
+   "kind": "fact",
+   "text": "Expense claims above 500 EUR need director approval; below that the line manager approves.",
+   "fields": {
+    "subject": "approval_limit",
+    "predicate": "expense approval",
+    "object": "500 EUR director"
+   },
+   "about": [
+    "expense_report",
+    "approval_limit"
+   ],
+   "supersedes": "fi-limit-old"
+  },
+  {
+   "key": "fi-meal-dom",
+   "kind": "fact",
+   "text": "The meal allowance on domestic business trips is 45 EUR per day.",
+   "fields": {
+    "subject": "expense_report",
+    "predicate": "meal allowance domestic",
+    "object": "45 EUR per day"
+   },
+   "about": [
+    "expense_report"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "fi-meal-abroad",
+   "kind": "fact",
+   "text": "The meal allowance on business trips abroad is 60 EUR per day.",
+   "fields": {
+    "subject": "expense_report",
+    "predicate": "meal allowance abroad",
+    "object": "60 EUR per day"
+   },
+   "about": [
+    "expense_report"
+   ],
+   "q": [
+    "necessary:travelling"
+   ],
+   "trap": [
+    "opposite",
+    "qualifier"
+   ]
+  },
+  {
+   "key": "fi-vat-old",
+   "kind": "fact",
+   "text": "The standard VAT rate is 20%.",
+   "fields": {
+    "subject": "vat",
+    "predicate": "standard rate",
+    "object": "20%"
+   },
+   "about": [
+    "vat"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "fi-vat",
+   "kind": "fact",
+   "text": "Since 1 July 2026 the standard VAT rate is 21% and the reduced rate for books and food is 9%.",
+   "fields": {
+    "subject": "vat",
+    "predicate": "standard rate",
+    "object": "21%, reduced 9%"
+   },
+   "about": [
+    "vat"
+   ],
+   "supersedes": "fi-vat-old"
+  },
+  {
+   "key": "fi-vat-calc",
+   "kind": "procedure",
+   "text": "Work out VAT: gross = net \u00d7 1.21; to get the net from a gross amount divide by 1.21, and the VAT is the difference.",
+   "fields": {
+    "trigger": "calculate VAT on an amount",
+    "steps": [
+     "to add VAT multiply the net amount by 1.21",
+     "to remove VAT divide the gross amount by 1.21",
+     "the VAT amount is gross minus net"
+    ]
+   },
+   "about": [
+    "vat"
+   ]
+  },
+  {
+   "key": "fi-margin",
+   "kind": "procedure",
+   "text": "Gross margin percent is revenue minus cost of goods sold, divided by revenue; never divide by cost.",
+   "fields": {
+    "trigger": "calculate gross margin",
+    "steps": [
+     "subtract cost of goods sold from revenue",
+     "divide the result by revenue",
+     "express it as a percentage"
+    ]
+   },
+   "about": [
+    "gross_margin"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "fi-markup",
+   "kind": "procedure",
+   "text": "Markup percent is selling price minus cost, divided by cost.",
+   "fields": {
+    "trigger": "calculate markup",
+    "steps": [
+     "subtract cost from the selling price",
+     "divide the result by cost",
+     "express it as a percentage"
+    ]
+   },
+   "about": [
+    "markup"
+   ],
+   "trap": [
+    "opposite"
+   ],
+   "note": "same words and a different denominator than fi-margin"
+  },
+  {
+   "key": "fi-variance",
+   "kind": "procedure",
+   "text": "Budget variance is actual minus budget; costs above budget are unfavourable, revenue above budget is favourable.",
+   "fields": {
+    "trigger": "report budget variance",
+    "steps": [
+     "compute actual minus budget",
+     "label cost overruns unfavourable and revenue overruns favourable",
+     "explain every variance above 5%"
+    ]
+   },
+   "about": [
+    "budget_variance"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-depr-old",
+   "kind": "fact",
+   "text": "Laptops are depreciated straight-line over 4 years.",
+   "fields": {
+    "subject": "depreciation",
+    "predicate": "laptop useful life",
+    "object": "4 years"
+   },
+   "about": [
+    "depreciation"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "fi-depr",
+   "kind": "fact",
+   "text": "Laptops are depreciated straight-line over 3 years and furniture over 8 years.",
+   "fields": {
+    "subject": "depreciation",
+    "predicate": "useful life",
+    "object": "laptops 3 years, furniture 8 years"
+   },
+   "about": [
+    "depreciation"
+   ],
+   "supersedes": "fi-depr-old"
+  },
+  {
+   "key": "fi-close",
+   "kind": "procedure",
+   "text": "Month-end close: accrue unbilled costs, reconcile the bank, post depreciation, review variances, and lock the period by working day 5.",
+   "fields": {
+    "trigger": "close the month",
+    "steps": [
+     "accrue unbilled costs",
+     "reconcile the bank accounts",
+     "post depreciation",
+     "review budget variances",
+     "lock the period by working day 5"
+    ]
+   },
+   "about": [
+    "month_end_close"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-late-inv",
+   "kind": "lesson",
+   "text": "Late supplier invoices missed the March close and distorted the margin; chase open invoices on working day 2.",
+   "fields": {
+    "situation": "a supplier invoice arrives after the books are locked",
+    "insight": "the cost lands in the next month and the margin is wrong",
+    "do_instead": "chase missing invoices on working day 2"
+   },
+   "about": [
+    "month_end_close",
+    "invoice"
+   ]
+  },
+  {
+   "key": "fi-four-eyes",
+   "kind": "directive",
+   "text": "Invoices above 10,000 EUR need two approvers.",
+   "about": [
+    "invoice",
+    "approval_limit"
+   ],
+   "strength": "must",
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-po",
+   "kind": "directive",
+   "text": "No work starts without a purchase order, and the supplier invoice must quote the purchase order number.",
+   "about": [
+    "purchase_order",
+    "invoice"
+   ],
+   "strength": "must",
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-fx",
+   "kind": "directive",
+   "text": "Convert foreign currency at the ECB reference rate of the transaction date, not the payment date.",
+   "about": [
+    "fx_rate"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "fi-fx-loan",
+   "kind": "directive",
+   "text": "Revalue intercompany loans at the month-end exchange rate.",
+   "about": [
+    "fx_rate"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "trap": [
+    "opposite"
+   ],
+   "note": "a different rate rule for a special case"
+  },
+  {
+   "key": "fi-q4-freeze",
+   "kind": "directive",
+   "text": "In the fourth fiscal quarter stop accepting new capital expenditure requests after the 15th of the last month.",
+   "q": [
+    "necessary:fiscal_quarter = q4"
+   ],
+   "about": [
+    "month_end_close"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "fi-forecast",
+   "kind": "fact",
+   "text": "The rolling forecast is updated on the third working day of each month in the forecast sheet of the finance wiki.",
+   "fields": {
+    "subject": "forecast",
+    "predicate": "update schedule",
+    "object": "third working day"
+   },
+   "about": [
+    "forecast"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-audit",
+   "kind": "event",
+   "text": "The 2026 external audit closed with no material findings and two minor findings on expense approvals.",
+   "fields": {
+    "occurred_at": "2026-04-18T10:00:00Z"
+   },
+   "about": [
+    "audit",
+    "expense_report"
+   ]
+  },
+  {
+   "key": "fi-budget-old",
+   "kind": "fact",
+   "text": "The 2026 marketing budget is 450,000 EUR.",
+   "fields": {
+    "subject": "finance_wiki",
+    "predicate": "marketing budget 2026",
+    "object": "450,000 EUR"
+   },
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "fi-budget",
+   "kind": "fact",
+   "text": "The 2026 marketing budget is 480,000 EUR, of which 120,000 EUR is reserved for events.",
+   "fields": {
+    "subject": "finance_wiki",
+    "predicate": "marketing budget 2026",
+    "object": "480,000 EUR"
+   },
+   "supersedes": "fi-budget-old"
+  },
+  {
+   "key": "fi-cc",
+   "kind": "fact",
+   "text": "Cost center 4410 is Marketing, 4420 is Sales, and 5100 is Engineering.",
+   "fields": {
+    "subject": "cost_center",
+    "predicate": "numbers",
+    "object": "4410 Marketing, 4420 Sales, 5100 Engineering"
+   },
+   "about": [
+    "cost_center"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-cc-wrong",
+   "kind": "fact",
+   "text": "Cost center 4420 is Marketing.",
+   "fields": {
+    "subject": "cost_center",
+    "predicate": "numbers",
+    "object": "4420 Marketing"
+   },
+   "about": [
+    "cost_center"
+   ],
+   "retracted": true,
+   "trap": [
+    "retracted"
+   ]
+  },
+  {
+   "key": "fi-pay-run",
+   "kind": "directive",
+   "text": "Supplier payments run every Thursday; invoices approved after Wednesday noon wait for the next run.",
+   "about": [
+    "accounts_payable",
+    "invoice"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-usd-inv",
+   "kind": "directive",
+   "text": "An invoice issued in US dollars must state the exchange rate used.",
+   "q": [
+    "necessary:currency = usd"
+   ],
+   "about": [
+    "invoice",
+    "fx_rate"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "fi-round-bank",
+   "kind": "directive",
+   "text": "Bank reconciliation differences under 1 EUR may be written off as rounding; larger ones need investigation.",
+   "about": [
+    "bank_reconciliation"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ]
+  },
+  {
+   "key": "fi-report-dates",
+   "kind": "lesson",
+   "text": "The management report disagreed with the ledger because the report used invoice dates and the ledger used posting dates.",
+   "fields": {
+    "situation": "report totals differ from ledger totals",
+    "insight": "invoice date versus posting date",
+    "do_instead": "state which date a report uses"
+   },
+   "about": [
+    "reporting"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "fi-no-hardcode",
+   "kind": "directive",
+   "text": "In finance workbooks never hard-code numbers inside formulas; reference the assumptions sheet.",
+   "about": [
+    "reporting"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "fi-round-late",
+   "kind": "directive",
+   "text": "Round only for the final presentation; keep full precision in intermediate calculations.",
+   "about": [
+    "statistics",
+    "reporting"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "fi-petty",
+   "kind": "task",
+   "text": "Reconcile the petty cash box.",
+   "fields": {
+    "due": "2026-11-05T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "petty_cash"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "note": "overdue"
+  },
+  {
+   "key": "fi-vat-return",
+   "kind": "task",
+   "text": "Submit the quarterly VAT return by the 25th of next month.",
+   "fields": {
+    "due": "2026-12-25T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "vat"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "note": "not due yet"
+  },
+  {
+   "key": "fi-old-portal",
+   "kind": "directive",
+   "text": "Until 30 September submit expense claims through the old portal.",
+   "about": [
+    "expense_report"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "fields": {
+    "expires_at": "2026-09-30T00:00:00Z"
+   },
+   "strength": "must",
+   "trap": [
+    "expired"
+   ]
+  },
+  {
+   "key": "fi-pay-30",
+   "kind": "directive",
+   "text": "Pay supplier invoices within 30 days of receipt.",
+   "about": [
+    "accounts_payable",
+    "invoice"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "trap": [
+    "contradicted"
+   ]
+  },
+  {
+   "key": "fi-pay-45",
+   "kind": "directive",
+   "text": "Pay supplier invoices on day 45 to improve cash flow unless the supplier has a discount clause.",
+   "about": [
+    "accounts_payable",
+    "invoice"
+   ],
+   "at": [
+    "https://wiki.northwind.example/finance"
+   ],
+   "links": [
+    {
+     "relation": "contradicts",
+     "target": "fi-pay-30"
+    }
+   ],
+   "trap": [
+    "contradicted"
+   ]
+  }
+ ]
+}

@@ -16,6 +16,7 @@ dependencies = [
     "fastapi>=0.163.1",
     "uvicorn>=0.54.0",
     "packaging>=26.3",
+    "httpx>=0.28.1",
 ]
 
 [project.scripts]
@@ -26,6 +27,9 @@ ontyra = "ontyra.cli:main"
 embedded = ["surrealdb[embedded]>=3.0.0,<4"]
 langchain = [
     "langchain-core>=1.8.0",
+]
+rerank-local = [
+    "sentence-transformers>=5",
 ]
 
 [dependency-groups]
@@ -40,6 +44,7 @@ dev = [
     "httpx>=0.28.1",
     "langchain-core>=1.8.0",
     "numpy>=2.5.4",
+    "langchain-openai>=1.8.0",
 ]
 
 [tool.hatch.version]

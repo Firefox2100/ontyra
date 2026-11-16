@@ -1,0 +1,50 @@
+[
+ {
+  "id": "pc-pay-terms",
+  "world": "commons",
+  "tags": [
+   "precedence",
+   "office"
+  ],
+  "why": "a contradiction: both appear, with a caution",
+  "mode": "recall",
+  "query": "when should we pay supplier invoices",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-pay-30",
+   "fi-pay-45"
+  ],
+  "min_cautions": 1,
+  "allow": [
+   "fi-pay-run",
+   "fi-po",
+   "fi-four-eyes"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pc-sunday-call",
+  "world": "commons",
+  "tags": [
+   "precedence",
+   "daily"
+  ],
+  "why": "a contradiction in what Alex wants",
+  "mode": "recall",
+  "query": "can I call Alex on Sunday evening",
+  "include": [
+   "dl-calls-sun",
+   "dl-calls-no"
+  ],
+  "min_cautions": 1,
+  "allow": [
+   "dl-weekend",
+   "dl-bday"
+  ],
+  "split": "holdout"
+ }
+]

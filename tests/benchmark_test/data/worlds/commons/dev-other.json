@@ -1,0 +1,452 @@
+{
+ "concepts": [
+  {
+   "label": "Pipeline-ml",
+   "definition": "Mira's machine-learning training pipeline (Python)."
+  },
+  {
+   "label": "Infra repo",
+   "aliases": [
+    "infrastructure repo"
+   ],
+   "definition": "Terraform and Kubernetes configuration for the company."
+  },
+  {
+   "label": "Storefront",
+   "definition": "The React web shop frontend."
+  },
+  {
+   "label": "NVIDIA GPU",
+   "scheme": "qualifier",
+   "aliases": [
+    "gpu",
+    "cuda device"
+   ]
+  },
+  {
+   "label": "Terraform",
+   "aliases": [
+    "tf"
+   ]
+  },
+  {
+   "label": "Kubernetes",
+   "aliases": [
+    "k8s"
+   ]
+  },
+  {
+   "label": "React"
+  },
+  {
+   "label": "ESLint"
+  },
+  {
+   "label": "TypeScript",
+   "aliases": [
+    "ts"
+   ]
+  },
+  {
+   "label": "pre-commit"
+  },
+  {
+   "label": "secret",
+   "aliases": [
+    "credential",
+    "api key"
+   ]
+  },
+  {
+   "label": "accessibility",
+   "aliases": [
+    "a11y"
+   ]
+  },
+  {
+   "label": "reproducibility",
+   "aliases": [
+    "repeatable results"
+   ]
+  },
+  {
+   "label": "rollback"
+  },
+  {
+   "label": "on-call",
+   "aliases": [
+    "pager duty"
+   ]
+  },
+  {
+   "label": "flaky test"
+  }
+ ],
+ "relations": [],
+ "resources": [
+  {
+   "uri": "file:///home/mira/src/pipeline-ml",
+   "kind": "project",
+   "label": "pipeline-ml repo",
+   "instance_of": [
+    "pipeline_ml"
+   ]
+  },
+  {
+   "uri": "git+https://github.com/northwind/infra",
+   "kind": "repo",
+   "label": "infra repo",
+   "instance_of": [
+    "infra_repo"
+   ]
+  },
+  {
+   "uri": "file:///home/mira/src/storefront",
+   "kind": "project",
+   "label": "storefront repo",
+   "instance_of": [
+    "storefront"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "dm-poetry",
+   "kind": "directive",
+   "text": "Use poetry for dependency management in pipeline-ml; do not use uv in this repository.",
+   "about": [
+    "poetry"
+   ],
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ],
+   "strength": "must",
+   "trap": [
+    "twin",
+    "opposite"
+   ],
+   "note": "twin of d-uv: the other project uses uv"
+  },
+  {
+   "key": "dm-seed",
+   "kind": "directive",
+   "text": "Set the python, numpy and torch random seeds at the start of every training script in pipeline-ml.",
+   "about": [
+    "reproducibility"
+   ],
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dm-bf16",
+   "kind": "directive",
+   "text": "Train with bf16 mixed precision whenever an NVIDIA GPU is present.",
+   "about": [
+    "nvidia_gpu"
+   ],
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ],
+   "q": [
+    "necessary:nvidia_gpu"
+   ],
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "dm-smoke-only",
+   "kind": "directive",
+   "text": "On a machine without a GPU run only the smoke-test config and never launch a full training run.",
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ],
+   "q": [
+    "exclusion:nvidia_gpu"
+   ],
+   "trap": [
+    "qualifier",
+    "opposite"
+   ],
+   "note": "opposite of dm-bf16 by hardware"
+  },
+  {
+   "key": "dm-ckpt",
+   "kind": "fact",
+   "text": "Pipeline-ml checkpoints are written to /data/checkpoints and deleted after 14 days.",
+   "fields": {
+    "subject": "pipeline_ml",
+    "predicate": "checkpoint location",
+    "object": "/data/checkpoints, 14 days"
+   },
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ]
+  },
+  {
+   "key": "dm-batch",
+   "kind": "lesson",
+   "text": "Batch size 512 ran out of memory on the 24 GB card; batch size 256 with gradient accumulation fit.",
+   "fields": {
+    "situation": "a training run crashes with CUDA out of memory",
+    "insight": "batch 512 does not fit in 24 GB",
+    "do_instead": "use batch 256 with gradient accumulation"
+   },
+   "about": [
+    "nvidia_gpu"
+   ],
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ]
+  },
+  {
+   "key": "dm-py-old",
+   "kind": "fact",
+   "text": "Pipeline-ml runs on Python 3.10.",
+   "fields": {
+    "subject": "pipeline_ml",
+    "predicate": "python version",
+    "object": "3.10"
+   },
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "dm-py-new",
+   "kind": "fact",
+   "text": "Pipeline-ml runs on Python 3.11 since the CUDA image upgrade.",
+   "fields": {
+    "subject": "pipeline_ml",
+    "predicate": "python version",
+    "object": "3.11"
+   },
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ],
+   "supersedes": "dm-py-old"
+  },
+  {
+   "key": "dm-docstring",
+   "kind": "directive",
+   "text": "Write docstrings in Google style in pipeline-ml.",
+   "strength": "prefer",
+   "at": [
+    "file:///home/mira/src/pipeline-ml"
+   ]
+  },
+  {
+   "key": "dm-tf-plan",
+   "kind": "directive",
+   "text": "Run terraform plan and read the whole diff before any terraform apply.",
+   "about": [
+    "terraform"
+   ],
+   "at": [
+    "git+https://github.com/northwind/infra"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dm-tf-state",
+   "kind": "fact",
+   "text": "Terraform state for the infra repo lives in the S3 bucket northwind-tfstate with locking in DynamoDB.",
+   "fields": {
+    "subject": "infra_repo",
+    "predicate": "terraform state",
+    "object": "S3 bucket northwind-tfstate"
+   },
+   "about": [
+    "terraform"
+   ],
+   "at": [
+    "git+https://github.com/northwind/infra"
+   ]
+  },
+  {
+   "key": "dm-staging-first",
+   "kind": "directive",
+   "text": "Deploy to the staging namespace first; production deploys need an approved change ticket.",
+   "about": [
+    "kubernetes"
+   ],
+   "at": [
+    "git+https://github.com/northwind/infra"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dm-probe",
+   "kind": "lesson",
+   "text": "A rolling update stalled because the readiness probe path no longer matched the renamed health endpoint.",
+   "fields": {
+    "situation": "a deployment hangs during a rolling update",
+    "insight": "the readiness probe path changed with the health endpoint",
+    "do_instead": "check probes whenever an endpoint is renamed"
+   },
+   "about": [
+    "kubernetes"
+   ],
+   "at": [
+    "git+https://github.com/northwind/infra"
+   ]
+  },
+  {
+   "key": "dm-secrets",
+   "kind": "directive",
+   "text": "Never commit secrets or .env files; fetch credentials with the vault CLI.",
+   "about": [
+    "secret"
+   ],
+   "strength": "must",
+   "polarity": "avoid"
+  },
+  {
+   "key": "dm-hooks",
+   "kind": "directive",
+   "text": "After cloning any repository run pre-commit install.",
+   "about": [
+    "pre_commit"
+   ]
+  },
+  {
+   "key": "dm-hooks-fn",
+   "kind": "directive",
+   "text": "Use function components and hooks in storefront; no class components.",
+   "about": [
+    "react"
+   ],
+   "at": [
+    "file:///home/mira/src/storefront"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dm-eslint",
+   "kind": "directive",
+   "text": "Fix every ESLint warning in storefront before opening a pull request.",
+   "about": [
+    "eslint"
+   ],
+   "at": [
+    "file:///home/mira/src/storefront"
+   ]
+  },
+  {
+   "key": "dm-a11y",
+   "kind": "directive",
+   "text": "Every interactive element in storefront needs an accessible name: an aria-label or visible text.",
+   "about": [
+    "accessibility"
+   ],
+   "at": [
+    "file:///home/mira/src/storefront"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "dm-ts-strict",
+   "kind": "decision",
+   "text": "Chose TypeScript strict mode for storefront because most production bugs were undefined access.",
+   "fields": {
+    "chosen": "strict mode",
+    "alternatives": [
+     "loose mode"
+    ],
+    "rationale": "most production bugs were undefined access",
+    "decided_at": "2026-05-20T09:00:00Z"
+   },
+   "about": [
+    "typescript"
+   ],
+   "at": [
+    "file:///home/mira/src/storefront"
+   ]
+  },
+  {
+   "key": "dm-bundle",
+   "kind": "event",
+   "text": "On 2026-10-02 the storefront bundle grew to 4 MB after a whole icon library was imported; per-icon imports fixed it.",
+   "fields": {
+    "occurred_at": "2026-10-02T14:00:00Z"
+   },
+   "at": [
+    "file:///home/mira/src/storefront"
+   ]
+  },
+  {
+   "key": "dm-flaky",
+   "kind": "procedure",
+   "text": "Handle a flaky test: quarantine it with the flaky marker, open a ticket, and fix it within a week.",
+   "fields": {
+    "trigger": "a test fails intermittently",
+    "steps": [
+     "mark the test as flaky so it is quarantined",
+     "open a ticket with the failing log",
+     "fix or delete it within a week"
+    ]
+   },
+   "about": [
+    "flaky_test"
+   ]
+  },
+  {
+   "key": "dm-review",
+   "kind": "procedure",
+   "text": "Review a pull request: read the description, run it locally, check tests and migrations, comment, then approve.",
+   "fields": {
+    "trigger": "asked to review a pull request",
+    "steps": [
+     "read the description and linked ticket",
+     "run the branch locally",
+     "check that tests and migrations are included",
+     "leave comments, then approve or request changes"
+    ]
+   }
+  },
+  {
+   "key": "dm-oncall",
+   "kind": "fact",
+   "text": "The on-call rotation hands over on Mondays at 10:00; the pager runbook is in the ops wiki.",
+   "fields": {
+    "subject": "on_call",
+    "predicate": "handover",
+    "object": "Monday 10:00"
+   },
+   "about": [
+    "on_call"
+   ]
+  },
+  {
+   "key": "dm-rollback",
+   "kind": "lesson",
+   "text": "During the August outage the rollback script was untested and failed; rehearse rollbacks every quarter.",
+   "fields": {
+    "situation": "an outage needs a rollback",
+    "insight": "the rollback script had never been tested",
+    "do_instead": "rehearse rollbacks quarterly"
+   },
+   "about": [
+    "rollback"
+   ]
+  },
+  {
+   "key": "dm-node22",
+   "kind": "task",
+   "text": "Upgrade storefront CI to Node 22 before the LTS change.",
+   "fields": {
+    "due": "2026-12-15T00:00:00Z",
+    "state": "open"
+   },
+   "at": [
+    "file:///home/mira/src/storefront"
+   ]
+  }
+ ]
+}

@@ -1,14 +1,20 @@
 """External model adapters implementing `ontyra.ports.adapters`. The only place that imports
 LangChain (lazily, so it stays an optional extra)."""
 
+from ontyra.adapters.decider import LangChainDecider, SystemOneDecider
 from ontyra.adapters.embeddings import HashEmbedder, LangChainEmbedder
-from ontyra.adapters.factory import build_embedder, build_reranker
-from ontyra.adapters.rerank import LangChainReranker
+from ontyra.adapters.factory import build_decider, build_embedder, build_reranker
+from ontyra.adapters.rerank import CrossEncoderReranker, HttpReranker, LangChainReranker
 
 __all__ = [
+    "CrossEncoderReranker",
     "HashEmbedder",
+    "HttpReranker",
+    "LangChainDecider",
     "LangChainEmbedder",
     "LangChainReranker",
+    "SystemOneDecider",
+    "build_decider",
     "build_embedder",
     "build_reranker",
 ]

@@ -313,7 +313,8 @@ async def test_briefing_returns_every_applicable_directive(
     app: Application, agent: Caller, remember, concepts
 ) -> None:
     ids = [
-        await remember("directive", f"global rule number {n}", strength="should") for n in range(6)
+        await remember("directive", f"global rule number {n}", strength="should", scope="universal")
+        for n in range(6)
     ]
     ids.append(
         await remember("directive", "project rule", strength="must", anchors=[{"uri": PROJECT}])
@@ -331,10 +332,13 @@ async def test_briefing_returns_every_applicable_directive(
 async def test_briefing_over_budget_counts_what_did_not_fit(
     app: Application, agent: Caller, remember, concepts
 ) -> None:
-    await remember("directive", "must rule", strength="must")
+    await remember("directive", "must rule", strength="must", scope="universal")
     for n in range(8):
         await remember(
-            "directive", f"a fairly long optional rule number {n} " * 3, strength="prefer"
+            "directive",
+            f"a fairly long optional rule number {n} " * 3,
+            strength="prefer",
+            scope="universal",
         )
     pack = await app.recall.briefing(agent, RecallRequest(context=HERE, budget_tokens=150))
     assert [i.text for i in pack.must_follow] == ["must rule"]
@@ -547,8 +551,9 @@ async def test_check_surfaces_applicable_directives_before_an_action(
         strength="must",
         polarity="avoid",
         about=[str(concepts["docker"])],
+        scope="universal",
     )
-    await remember("directive", "keep commit messages short", strength="should")
+    await remember("directive", "keep commit messages short", strength="should", scope="universal")
     risky = await app.recall.check(agent, "docker network prune", HERE)
     assert risky.verdict == "caution"
     assert any("prune docker networks" in i.text for i in risky.pack.must_follow)
@@ -601,3 +606,56 @@ async def test_links_between_memories_survive_revisions(
     )
     pack = await recall(app, agent, "format python code", HERE)
     assert texts(pack) == ["format python code with ruff format and ruff check"]
+
+
+# ---- scope: what a briefing or check carries without a query ------------------------------
+
+
+async def test_briefing_needs_a_tie_to_the_context_for_a_contextual_directive(
+    app: Application, agent: Caller, remember, concepts
+) -> None:
+    linux = [{"concept": str(concepts["linux"]), "role": "necessary"}]
+    universal = await remember("directive", "answer in English", scope="universal")
+    on_topic = await remember(
+        "directive", "run the test suite first", about=[str(concepts["pytest"])]
+    )
+    unrelated = await remember("directive", "water the ferns", about=[str(concepts["docker"])])
+    unscoped = await remember("directive", "an unscoped rule")
+    unknown_condition = await remember("directive", "linux only rule", qualifiers=linux)
+    signals = [Signal(concept="ubuntu"), Signal(concept="pytest")]
+    context = RecallContext(uris=HERE.uris, signals=signals)
+    pack = await app.recall.briefing(agent, RecallRequest(context=context, budget_tokens=5000))
+    got = {i.memory for i in pack.must_follow + pack.applicable}
+    assert universal in got and on_topic in got  # universal; pytest observed
+    assert unrelated not in got and unscoped not in got
+    assert unknown_condition in got  # ubuntu entails linux: the qualifier is satisfied
+    bare = await app.recall.briefing(agent, RecallRequest(context=HERE, budget_tokens=5000))
+    got = {i.memory for i in bare.must_follow + bare.applicable}
+    assert got == {universal}  # nothing ties the others to this context; an unknown necessary
+    # qualifier is not evidence either
+
+
+async def test_check_scopes_by_the_intent(
+    app: Application, agent: Caller, remember, concepts
+) -> None:
+    docker_rule = await remember(
+        "directive", "never prune docker networks", strength="must", about=[str(concepts["docker"])]
+    )
+    quiet = await app.recall.check(agent, "read a file", HERE)
+    assert docker_rule not in {i.memory for i in quiet.pack.must_follow}
+    loud = await app.recall.check(agent, "docker compose up", HERE)
+    assert docker_rule in {i.memory for i in loud.pack.must_follow}
+
+
+async def test_unscoped_directive_is_flagged_when_written(app: Application, agent: Caller) -> None:
+    from ontyra.models.proposals import AddMemory, ProposalRequest
+
+    def add(text: str, **fields: object) -> ProposalRequest:
+        body = {"text": text, "strength": "should", "rule": text, **fields}
+        return ProposalRequest(ops=[AddMemory(kind="directive", ref="m", fields=body)])  # type: ignore[arg-type]
+
+    flagged = await app.memory.submit(agent, add("rotate the logs weekly"))
+    assert [f.code for f in flagged.findings] == ["unscoped_directive"]
+    assert flagged.status == "committed"  # advice, not a rejection
+    ok = await app.memory.submit(agent, add("answer in English", scope="universal"))
+    assert not ok.findings

@@ -47,15 +47,60 @@ class EmbeddingSettings(BaseModel):
     name: str | None = None  # stored with each vector; defaults to kwargs["model"]
     class_path: str | None = None
     kwargs: dict[str, Any] = {}
+    # Instruction-tuned embedders (Qwen3-Embedding, e5, bge…) expect a prefix on queries and/or
+    # documents. Applied by the `langchain` provider; the stored text is not changed.
+    query_prefix: str = ""
+    document_prefix: str = ""
 
 
 class RerankSettings(BaseModel):
-    """Optional reranker (`ONTYRA_RERANK__*`): a LangChain `BaseDocumentCompressor`."""
+    """Optional reranker (`ONTYRA_RERANK__*`).
 
-    provider: Literal["none", "langchain"] = "none"
-    class_path: str | None = None
-    kwargs: dict[str, Any] = {}
-    top_n: int = 30  # candidates sent to the reranker
+    `http`: a hosted rerank API (`{url}/rerank`; cannot be retrained). `cross_encoder`: an
+    in-process sentence-transformers cross-encoder that can be fine-tuned from feedback (needs
+    the `rerank-local` extra); `model` is its base model, `model_dir` where versions are kept.
+    `langchain`: any LangChain `BaseDocumentCompressor` (not retrainable).
+    """
+
+    provider: Literal["none", "langchain", "http", "cross_encoder"] = "none"
+    class_path: str | None = None  # langchain
+    kwargs: dict[str, Any] = {}  # langchain
+    url: str | None = None  # http
+    model: str | None = None  # http model name, or the cross-encoder's base model
+    api_key: str | None = None  # http
+    model_dir: str | None = None  # cross_encoder: where trained versions are saved
+    device: str | None = None  # cross_encoder: cpu (default), cuda, ... (set it explicitly)
+    top_n: int = 30  # candidates sent to the reranker (legacy engine)
+    min_examples: int = 50  # feedback pairs needed before a retrain is allowed
+    feedback_ttl_days: int = 365  # feedback expires after this long unless given its own
+
+
+class DecisionSettings(BaseModel):
+    """Optional decision model (`ONTYRA_DECISION__*`); needs `ONTYRA_RECALL__ENGINE=fusion`.
+
+    A decision model (System One API) answers in one pass, with probabilities, which of the top
+    candidates matter for the situation; recall blends that into its ranking. When `provider` is
+    `none` recall is the deterministic fusion ranking (plus the reranker, if configured), and
+    a decision model that fails or times out is skipped for that request.
+
+    `systemone`: `POST {url}/systemone` (TypeSafe's Jev API, LocalAI, llama.cpp's server…).
+    `langchain`: any `langchain_core.decisions.BaseDecisionModel` class (`class_path`, `kwargs`).
+    `format`: `choice` (one question over the candidates plus "none"; best in the benchmark) or
+    `noul` (one yes/no question per candidate). A server limits how large a request may be (a
+    `choice` over many long memories can be refused): lower `memory_chars` or
+    `ONTYRA_RECALL__DECISION_CANDIDATES` to fit, or raise the limit on the server.
+    """
+
+    provider: Literal["none", "systemone", "langchain"] = "none"
+    url: str | None = None  # systemone, e.g. http://localhost:8083/v1
+    model: str | None = None  # systemone
+    api_key: str | None = None  # systemone
+    class_path: str | None = None  # langchain
+    kwargs: dict[str, Any] = {}  # langchain
+    name: str | None = None  # reported in traces; defaults to the model or class path
+    format: Literal["choice", "noul"] = "choice"
+    memory_chars: int = 100  # each candidate is cut to this many characters in the request
+    timeout: float = 30.0  # seconds; a slower answer counts as no answer
 
 
 class Settings(BaseSettings):
@@ -76,6 +121,7 @@ class Settings(BaseSettings):
     actor_trust: dict[str, float] = {}
     embedding: EmbeddingSettings = EmbeddingSettings()
     rerank: RerankSettings = RerankSettings()
+    decision: DecisionSettings = DecisionSettings()
     recall: RecallSettings = RecallSettings()
     log_level: str = "INFO"
 

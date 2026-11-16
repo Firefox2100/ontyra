@@ -1,0 +1,1423 @@
+[
+ {
+  "id": "sp-sudo-apt",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "no root: sudo only runs whitelisted commands; the generic apt directive is overridden",
+  "mode": "recall",
+  "query": "can I run sudo apt install on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-root"
+  ],
+  "exclude": [
+   "d-apt"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "sp-sudo-laptop-not-server",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "qualifier"
+  ],
+  "why": "not on a work server: the generic apt directive applies, the server rule does not",
+  "mode": "recall",
+  "query": "install system packages with apt",
+  "context": {
+   "signals": [
+    {
+     "concept": "ubuntu"
+    },
+    {
+     "concept": "work_server",
+     "value": false
+    }
+   ]
+  },
+  "include": [
+   "d-apt"
+  ],
+  "exclude": [
+   "ws-no-root"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-sudo-unknown",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "qualifier"
+  ],
+  "why": "nothing known about the server: the generic rule applies and the server rule may come with a caveat",
+  "mode": "recall",
+  "query": "install system packages with apt",
+  "context": {
+   "signals": [
+    {
+     "concept": "ubuntu"
+    }
+   ]
+  },
+  "include": [
+   "d-apt"
+  ],
+  "allow": [
+   "ws-no-root"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-sudo-target",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "qualifier"
+  ],
+  "why": "developing elsewhere for a work server: the no-root rule applies",
+  "mode": "recall",
+  "query": "write a deploy script that installs system packages",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ws-no-root"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-sudo-refused",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "a refused sudo is final",
+  "mode": "recall",
+  "query": "sudo refused my command, should I try another way",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-sudo-lesson"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-need-root",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "escalation procedure",
+  "mode": "recall",
+  "query": "this task needs root rights on the server, what do I do",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-ask-admin"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-where-install",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "everything under /local",
+  "mode": "recall",
+  "query": "where should I install the software I compile",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-local-dir"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "sp-build-source",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "procedure",
+  "mode": "recall",
+  "query": "how do I install this tool from source on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-install-proc"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-home-full",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "quota lesson",
+  "mode": "recall",
+  "query": "my home directory is full",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-home-lesson"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-db-location",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "databases belong under /local",
+  "mode": "recall",
+  "query": "where do I keep the database files",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-b/local"
+   ]
+  },
+  "include": [
+   "ws-local-dir"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pg-login",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "database role, not a unix account",
+  "mode": "recall",
+  "query": "how do I log in to postgres on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-pg-account"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "sp-restart-apache",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "permitted sudo service command",
+  "mode": "recall",
+  "query": "restart apache on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-service-ctl"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-pg-extension",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "needs root: ask the administrators",
+  "mode": "recall",
+  "query": "install a postgres extension",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-pg-ext"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-lamp",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "LAMP and PostgreSQL",
+  "mode": "recall",
+  "query": "what is installed on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-lamp-fact"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-expose-app",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "reverse proxy or direct on 8888",
+  "mode": "recall",
+  "query": "expose my web app on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-expose-dir",
+   "ws-expose-proc"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-other-port",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "only 8888 is open",
+  "mode": "recall",
+  "query": "can I run the service on port 3000 and open it",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-port-fact"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-domain",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "the only load balancer setting",
+  "mode": "recall",
+  "query": "how do I get a domain for the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-lb-fact"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-reverse-proxy",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "lexical"
+  ],
+  "why": "proxy on 8888",
+  "mode": "recall",
+  "query": "set up apache as a reverse proxy",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-expose-dir"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-ws-dev",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "qualifier"
+  ],
+  "why": "developing elsewhere for the server: no WebSockets",
+  "mode": "recall",
+  "query": "add live updates with websockets",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ws-no-ws"
+  ],
+  "allow": [
+   "ws-no-ws-fact",
+   "ws-lb-fact"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "sp-ws-not-server",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "qualifier"
+  ],
+  "why": "not destined for a work server: the rule does not apply",
+  "mode": "recall",
+  "query": "add live updates with websockets",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": false
+    }
+   ]
+  },
+  "exclude": [
+   "ws-no-ws",
+   "ws-no-ws-fact"
+  ],
+  "silent": true,
+  "split": "holdout"
+ },
+ {
+  "id": "sp-ws-on-server",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "qualifier"
+  ],
+  "why": "on the server itself",
+  "mode": "recall",
+  "query": "can the app use websockets",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-ws"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-udp",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "lexical"
+  ],
+  "why": "UDP does not work",
+  "mode": "recall",
+  "query": "use a UDP based discovery protocol",
+  "include": [
+   "rs-no-udp"
+  ],
+  "allow": [
+   "rs-uni-fact"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "sp-site-down",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "lexical"
+  ],
+  "why": "maybe the university blocks it",
+  "mode": "recall",
+  "query": "this website will not load from my machine",
+  "include": [
+   "rs-blocked"
+  ],
+  "allow": [
+   "rs-uni-fact",
+   "rs-defender-dir",
+   "rs-defender-fact"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-paywall",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "lexical"
+  ],
+  "why": "use the university access",
+  "mode": "recall",
+  "query": "download the full text of this journal article",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/notes"
+   ]
+  },
+  "include": [
+   "rs-access"
+  ],
+  "allow": [
+   "rs-uni-fact",
+   "rs-zotero-first",
+   "rs-zotero-save",
+   "rs-paper-proc",
+   "rs-zotero-fact",
+   "wr-zotero"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-defender",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "lexical"
+  ],
+  "why": "do not retry",
+  "mode": "recall",
+  "query": "the installer was blocked by Defender, retry it",
+  "include": [
+   "rs-defender-dir"
+  ],
+  "allow": [
+   "rs-defender-fact",
+   "rs-blocked"
+  ],
+  "top": 2,
+  "split": "tune"
+ },
+ {
+  "id": "sp-paper-need",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "lexical"
+  ],
+  "why": "look in Zotero first",
+  "mode": "recall",
+  "query": "get the paper on graph transformers",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/notes"
+   ]
+  },
+  "include": [
+   "rs-zotero-first",
+   "rs-paper-proc"
+  ],
+  "allow": [
+   "rs-zotero-save",
+   "rs-zotero-fact",
+   "rs-access",
+   "wr-zotero"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-paper-found",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "lexical"
+  ],
+  "why": "send them to Zotero",
+  "mode": "recall",
+  "query": "I found three relevant papers, what should I do with them",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/notes"
+   ]
+  },
+  "include": [
+   "rs-zotero-save"
+  ],
+  "allow": [
+   "rs-zotero-first",
+   "rs-paper-proc",
+   "rs-zotero-fact",
+   "wr-zotero"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-challenge",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "lexical"
+  ],
+  "why": "challenge it",
+  "mode": "recall",
+  "query": "I will skip input validation to save time",
+  "include": [
+   "dp-challenge"
+  ],
+  "allow": [
+   "dp-style"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-stack-db",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "lexical"
+  ],
+  "why": "MongoDB (documents) unless a reason",
+  "mode": "recall",
+  "query": "which database should I use for the new service",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ]
+  },
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-fact",
+   "dp-stack-except"
+  ],
+  "exclude": [
+   "f-db",
+   "dm-ckpt"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-stack-graph",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "lexical"
+  ],
+  "why": "Neo4j",
+  "mode": "recall",
+  "query": "model the relationships between papers as a graph",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ]
+  },
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-fact",
+   "dp-stack-except"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-stack-ui",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "lexical"
+  ],
+  "why": "React",
+  "mode": "recall",
+  "query": "which framework for the dashboard frontend",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ]
+  },
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-fact",
+   "dp-stack-except"
+  ],
+  "exclude": [
+   "dm-hooks-fn"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-stack-exception",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "lexical"
+  ],
+  "why": "the exception clause",
+  "mode": "recall",
+  "query": "MongoDB cannot enforce the relational constraints we need, what else could we use",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ]
+  },
+  "include": [
+   "dp-stack-except"
+  ],
+  "allow": [
+   "dp-stack",
+   "dp-stack-fact"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-server-db",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "daily",
+   "interplay"
+  ],
+  "why": "server rules together: /local, database accounts, no root; the stack preference may apply",
+  "mode": "recall",
+  "query": "set up the database for my project on the server",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-local-dir",
+   "ws-pg-account"
+  ],
+  "allow_prefix": [
+   "ws-",
+   "dp-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-stack-server",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "daily",
+   "interplay"
+  ],
+  "why": "the stack preference with the server's constraints in view",
+  "mode": "recall",
+  "query": "which database for a new app that will run on the work server",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "dp-stack"
+  ],
+  "allow_prefix": [
+   "ws-",
+   "dp-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-no-root",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "no-root rule, said another way",
+  "mode": "recall",
+  "query": "this box won't let me add the missing library with elevated rights",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-root"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-disk",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "the quota",
+  "mode": "recall",
+  "query": "my files keep running out of room in my own folder",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-local-dir"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-pp-db-auth",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "database accounts",
+  "mode": "recall",
+  "query": "how do I authenticate to the relational database installed here",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-pg-account"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-expose",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "single open port",
+  "mode": "recall",
+  "query": "how can people on the internet open my page",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-expose-proc",
+   "ws-expose-dir"
+  ],
+  "allow_prefix": [
+   "ws-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-realtime",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "no WebSockets behind the balancer",
+  "mode": "recall",
+  "query": "push live notifications to the browser as they happen",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ws-no-ws"
+  ],
+  "allow": [
+   "ws-no-ws-fact",
+   "ws-lb-fact"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-quic",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "UDP does not work",
+  "mode": "recall",
+  "query": "enable the newest transport protocol on my web server",
+  "include": [
+   "rs-no-udp"
+  ],
+  "allow": [
+   "rs-uni-fact"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-pp-antivirus",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "do not retry",
+  "mode": "recall",
+  "query": "the antivirus refused to let the script run, should I try again",
+  "include": [
+   "rs-defender-dir"
+  ],
+  "allow": [
+   "rs-defender-fact"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-article",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "look in the library first",
+  "mode": "recall",
+  "query": "I need to read the article by Smith on graph attention",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/notes"
+   ]
+  },
+  "include": [
+   "rs-zotero-first",
+   "rs-paper-proc"
+  ],
+  "allow": [
+   "rs-zotero-save",
+   "rs-zotero-fact",
+   "rs-access",
+   "wr-zotero"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-preprint",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "into Zotero",
+  "mode": "recall",
+  "query": "I came across a useful preprint while reading, where should it go",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/notes"
+   ]
+  },
+  "include": [
+   "rs-zotero-save"
+  ],
+  "allow": [
+   "rs-zotero-first",
+   "rs-paper-proc",
+   "rs-zotero-fact",
+   "wr-zotero"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-pp-passwords",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "challenge a bad practice; the secrets rule applies too",
+  "mode": "recall",
+  "query": "let's just keep the passwords in the repository, it is quicker",
+  "include": [
+   "dp-challenge",
+   "dm-secrets"
+  ],
+  "allow": [
+   "ad-password",
+   "dp-style"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-pp-datastore",
+  "world": "commons",
+  "tags": [
+   "special",
+   "daily",
+   "paraphrase",
+   "semantic"
+  ],
+  "why": "preferred stack",
+  "mode": "recall",
+  "query": "which data store for the recommendation service",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ]
+  },
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-fact",
+   "dp-stack-except"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-brief-server",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "briefing"
+  ],
+  "why": "on a work server: every server rule applies; the generic apt rule is overridden",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-root",
+   "ws-local-dir",
+   "ws-pg-account",
+   "ws-expose-dir",
+   "ws-no-ws"
+  ],
+  "exclude": [
+   "d-apt"
+  ],
+  "allow_prefix": [
+   "ws-",
+   "rs-",
+   "dp-",
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-brief-laptop-target",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "briefing",
+   "qualifier"
+  ],
+  "why": "developing elsewhere for a work server: the server rules that concern deployment come along",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ws-no-ws",
+   "ws-expose-dir",
+   "ws-no-root"
+  ],
+  "allow_prefix": [
+   "ws-",
+   "rs-",
+   "dp-",
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-brief-laptop-plain",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "briefing",
+   "qualifier"
+  ],
+  "why": "not related to a work server: none of the server rules",
+  "mode": "briefing",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": false
+    }
+   ]
+  },
+  "include": [
+   "dp-style",
+   "dp-challenge",
+   "dp-stack",
+   "rs-defender-dir",
+   "rs-no-udp",
+   "rs-zotero-first"
+  ],
+  "exclude": [
+   "ws-no-ws",
+   "ws-no-root",
+   "ws-local-dir",
+   "ws-expose-dir",
+   "ws-pg-account"
+  ],
+  "allow_prefix": [
+   "rs-",
+   "dp-",
+   "dl-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-ck-apt",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "check"
+  ],
+  "why": "a root command on a work server",
+  "mode": "check",
+  "query": "sudo apt install libpq-dev",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-root"
+  ],
+  "verdict": "caution",
+  "allow_prefix": [
+   "ws-",
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-ck-home",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "check"
+  ],
+  "why": "wrong place",
+  "mode": "check",
+  "query": "initialise the database in my home directory",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-local-dir"
+  ],
+  "verdict": "caution",
+  "allow_prefix": [
+   "ws-",
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-ck-port",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "check"
+  ],
+  "why": "only 8888",
+  "mode": "check",
+  "query": "start the service on port 5000 and open the firewall",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-port-fact",
+   "ws-expose-dir"
+  ],
+  "verdict": "caution",
+  "allow_prefix": [
+   "ws-",
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-ck-ws",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "check",
+   "qualifier"
+  ],
+  "why": "for a work server",
+  "mode": "check",
+  "query": "build the chat feature on websockets",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/newproject/app.py"
+   ],
+   "signals": [
+    {
+     "concept": "work_server",
+     "value": true
+    }
+   ]
+  },
+  "include": [
+   "ws-no-ws"
+  ],
+  "verdict": "caution",
+  "allow_prefix": [
+   "ws-",
+   "dl-"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "sp-ck-pg",
+  "world": "commons",
+  "tags": [
+   "special",
+   "server",
+   "check"
+  ],
+  "why": "unix-account style access",
+  "mode": "check",
+  "query": "connect with sudo -u postgres psql",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-pg-account"
+  ],
+  "verdict": "caution",
+  "allow_prefix": [
+   "ws-",
+   "dl-"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "sp-ck-retry",
+  "world": "commons",
+  "tags": [
+   "special",
+   "research",
+   "check"
+  ],
+  "why": "do not retry",
+  "mode": "check",
+  "query": "retry the blocked download with different options",
+  "include": [
+   "rs-defender-dir"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "rs-blocked"
+  ],
+  "allow_prefix": [
+   "rs-",
+   "dl-"
+  ],
+  "split": "tune"
+ }
+]

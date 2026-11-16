@@ -1,0 +1,485 @@
+[
+ {
+  "id": "hm-cell-sheet",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a spreadsheet cell, not a culture cell",
+  "mode": "recall",
+  "query": "fix the cell references in the budget workbook",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-no-hardcode"
+  ],
+  "exclude": [
+   "bi-hek",
+   "bi-myco"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "hm-cell-culture",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a culture cell, not a spreadsheet cell",
+  "mode": "recall",
+  "query": "how long can I keep the cells before passaging",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-hek"
+  ],
+  "exclude": [
+   "fi-no-hardcode"
+  ],
+  "allow": [
+   "bi-myco"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-model-physics",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a simulation model; the statistics model rule is another sense",
+  "mode": "recall",
+  "query": "which version is the detector response model",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-geant"
+  ],
+  "exclude": [
+   "ph-geant-old",
+   "st-model"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-model-stats",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a statistical model, not a simulation",
+  "mode": "recall",
+  "query": "what must the model description in the methods section contain",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-model"
+  ],
+  "exclude": [
+   "ph-geant"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-report-ledger",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a management report, not an incident report",
+  "mode": "recall",
+  "query": "the report totals do not match the ledger",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-report-dates"
+  ],
+  "exclude": [
+   "ad-incident",
+   "ad-incident-facts"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "hm-report-incident",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "an incident report, not a finance report",
+  "mode": "recall",
+  "query": "I need to write a report about the accident",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-incident"
+  ],
+  "allow": [
+   "ad-incident-facts"
+  ],
+  "exclude": [
+   "fi-report-dates"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-charge-electron",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "physical charge, not charging a car",
+  "mode": "recall",
+  "query": "how much charge does an electron carry",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-charge"
+  ],
+  "exclude": [
+   "dh-ev"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-charge-car",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "charging a car",
+  "mode": "recall",
+  "query": "charge the car before the long trip",
+  "context": {
+   "uris": [
+    "place:car"
+   ]
+  },
+  "include": [
+   "dh-ev"
+  ],
+  "exclude": [
+   "ph-charge"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-test-smoke",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a safety test, not a software test",
+  "mode": "recall",
+  "query": "when do I test the smoke detectors",
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  },
+  "include": [
+   "dh-smoke"
+  ],
+  "exclude": [
+   "dm-flaky",
+   "d-pytest"
+  ],
+  "top": 1,
+  "split": "holdout"
+ },
+ {
+  "id": "hm-service-car",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a car service, not the boiler service",
+  "mode": "recall",
+  "query": "book the service",
+  "context": {
+   "uris": [
+    "place:car"
+   ]
+  },
+  "include": [
+   "dh-service"
+  ],
+  "exclude": [
+   "dh-boiler-service"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-service-boiler",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "the boiler service, not the car service",
+  "mode": "recall",
+  "query": "when was the boiler last serviced",
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  },
+  "include": [
+   "dh-boiler-service"
+  ],
+  "exclude": [
+   "dh-service"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-sample-psy",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "power analysis in psychology; the survey sampling rule is anchored to the survey project",
+  "mode": "recall",
+  "query": "how big a sample do I need",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-power"
+  ],
+  "exclude": [
+   "so-sampling"
+  ],
+  "allow": [
+   "ps-within",
+   "ps-recruit"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-sample-survey",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "survey sampling report",
+  "mode": "recall",
+  "query": "how should I describe the sample",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-sampling"
+  ],
+  "exclude": [
+   "ps-power"
+  ],
+  "allow": [
+   "so-weight",
+   "so-panel-bias"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "hm-pressure-car",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "tyre pressure at the car",
+  "mode": "recall",
+  "query": "what should the pressure be",
+  "context": {
+   "uris": [
+    "place:car"
+   ]
+  },
+  "include": [
+   "dh-tyre"
+  ],
+  "exclude": [
+   "dh-boiler"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-pressure-boiler",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "boiler pressure at home",
+  "mode": "recall",
+  "query": "what should the pressure be",
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  },
+  "include": [
+   "dh-boiler"
+  ],
+  "exclude": [
+   "dh-tyre"
+  ],
+  "allow": [
+   "dh-boiler-service"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-citation-soc",
+  "world": "commons",
+  "tags": [
+   "homonym",
+   "twin"
+  ],
+  "why": "APA in the survey project; the other styles are anchored elsewhere",
+  "mode": "recall",
+  "query": "which citation style should I use",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-apa"
+  ],
+  "exclude": [
+   "li-chicago",
+   "li-mla"
+  ],
+  "allow": [
+   "wr-ieee"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-citation-psy",
+  "world": "commons",
+  "tags": [
+   "homonym",
+   "twin"
+  ],
+  "why": "APA in the psychology project",
+  "mode": "recall",
+  "query": "which citation style should I use",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-apa"
+  ],
+  "exclude": [
+   "li-chicago",
+   "li-mla",
+   "so-apa"
+  ],
+  "allow": [
+   "wr-ieee"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "hm-citation-lit",
+  "world": "commons",
+  "tags": [
+   "homonym",
+   "twin"
+  ],
+  "why": "Chicago in the book project",
+  "mode": "recall",
+  "query": "which citation style should I use for the manuscript",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-chicago"
+  ],
+  "exclude": [
+   "so-apa",
+   "ps-apa"
+  ],
+  "allow": [
+   "li-mla",
+   "wr-ieee"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "hm-deadline-conf",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a conference deadline, not a tax deadline",
+  "mode": "recall",
+  "query": "when is the NeurIPS deadline",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-deadline"
+  ],
+  "exclude": [
+   "fi-vat-return"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "hm-time-format",
+  "world": "commons",
+  "tags": [
+   "homonym"
+  ],
+  "why": "a clock time format, not a paper format",
+  "mode": "recall",
+  "query": "which time format should I use for clock times",
+  "include": [
+   "dl-24h"
+  ],
+  "exclude": [
+   "wr-table",
+   "wr-latex"
+  ],
+  "top": 1,
+  "split": "tune"
+ }
+]

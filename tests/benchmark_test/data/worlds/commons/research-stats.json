@@ -1,0 +1,311 @@
+{
+ "concepts": [
+  {
+   "label": "p-value",
+   "aliases": [
+    "significance level",
+    "p value"
+   ]
+  },
+  {
+   "label": "confidence interval",
+   "aliases": [
+    "ci"
+   ]
+  },
+  {
+   "label": "multiple comparisons",
+   "aliases": [
+    "bonferroni",
+    "false discovery rate"
+   ]
+  },
+  {
+   "label": "test assumptions",
+   "aliases": [
+    "normality check"
+   ]
+  },
+  {
+   "label": "statistical test choice",
+   "aliases": [
+    "which test"
+   ]
+  },
+  {
+   "label": "outlier"
+  },
+  {
+   "label": "log transform",
+   "aliases": [
+    "log scale"
+   ]
+  },
+  {
+   "label": "correlation"
+  },
+  {
+   "label": "regression"
+  },
+  {
+   "label": "multicollinearity",
+   "aliases": [
+    "vif",
+    "collinearity"
+   ]
+  },
+  {
+   "label": "Bayes factor"
+  },
+  {
+   "label": "statistical model",
+   "aliases": [
+    "model formula"
+   ]
+  },
+  {
+   "label": "R language",
+   "aliases": [
+    "r",
+    "tidyverse"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "source": "correlation",
+   "relation": "alternative_to",
+   "target": "regression"
+  }
+ ],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/stats-core",
+   "kind": "project",
+   "label": "shared analysis code",
+   "instance_of": [
+    "statistics"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "st-pvalue",
+   "kind": "fact",
+   "text": "A p-value is the probability of data at least this extreme if the null hypothesis is true; it is not the probability that the null hypothesis is true.",
+   "fields": {
+    "subject": "p_value",
+    "predicate": "meaning",
+    "object": "probability of data this extreme under the null"
+   },
+   "about": [
+    "p_value",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-ci",
+   "kind": "fact",
+   "text": "A 95% confidence interval means that 95% of intervals built this way from repeated samples contain the true value; it is not a 95% probability for this one interval.",
+   "fields": {
+    "subject": "confidence_interval",
+    "predicate": "meaning",
+    "object": "coverage over repeated samples"
+   },
+   "about": [
+    "confidence_interval",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-multi",
+   "kind": "directive",
+   "text": "Correct for multiple comparisons with Bonferroni or Benjamini-Hochberg when testing more than one hypothesis.",
+   "about": [
+    "multiple_comparisons",
+    "p_value"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "st-assume",
+   "kind": "procedure",
+   "text": "Check test assumptions: plot the residuals, run Shapiro-Wilk for normality and Levene for equal variance, and switch to a nonparametric test if they fail.",
+   "fields": {
+    "trigger": "before running a parametric test",
+    "steps": [
+     "plot the residuals",
+     "run Shapiro-Wilk for normality",
+     "run Levene for equal variances",
+     "use a nonparametric test if assumptions fail"
+    ]
+   },
+   "about": [
+    "test_assumptions",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-choice",
+   "kind": "procedure",
+   "text": "Choose a test: two independent groups with normal data use a t-test, otherwise Mann-Whitney; three or more groups use ANOVA or Kruskal-Wallis; paired data use a paired t-test or Wilcoxon.",
+   "fields": {
+    "trigger": "choose a statistical test",
+    "steps": [
+     "two independent groups: t-test if normal, else Mann-Whitney",
+     "three or more groups: ANOVA, or Kruskal-Wallis if not normal",
+     "paired data: paired t-test, or Wilcoxon if not normal"
+    ]
+   },
+   "about": [
+    "statistical_test_choice",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-outlier",
+   "kind": "directive",
+   "text": "Do not delete outliers without a rule stated in advance; report results with and without them.",
+   "about": [
+    "outlier",
+    "statistics"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "st-log",
+   "kind": "directive",
+   "text": "Take logs of right-skewed positive data before parametric tests and back-transform for reporting.",
+   "about": [
+    "log_transform",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-corr",
+   "kind": "directive",
+   "text": "Plot the data first and report the correlation coefficient with its confidence interval; correlation is not causation.",
+   "about": [
+    "correlation",
+    "statistics"
+   ],
+   "trap": [
+    "twin"
+   ]
+  },
+  {
+   "key": "st-vif",
+   "kind": "lesson",
+   "text": "A regression coefficient flipped sign after a collinear predictor was added; check variance inflation factors.",
+   "fields": {
+    "situation": "a regression coefficient changes sign when a predictor is added",
+    "insight": "the two predictors were collinear",
+    "do_instead": "check variance inflation factors"
+   },
+   "about": [
+    "regression",
+    "multicollinearity"
+   ]
+  },
+  {
+   "key": "st-bf",
+   "kind": "fact",
+   "text": "A Bayes factor above 10 is strong evidence for a hypothesis and one below 3 is only anecdotal.",
+   "fields": {
+    "subject": "bayes_factor",
+    "predicate": "interpretation",
+    "object": ">10 strong, <3 anecdotal"
+   },
+   "about": [
+    "bayes_factor",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-digits",
+   "kind": "directive",
+   "text": "Round p-values to three decimals and effect sizes to two.",
+   "about": [
+    "p_value",
+    "statistics"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "st-model",
+   "kind": "directive",
+   "text": "State the full model formula with every predictor and interaction in the methods section.",
+   "about": [
+    "statistical_model",
+    "statistics"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "st-null",
+   "kind": "event",
+   "text": "At the May lab meeting a non-significant result was read as proof of no effect; absence of evidence is not evidence of absence.",
+   "fields": {
+    "occurred_at": "2026-05-12T14:00:00Z"
+   },
+   "about": [
+    "p_value",
+    "statistics"
+   ]
+  },
+  {
+   "key": "st-r-old",
+   "kind": "fact",
+   "text": "Analyses use R 4.2 with the tidyverse.",
+   "fields": {
+    "subject": "r_language",
+    "predicate": "version",
+    "object": "4.2"
+   },
+   "about": [
+    "r_language"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "st-r",
+   "kind": "fact",
+   "text": "Analyses use R 4.4 with the tidyverse; Python is for pipelines only.",
+   "fields": {
+    "subject": "r_language",
+    "predicate": "version",
+    "object": "4.4"
+   },
+   "about": [
+    "r_language"
+   ],
+   "supersedes": "st-r-old"
+  },
+  {
+   "key": "st-bh",
+   "kind": "decision",
+   "text": "Chose Benjamini-Hochberg over Bonferroni for gene expression screens because Bonferroni was too conservative.",
+   "fields": {
+    "chosen": "Benjamini-Hochberg",
+    "alternatives": [
+     "Bonferroni"
+    ],
+    "rationale": "Bonferroni was too conservative for thousands of tests",
+    "decided_at": "2026-02-25T09:00:00Z"
+   },
+   "about": [
+    "multiple_comparisons"
+   ],
+   "at": [
+    "file:///home/mira/research/stats-core"
+   ]
+  }
+ ]
+}

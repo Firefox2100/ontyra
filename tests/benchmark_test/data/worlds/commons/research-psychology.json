@@ -1,0 +1,297 @@
+{
+ "concepts": [
+  {
+   "label": "Sleep study",
+   "definition": "The psychology experiment on sleep and attention."
+  },
+  {
+   "label": "power analysis",
+   "aliases": [
+    "sample size calculation"
+   ]
+  },
+  {
+   "label": "preregistration",
+   "aliases": [
+    "osf registration",
+    "registered report"
+   ]
+  },
+  {
+   "label": "order effects",
+   "aliases": [
+    "counterbalancing",
+    "demand characteristics"
+   ]
+  },
+  {
+   "label": "effect size",
+   "aliases": [
+    "cohen's d",
+    "eta squared"
+   ]
+  },
+  {
+   "label": "debriefing",
+   "aliases": [
+    "participant debrief"
+   ]
+  },
+  {
+   "label": "actigraphy",
+   "aliases": [
+    "sleep tracker",
+    "wrist actigraph"
+   ]
+  },
+  {
+   "label": "exclusion criteria",
+   "aliases": [
+    "participant exclusion"
+   ]
+  },
+  {
+   "label": "validated questionnaire",
+   "aliases": [
+    "psqi",
+    "phq-9",
+    "validated scale"
+   ]
+  },
+  {
+   "label": "replication"
+  },
+  {
+   "label": "participant recruitment",
+   "aliases": [
+    "participant panel"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "source": "effect size",
+   "relation": "alternative_to",
+   "target": "p-value"
+  }
+ ],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/sleep-study",
+   "kind": "project",
+   "label": "sleep study",
+   "instance_of": [
+    "sleep_study"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "ps-power",
+   "kind": "directive",
+   "text": "Run an a-priori power analysis with 80% power and alpha .05, and preregister the sample size.",
+   "about": [
+    "power_analysis",
+    "preregistration"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ps-prereg",
+   "kind": "directive",
+   "text": "Preregister hypotheses and the analysis plan on OSF before collecting any data.",
+   "about": [
+    "preregistration"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ps-order",
+   "kind": "directive",
+   "text": "Counterbalance the order of conditions to control order effects and keep participants unaware of the hypothesis.",
+   "about": [
+    "order_effects"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "ps-effect",
+   "kind": "directive",
+   "text": "Report effect sizes with confidence intervals: Cohen's d for mean differences and partial eta squared for ANOVA.",
+   "about": [
+    "effect_size",
+    "confidence_interval"
+   ]
+  },
+  {
+   "key": "ps-cohen",
+   "kind": "fact",
+   "text": "Cohen's conventions call d of 0.2 small, 0.5 medium and 0.8 large; treat them only as a rough guide.",
+   "fields": {
+    "subject": "effect_size",
+    "predicate": "conventions",
+    "object": "d 0.2 small, 0.5 medium, 0.8 large"
+   },
+   "about": [
+    "effect_size"
+   ]
+  },
+  {
+   "key": "ps-apa",
+   "kind": "directive",
+   "text": "Psychology manuscripts follow APA 7: author-year citations, and statistics written as p = .03 without a leading zero.",
+   "about": [
+    "apa_style"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "trap": [
+    "twin",
+    "opposite"
+   ]
+  },
+  {
+   "key": "ps-pexact",
+   "kind": "directive",
+   "text": "Report exact p values such as p = .034 rather than p < .05, except for p < .001.",
+   "about": [
+    "p_value"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "ps-debrief",
+   "kind": "directive",
+   "text": "Debrief every participant after the session; any deception needs prior ethics approval.",
+   "about": [
+    "debriefing",
+    "ethics_board"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ps-actigraph",
+   "kind": "lesson",
+   "text": "The wrist actigraphs lost data when the battery fell below 20%; charge them before every session.",
+   "fields": {
+    "situation": "sleep tracker data has gaps",
+    "insight": "devices below 20% battery stop recording",
+    "do_instead": "charge before every session"
+   },
+   "about": [
+    "actigraphy"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  {
+   "key": "ps-exclude",
+   "kind": "directive",
+   "text": "Define exclusion criteria before looking at the data and report how many participants were excluded and why.",
+   "about": [
+    "exclusion_criteria"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  {
+   "key": "ps-scales",
+   "kind": "directive",
+   "text": "Use validated questionnaires, the PSQI for sleep quality and the PHQ-9 for depressive symptoms, and cite their validation papers.",
+   "about": [
+    "validated_questionnaire"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  {
+   "key": "ps-replic",
+   "kind": "event",
+   "text": "In August the replication of the primed-sleepiness effect failed with d of 0.05 in 240 participants.",
+   "fields": {
+    "occurred_at": "2026-08-12T13:00:00Z"
+   },
+   "about": [
+    "replication"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  {
+   "key": "ps-recruit",
+   "kind": "fact",
+   "text": "Participants are recruited from the university panel and paid 12 EUR per hour.",
+   "fields": {
+    "subject": "participant_recruitment",
+    "predicate": "payment",
+    "object": "12 EUR per hour"
+   },
+   "about": [
+    "participant_recruitment"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  {
+   "key": "ps-within",
+   "kind": "decision",
+   "text": "Chose a within-subject design to cut the required sample size, with counterbalanced order.",
+   "fields": {
+    "chosen": "within-subject design",
+    "alternatives": [
+     "between-subject design"
+    ],
+    "rationale": "needs about half the participants",
+    "decided_at": "2026-02-02T09:00:00Z"
+   },
+   "about": [
+    "power_analysis",
+    "order_effects"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ]
+  },
+  {
+   "key": "ps-upload",
+   "kind": "task",
+   "text": "Upload the preregistration to OSF.",
+   "fields": {
+    "due": "2026-11-25T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "preregistration"
+   ],
+   "at": [
+    "file:///home/mira/research/sleep-study"
+   ],
+   "note": "not due yet"
+  }
+ ]
+}

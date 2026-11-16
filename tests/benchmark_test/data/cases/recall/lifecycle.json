@@ -1,0 +1,90 @@
+[
+ {
+  "id": "db-versions",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "the retracted claim and the superseded version never come back",
+  "mode": "recall",
+  "query": "does tidewatch use MySQL or PostgreSQL",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "f-db"
+  ],
+  "exclude": [
+   "f-mysql",
+   "f-db-old"
+  ],
+  "allow": [
+   "e-pg16",
+   "l-pgdata"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "deploy-expired-freeze",
+  "world": "commons",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "an expired freeze stays out",
+  "mode": "recall",
+  "query": "can we deploy tidewatch now",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-no-friday-deploy"
+  ],
+  "exclude": [
+   "d-freeze"
+  ],
+  "allow": [
+   "d-friday-ok",
+   "p-release"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "ledger-no-repeat",
+  "world": "commons",
+  "tags": [
+   "session",
+   "lifecycle"
+  ],
+  "why": "a memory delivered in this session is not delivered twice",
+  "mode": "recall",
+  "query": "write tests for the new endpoint",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-pytest"
+  ],
+  "then": [
+   {
+    "mode": "recall",
+    "query": "write tests for the new endpoint",
+    "context": {
+     "uris": [
+      "file:///home/mira/src/tidewatch/src/api/routes.py"
+     ]
+    },
+    "exclude": [
+     "d-pytest"
+    ],
+    "silent": true
+   }
+  ],
+  "split": "tune"
+ }
+]

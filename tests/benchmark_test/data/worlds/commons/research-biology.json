@@ -1,0 +1,321 @@
+{
+ "concepts": [
+  {
+   "label": "Zebrafish project",
+   "definition": "The developmental biology project on zebrafish."
+  },
+  {
+   "label": "animal protocol",
+   "aliases": [
+    "ethics protocol",
+    "animal licence"
+   ]
+  },
+  {
+   "label": "cell culture",
+   "aliases": [
+    "hek293",
+    "cell line"
+   ]
+  },
+  {
+   "label": "mycoplasma"
+  },
+  {
+   "label": "PCR",
+   "aliases": [
+    "polymerase chain reaction"
+   ]
+  },
+  {
+   "label": "experimental control",
+   "aliases": [
+    "negative control",
+    "positive control"
+   ]
+  },
+  {
+   "label": "blinding",
+   "aliases": [
+    "blind scoring"
+   ]
+  },
+  {
+   "label": "genome reference",
+   "aliases": [
+    "reference genome",
+    "grcz11"
+   ]
+  },
+  {
+   "label": "sequencing data",
+   "aliases": [
+    "sra",
+    "geo"
+   ]
+  },
+  {
+   "label": "biological replicate",
+   "aliases": [
+    "replicates",
+    "technical replicate"
+   ]
+  },
+  {
+   "label": "western blot"
+  },
+  {
+   "label": "aquarium facility",
+   "aliases": [
+    "fish facility"
+   ]
+  }
+ ],
+ "relations": [],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/zebrafish",
+   "kind": "project",
+   "label": "zebrafish project",
+   "instance_of": [
+    "zebrafish_project"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "bi-protocol-old",
+   "kind": "fact",
+   "text": "Zebrafish work runs under animal protocol ZF-2023-07.",
+   "fields": {
+    "subject": "animal_protocol",
+    "predicate": "number",
+    "object": "ZF-2023-07"
+   },
+   "about": [
+    "animal_protocol"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "bi-protocol",
+   "kind": "fact",
+   "text": "Zebrafish work runs under animal protocol ZF-2026-02 since the renewal; every cage card must carry it.",
+   "fields": {
+    "subject": "animal_protocol",
+    "predicate": "number",
+    "object": "ZF-2026-02"
+   },
+   "about": [
+    "animal_protocol"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ],
+   "supersedes": "bi-protocol-old"
+  },
+  {
+   "key": "bi-hek",
+   "kind": "directive",
+   "text": "Passage HEK293 cells at 80% confluence and never go beyond passage 30.",
+   "about": [
+    "cell_culture"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "bi-myco",
+   "kind": "lesson",
+   "text": "Mycoplasma contamination ruined two months of cultures; test every culture monthly with the PCR kit.",
+   "fields": {
+    "situation": "cultures grow badly with no visible contamination",
+    "insight": "mycoplasma is invisible under the microscope",
+    "do_instead": "test monthly with the PCR kit"
+   },
+   "about": [
+    "mycoplasma",
+    "cell_culture"
+   ]
+  },
+  {
+   "key": "bi-pcr",
+   "kind": "procedure",
+   "text": "Run a PCR: keep the master mix on ice, add the template last, run 35 cycles, and include a negative and a positive control.",
+   "fields": {
+    "trigger": "run a PCR",
+    "steps": [
+     "prepare the master mix on ice",
+     "add the template last",
+     "run 35 cycles",
+     "include a negative and a positive control"
+    ]
+   },
+   "about": [
+    "pcr"
+   ]
+  },
+  {
+   "key": "bi-control",
+   "kind": "directive",
+   "text": "Every experiment needs both a negative and a positive control.",
+   "about": [
+    "experimental_control"
+   ],
+   "strength": "must",
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "bi-blind",
+   "kind": "directive",
+   "text": "Score phenotypes blind to genotype and treatment.",
+   "about": [
+    "blinding"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "bi-genome-old",
+   "kind": "fact",
+   "text": "The zebrafish reference genome is GRCz10.",
+   "fields": {
+    "subject": "genome_reference",
+    "predicate": "zebrafish assembly",
+    "object": "GRCz10"
+   },
+   "about": [
+    "genome_reference"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "bi-genome",
+   "kind": "fact",
+   "text": "The zebrafish reference genome is GRCz11, annotated with Ensembl release 110.",
+   "fields": {
+    "subject": "genome_reference",
+    "predicate": "zebrafish assembly",
+    "object": "GRCz11, Ensembl 110"
+   },
+   "about": [
+    "genome_reference"
+   ],
+   "supersedes": "bi-genome-old"
+  },
+  {
+   "key": "bi-data",
+   "kind": "fact",
+   "text": "Public sequencing data are in NCBI SRA and GEO; zebrafish gene pages are at ZFIN.",
+   "fields": {
+    "subject": "sequencing_data",
+    "predicate": "where to find",
+    "object": "NCBI SRA, GEO, ZFIN"
+   },
+   "about": [
+    "sequencing_data"
+   ]
+  },
+  {
+   "key": "bi-replicate",
+   "kind": "directive",
+   "text": "A biological replicate is an independent animal or independent culture; technical replicates do not count towards n.",
+   "about": [
+    "biological_replicate",
+    "statistics"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "bi-temp",
+   "kind": "event",
+   "text": "On 2026-07-19 the aquarium rose to 31 degrees overnight; embryos from that clutch were excluded.",
+   "fields": {
+    "occurred_at": "2026-07-19T06:00:00Z"
+   },
+   "about": [
+    "aquarium_facility"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ]
+  },
+  {
+   "key": "bi-blot",
+   "kind": "procedure",
+   "text": "Run a western blot: load equal protein, transfer, block, incubate the primary antibody overnight, and image with a loading control.",
+   "fields": {
+    "trigger": "run a western blot",
+    "steps": [
+     "load equal amounts of protein",
+     "transfer to the membrane and block",
+     "incubate the primary antibody overnight",
+     "image together with a loading control"
+    ]
+   },
+   "about": [
+    "western_blot"
+   ]
+  },
+  {
+   "key": "bi-ppe",
+   "kind": "directive",
+   "text": "Wear a lab coat in the fish facility and change shoe covers between rooms.",
+   "about": [
+    "aquarium_facility"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ]
+  },
+  {
+   "key": "bi-renew",
+   "kind": "task",
+   "text": "Renew the animal protocol before it expires.",
+   "fields": {
+    "due": "2026-12-01T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "animal_protocol"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ],
+   "note": "not due yet"
+  },
+  {
+   "key": "bi-6dpf",
+   "kind": "decision",
+   "text": "Chose 6 dpf larvae over 3 dpf for the behaviour assay because the phenotype is clearer.",
+   "fields": {
+    "chosen": "6 dpf larvae",
+    "alternatives": [
+     "3 dpf larvae"
+    ],
+    "rationale": "the phenotype is clearer",
+    "decided_at": "2026-04-02T09:00:00Z"
+   },
+   "about": [
+    "blinding"
+   ],
+   "at": [
+    "file:///home/mira/research/zebrafish"
+   ]
+  }
+ ]
+}

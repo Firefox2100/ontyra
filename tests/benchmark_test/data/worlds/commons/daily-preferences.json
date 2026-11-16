@@ -1,0 +1,27 @@
+{
+  "concepts": [
+    {"label": "writing style", "aliases": ["tone", "communication style", "response style"]},
+    {"label": "best practice", "aliases": ["standard practice", "convention", "recommended practice"]},
+    {"label": "technology stack", "aliases": ["tech stack", "preferred technologies", "stack choice"]},
+    {"label": "database", "aliases": ["data store", "datastore"]},
+    {"label": "graph database", "aliases": ["graph store"]},
+    {"label": "document database", "aliases": ["document store"]},
+    {"label": "MongoDB", "aliases": ["mongo"]},
+    {"label": "Neo4j", "aliases": ["cypher"]}
+  ],
+  "relations": [
+    {"source": "mongodb", "relation": "is_a", "target": "document database"},
+    {"source": "neo4j", "relation": "is_a", "target": "graph database"},
+    {"source": "document database", "relation": "is_a", "target": "database"},
+    {"source": "graph database", "relation": "is_a", "target": "database"},
+    {"source": "postgresql", "relation": "is_a", "target": "database"}
+  ],
+  "resources": [],
+  "memories": [
+    {"key": "dp-style", "scope": "universal", "kind": "directive", "text": "Write in a technical, concise style; skip pleasantries and filler.", "about": ["writing_style"], "strength": "prefer", "note": "user case 9"},
+    {"key": "dp-challenge", "scope": "universal", "kind": "directive", "text": "Actively challenge a decision that does not follow best practice and has no stated justification: name the best practice and ask for the reason before going ahead.", "about": ["best_practice"], "strength": "should", "note": "user case 9"},
+    {"key": "dp-stack", "scope": "universal", "kind": "directive", "text": "Prefer Python, MongoDB, React and Neo4j over equivalent technologies.", "about": ["technology_stack", "mongodb", "neo4j", "react", "python"], "strength": "prefer", "note": "user case 10"},
+    {"key": "dp-stack-except", "scope": "universal", "kind": "directive", "text": "Use a different technology only when there is a specific reason one of the preferred ones does not fit, and state that reason.", "about": ["technology_stack"], "strength": "should", "note": "user case 10: the exception clause"},
+    {"key": "dp-stack-fact", "kind": "fact", "text": "The user's preferred technology stack is Python, MongoDB, React and Neo4j.", "fields": {"subject": "the_user", "predicate": "preferred stack", "object": "Python, MongoDB, React, Neo4j"}, "about": ["technology_stack", "the_user"]}
+  ]
+}

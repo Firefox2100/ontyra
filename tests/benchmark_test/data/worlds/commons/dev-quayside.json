@@ -1,0 +1,1026 @@
+{
+ "concepts": [
+  {
+   "label": "software project",
+   "definition": "A code repository or project the user develops."
+  },
+  {
+   "label": "Linux",
+   "scheme": "qualifier",
+   "aliases": [
+    "gnu/linux"
+   ]
+  },
+  {
+   "label": "Windows",
+   "scheme": "qualifier"
+  },
+  {
+   "label": "macOS",
+   "scheme": "qualifier",
+   "aliases": [
+    "mac os",
+    "osx"
+   ]
+  },
+  {
+   "label": "Debian family",
+   "scheme": "qualifier",
+   "is_a": [
+    "linux"
+   ]
+  },
+  {
+   "label": "Ubuntu",
+   "scheme": "qualifier",
+   "is_a": [
+    "debian family"
+   ]
+  },
+  {
+   "label": "Red Hat family",
+   "scheme": "qualifier",
+   "is_a": [
+    "linux"
+   ]
+  },
+  {
+   "label": "Fedora",
+   "scheme": "qualifier",
+   "is_a": [
+    "red hat family"
+   ]
+  },
+  {
+   "label": "Python",
+   "scheme": "qualifier",
+   "value_type": "version",
+   "version_scheme": "pep440"
+  },
+  {
+   "label": "Node.js",
+   "scheme": "qualifier",
+   "aliases": [
+    "node",
+    "nodejs"
+   ],
+   "value_type": "version",
+   "version_scheme": "semver"
+  },
+  {
+   "label": "RAM",
+   "scheme": "qualifier",
+   "value_type": "number",
+   "dimension": "memory"
+  },
+  {
+   "label": "conda",
+   "scheme": "qualifier"
+  },
+  {
+   "label": "Docker",
+   "scheme": "qualifier",
+   "aliases": [
+    "docker compose",
+    "compose"
+   ]
+  },
+  {
+   "label": "Podman",
+   "scheme": "qualifier"
+  },
+  {
+   "label": "testing framework"
+  },
+  {
+   "label": "pytest",
+   "aliases": [
+    "py.test"
+   ],
+   "is_a": [
+    "testing framework"
+   ]
+  },
+  {
+   "label": "unittest",
+   "is_a": [
+    "testing framework"
+   ]
+  },
+  {
+   "label": "vitest",
+   "is_a": [
+    "testing framework"
+   ]
+  },
+  {
+   "label": "package manager"
+  },
+  {
+   "label": "uv",
+   "is_a": [
+    "package manager"
+   ]
+  },
+  {
+   "label": "pip",
+   "is_a": [
+    "package manager"
+   ]
+  },
+  {
+   "label": "poetry",
+   "is_a": [
+    "package manager"
+   ]
+  },
+  {
+   "label": "pipenv",
+   "is_a": [
+    "package manager"
+   ]
+  },
+  {
+   "label": "PostgreSQL",
+   "aliases": [
+    "postgres",
+    "pg"
+   ]
+  },
+  {
+   "label": "SQLite"
+  },
+  {
+   "label": "Redis"
+  },
+  {
+   "label": "MySQL"
+  },
+  {
+   "label": "Alembic",
+   "aliases": [
+    "database migration",
+    "migrations"
+   ]
+  },
+  {
+   "label": "linter"
+  },
+  {
+   "label": "ruff",
+   "is_a": [
+    "linter"
+   ]
+  },
+  {
+   "label": "flake8",
+   "is_a": [
+    "linter"
+   ]
+  },
+  {
+   "label": "GitHub Actions",
+   "aliases": [
+    "github workflow"
+   ]
+  },
+  {
+   "label": "Tidewatch",
+   "definition": "A Python tide-monitoring service (the owner's project)."
+  },
+  {
+   "label": "Lanternkit",
+   "definition": "A TypeScript component library (the owner's project)."
+  },
+  {
+   "label": "Buildbox",
+   "aliases": [
+    "build box"
+   ],
+   "definition": "The self-hosted CI runner host."
+  }
+ ],
+ "relations": [
+  {"source": "tidewatch", "relation": "is_a", "target": "software_project"},
+  {"source": "lanternkit", "relation": "is_a", "target": "software_project"},
+  {
+   "source": "linux",
+   "relation": "disjoint_with",
+   "target": "windows"
+  },
+  {
+   "source": "linux",
+   "relation": "disjoint_with",
+   "target": "macos"
+  },
+  {
+   "source": "windows",
+   "relation": "disjoint_with",
+   "target": "macos"
+  },
+  {
+   "source": "debian family",
+   "relation": "disjoint_with",
+   "target": "red hat family"
+  },
+  {
+   "source": "pytest",
+   "relation": "alternative_to",
+   "target": "unittest"
+  },
+  {
+   "source": "docker",
+   "relation": "alternative_to",
+   "target": "podman"
+  },
+  {
+   "source": "uv",
+   "relation": "alternative_to",
+   "target": "poetry"
+  },
+  {
+   "source": "uv",
+   "relation": "alternative_to",
+   "target": "pip"
+  },
+  {
+   "source": "pipenv",
+   "relation": "replaced_by",
+   "target": "uv"
+  },
+  {
+   "source": "flake8",
+   "relation": "replaced_by",
+   "target": "ruff"
+  },
+  {
+   "source": "alembic",
+   "relation": "depends_on",
+   "target": "postgresql"
+  }
+ ],
+ "resources": [
+  {
+   "uri": "file:///home/mira/src/tidewatch",
+   "kind": "project",
+   "label": "tidewatch repo",
+   "instance_of": [
+    "tidewatch"
+   ]
+  },
+  {
+   "uri": "file:///home/mira/src/lanternkit",
+   "kind": "project",
+   "label": "lanternkit repo",
+   "instance_of": [
+    "lanternkit"
+   ]
+  },
+  {
+   "uri": "ssh://mira@buildbox",
+   "kind": "host",
+   "label": "CI runner",
+   "instance_of": [
+    "buildbox"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "d-pytest",
+   "kind": "directive",
+   "text": "Use pytest for tests in tidewatch; do not write unittest.TestCase classes.",
+   "fields": {
+    "strength": "must",
+    "rule": "use pytest, never unittest.TestCase",
+    "about": [
+     "concept:pytest"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "trap": [
+    "anchor",
+    "twin"
+   ]
+  },
+  {
+   "key": "d-vitest",
+   "kind": "directive",
+   "text": "Use vitest for tests in lanternkit; do not add jest.",
+   "fields": {
+    "strength": "must",
+    "rule": "use vitest, never jest",
+    "about": [
+     "concept:vitest"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/lanternkit"
+     }
+    ]
+   },
+   "trap": [
+    "anchor",
+    "twin"
+   ]
+  },
+  {
+   "key": "d-uv",
+   "kind": "directive",
+   "text": "Use uv for Python dependency management in tidewatch; do not run pip install directly.",
+   "fields": {
+    "strength": "should",
+    "rule": "manage dependencies with uv",
+    "about": [
+     "concept:uv"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "trap": [
+    "twin",
+    "opposite"
+   ]
+  },
+  {
+   "key": "d-ruff",
+   "kind": "directive",
+   "text": "Run ruff check and ruff format before committing Python changes.",
+   "fields": {
+    "strength": "should",
+    "rule": "run ruff before committing",
+    "about": [
+     "concept:ruff"
+    ],
+    "qualifiers": [
+     {
+      "concept": "concept:python",
+      "role": "necessary"
+     }
+    ]
+   },
+   "note": "applies wherever Python is in use"
+  },
+  {
+   "key": "d-no-force-push",
+   "kind": "directive",
+   "text": "Never force-push to the main branch.",
+   "about": ["software_project"],
+   "fields": {
+    "strength": "must",
+    "polarity": "avoid",
+    "rule": "no force-push to main"
+   }
+  },
+  {
+   "key": "d-types",
+   "kind": "directive",
+   "text": "Add type hints to every new Python function.",
+   "fields": {
+    "strength": "should",
+    "rule": "add type hints",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "trap": [
+    "overridden"
+   ]
+  },
+  {
+   "key": "d-scripts-notypes",
+   "kind": "directive",
+   "text": "Throwaway scripts under tidewatch/scripts do not need type hints.",
+   "fields": {
+    "strength": "should",
+    "polarity": "avoid",
+    "rule": "skip type hints in scripts",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch/scripts"
+     }
+    ]
+   },
+   "links": [
+    {
+     "relation": "overrides",
+     "target": "d-types"
+    }
+   ],
+   "note": "overrides d-types inside scripts/",
+   "trap": [
+    "overridden",
+    "anchor"
+   ]
+  },
+  {
+   "key": "d-apt",
+   "kind": "directive",
+   "text": "Install system packages with apt, not by downloading installers.",
+   "fields": {
+    "strength": "should",
+    "rule": "use apt for system packages",
+    "qualifiers": [
+     {
+      "concept": "concept:debian_family",
+      "role": "necessary"
+     }
+    ]
+   },
+   "note": "needs a Debian-family system: Ubuntu entails it; Windows and Fedora exclude it",
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "d-windows-ps",
+   "kind": "directive",
+   "text": "On Windows run PowerShell scripts with -ExecutionPolicy Bypass and use pathlib for paths.",
+   "fields": {
+    "strength": "should",
+    "rule": "PowerShell bypass and pathlib",
+    "qualifiers": [
+     {
+      "concept": "concept:windows",
+      "role": "necessary"
+     }
+    ]
+   },
+   "trap": [
+    "qualifier",
+    "opposite"
+   ]
+  },
+  {
+   "key": "d-compose",
+   "kind": "directive",
+   "text": "Start the local dependencies with docker compose up -d instead of by hand.",
+   "fields": {
+    "strength": "should",
+    "rule": "start dependencies with compose",
+    "about": [
+     "concept:docker"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ],
+    "qualifiers": [
+     {
+      "concept": "concept:docker",
+      "role": "necessary"
+     }
+    ]
+   },
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "d-tomllib",
+   "kind": "directive",
+   "text": "Use tomllib from the standard library instead of installing tomli.",
+   "fields": {
+    "strength": "should",
+    "rule": "use tomllib",
+    "qualifiers": [
+     {
+      "concept": "concept:python",
+      "role": "necessary",
+      "op": ">=",
+      "value": "3.11"
+     }
+    ]
+   },
+   "note": "only Python 3.11 and later",
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "d-low-ram",
+   "kind": "directive",
+   "text": "Limit pytest-xdist to two workers when running the tidewatch test suite.",
+   "fields": {
+    "strength": "should",
+    "rule": "pytest -n 2",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ],
+    "qualifiers": [
+     {
+      "concept": "concept:ram",
+      "role": "necessary",
+      "op": "<",
+      "value": 16,
+      "unit": "GB"
+     }
+    ]
+   },
+   "note": "only on small machines",
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "d-conda",
+   "kind": "directive",
+   "text": "Activate the conda environment tide before running anything in the notebooks folder.",
+   "fields": {
+    "strength": "should",
+    "rule": "activate conda env tide",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch/notebooks"
+     }
+    ],
+    "qualifiers": [
+     {
+      "concept": "concept:conda",
+      "role": "prerequisite"
+     }
+    ]
+   },
+   "note": "a prerequisite: attaches a check, never filters",
+   "trap": [
+    "anchor",
+    "qualifier"
+   ]
+  },
+  {
+   "key": "d-no-friday-deploy",
+   "kind": "directive",
+   "text": "Do not deploy tidewatch on Fridays.",
+   "fields": {
+    "strength": "should",
+    "polarity": "avoid",
+    "rule": "no Friday deploys",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "trap": [
+    "contradicted"
+   ]
+  },
+  {
+   "key": "d-friday-ok",
+   "kind": "directive",
+   "text": "Deploying tidewatch on Friday mornings is fine when the change is behind a flag.",
+   "fields": {
+    "strength": "prefer",
+    "rule": "Friday morning deploys behind flags are ok",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "links": [
+    {
+     "relation": "contradicts",
+     "target": "d-no-friday-deploy"
+    }
+   ],
+   "note": "an unresolved contradiction: both surface, with a caution",
+   "trap": [
+    "contradicted"
+   ]
+  },
+  {
+   "key": "d-freeze",
+   "kind": "directive",
+   "text": "Hold all tidewatch deploys until the first of November.",
+   "fields": {
+    "strength": "must",
+    "rule": "deploy freeze",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ],
+    "expires_at": "2026-11-01T00:00:00Z"
+   },
+   "note": "expired before the benchmark's now (2026-11-15)",
+   "trap": [
+    "expired"
+   ]
+  },
+  {
+   "key": "f-db-old",
+   "kind": "fact",
+   "text": "Tidewatch production runs PostgreSQL 14.",
+   "fields": {
+    "subject": "concept:tidewatch",
+    "predicate": "production database",
+    "object": "PostgreSQL 14",
+    "about": [
+     "concept:postgresql"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "note": "superseded by f-db",
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "f-db",
+   "kind": "fact",
+   "text": "Tidewatch production runs PostgreSQL 16.",
+   "fields": {
+    "subject": "concept:tidewatch",
+    "predicate": "production database",
+    "object": "PostgreSQL 16",
+    "about": [
+     "concept:postgresql"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "supersedes": "f-db-old"
+  },
+  {
+   "key": "f-mysql",
+   "kind": "fact",
+   "text": "Tidewatch stores its data in MySQL.",
+   "fields": {
+    "subject": "concept:tidewatch",
+    "predicate": "production database",
+    "object": "MySQL",
+    "about": [
+     "concept:mysql"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "retracted": true,
+   "note": "retracted: it was never true",
+   "trap": [
+    "retracted"
+   ]
+  },
+  {
+   "key": "f-port",
+   "kind": "fact",
+   "text": "The tidewatch dev API listens on port 8420.",
+   "fields": {
+    "subject": "concept:tidewatch",
+    "predicate": "dev API port",
+    "object": "8420",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "f-python",
+   "kind": "fact",
+   "text": "Tidewatch targets Python 3.12.",
+   "fields": {
+    "subject": "concept:tidewatch",
+    "predicate": "python version",
+    "object": "3.12",
+    "about": [
+     "concept:python"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "f-ci",
+   "kind": "fact",
+   "text": "Tidewatch CI runs on GitHub Actions using the self-hosted runner on buildbox.",
+   "fields": {
+    "subject": "concept:tidewatch",
+    "predicate": "ci",
+    "object": "GitHub Actions on buildbox",
+    "about": [
+     "concept:github_actions",
+     "concept:buildbox"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     },
+     {
+      "uri": "ssh://mira@buildbox"
+     }
+    ]
+   }
+  },
+  {
+   "key": "f-node",
+   "kind": "fact",
+   "text": "Lanternkit supports Node.js 20 and 22.",
+   "fields": {
+    "subject": "concept:lanternkit",
+    "predicate": "node versions",
+    "object": "20, 22",
+    "about": [
+     "concept:node_js"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/lanternkit"
+     }
+    ]
+   }
+  },
+  {
+   "key": "dec-sqlite-cache",
+   "kind": "decision",
+   "text": "Chose SQLite for the tidewatch local cache instead of Redis because a single process owns the cache.",
+   "fields": {
+    "chosen": "SQLite",
+    "alternatives": [
+     "Redis"
+    ],
+    "rationale": "one process owns the cache; no server to run",
+    "decided_at": "2026-08-03T09:00:00Z",
+    "about": [
+     "concept:sqlite",
+     "concept:redis"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "dec-uv",
+   "kind": "decision",
+   "text": "Chose uv over poetry for tidewatch dependency management because installs are much faster.",
+   "fields": {
+    "chosen": "uv",
+    "alternatives": [
+     "poetry"
+    ],
+    "rationale": "installs are much faster",
+    "decided_at": "2026-07-14T09:00:00Z",
+    "about": [
+     "concept:uv",
+     "concept:poetry"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "l-pgdata",
+   "kind": "lesson",
+   "text": "After changing the PostgreSQL major version the compose volume pgdata must be removed with docker compose down -v, otherwise the database container crash-loops.",
+   "fields": {
+    "situation": "upgrading the PostgreSQL major version in the compose file",
+    "insight": "the old pgdata volume is incompatible and the container crash-loops",
+    "do_instead": "run docker compose down -v first",
+    "about": [
+     "concept:postgresql",
+     "concept:docker"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "l-utc-flaky",
+   "kind": "lesson",
+   "text": "Tests comparing datetimes flaked on CI because buildbox runs in UTC; freeze time with time-machine.",
+   "fields": {
+    "situation": "datetime tests pass locally but fail on CI",
+    "insight": "buildbox runs in UTC while laptops use local time",
+    "do_instead": "freeze time with time-machine",
+    "about": [
+     "concept:buildbox"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     },
+     {
+      "uri": "ssh://mira@buildbox"
+     }
+    ]
+   }
+  },
+  {
+   "key": "l-crlf",
+   "kind": "lesson",
+   "text": "Git on Windows rewrote line endings in shell scripts; set text=auto eol=lf for .sh files in .gitattributes.",
+   "fields": {
+    "situation": "shell scripts break after a checkout on Windows",
+    "insight": "git converted LF line endings to CRLF",
+    "do_instead": "set eol=lf for .sh files",
+    "qualifiers": [
+     {
+      "concept": "concept:windows",
+      "role": "necessary"
+     }
+    ]
+   },
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "p-release",
+   "kind": "procedure",
+   "text": "Release tidewatch: bump the version, update the changelog, tag it, push the tag, and let CI publish.",
+   "fields": {
+    "trigger": "release tidewatch",
+    "steps": [
+     {
+      "text": "bump the version in pyproject.toml"
+     },
+     {
+      "text": "update CHANGELOG.md"
+     },
+     {
+      "text": "git tag vX.Y.Z"
+     },
+     {
+      "text": "git push origin vX.Y.Z"
+     },
+     {
+      "text": "wait for the publish job on CI"
+     }
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   },
+   "trap": [
+    "anchor",
+    "twin"
+   ]
+  },
+  {
+   "key": "p-migrate",
+   "kind": "procedure",
+   "text": "Add a database migration in tidewatch: autogenerate a revision with alembic, review it, upgrade, and test the downgrade.",
+   "fields": {
+    "trigger": "add a database migration",
+    "steps": [
+     {
+      "text": "alembic revision --autogenerate"
+     },
+     {
+      "text": "review the generated revision by hand"
+     },
+     {
+      "text": "alembic upgrade head"
+     },
+     {
+      "text": "alembic downgrade -1 and upgrade again"
+     }
+    ],
+    "about": [
+     "concept:alembic"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "p-lk-release",
+   "kind": "procedure",
+   "text": "Release lanternkit: run the build, bump the version, and publish to npm with provenance.",
+   "fields": {
+    "trigger": "release lanternkit",
+    "steps": [
+     {
+      "text": "npm run build"
+     },
+     {
+      "text": "npm version patch"
+     },
+     {
+      "text": "npm publish --provenance"
+     }
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/lanternkit"
+     }
+    ]
+   },
+   "trap": [
+    "anchor",
+    "twin"
+   ]
+  },
+  {
+   "key": "e-disk",
+   "kind": "event",
+   "text": "On 2026-10-30 the buildbox disk filled up and CI stalled for six hours.",
+   "fields": {
+    "occurred_at": "2026-10-30T08:00:00Z",
+    "outcome": "pruned old workspaces",
+    "about": [
+     "concept:buildbox"
+    ],
+    "anchors": [
+     {
+      "uri": "ssh://mira@buildbox"
+     }
+    ]
+   }
+  },
+  {
+   "key": "e-pg16",
+   "kind": "event",
+   "text": "On 2026-09-12 tidewatch production was migrated to PostgreSQL 16.",
+   "fields": {
+    "occurred_at": "2026-09-12T20:00:00Z",
+    "about": [
+     "concept:postgresql"
+    ],
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/tidewatch"
+     }
+    ]
+   }
+  },
+  {
+   "key": "t-rotate-key",
+   "kind": "task",
+   "text": "Rotate the buildbox deploy key.",
+   "fields": {
+    "due": "2026-11-10T00:00:00Z",
+    "state": "open",
+    "about": [
+     "concept:buildbox"
+    ],
+    "anchors": [
+     {
+      "uri": "ssh://mira@buildbox"
+     }
+    ]
+   },
+   "note": "overdue at the benchmark's now",
+   "trap": [
+    "anchor"
+   ]
+  },
+  {
+   "key": "t-docs",
+   "kind": "task",
+   "text": "Write the lanternkit migration guide.",
+   "fields": {
+    "due": "2026-12-31T00:00:00Z",
+    "state": "open",
+    "anchors": [
+     {
+      "uri": "file:///home/mira/src/lanternkit"
+     }
+    ]
+   },
+   "note": "not due yet"
+  }
+ ]
+}

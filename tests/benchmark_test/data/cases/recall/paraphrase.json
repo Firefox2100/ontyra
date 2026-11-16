@@ -1,0 +1,859 @@
+[
+ {
+  "id": "pa-ci-clock",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "dev"
+  ],
+  "why": "experience stored as a lesson about the runner's time zone",
+  "mode": "recall",
+  "query": "everything is green on my machine yet red on the build server, only for anything involving the calendar",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "l-utc-flaky"
+  ],
+  "allow": [
+   "f-ci",
+   "e-disk"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-add-library",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "dev"
+  ],
+  "why": "dependency tooling",
+  "mode": "recall",
+  "query": "pull in a new library for the service",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-uv"
+  ],
+  "allow": [
+   "dec-uv"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-live-engine",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "dev"
+  ],
+  "why": "the production database fact",
+  "mode": "recall",
+  "query": "which engine stores the live data",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "f-db"
+  ],
+  "exclude": [
+   "f-db-old",
+   "f-mysql"
+  ],
+  "allow": [
+   "e-pg16",
+   "dec-sqlite-cache",
+   "l-pgdata"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-ship",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "dev"
+  ],
+  "why": "release procedure",
+  "mode": "recall",
+  "query": "ship the service to users",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "p-release"
+  ],
+  "exclude": [
+   "p-lk-release"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-oncall",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "dev"
+  ],
+  "why": "on-call fact",
+  "mode": "recall",
+  "query": "who is responsible when something breaks at night",
+  "include": [
+   "dm-oncall"
+  ],
+  "allow": [
+   "dm-rollback"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-gpu-oom",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "dev"
+  ],
+  "why": "lesson about batch size",
+  "mode": "recall",
+  "query": "the optimisation stops midway complaining there is no room left on the accelerator",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ]
+  },
+  "include": [
+   "dm-batch"
+  ],
+  "allow": [
+   "dm-bf16"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-expense-taxi",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "expense procedure and receipt rule",
+  "mode": "recall",
+  "query": "an employee wants money back for a taxi ride",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-exp-proc",
+   "fi-exp-receipt"
+  ],
+  "allow": [
+   "fi-limit",
+   "fi-meal-dom",
+   "fi-meal-abroad"
+  ],
+  "exclude": [
+   "fi-limit-old",
+   "fi-old-portal"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-lodging-cap",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "hotel limit",
+  "mode": "recall",
+  "query": "what is the nightly cap for lodging abroad",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/ops/travel"
+   ]
+  },
+  "include": [
+   "ad-hotel"
+  ],
+  "allow": [
+   "ad-flight-long"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-unordered-work",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "purchase order rule",
+  "mode": "recall",
+  "query": "a vendor demands payment for services we never requested",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-po"
+  ],
+  "allow": [
+   "fi-four-eyes",
+   "fi-pay-run"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-money-back",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "refund procedure, current window",
+  "mode": "recall",
+  "query": "a buyer is unhappy with a faulty purchase and wants reimbursement",
+  "include": [
+   "ad-refund"
+  ],
+  "exclude": [
+   "ad-refund-old"
+  ],
+  "allow": [
+   "ad-support-tone"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-voucher-scam",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "phishing lesson",
+  "mode": "recall",
+  "query": "someone I do not recognise urgently asks me to buy vouchers",
+  "include": [
+   "ad-phish"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-newcomer",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "onboarding",
+  "mode": "recall",
+  "query": "a fresh employee arrives soon, how do I prepare for them",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-onboard",
+   "ad-onboard-late"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-unwell",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "office"
+  ],
+  "why": "sick leave rule",
+  "mode": "recall",
+  "query": "I feel unwell today and cannot come in",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-sick"
+  ],
+  "allow": [
+   "ad-leave"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-warm-lab",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "calibration drift lesson",
+  "mode": "recall",
+  "query": "the readings change when the lab gets warm",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-drift"
+  ],
+  "allow": [
+   "ph-calib"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-announce",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "significance threshold",
+  "mode": "recall",
+  "query": "how sure must we be before announcing a new particle",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-sigma"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-thousand",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "unit mix-up lesson",
+  "mode": "recall",
+  "query": "the number I computed is a thousand times too large",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/neutrino-detector/analysis/fit.py"
+   ]
+  },
+  "include": [
+   "ph-mev-gev"
+  ],
+  "allow": [
+   "ph-units"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-lump",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "polymerisation lesson",
+  "mode": "recall",
+  "query": "the liquid turned into a solid lump in the flask",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-inhibitor"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-protection",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "lab safety",
+  "mode": "recall",
+  "query": "what protection is needed near volatile liquids",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  },
+  "include": [
+   "ch-ppe"
+  ],
+  "allow": [
+   "ch-ether",
+   "ch-waste"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-dying-dishes",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "mycoplasma lesson",
+  "mode": "recall",
+  "query": "my dishes keep dying but look clean under the scope",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-myco"
+  ],
+  "allow": [
+   "bi-hek"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-tank-warm",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "temperature incident",
+  "mode": "recall",
+  "query": "the fish water heated up during the night, are the eggs from that batch still usable",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  },
+  "include": [
+   "bi-temp"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-perfect-score",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research",
+   "homonym"
+  ],
+  "why": "leakage lesson",
+  "mode": "recall",
+  "query": "my numbers on fresh examples are implausibly flawless",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-leak"
+  ],
+  "allow": [
+   "cr-testset"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-one-run",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "seeds rule",
+  "mode": "recall",
+  "query": "one run is not enough to prove the method works",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn/src/train.py"
+   ]
+  },
+  "include": [
+   "cr-seeds"
+  ],
+  "exclude": [
+   "dm-seed"
+  ],
+  "allow": [
+   "cr-baseline"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-translation",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "translation lesson",
+  "mode": "recall",
+  "query": "a foreign-language novel's crucial expression may have been altered when rendered for readers",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/diaspora-novels/chapter3.md"
+   ]
+  },
+  "include": [
+   "li-translation"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-not-representative",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "sampling bias lesson and weighting",
+  "mode": "recall",
+  "query": "the people who answered were not like the whole country",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-panel-bias"
+  ],
+  "allow": [
+   "so-weight",
+   "so-sampling"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-agree-first",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "consent rule",
+  "mode": "recall",
+  "query": "participants must agree before we start asking questions",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  },
+  "include": [
+   "so-consent"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-noticing",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "order effects and demand characteristics",
+  "mode": "recall",
+  "query": "participants noticing what we are testing may change their behaviour",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-order"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-meaningful",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "effect size",
+  "mode": "recall",
+  "query": "how do I show the difference is meaningful and not just significant",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/protocol"
+   ]
+  },
+  "include": [
+   "ps-effect"
+  ],
+  "allow": [
+   "ps-cohen",
+   "st-pvalue"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-no-effect",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "misreading of null results",
+  "mode": "recall",
+  "query": "my result is not significant so there is no effect, right",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-pvalue"
+  ],
+  "allow": [
+   "st-null",
+   "st-bf",
+   "st-ci"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-weird-points",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "outlier rule",
+  "mode": "recall",
+  "query": "should I throw away the weird data points",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-outlier"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-returned-unread",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "desk rejection lesson",
+  "mode": "recall",
+  "query": "an editor turned it down on the first day with no feedback at all",
+  "include": [
+   "wr-desk"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-hide-identity",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "double-blind rule",
+  "mode": "recall",
+  "query": "hide my identity from the people judging the paper",
+  "include": [
+   "wr-blind"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-reuse-files",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "research"
+  ],
+  "why": "dataset licence rule",
+  "mode": "recall",
+  "query": "can I reuse these files in my own project",
+  "include": [
+   "da-licence"
+  ],
+  "allow": [
+   "da-zenodo"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-cold-radiators",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "daily"
+  ],
+  "why": "boiler procedure",
+  "mode": "recall",
+  "query": "the heating is dead and the meter is almost at zero",
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  },
+  "include": [
+   "dh-boiler"
+  ],
+  "allow": [
+   "dh-boiler-service"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-stew",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "daily"
+  ],
+  "why": "dietary constraints apply to any food question",
+  "mode": "recall",
+  "query": "which vegetables should I put in the stew",
+  "include": [
+   "dh-allergen"
+  ],
+  "allow": [
+   "dl-veg",
+   "dl-peanut",
+   "dh-curry",
+   "dl-alex-fish"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-canine",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "daily",
+   "twin"
+  ],
+  "why": "the dog, not the cat",
+  "mode": "recall",
+  "query": "what time is the canine's dinner",
+  "include": [
+   "dl-pixel"
+  ],
+  "exclude": [
+   "dl-luna"
+  ],
+  "allow": [
+   "dl-pixel-vet"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pa-feline",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "daily",
+   "twin"
+  ],
+  "why": "the cat, not the dog",
+  "mode": "recall",
+  "query": "when should the pet that meows be given her meal",
+  "include": [
+   "dl-luna"
+  ],
+  "exclude": [
+   "dl-pixel"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-neighbours",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "daily"
+  ],
+  "why": "Dutch learning rule",
+  "mode": "recall",
+  "query": "teach me how to talk with my neighbours in their language",
+  "include": [
+   "mh-dutch"
+  ],
+  "allow": [
+   "mh-dutch-plan"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "pa-hot",
+  "world": "commons",
+  "tags": [
+   "paraphrase",
+   "semantic",
+   "daily"
+  ],
+  "why": "unit preference",
+  "mode": "recall",
+  "query": "it is very hot today, how warm will it be in Fahrenheit",
+  "include": [
+   "dl-metric"
+  ],
+  "split": "tune"
+ }
+]

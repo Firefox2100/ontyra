@@ -14,8 +14,22 @@ class RecallSettings(Model):
     """Recall tuning (`ONTYRA_RECALL__*`). Defaults are hand-set starting points; the benchmark
     suite is where they get tuned."""
 
+    engine: Literal["legacy", "fusion"] = "legacy"  # which recall engine serves `recall`
     machine: str = "localhost"  # host id for `file:` URIs without one
-    candidates: int = 40  # per lane
+    candidates: int = 40  # per lane (legacy engine)
+    # --- fusion engine (plans/21) ---
+    overfetch: int = 150  # per lane, before applicability filtering
+    fusion_alpha: float = 0.2  # weight of the lexical score; 1 - alpha goes to the dense score
+    fusion_baseline: Literal["mean", "min"] = "mean"  # dense score = (cos - base) / (top - base)
+    fusion_margin: float = 0.1  # keep candidates within this of the best fused score
+    abstain_cosine: float = 0.0  # stay silent when the best cosine is below this (per embedder)
+    concept_boost: float = 0.0  # added to the fused score, times the concept lane weight
+    rerank_candidates: int = 30  # how many top candidates the reranker sees
+    rerank_weight: float = 0.5  # share of the reranker probability in the final score
+    # --- decision model (optional; ONTYRA_DECISION__* selects it, plans/21) ---
+    decision_candidates: int = 8  # top candidates the decision model is asked about
+    decision_weight: float = 0.5  # share of its probability in the final score
+    decision_margin: float = 0.15  # keep candidates within this of the best blended score
     relevance_threshold: float = 0.25  # input-driven recall stays silent below this
     vector_floor: float = 0.3  # cosine at or below this counts as no similarity
     lane_weights: dict[str, float] = {"lexical": 1.0, "vector": 1.0, "concept": 0.9}
@@ -63,6 +77,7 @@ class RecallRequest(Model):
     budget_tokens: int | None = None
     profile: Literal["compact", "rich"] = "rich"
     redeliver: bool = False  # ignore the ledger (e.g. after context compaction)
+    decide: bool = True  # False: skip the decision model for this request even if configured
 
 
 class RecallItem(Model):

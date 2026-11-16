@@ -1,0 +1,624 @@
+{
+ "concepts": [
+  {
+   "label": "leave request",
+   "aliases": [
+    "annual leave",
+    "vacation request",
+    "time off"
+   ]
+  },
+  {
+   "label": "onboarding",
+   "aliases": [
+    "new hire setup"
+   ]
+  },
+  {
+   "label": "incident report",
+   "aliases": [
+    "accident report",
+    "safety incident"
+   ]
+  },
+  {
+   "label": "meeting minutes",
+   "aliases": [
+    "minutes"
+   ]
+  },
+  {
+   "label": "travel booking",
+   "aliases": [
+    "business travel"
+   ]
+  },
+  {
+   "label": "procurement",
+   "aliases": [
+    "purchasing"
+   ]
+  },
+  {
+   "label": "IT helpdesk",
+   "aliases": [
+    "helpdesk",
+    "it support"
+   ]
+  },
+  {
+   "label": "visitor badge",
+   "aliases": [
+    "visitor registration"
+   ]
+  },
+  {
+   "label": "customer support",
+   "aliases": [
+    "customer service"
+   ]
+  },
+  {
+   "label": "refund"
+  },
+  {
+   "label": "phishing"
+  },
+  {
+   "label": "password",
+   "aliases": [
+    "passphrase"
+   ]
+  },
+  {
+   "label": "appraisal",
+   "aliases": [
+    "performance review"
+   ]
+  },
+  {
+   "label": "People manager",
+   "scheme": "qualifier",
+   "aliases": [
+    "line manager"
+   ]
+  },
+  {
+   "label": "HR wiki"
+  },
+  {
+   "label": "Ops wiki"
+  },
+  {
+   "label": "email etiquette"
+  },
+  {
+   "label": "presentation template",
+   "aliases": [
+    "slide template"
+   ]
+  }
+ ],
+ "relations": [],
+ "resources": [
+  {
+   "uri": "https://wiki.northwind.example/hr",
+   "kind": "url",
+   "label": "HR wiki",
+   "instance_of": [
+    "hr_wiki"
+   ]
+  },
+  {
+   "uri": "https://wiki.northwind.example/ops",
+   "kind": "url",
+   "label": "Ops wiki",
+   "instance_of": [
+    "ops_wiki"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "ad-leave",
+   "kind": "procedure",
+   "text": "Request annual leave: submit it in the HR portal at least two weeks ahead, wait for your manager's approval, then add it to the team calendar.",
+   "fields": {
+    "trigger": "request leave",
+    "steps": [
+     "submit the request in the HR portal at least two weeks ahead",
+     "wait for the manager's approval",
+     "add the absence to the team calendar"
+    ]
+   },
+   "about": [
+    "leave_request"
+   ],
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ]
+  },
+  {
+   "key": "ad-leave-days-old",
+   "kind": "fact",
+   "text": "Employees get 25 days of annual leave.",
+   "fields": {
+    "subject": "leave_request",
+    "predicate": "annual entitlement",
+    "object": "25 days"
+   },
+   "about": [
+    "leave_request"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "ad-leave-days",
+   "kind": "fact",
+   "text": "Employees get 28 days of annual leave; up to 5 unused days carry over until 31 March.",
+   "fields": {
+    "subject": "leave_request",
+    "predicate": "annual entitlement",
+    "object": "28 days, 5 carry over"
+   },
+   "about": [
+    "leave_request"
+   ],
+   "supersedes": "ad-leave-days-old"
+  },
+  {
+   "key": "ad-sick",
+   "kind": "directive",
+   "text": "Tell your manager before 9:30 on the first day you are sick; absences over three days need a doctor's note.",
+   "about": [
+    "leave_request"
+   ],
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ],
+   "strength": "must"
+  },
+  {
+   "key": "ad-onboard",
+   "kind": "procedure",
+   "text": "Onboard a new hire: order the laptop two weeks ahead, create the accounts, assign a buddy, and plan a first-day lunch.",
+   "fields": {
+    "trigger": "a new colleague is joining",
+    "steps": [
+     "order the laptop two weeks ahead",
+     "create email and system accounts",
+     "assign a buddy",
+     "plan the first-day lunch and a welcome meeting"
+    ]
+   },
+   "about": [
+    "onboarding"
+   ],
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ]
+  },
+  {
+   "key": "ad-onboard-late",
+   "kind": "lesson",
+   "text": "A new hire's laptop arrived late because it was ordered only the week before the start date.",
+   "fields": {
+    "situation": "a new colleague starts on Monday",
+    "insight": "equipment ordered one week ahead arrives late",
+    "do_instead": "order two weeks ahead"
+   },
+   "about": [
+    "onboarding",
+    "procurement"
+   ]
+  },
+  {
+   "key": "ad-incident",
+   "kind": "procedure",
+   "text": "File a workplace incident report: make the area safe, tell the safety officer within 24 hours, fill in form S-12 and attach photos.",
+   "fields": {
+    "trigger": "an accident or near miss happens at work",
+    "steps": [
+     "make the area safe and help anyone hurt",
+     "notify the safety officer within 24 hours",
+     "fill in form S-12",
+     "attach photos and witness names"
+    ]
+   },
+   "about": [
+    "incident_report"
+   ],
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ]
+  },
+  {
+   "key": "ad-incident-facts",
+   "kind": "directive",
+   "text": "Describe only observed facts in an incident report: no guesses about cause and no blame.",
+   "about": [
+    "incident_report"
+   ],
+   "strength": "must",
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ]
+  },
+  {
+   "key": "ad-minutes",
+   "kind": "procedure",
+   "text": "Take meeting minutes: note attendees, decisions and action items with owner and due date, and send them within 24 hours.",
+   "fields": {
+    "trigger": "taking notes in a meeting",
+    "steps": [
+     "list attendees and the agenda",
+     "record every decision",
+     "record each action item with owner and due date",
+     "send the minutes within 24 hours"
+    ]
+   },
+   "about": [
+    "meeting_minutes"
+   ]
+  },
+  {
+   "key": "ad-minutes-fmt",
+   "kind": "directive",
+   "text": "Write action items in minutes as Owner, action, due date, one per line.",
+   "about": [
+    "meeting_minutes"
+   ],
+   "strength": "prefer"
+  },
+  {
+   "key": "ad-flight",
+   "kind": "directive",
+   "text": "Book flights through the travel portal at least 14 days ahead and fly economy on flights under six hours.",
+   "about": [
+    "travel_booking"
+   ],
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "ad-flight-long",
+   "kind": "fact",
+   "text": "Business class is allowed on flights over six hours with director approval.",
+   "fields": {
+    "subject": "travel_booking",
+    "predicate": "business class",
+    "object": "over six hours with approval"
+   },
+   "about": [
+    "travel_booking"
+   ],
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ],
+   "trap": [
+    "opposite"
+   ],
+   "note": "near-opposite of ad-flight by flight length"
+  },
+  {
+   "key": "ad-hotel",
+   "kind": "fact",
+   "text": "The hotel limit is 140 EUR per night in cities and 100 EUR elsewhere.",
+   "fields": {
+    "subject": "travel_booking",
+    "predicate": "hotel limit",
+    "object": "140 EUR city, 100 EUR elsewhere"
+   },
+   "about": [
+    "travel_booking"
+   ],
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ]
+  },
+  {
+   "key": "ad-procure",
+   "kind": "procedure",
+   "text": "Buy equipment over 1,000 EUR: collect three quotes, raise a purchase order, and get procurement approval before ordering.",
+   "fields": {
+    "trigger": "buy equipment over 1,000 EUR",
+    "steps": [
+     "collect three comparable quotes",
+     "raise a purchase order",
+     "get procurement approval",
+     "order and log the delivery"
+    ]
+   },
+   "about": [
+    "procurement",
+    "purchase_order"
+   ],
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ]
+  },
+  {
+   "key": "ad-badge",
+   "kind": "directive",
+   "text": "Register visitors at reception the day before; visitors wear a visitor badge at all times and are never left alone.",
+   "about": [
+    "visitor_badge"
+   ],
+   "strength": "must",
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ]
+  },
+  {
+   "key": "ad-helpdesk",
+   "kind": "procedure",
+   "text": "Get IT help: open a ticket in the helpdesk portal; for outages call extension 4000.",
+   "fields": {
+    "trigger": "a computer or account problem",
+    "steps": [
+     "open a ticket in the helpdesk portal",
+     "describe the symptom and the device",
+     "for a total outage call extension 4000"
+    ]
+   },
+   "about": [
+    "it_helpdesk"
+   ]
+  },
+  {
+   "key": "ad-password",
+   "kind": "directive",
+   "text": "Change work passwords every 180 days, never share them, and keep them in the password manager.",
+   "about": [
+    "password"
+   ],
+   "strength": "must",
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "ad-phish",
+   "kind": "lesson",
+   "text": "A phishing email that imitated the CEO asked for gift cards; confirm any unusual payment request by phone.",
+   "fields": {
+    "situation": "an urgent email asks for money or credentials",
+    "insight": "it imitated an executive",
+    "do_instead": "confirm by phone with the person"
+   },
+   "about": [
+    "phishing"
+   ]
+  },
+  {
+   "key": "ad-support-tone",
+   "kind": "directive",
+   "text": "Open customer support replies with the customer's name, acknowledge the problem, and end with the next step and a date.",
+   "about": [
+    "customer_support"
+   ]
+  },
+  {
+   "key": "ad-refund-old",
+   "kind": "procedure",
+   "text": "Process a refund: verify the order, check the 14-day return window, refund to the original payment method, and log the ticket.",
+   "fields": {
+    "trigger": "a customer asks for a refund",
+    "steps": [
+     "verify the order",
+     "check the 14-day return window",
+     "refund to the original payment method",
+     "log the ticket"
+    ]
+   },
+   "about": [
+    "refund",
+    "customer_support"
+   ],
+   "trap": [
+    "stale",
+    "superseded"
+   ]
+  },
+  {
+   "key": "ad-refund",
+   "kind": "procedure",
+   "text": "Process a refund: verify the order, check the 30-day return window, refund to the original payment method, and log the ticket.",
+   "fields": {
+    "trigger": "a customer asks for a refund",
+    "steps": [
+     "verify the order",
+     "check the 30-day return window",
+     "refund to the original payment method",
+     "log the ticket"
+    ]
+   },
+   "about": [
+    "refund",
+    "customer_support"
+   ],
+   "supersedes": "ad-refund-old"
+  },
+  {
+   "key": "ad-closed",
+   "kind": "fact",
+   "text": "The office is closed on 24 and 31 December.",
+   "fields": {
+    "subject": "ops_wiki",
+    "predicate": "office closure",
+    "object": "24 and 31 December"
+   },
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ]
+  },
+  {
+   "key": "ad-wfh",
+   "kind": "directive",
+   "text": "On remote days be reachable on chat from 9:30 to 16:00 and keep your calendar current.",
+   "q": [
+    "necessary:working_from_home"
+   ],
+   "trap": [
+    "qualifier",
+    "opposite"
+   ]
+  },
+  {
+   "key": "ad-desk",
+   "kind": "directive",
+   "text": "On office days book a desk in the evening before.",
+   "q": [
+    "exclusion:working_from_home"
+   ],
+   "trap": [
+    "qualifier",
+    "opposite"
+   ],
+   "note": "opposite of ad-wfh"
+  },
+  {
+   "key": "ad-appraisal",
+   "kind": "directive",
+   "text": "Managers must complete the annual appraisals of their team by 15 December.",
+   "q": [
+    "necessary:people_manager"
+   ],
+   "about": [
+    "appraisal"
+   ],
+   "strength": "must",
+   "trap": [
+    "qualifier"
+   ]
+  },
+  {
+   "key": "ad-ext-email",
+   "kind": "directive",
+   "text": "Write to external clients in a formal tone, state the requested action in the subject line, and sign with name and title.",
+   "about": [
+    "email_etiquette"
+   ],
+   "trap": [
+    "opposite"
+   ]
+  },
+  {
+   "key": "ad-int-chat",
+   "kind": "directive",
+   "text": "Internal chat may be informal, but record decisions in the thread so they can be found later.",
+   "about": [
+    "email_etiquette"
+   ],
+   "trap": [
+    "opposite"
+   ],
+   "note": "opposite register of ad-ext-email"
+  },
+  {
+   "key": "ad-slides",
+   "kind": "directive",
+   "text": "Use the corporate slide template and put the date and author in the footer of every deck.",
+   "about": [
+    "presentation_template"
+   ]
+  },
+  {
+   "key": "ad-allhands",
+   "kind": "event",
+   "text": "At the September all-hands the company decided that from 2027 office days are Tuesday to Thursday.",
+   "fields": {
+    "occurred_at": "2026-09-24T15:00:00Z"
+   },
+   "about": [
+    "working_from_home"
+   ]
+  },
+  {
+   "key": "ad-handbook",
+   "kind": "task",
+   "text": "Review the remote-work section of the staff handbook.",
+   "fields": {
+    "due": "2026-11-30T00:00:00Z",
+    "state": "open"
+   },
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ],
+   "note": "not due yet"
+  },
+  {
+   "key": "ad-appraisal-task",
+   "kind": "task",
+   "text": "Send the draft appraisal forms to HR.",
+   "fields": {
+    "due": "2026-11-12T00:00:00Z",
+    "state": "open"
+   },
+   "about": [
+    "appraisal"
+   ],
+   "at": [
+    "https://wiki.northwind.example/hr"
+   ],
+   "note": "overdue"
+  },
+  {
+   "key": "ad-north-park",
+   "kind": "fact",
+   "text": "The north car park is closed until 31 October because of resurfacing.",
+   "fields": {
+    "subject": "ops_wiki",
+    "predicate": "car park",
+    "object": "north car park closed",
+    "expires_at": "2026-10-31T00:00:00Z"
+   },
+   "at": [
+    "https://wiki.northwind.example/ops"
+   ],
+   "trap": [
+    "expired"
+   ]
+  },
+  {
+   "key": "ad-minutes-shared",
+   "kind": "directive",
+   "text": "Store all meeting minutes in the shared team drive.",
+   "about": [
+    "meeting_minutes"
+   ],
+   "trap": [
+    "overridden"
+   ]
+  },
+  {
+   "key": "ad-minutes-board",
+   "kind": "directive",
+   "text": "Board meeting minutes are confidential and are stored only in the board folder, never in the shared team drive.",
+   "about": [
+    "meeting_minutes"
+   ],
+   "at": [
+    "https://wiki.northwind.example/board"
+   ],
+   "strength": "must",
+   "links": [
+    {
+     "relation": "overrides",
+     "target": "ad-minutes-shared"
+    }
+   ],
+   "trap": [
+    "overridden",
+    "anchor"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,284 @@
+{
+ "concepts": [
+  {
+   "label": "Graph-nn project",
+   "definition": "The graph neural network research project."
+  },
+  {
+   "label": "random seed",
+   "aliases": [
+    "seeds"
+   ]
+  },
+  {
+   "label": "test set",
+   "aliases": [
+    "held-out set"
+   ]
+  },
+  {
+   "label": "validation set",
+   "aliases": [
+    "dev set"
+   ]
+  },
+  {
+   "label": "baseline model",
+   "aliases": [
+    "baseline"
+   ]
+  },
+  {
+   "label": "compute budget",
+   "aliases": [
+    "gpu hours"
+   ]
+  },
+  {
+   "label": "OGB benchmark",
+   "aliases": [
+    "open graph benchmark"
+   ]
+  },
+  {
+   "label": "data leakage",
+   "aliases": [
+    "train-test leak"
+   ]
+  },
+  {
+   "label": "ablation study",
+   "aliases": [
+    "ablation"
+   ]
+  },
+  {
+   "label": "artifact release",
+   "aliases": [
+    "code release"
+   ]
+  },
+  {
+   "label": "arXiv",
+   "aliases": [
+    "preprint"
+   ]
+  },
+  {
+   "label": "macro-F1",
+   "aliases": [
+    "f1 score"
+   ]
+  }
+ ],
+ "relations": [],
+ "resources": [
+  {
+   "uri": "file:///home/mira/research/graph-nn",
+   "kind": "project",
+   "label": "graph-nn project",
+   "instance_of": [
+    "graph_nn_project"
+   ]
+  }
+ ],
+ "memories": [
+  {
+   "key": "cr-seeds",
+   "kind": "directive",
+   "text": "Report the mean and standard deviation over at least five random seeds, never a single best run.",
+   "about": [
+    "random_seed"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ],
+   "strength": "must",
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "cr-testset",
+   "kind": "directive",
+   "text": "Never tune hyperparameters on the test set; use the validation set and touch the test set once at the end.",
+   "about": [
+    "test_set",
+    "validation_set"
+   ],
+   "strength": "must",
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "cr-baseline",
+   "kind": "directive",
+   "text": "Include a strong simple baseline, such as logistic regression or an MLP, before claiming gains from a graph model.",
+   "about": [
+    "baseline_model"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "cr-compute",
+   "kind": "fact",
+   "text": "The compute budget is two GPU-weeks per paper; log GPU-hours in the experiment sheet.",
+   "fields": {
+    "subject": "compute_budget",
+    "predicate": "limit",
+    "object": "2 GPU-weeks per paper"
+   },
+   "about": [
+    "compute_budget"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  },
+  {
+   "key": "cr-ogb",
+   "kind": "fact",
+   "text": "Standard graph benchmarks come from the Open Graph Benchmark; cite the dataset version.",
+   "fields": {
+    "subject": "ogb_benchmark",
+    "predicate": "use",
+    "object": "standard graph datasets"
+   },
+   "about": [
+    "ogb_benchmark"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  },
+  {
+   "key": "cr-leak",
+   "kind": "lesson",
+   "text": "Test nodes leaked into training through the neighbour sampler; build the splits before building the graph.",
+   "fields": {
+    "situation": "test accuracy is suspiciously high",
+    "insight": "the neighbour sampler exposed test nodes during training",
+    "do_instead": "split the data before constructing the graph"
+   },
+   "about": [
+    "data_leakage"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  },
+  {
+   "key": "cr-ablation",
+   "kind": "procedure",
+   "text": "Write an ablation study: remove one component at a time, keep the seeds fixed, and report all variants in one table.",
+   "fields": {
+    "trigger": "write an ablation study",
+    "steps": [
+     "list the components of the model",
+     "remove one component at a time with fixed seeds",
+     "report every variant in one table"
+    ]
+   },
+   "about": [
+    "ablation_study"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "cr-release",
+   "kind": "directive",
+   "text": "Release code and configs with a README that reproduces the main table with one command.",
+   "about": [
+    "artifact_release",
+    "reproducibility"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  },
+  {
+   "key": "cr-arxiv",
+   "kind": "fact",
+   "text": "Post preprints to arXiv under cs.LG and put the code link in the abstract comments.",
+   "fields": {
+    "subject": "arxiv",
+    "predicate": "category",
+    "object": "cs.LG"
+   },
+   "about": [
+    "arxiv"
+   ]
+  },
+  {
+   "key": "cr-f1",
+   "kind": "directive",
+   "text": "Use macro-F1 for imbalanced classes, not accuracy.",
+   "about": [
+    "macro_f1"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ],
+   "trap": [
+    "twin"
+   ]
+  },
+  {
+   "key": "cr-rebuttal",
+   "kind": "event",
+   "text": "In the June rebuttal two baselines were added and accuracy dropped from 71.2 to 70.8; the main claim held.",
+   "fields": {
+    "occurred_at": "2026-06-20T10:00:00Z"
+   },
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  },
+  {
+   "key": "cr-deadline",
+   "kind": "fact",
+   "text": "The NeurIPS deadline falls in May and the ICLR deadline in late September.",
+   "fields": {
+    "subject": "deadline",
+    "predicate": "conference deadlines",
+    "object": "NeurIPS May, ICLR late September"
+   },
+   "about": [
+    "deadline"
+   ],
+   "trap": [
+    "homonym"
+   ]
+  },
+  {
+   "key": "cr-sage",
+   "kind": "decision",
+   "text": "Chose GraphSAGE over GAT as the main architecture because training was three times faster at similar accuracy.",
+   "fields": {
+    "chosen": "GraphSAGE",
+    "alternatives": [
+     "GAT"
+    ],
+    "rationale": "three times faster at similar accuracy",
+    "decided_at": "2026-03-30T09:00:00Z"
+   },
+   "about": [
+    "baseline_model"
+   ],
+   "at": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  }
+ ]
+}

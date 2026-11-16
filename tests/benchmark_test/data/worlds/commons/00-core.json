@@ -1,0 +1,14 @@
+{
+  "concepts": [
+    {"label": "Day type", "scheme": "qualifier", "value_type": "enum", "values": ["weekday", "weekend", "holiday"]},
+    {"label": "Travelling", "scheme": "qualifier"},
+    {"label": "Working from home", "scheme": "qualifier", "aliases": ["remote day"]},
+    {"label": "statistics", "aliases": ["statistical analysis"]},
+    {"label": "reporting", "aliases": ["reports"]},
+    {"label": "deadline"},
+    {"label": "the user", "aliases": ["user", "me", "myself"], "definition": "The person whose memory this is (Mira)."}
+  ],
+  "relations": [],
+  "resources": [],
+  "memories": []
+}

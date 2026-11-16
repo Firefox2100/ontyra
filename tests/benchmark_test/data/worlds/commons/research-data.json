@@ -1,0 +1,23 @@
+{
+  "concepts": [
+    {"label": "climate data", "aliases": ["earth observation"]},
+    {"label": "health statistics", "aliases": ["public health data"]},
+    {"label": "text corpus data", "aliases": ["language datasets"]},
+    {"label": "economic data", "aliases": ["macro data"]},
+    {"label": "astronomy archive", "aliases": ["sky survey data"]},
+    {"label": "dataset licence", "aliases": ["data licence", "dataset license"]},
+    {"label": "data repository", "aliases": ["zenodo", "doi deposit"]}
+  ],
+  "relations": [],
+  "resources": [],
+  "memories": [
+    {"key": "da-climate", "kind": "fact", "text": "Climate and earth observation data come from NASA Earthdata and the Copernicus Climate Data Store.", "fields": {"subject": "climate_data", "predicate": "where to find", "object": "NASA Earthdata, Copernicus CDS"}, "about": ["climate_data"]},
+    {"key": "da-health", "kind": "fact", "text": "Public health statistics are in the WHO Global Health Observatory and national disease registries.", "fields": {"subject": "health_statistics", "predicate": "where to find", "object": "WHO GHO, national registries"}, "about": ["health_statistics"]},
+    {"key": "da-text", "kind": "fact", "text": "Text datasets can be found on Hugging Face and in Common Crawl; check each licence before use.", "fields": {"subject": "text_corpus_data", "predicate": "where to find", "object": "Hugging Face, Common Crawl"}, "about": ["text_corpus_data", "dataset_licence"]},
+    {"key": "da-econ", "kind": "fact", "text": "Economic series are in FRED, Eurostat and the World Bank open data portal.", "fields": {"subject": "economic_data", "predicate": "where to find", "object": "FRED, Eurostat, World Bank"}, "about": ["economic_data"]},
+    {"key": "da-astro", "kind": "fact", "text": "Astronomical observations are in the ESA archive and MAST.", "fields": {"subject": "astronomy_archive", "predicate": "where to find", "object": "ESA archive, MAST"}, "about": ["astronomy_archive"]},
+    {"key": "da-licence", "kind": "directive", "text": "Before reusing a dataset check its licence and cite its DOI.", "about": ["dataset_licence"], "strength": "must"},
+    {"key": "da-units", "kind": "lesson", "text": "A downloaded dataset used different units from its documentation; compare summary statistics and units right after download.", "fields": {"situation": "a freshly downloaded dataset gives odd magnitudes", "insight": "the file's units differed from the documentation", "do_instead": "check units and summary statistics after download"}, "about": ["dataset_licence"]},
+    {"key": "da-zenodo", "kind": "directive", "text": "Deposit your own datasets in Zenodo to get a DOI before the paper is submitted.", "about": ["data_repository"]}
+  ]
+}

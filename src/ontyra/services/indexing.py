@@ -33,6 +33,7 @@ _SKIP = {
     "about",
     "anchors",
     "qualifiers",
+    "scope",
     "evidence",
 }
 

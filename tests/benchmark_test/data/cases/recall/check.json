@@ -1,0 +1,96 @@
+[
+ {
+  "id": "force-push",
+  "world": "commons",
+  "tags": [
+   "check"
+  ],
+  "why": "a risky intent meets a must-not directive",
+  "mode": "check",
+  "query": "git push --force origin main",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-no-force-push"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "d-pytest",
+   "p-release"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "unittest-class",
+  "world": "commons",
+  "tags": [
+   "check"
+  ],
+  "why": "an intent that breaks a directive",
+  "mode": "check",
+  "query": "I will write a unittest.TestCase class for the new endpoint",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-pytest"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "d-no-force-push"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "rename-variable",
+  "world": "commons",
+  "tags": [
+   "check"
+  ],
+  "why": "a harmless intent is clear",
+  "mode": "check",
+  "query": "rename a local variable",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "verdict": "clear",
+  "allow": [
+   "d-pytest",
+   "d-no-force-push",
+   "dec-sqlite-cache"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pip-install",
+  "world": "commons",
+  "tags": [
+   "check"
+  ],
+  "why": "pip against the dependency directive",
+  "mode": "check",
+  "query": "run pip install requests",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-uv"
+  ],
+  "verdict": "caution",
+  "allow": [
+   "dec-uv",
+   "d-pytest",
+   "d-no-force-push"
+  ],
+  "split": "tune"
+ }
+]

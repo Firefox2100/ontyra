@@ -1,0 +1,157 @@
+[
+ {
+  "id": "alias-pytest",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "an alias maps to the concept the memory is about",
+  "mode": "recall",
+  "query": "set up py.test fixtures",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-pytest"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "alias-postgres",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "an alias plus symptom words",
+  "mode": "recall",
+  "query": "postgres crash loop after the upgrade",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "l-pgdata"
+  ],
+  "allow": [
+   "f-db",
+   "e-pg16"
+  ],
+  "top": 1,
+  "split": "tune"
+ },
+ {
+  "id": "alternative-poetry",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "a mention of the alternative finds the decision",
+  "mode": "recall",
+  "query": "should we switch to poetry",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "dec-uv"
+  ],
+  "allow": [
+   "d-uv"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "replaced-pipenv",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "a replaced tool leads to its replacement",
+  "mode": "recall",
+  "query": "how do I use pipenv here",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-uv"
+  ],
+  "allow": [
+   "dec-uv"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "broader-testing-framework",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "a broader concept reaches the specific one",
+  "mode": "recall",
+  "query": "which testing framework should I use",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-pytest"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "alias-compose",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "aliases and a concrete symptom",
+  "mode": "recall",
+  "query": "docker compose fails to start the database",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "include": [
+   "d-compose",
+   "l-pgdata"
+  ],
+  "allow": [
+   "f-db"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "replaced-flake8",
+  "world": "commons",
+  "tags": [
+   "ontology"
+  ],
+  "why": "flake8 is replaced by ruff",
+  "mode": "recall",
+  "query": "configure flake8 for the repo",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ],
+   "signals": [
+    {
+     "concept": "python",
+     "value": "3.12"
+    }
+   ]
+  },
+  "include": [
+   "d-ruff"
+  ],
+  "split": "holdout"
+ }
+]

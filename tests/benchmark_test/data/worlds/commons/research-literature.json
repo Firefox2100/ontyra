@@ -1,0 +1,36 @@
+{
+  "concepts": [
+    {"label": "Diaspora novel corpus", "definition": "The literature project on diaspora novels."},
+    {"label": "MLA style", "aliases": ["mla citation"]},
+    {"label": "close reading"},
+    {"label": "thesis statement", "aliases": ["central claim"]},
+    {"label": "primary source", "aliases": ["primary text"]},
+    {"label": "special collections", "aliases": ["manuscript archive", "reading room"]},
+    {"label": "digitised texts", "aliases": ["project gutenberg", "hathitrust"]},
+    {"label": "translation check"},
+    {"label": "plagiarism", "aliases": ["paraphrasing rules"]},
+    {"label": "Chicago style", "aliases": ["chicago notes", "footnote style"]},
+    {"label": "corpus building"}
+  ],
+  "relations": [
+    {"source": "mla style", "relation": "alternative_to", "target": "chicago style"}
+  ],
+  "resources": [
+    {"uri": "file:///home/mira/research/diaspora-novels", "kind": "project", "label": "diaspora novels project", "instance_of": ["diaspora_novel_corpus"]}
+  ],
+  "memories": [
+    {"key": "li-mla", "kind": "directive", "text": "Cite literary works in MLA style: author, title in italics, publisher and year, with (Author page) in the text; this applies to course essays only.", "about": ["mla_style"], "trap": ["twin", "opposite"]},
+    {"key": "li-chicago", "kind": "directive", "text": "The book manuscript uses Chicago notes-bibliography style with footnotes, not MLA.", "about": ["chicago_style"], "at": ["file:///home/mira/research/diaspora-novels"], "strength": "must", "trap": ["twin", "opposite"]},
+    {"key": "li-close", "kind": "procedure", "text": "Write a close reading: quote the passage, name its form and diction, interpret the effect, and link it back to the argument.", "fields": {"trigger": "write a close reading of a passage", "steps": ["quote the passage in full", "identify its form, diction and imagery", "interpret the effect", "link the reading back to the chapter's argument"]}, "about": ["close_reading"]},
+    {"key": "li-thesis", "kind": "directive", "text": "State the thesis in the first paragraph as a contestable claim, not a summary of the plot.", "about": ["thesis_statement"]},
+    {"key": "li-primary", "kind": "directive", "text": "Quote primary texts from a named edition with page numbers and keep them apart from secondary criticism.", "about": ["primary_source"], "at": ["file:///home/mira/research/diaspora-novels"]},
+    {"key": "li-archive", "kind": "fact", "text": "Manuscripts are held in the university special collections; request items at least 48 hours ahead with the reading room form.", "fields": {"subject": "special_collections", "predicate": "access", "object": "request 48 hours ahead"}, "about": ["special_collections"]},
+    {"key": "li-digital", "kind": "fact", "text": "Public-domain texts are on Project Gutenberg and scans on HathiTrust; always record which edition you used.", "fields": {"subject": "digitised_texts", "predicate": "where to find", "object": "Project Gutenberg, HathiTrust"}, "about": ["digitised_texts"]},
+    {"key": "li-translation", "kind": "lesson", "text": "A mistranslated key word in the English edition undermined a chapter's argument; check central terms in the original.", "fields": {"situation": "an argument rests on one word in a translated text", "insight": "the English edition mistranslated it", "do_instead": "check the original language for central terms"}, "about": ["translation_check"], "at": ["file:///home/mira/research/diaspora-novels"]},
+    {"key": "li-plag", "kind": "directive", "text": "Paraphrase and cite; never copy more than four words in a row without quotation marks.", "about": ["plagiarism"], "strength": "must"},
+    {"key": "li-theme", "kind": "decision", "text": "Organised the chapter by theme instead of chronology because the novels overlap in time.", "fields": {"chosen": "theme-based chapter structure", "alternatives": ["chronological order"], "rationale": "the novels overlap in time", "decided_at": "2026-03-10T09:00:00Z"}, "at": ["file:///home/mira/research/diaspora-novels"]},
+    {"key": "li-length", "kind": "fact", "text": "Journal essays in literary studies run to 8,000 words including notes.", "fields": {"subject": "thesis_statement", "predicate": "journal essay length", "object": "8,000 words"}, "about": ["thesis_statement"]},
+    {"key": "li-symposium", "kind": "event", "text": "At the May symposium a respondent asked for closer engagement with postcolonial theory.", "fields": {"occurred_at": "2026-05-22T16:00:00Z"}, "at": ["file:///home/mira/research/diaspora-novels"]},
+    {"key": "li-corpus", "kind": "procedure", "text": "Build the text corpus: get permission, record edition and year, clean the OCR errors, and tag each file with metadata.", "fields": {"trigger": "add a novel to the corpus", "steps": ["get permission or confirm the licence", "record edition and publication year", "clean OCR errors", "tag the file with metadata"]}, "about": ["corpus_building"], "at": ["file:///home/mira/research/diaspora-novels"]}
+  ]
+}
