@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from collections.abc import AsyncGenerator, Callable, Mapping
+from contextlib import AbstractAsyncContextManager, AsyncExitStack, asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -25,20 +26,22 @@ def create_app(
     services: Services | None = None,
     *,
     open_services: Callable[[], AbstractAsyncContextManager[Services]] | None = None,
+    mounts: Mapping[str, Any] | None = None,
 ) -> FastAPI:
     """Build the application.
 
     Pass ready `services` (tests, embedding) or `open_services`, an async context manager
-    factory the lifespan enters and leaves (the daemon's connect/close).
+    factory the lifespan enters and leaves (the daemon's connect/close). `mounts` are other ASGI
+    apps (the MCP transport) served under a path; their own lifespans run with this one.
     """
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-        if open_services is None:
-            yield
-            return
-        async with open_services() as opened:
-            app.state.services = opened
+        async with AsyncExitStack() as stack:
+            if open_services is not None:
+                app.state.services = await stack.enter_async_context(open_services())
+            for mounted in (mounts or {}).values():
+                await stack.enter_async_context(mounted.router.lifespan_context(mounted))
             yield
 
     app = FastAPI(title="Ontyra", version=__version__, description=DESCRIPTION, lifespan=lifespan)
@@ -49,6 +52,8 @@ def create_app(
         app.include_router(router)
     for router in VERSIONED:
         app.include_router(router, prefix="/v1")
+    for path, mounted in (mounts or {}).items():
+        app.mount(path, mounted)
     return app
 
 

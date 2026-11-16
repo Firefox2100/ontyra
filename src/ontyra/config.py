@@ -103,6 +103,19 @@ class DecisionSettings(BaseModel):
     timeout: float = 30.0  # seconds; a slower answer counts as no answer
 
 
+class McpSettings(BaseModel):
+    """MCP server (`ONTYRA_MCP__*`), served by the daemon at `path` (streamable HTTP).
+
+    Needs the `mcp` extra. `lite` is a handful of tools for weak tool-callers; `full` adds
+    search, browsing and review. The caller is identified like the REST API (`X-Ontyra-*`
+    headers, no authentication yet), so keep the daemon on localhost.
+    """
+
+    enabled: bool = False
+    profile: Literal["lite", "full"] = "lite"
+    path: str = "/mcp"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="ONTYRA_",
@@ -123,6 +136,7 @@ class Settings(BaseSettings):
     rerank: RerankSettings = RerankSettings()
     decision: DecisionSettings = DecisionSettings()
     recall: RecallSettings = RecallSettings()
+    mcp: McpSettings = McpSettings()
     log_level: str = "INFO"
 
 

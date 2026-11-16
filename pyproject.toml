@@ -31,6 +31,9 @@ langchain = [
 rerank-local = [
     "sentence-transformers>=5",
 ]
+mcp = [
+    "fastmcp>=3",
+]
 
 [dependency-groups]
 dev = [
@@ -53,6 +56,10 @@ source = "vcs"
 [tool.hatch.build.hooks.vcs]
 version-file = "src/ontyra/_version.py"
 
+[tool.hatch.build.targets.sdist]
+# The monorepo also holds integrations (their own packages); the daemon ships only its source.
+include = ["src/ontyra", "README.md", "LICENSE", "pyproject.toml"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ontyra"]
 
@@ -62,7 +69,7 @@ python-preference = "only-managed"
 
 [tool.ruff]
 line-length = 100
-extend-exclude = ["spikes"]
+extend-exclude = ["spikes", "integrations"]
 src = ["src", "tests"]
 
 [tool.ruff.lint]

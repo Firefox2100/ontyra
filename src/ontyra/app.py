@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -153,4 +154,14 @@ async def open_application(settings: Settings) -> AsyncGenerator[Application]:
 def create_rest_app(settings: Settings | None = None) -> FastAPI:
     """The REST daemon as an ASGI app (`uvicorn ontyra.app:create_rest_app --factory`)."""
     cfg = settings or load_settings()
-    return create_app(open_services=lambda: open_application(cfg))
+    holder: dict[str, Any] = {}
+    mounts: dict[str, Any] = {}
+    if cfg.mcp.enabled:
+        from ontyra.transports.mcp import create_mcp_app
+
+        mounts[cfg.mcp.path] = create_mcp_app(
+            lambda: holder["app"].state.services, profile=cfg.mcp.profile
+        )
+    app = create_app(open_services=lambda: open_application(cfg), mounts=mounts)
+    holder["app"] = app
+    return app
