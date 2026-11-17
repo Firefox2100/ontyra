@@ -1,6 +1,6 @@
 [
   {
-    "description": "Approve a held proposal (only a human reviewer's call).",
+    "description": "Approve a held proposal. Side effect: commits it, which can add, supersede or retract memories. Only a human credential may review.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -16,7 +16,7 @@
     "name": "approve"
   },
   {
-    "description": "Approve and apply a held ontology change (a human's call).",
+    "description": "Approve and apply a held ontology change. Side effect: the shared ontology changes for everyone (a merge or deprecation redirects concepts). Needs a human credential with global write permission.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -727,7 +727,7 @@
     "name": "pending_ontology_changes"
   },
   {
-    "description": "Proposals held for review.",
+    "description": "Proposals held for review that you may see.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1158,7 +1158,7 @@
     "name": "recall"
   },
   {
-    "description": "Reject a held proposal with a reason.",
+    "description": "Reject a held proposal with a reason (nothing is committed).",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1178,7 +1178,7 @@
     "name": "reject"
   },
   {
-    "description": "Reject a held ontology change with a reason.",
+    "description": "Reject a held ontology change with a reason (nothing is applied).",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1198,7 +1198,7 @@
     "name": "reject_ontology_change"
   },
   {
-    "description": "Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`); it is validated, then committed or held for review. Read the findings: warnings may point at a duplicate you should supersede.",
+    "description": "Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`); it is validated, then committed or held for review. Side effects: a proposal is recorded; if the policy commits it, memories are added or superseded or retracted (history is kept). Read the findings: warnings may point at a duplicate you should supersede. Memories go to your own space; `space: global` writes to the shared memory and needs permission.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1611,6 +1611,14 @@
               },
               "minItems": 1,
               "type": "array"
+            },
+            "space": {
+              "default": "own",
+              "enum": [
+                "own",
+                "global"
+              ],
+              "type": "string"
             }
           },
           "required": [

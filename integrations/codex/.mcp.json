@@ -6,7 +6,8 @@
       "http_headers": {
         "X-Ontyra-Actor": "codex",
         "X-Ontyra-Harness": "codex"
-      }
+      },
+      "bearer_token_env_var": "ONTYRA_TOKEN"
     }
   }
 }

@@ -6,14 +6,14 @@ from fastapi import APIRouter, Query, status
 
 from ontyra.models import RecordId
 from ontyra.models.ontology import ConceptDefinition, ConceptView, RelationRequest
-from ontyra.transports.rest.deps import CallerDep, OntologyServiceDep
+from ontyra.transports.rest.deps import CallerDep, GlobalWriterDep, OntologyServiceDep
 
 router = APIRouter(prefix="/concepts", tags=["ontology"])
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Create a concept")
 async def define(
-    request: ConceptDefinition, caller: CallerDep, service: OntologyServiceDep
+    request: ConceptDefinition, caller: GlobalWriterDep, service: OntologyServiceDep
 ) -> ConceptView:
     return await service.define(caller, request)
 
@@ -40,6 +40,6 @@ async def get_concept(
 
 @router.post("/relations", summary="Relate two concepts (is_a, part_of, same_as, …)")
 async def relate(
-    request: RelationRequest, caller: CallerDep, service: OntologyServiceDep
+    request: RelationRequest, caller: GlobalWriterDep, service: OntologyServiceDep
 ) -> ConceptView:
     return await service.relate(caller, request)

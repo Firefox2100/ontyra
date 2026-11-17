@@ -5,7 +5,8 @@
       "url": "${ONTYRA_URL:-http://127.0.0.1:8787}/mcp/",
       "headers": {
         "X-Ontyra-Actor": "claude",
-        "X-Ontyra-Harness": "claude-code"
+        "X-Ontyra-Harness": "claude-code",
+        "Authorization": "Bearer ${ONTYRA_TOKEN:-}"
       }
     }
   }

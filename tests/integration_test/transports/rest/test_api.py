@@ -142,16 +142,13 @@ async def test_idempotency_key_over_http(client: httpx.AsyncClient) -> None:
     assert len((await client.get("/v1/memories", headers=AGENT)).json()) == 1
 
 
-async def test_owner_header_isolates_memories(client: httpx.AsyncClient) -> None:
-    alice = {**HUMAN, "X-Ontyra-Actor": "alice", "X-Ontyra-Owner": "alice"}
-    r = await client.post(
-        "/v1/proposals", json={"ops": [directive("alice only", "d")]}, headers=alice
-    )
+async def test_an_owner_header_does_not_choose_the_owner(client: httpx.AsyncClient) -> None:
+    # single-user mode: everything is global; a header cannot create or pick another owner
+    mine = {**HUMAN, "X-Ontyra-Owner": "alice"}
+    r = await client.post("/v1/proposals", json={"ops": [directive("shared", "d")]}, headers=mine)
     assert r.status_code == 201
-    mid = r.json()["created"]["d"].split(":", 1)[1]
-    assert (await client.get("/v1/memories", headers=AGENT)).json() == []  # global caller
-    assert (await client.get(f"/v1/memories/{mid}", headers=AGENT)).status_code == 404
-    assert len((await client.get("/v1/memories", headers=alice)).json()) == 1
+    listing = (await client.get("/v1/memories", headers=AGENT)).json()
+    assert [m["owner"] for m in listing] == ["owner:global"]
 
 
 async def test_actor_defaults_and_trust_are_assigned_by_configuration(

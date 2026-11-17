@@ -52,6 +52,7 @@ approval unless you chose `auto_commit`; see [Review and policy](../guides/revie
 | Variable | Default | Effect |
 |---|---|---|
 | `ONTYRA_URL` | `http://127.0.0.1:8787` | where the daemon is |
+| `ONTYRA_TOKEN` | unset | the token to send, when the daemon requires one |
 | `ONTYRA_CAPTURE` | off | periodic "anything worth remembering?" prompt |
 | `ONTYRA_CAPTURE_EVERY` | `10` | prompts between capture prompts |
 | `ONTYRA_LOG_EPISODES` | `1` | log prompts and replies as episodes (what proposals cite as evidence) |

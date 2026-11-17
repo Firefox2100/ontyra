@@ -16,7 +16,8 @@ A Claude Code plugin: memory without the agent having to ask.
   `remember`) over streamable HTTP, so the agent can query and propose memories itself.
 
 Needs the daemon running with `ONTYRA_MCP__ENABLED=true` (`uv run ontyra serve`), `curl` and
-`jq`. `ONTYRA_URL` overrides `http://127.0.0.1:8787`. No authentication yet: localhost only.
+`jq`. `ONTYRA_URL` overrides `http://127.0.0.1:8787`. Authentication is optional: set `ONTYRA_TOKEN` to the daemon's token when it requires one
+(single-user token or an account's credential; see the docs, Authentication).
 
 Try it without installing: `claude --plugin-dir integrations/claude-code`.
 Test the hook by hand: `echo '{"hook_event_name":"UserPromptSubmit","prompt":"hi","cwd":"/tmp","session_id":"s"}' | hooks/ontyra-hook.sh`.

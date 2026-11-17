@@ -38,8 +38,15 @@ class _Actors:
         return None
 
 
+class _Auth:
+    required = False
+
+    async def caller(self, principal: Any, **_: Any) -> Any:
+        return await _Actors().caller()
+
+
 def _client(exc: Exception) -> httpx.AsyncClient:
-    services = SimpleNamespace(actors=_Actors(), memory=_Memory(exc))
+    services = SimpleNamespace(actors=_Actors(), auth=_Auth(), memory=_Memory(exc))
     app = create_app(services)  # type: ignore[arg-type]
     return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
 

@@ -9,7 +9,7 @@ from datetime import datetime
 from ontyra.models import RecordId
 from ontyra.models.core import Actor, Owner
 from ontyra.ports import Create, Store
-from ontyra.services.context import GLOBAL_OWNER, Caller
+from ontyra.services.context import ALL_PERMISSIONS, GLOBAL_OWNER, Caller
 
 DEFAULT_TRUST: dict[str, float] = {
     "human": 1.0,
@@ -46,10 +46,12 @@ class ActorService:
             await self.store.apply([Create.of(rid, Owner(kind=kind, name=name))])  # type: ignore[arg-type]
         return rid
 
-    async def ensure_actor(self, kind: str, name: str, harness: str | None = None) -> Actor:
-        """Idempotent by name. Trust comes from configuration by actor kind, never from the
-        actor itself."""
-        rid = RecordId("actor", _slug(name))
+    async def ensure_actor(
+        self, kind: str, name: str, harness: str | None = None, rid: RecordId | None = None
+    ) -> Actor:
+        """Idempotent by id (default: derived from the name). Trust comes from configuration by
+        actor kind, never from the actor itself."""
+        rid = rid or RecordId("actor", _slug(name))
         existing = await self.store.get(rid)
         if isinstance(existing, Actor):
             return existing
@@ -63,7 +65,18 @@ class ActorService:
         return actor.model_copy(update={"id": rid})
 
     async def caller(
-        self, *, kind: str, name: str, harness: str | None = None, owner: RecordId | None = None
+        self,
+        *,
+        kind: str,
+        name: str,
+        harness: str | None = None,
+        owner: RecordId | None = None,
+        permissions: frozenset[str] | None = None,
+        actor_id: RecordId | None = None,
     ) -> Caller:
-        actor = await self.ensure_actor(kind, name, harness)
-        return Caller(actor=actor, owner=owner or await self.ensure_owner())
+        """Build a caller. Transports never take `owner` from a request: single-user mode leaves
+        it unset (the global owner, with every permission), multi-user mode passes the account's."""
+        actor = await self.ensure_actor(kind, name, harness, actor_id)
+        if owner is None:
+            return Caller(actor=actor, owner=await self.ensure_owner(), permissions=ALL_PERMISSIONS)
+        return Caller(actor=actor, owner=owner, permissions=permissions or frozenset())

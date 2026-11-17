@@ -26,7 +26,7 @@ from ontyra.models.ontology_change import (
 )
 from ontyra.ports import Create, Store, Update
 from ontyra.services import errors
-from ontyra.services.context import Caller
+from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.ontology import OntologyService
 
 SIMILAR = 0.5
@@ -132,7 +132,7 @@ class OntologyChangeService:
             created_at=now,
             advice=advice,
         )
-        if caller.actor.kind == "human" or request.change.op in self.auto_apply:
+        if caller.can_review(GLOBAL_OWNER) or request.change.op in self.auto_apply:
             await self._apply(caller, request.change)
             record.status = "applied"
             record.decided_by = caller.actor_id
@@ -177,6 +177,8 @@ class OntologyChangeService:
     async def approve(self, reviewer: Caller, change: RecordId) -> ChangeResult:
         if reviewer.actor.kind != "human":
             raise errors.InvalidRequestError("only a human can approve an ontology change")
+        if not reviewer.can_write(GLOBAL_OWNER):
+            raise errors.PermissionDeniedError("changing the ontology needs global write access")
         rec = await self._get(change)
         if rec.status != "pending":
             raise errors.ProposalStateError(f"change {change} is already {rec.status}")
@@ -198,6 +200,8 @@ class OntologyChangeService:
     async def reject(self, reviewer: Caller, change: RecordId, reason: str) -> ChangeResult:
         if reviewer.actor.kind != "human":
             raise errors.InvalidRequestError("only a human can reject an ontology change")
+        if not reviewer.can_write(GLOBAL_OWNER):
+            raise errors.PermissionDeniedError("changing the ontology needs global write access")
         rec = await self._get(change)
         if rec.status != "pending":
             raise errors.ProposalStateError(f"change {change} is already {rec.status}")

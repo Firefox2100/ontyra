@@ -32,3 +32,15 @@ def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(errors.InvalidProposalError)
     async def _invalid(_: Request, exc: errors.InvalidProposalError) -> JSONResponse:
         return _json(422, str(exc), findings=[f.model_dump(mode="json") for f in exc.findings])
+
+    @app.exception_handler(errors.PermissionDeniedError)
+    async def _forbidden(_: Request, exc: errors.PermissionDeniedError) -> JSONResponse:
+        return _json(403, str(exc))
+
+    @app.exception_handler(errors.AuthenticationError)
+    async def _unauthenticated(_: Request, exc: errors.AuthenticationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": str(exc)},
+            headers={"WWW-Authenticate": "Bearer"},
+        )

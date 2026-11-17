@@ -133,3 +133,12 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_UI__ENABLED` | bool | `False` |
 | `ONTYRA_UI__ACTOR` | str | `owner` |
 
+## auth
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_AUTH__MULTI_USER` | bool | `False` |
+| `ONTYRA_AUTH__TOKEN` | pydantic.types.SecretStr \| None | unset |
+| `ONTYRA_AUTH__ADMIN_TOKEN` | pydantic.types.SecretStr \| None | unset |
+| `ONTYRA_AUTH__UI_SESSION_HOURS` | int | `12` |
+

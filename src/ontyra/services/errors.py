@@ -31,3 +31,11 @@ class InvalidProposalError(ServiceError):
 
 class InvalidRequestError(ServiceError):
     """The request is malformed or cannot be satisfied as stated."""
+
+
+class AuthenticationError(ServiceError):
+    """No valid credential was presented."""
+
+
+class PermissionDeniedError(ServiceError):
+    """The caller is known but may not do this."""

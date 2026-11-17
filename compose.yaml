@@ -39,6 +39,8 @@ services:
       ONTYRA_SERVER__HOST: 127.0.0.1
       ONTYRA_SERVER__PORT: ${ONTYRA_PORT:-8787}
       ONTYRA_DB__PASSWORD: ${ONTYRA_DB_PASSWORD}
+      # authentication (docs: Authentication): empty means off; a value requires that bearer token
+      ONTYRA_AUTH__TOKEN: ${ONTYRA_AUTH_TOKEN:-}
       ONTYRA_MCP__PROFILE: lite
       # the operator console at /ui (acts as a human, no login: loopback only)
       ONTYRA_UI__ENABLED: "true"

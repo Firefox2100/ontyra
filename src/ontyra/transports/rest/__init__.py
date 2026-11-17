@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import APIRouter, FastAPI
 
 from ontyra import __version__
+from ontyra.transports.auth import AuthMiddleware
 from ontyra.transports.rest.deps import Services
 from ontyra.transports.rest.errors import install_error_handlers
 from ontyra.transports.rest.routers import UNVERSIONED, VERSIONED
@@ -17,8 +18,11 @@ DESCRIPTION = """\
 Structured, typed memory for agents. Writes go through **proposals** (validated, then
 committed or held for review by policy); reads return current memories with their history.
 
-There is no authentication yet. Identify the caller with `X-Ontyra-Actor` (and optionally
-`X-Ontyra-Actor-Kind`, `X-Ontyra-Harness`, `X-Ontyra-Owner`); run on localhost only.
+Authentication: off by default (run on localhost only; the caller is then a label from
+`X-Ontyra-Actor`, `X-Ontyra-Actor-Kind`, `X-Ontyra-Harness`). With `ONTYRA_AUTH__TOKEN` every
+request needs `Authorization: Bearer <token>`. With `ONTYRA_AUTH__MULTI_USER` each account has
+credentials (see `/v1/admin`); the account decides the owner, actor kind and permissions, and
+the headers are ignored. An owner is never a request parameter.
 """
 
 
@@ -29,6 +33,7 @@ def create_app(
     mounts: Mapping[str, Any] | None = None,
     extra_routers: Sequence[APIRouter] = (),
     ui_actor: str | None = None,
+    ui_session_hours: int = 12,
 ) -> FastAPI:
     """Build the application.
 
@@ -52,6 +57,8 @@ def create_app(
         app.state.services = services
     if ui_actor:
         app.state.ui_actor = ui_actor
+    app.state.ui_session_hours = ui_session_hours
+    app.add_middleware(AuthMiddleware)
     install_error_handlers(app)
     for router in UNVERSIONED:
         app.include_router(router)

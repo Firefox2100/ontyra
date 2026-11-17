@@ -19,8 +19,9 @@ ONTYRA_POLICY__DEFAULT=review
 ONTYRA_POLICY__RULES='[{"actor_kinds":["human"],"decision":"auto_commit"}]'
 ```
 
-Who counts as a human comes from the `X-Ontyra-Actor-Kind` header. There is no authentication yet,
-so anyone who can reach the port can claim it: keep the daemon on loopback.
+Who counts as a human comes from the `X-Ontyra-Actor-Kind` header, which is only a label unless you
+turn on accounts: with [multi-user mode](./authentication.md) it comes from the credential. Without
+it anyone who can reach the port can claim it, so keep the daemon on loopback.
 
 ## The operator console
 
@@ -35,7 +36,8 @@ With `ONTYRA_UI__ENABLED=true`, open `http://127.0.0.1:8787/ui/`:
 - **Recall playground**: try a recall or briefing with a query, locations and signals, and see why
   each memory was returned.
 
-The console acts as a human named `ONTYRA_UI__ACTOR` (default `owner`) and has no login. It
+The console acts as a human named `ONTYRA_UI__ACTOR` (default `owner`) and has no login unless a
+token is required (then `/ui/login`). It
 refuses form posts that come from another website, but it is meant for loopback only.
 
 ## Over the API

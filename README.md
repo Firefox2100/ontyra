@@ -3,7 +3,7 @@
 Experimental long-term memory system for agents: typed, layered memory in a daemon that agent
 harnesses (Claude Code, Codex, any MCP client) talk to over REST or MCP.
 
-Status: experiment. No authentication yet, run it on loopback only.
+Status: experiment. Authentication is optional (a single token, or per-user accounts); with none, run it on loopback only.
 
 ## Try it
 

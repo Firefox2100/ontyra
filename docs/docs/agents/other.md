@@ -8,7 +8,7 @@ Any client that speaks MCP over streamable HTTP, or HTTP, can use Ontyra.
 
 Endpoint: `http://127.0.0.1:8787/mcp/` (enable with `ONTYRA_MCP__ENABLED=true`).
 
-Identify the caller with headers (not authenticated yet, so these are labels, not credentials):
+Authenticate with `Authorization: Bearer <token>` when the daemon requires one ([Authentication](../guides/authentication.md)). Without accounts the caller labels itself with headers (labels, not credentials; ignored when accounts are on):
 
 | Header | Meaning |
 |---|---|

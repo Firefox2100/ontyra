@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ontyra.models import PolicyConfig
@@ -137,6 +137,35 @@ class UiSettings(BaseModel):
     actor: str = "owner"
 
 
+class AuthSettings(BaseModel):
+    """Authentication. Off by default (loopback use).
+
+    Single-user mode (`multi_user` false): everything belongs to the global owner. Set `token`
+    to require `Authorization: Bearer <token>` on every request; leave it unset for none.
+    Multi-user mode: every request needs a credential issued to a user (see `/v1/admin`);
+    `admin_token` is the bootstrap credential of the built-in `admin` account.
+    """
+
+    multi_user: bool = False
+    token: SecretStr | None = None
+    admin_token: SecretStr | None = None
+    ui_session_hours: int = 12
+
+    @field_validator("token", "admin_token", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, value: object) -> object:
+        return None if value == "" else value  # an empty variable in a compose file
+
+    @model_validator(mode="after")
+    def _check(self) -> AuthSettings:
+        if self.multi_user and self.admin_token is None:
+            raise ValueError("multi-user mode needs ONTYRA_AUTH__ADMIN_TOKEN (the bootstrap admin)")
+        for name, secret in (("token", self.token), ("admin_token", self.admin_token)):
+            if secret is not None and len(secret.get_secret_value()) < 16:
+                raise ValueError(f"auth.{name} must be at least 16 characters")
+        return self
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="ONTYRA_",
@@ -160,6 +189,7 @@ class Settings(BaseSettings):
     ontology: OntologySettings = OntologySettings()
     mcp: McpSettings = McpSettings()
     ui: UiSettings = UiSettings()
+    auth: AuthSettings = AuthSettings()
     log_level: str = "INFO"
 
 

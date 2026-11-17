@@ -59,3 +59,11 @@ def test_policy_and_trust_come_from_the_environment(clean_env: pytest.MonkeyPatc
 
 def test_safe_policy_default_is_review(clean_env: pytest.MonkeyPatch) -> None:
     assert load_settings(env_file=None).policy.default == "review"
+
+
+def test_a_blank_token_means_none_and_a_short_one_is_refused() -> None:
+    from ontyra.config import AuthSettings
+
+    assert AuthSettings(token="").token is None  # type: ignore[arg-type]  # an empty compose variable
+    with pytest.raises(ValueError, match="at least 16"):
+        AuthSettings(token="short")  # type: ignore[arg-type]

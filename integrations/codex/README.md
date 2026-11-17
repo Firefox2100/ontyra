@@ -13,7 +13,8 @@ packaged for Codex (`.codex-plugin/plugin.json`).
 ## Requirements
 
 A running Ontyra daemon with MCP on (`ONTYRA_MCP__ENABLED=true`), by default at
-`http://127.0.0.1:8787`; `curl` and `jq` on the PATH. No authentication yet: loopback only.
+`http://127.0.0.1:8787`; `curl` and `jq` on the PATH. When the daemon requires a token, export it as `ONTYRA_TOKEN` (an account's agent credential,
+or the single-user token): the hooks and the MCP server send it as a bearer token.
 Another address: edit `url` in `.mcp.json` and export `ONTYRA_URL` for the hooks.
 
 ## Install

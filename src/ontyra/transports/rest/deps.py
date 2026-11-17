@@ -9,6 +9,7 @@ from fastapi import Depends, Header, Request
 from ontyra.services import (
     ActorService,
     AnchorService,
+    AuthService,
     Caller,
     ExplorationService,
     FeedbackService,
@@ -17,11 +18,17 @@ from ontyra.services import (
     OntologyService,
     RecallService,
     RerankTrainingService,
+    errors,
 )
+from ontyra.services.context import GLOBAL_OWNER
+from ontyra.transports.auth import resolve_caller
 
 
 class Services(Protocol):
     """The service objects the REST transport needs (the composition root provides them)."""
+
+    @property
+    def auth(self) -> AuthService: ...
 
     @property
     def actors(self) -> ActorService: ...
@@ -116,27 +123,52 @@ RerankingServiceDep = Annotated[RerankTrainingService, Depends(get_reranking_ser
 
 
 async def get_caller(
+    request: Request,
     services: ServicesDep,
     x_ontyra_actor: Annotated[
-        str, Header(description="Name of the acting agent/person. Registered on first use.")
+        str,
+        Header(
+            description="A name for the caller. Only a label: used when no account system "
+            "is active (single-user mode); ignored when accounts are on."
+        ),
     ] = "anonymous",
     x_ontyra_actor_kind: Annotated[
         Literal["human", "agent", "tool", "service", "model"],
-        Header(description="Kind of actor; trust is configured per kind."),
+        Header(description="Declared kind. Single-user mode only; accounts set it."),
     ] = "agent",
     x_ontyra_harness: Annotated[
         str | None, Header(description="Harness the actor runs in, e.g. `claude-code`.")
     ] = None,
-    x_ontyra_owner: Annotated[
-        str | None, Header(description="Owner scope name; omitted means the global owner.")
-    ] = None,
 ) -> Caller:
-    """Identify the caller from headers. There is no authentication yet: these headers are
-    trusted as sent, so run the daemon on localhost only."""
-    owner = await services.actors.ensure_owner("user", x_ontyra_owner) if x_ontyra_owner else None
-    return await services.actors.caller(
-        kind=x_ontyra_actor_kind, name=x_ontyra_actor, harness=x_ontyra_harness, owner=owner
+    """The caller. With a required credential (an `Authorization: Bearer` token, checked by the
+    middleware) the account decides the owner, kind and permissions; the headers above are then
+    ignored. Without one (single-user, no token) they are trusted labels and the owner is global.
+    The owner is never a request parameter."""
+    return await resolve_caller(
+        services.auth,
+        request.scope,
+        label=x_ontyra_actor,
+        kind=x_ontyra_actor_kind,
+        harness=x_ontyra_harness,
     )
 
 
 CallerDep = Annotated[Caller, Depends(get_caller)]
+
+
+async def require_global_write(caller: CallerDep) -> Caller:
+    if not caller.can_write(GLOBAL_OWNER):
+        raise errors.PermissionDeniedError("this needs permission to write the global memory")
+    return caller
+
+
+GlobalWriterDep = Annotated[Caller, Depends(require_global_write)]
+
+
+async def require_admin(caller: CallerDep) -> Caller:
+    if caller.actor.kind != "human" or not caller.has("admin"):
+        raise errors.PermissionDeniedError("this needs an administrator's human credential")
+    return caller
+
+
+AdminDep = Annotated[Caller, Depends(require_admin)]

@@ -661,6 +661,130 @@
         "title": "ConceptView",
         "type": "object"
       },
+      "CredentialCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "harness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harness"
+          },
+          "kind": {
+            "default": "agent",
+            "enum": [
+              "human",
+              "agent"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CredentialCreate",
+        "type": "object"
+      },
+      "CredentialView": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "harness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harness"
+          },
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "human",
+              "agent"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "token_hint": {
+            "title": "Token Hint",
+            "type": "string"
+          },
+          "user": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user",
+          "name",
+          "kind",
+          "harness",
+          "token_hint",
+          "created_at",
+          "revoked_at",
+          "last_used_at"
+        ],
+        "title": "CredentialView",
+        "type": "object"
+      },
       "DefineChange": {
         "additionalProperties": false,
         "properties": {
@@ -1154,6 +1278,25 @@
           "revisions"
         ],
         "title": "History",
+        "type": "object"
+      },
+      "IssuedCredential": {
+        "additionalProperties": false,
+        "description": "The only time the token is ever shown.",
+        "properties": {
+          "credential": {
+            "$ref": "#/components/schemas/CredentialView"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "credential",
+          "token"
+        ],
+        "title": "IssuedCredential",
         "type": "object"
       },
       "LinkMemories": {
@@ -1839,11 +1982,28 @@
             "title": "RecordId",
             "type": "string"
           },
+          "permissions": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
           "result": {
             "additionalProperties": true,
             "default": {},
             "title": "Result",
             "type": "object"
+          },
+          "space": {
+            "default": "own",
+            "enum": [
+              "own",
+              "global"
+            ],
+            "title": "Space",
+            "type": "string"
           },
           "status": {
             "enum": [
@@ -1933,6 +2093,15 @@
             "minItems": 1,
             "title": "Ops",
             "type": "array"
+          },
+          "space": {
+            "default": "own",
+            "enum": [
+              "own",
+              "global"
+            ],
+            "title": "Space",
+            "type": "string"
           }
         },
         "required": [
@@ -3392,6 +3561,117 @@
         "title": "TrainOptions",
         "type": "object"
       },
+      "UserCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "permissions": {
+            "default": [],
+            "items": {
+              "enum": [
+                "global_write",
+                "admin"
+              ],
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "UserCreate",
+        "type": "object"
+      },
+      "UserUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "disabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "global_write",
+                    "admin"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          }
+        },
+        "title": "UserUpdate",
+        "type": "object"
+      },
+      "UserView": {
+        "additionalProperties": false,
+        "properties": {
+          "disabled": {
+            "title": "Disabled",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "enum": [
+                "global_write",
+                "admin"
+              ],
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "owner",
+          "permissions",
+          "disabled"
+        ],
+        "title": "UserView",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -3435,7 +3715,7 @@
     }
   },
   "info": {
-    "description": "Structured, typed memory for agents. Writes go through **proposals** (validated, then\ncommitted or held for review by policy); reads return current memories with their history.\n\nThere is no authentication yet. Identify the caller with `X-Ontyra-Actor` (and optionally\n`X-Ontyra-Actor-Kind`, `X-Ontyra-Harness`, `X-Ontyra-Owner`); run on localhost only.\n",
+    "description": "Structured, typed memory for agents. Writes go through **proposals** (validated, then\ncommitted or held for review by policy); reads return current memories with their history.\n\nAuthentication: off by default (run on localhost only; the caller is then a label from\n`X-Ontyra-Actor`, `X-Ontyra-Actor-Kind`, `X-Ontyra-Harness`). With `ONTYRA_AUTH__TOKEN` every\nrequest needs `Authorization: Bearer <token>`. With `ONTYRA_AUTH__MULTI_USER` each account has\ncredentials (see `/v1/admin`); the account decides the owner, actor kind and permissions, and\nthe headers are ignored. An owner is never a request parameter.\n",
     "title": "Ontyra"
   },
   "openapi": "3.1.0",
@@ -3461,30 +3741,46 @@
         ]
       }
     },
-    "/v1/ask": {
-      "post": {
-        "operationId": "ask_v1_ask_post",
+    "/v1/admin/credentials": {
+      "get": {
+        "operationId": "list_credentials_v1_admin_credentials_get",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -3513,11 +3809,88 @@
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CredentialView"
+                  },
+                  "title": "Response List Credentials V1 Admin Credentials Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List credentials (never the tokens)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/credentials/{credential_id}/revoke": {
+      "post": {
+        "operationId": "revoke_credential_v1_admin_credentials__credential_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "title": "Credential Id",
+              "type": "string"
+            }
           },
           {
-            "description": "Owner scope name; omitted means the global owner.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
-            "name": "x-ontyra-owner",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
             "required": false,
             "schema": {
               "anyOf": [
@@ -3528,8 +3901,469 @@
                   "type": "null"
                 }
               ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke a credential",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "operationId": "list_users_v1_admin_users_get",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserView"
+                  },
+                  "title": "Response List Users V1 Admin Users Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List accounts (multi-user mode, administrators)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "create_user_v1_admin_users_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create an account",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/users/{name}": {
+      "patch": {
+        "operationId": "update_user_v1_admin_users__name__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change an account's permissions or disable it",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/users/{name}/credentials": {
+      "post": {
+        "description": "One account can hold several: one for the person, one per agent harness. The token is in this response only; it is stored as a hash and cannot be shown again.",
+        "operationId": "issue_credential_v1_admin_users__name__credentials_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CredentialCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedCredential"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Issue a credential to an account",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/ask": {
+      "post": {
+        "operationId": "ask_v1_ask_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
             }
           }
         ],
@@ -3577,25 +4411,25 @@
         "operationId": "briefing_v1_briefing_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -3623,24 +4457,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -3688,25 +4504,25 @@
         "operationId": "check_v1_check_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -3734,24 +4550,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -3842,25 +4640,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -3888,24 +4686,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -3944,25 +4724,25 @@
         "operationId": "define_v1_concepts_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -3990,24 +4770,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4054,25 +4816,25 @@
         "operationId": "relate_v1_concepts_relations_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4100,24 +4862,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4173,25 +4917,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4219,24 +4963,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4274,25 +5000,25 @@
         "operationId": "record_episode_v1_episodes_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4320,24 +5046,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4452,25 +5160,25 @@
         "operationId": "record_v1_feedback_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4498,24 +5206,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4592,25 +5282,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4638,24 +5328,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4746,25 +5418,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4792,24 +5464,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4859,25 +5513,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -4905,24 +5559,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -4988,25 +5624,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5034,24 +5670,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5098,25 +5716,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5144,24 +5762,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5216,25 +5816,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5262,24 +5862,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5374,25 +5956,25 @@
         "operationId": "propose_v1_ontology_changes_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5420,24 +6002,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5493,25 +6057,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5539,24 +6103,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5602,25 +6148,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5648,24 +6194,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5713,25 +6241,25 @@
         "operationId": "overview_v1_overview_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5759,24 +6287,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -5844,6 +6354,55 @@
               "title": "Limit",
               "type": "integer"
             }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
           }
         ],
         "responses": {
@@ -5882,25 +6441,25 @@
         "operationId": "submit_v1_proposals_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -5928,24 +6487,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -6019,6 +6560,55 @@
               "title": "Proposal Id",
               "type": "string"
             }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
           }
         ],
         "responses": {
@@ -6064,25 +6654,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -6110,24 +6700,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -6173,25 +6745,25 @@
             }
           },
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -6219,24 +6791,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -6284,25 +6838,25 @@
         "operationId": "recall_v1_recall_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -6330,24 +6884,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -6417,25 +6953,25 @@
         "operationId": "train_v1_reranker_train_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -6463,24 +6999,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],
@@ -6556,6 +7074,57 @@
       "post": {
         "description": "Adds explicit containment (`parents`), equivalence (`same_as`) and concept membership (`instance_of`) to a URI. Paths below a registered resource need no registration: containment by path segment is automatic.",
         "operationId": "register_v1_resources_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6600,25 +7169,25 @@
         "operationId": "search_v1_search_post",
         "parameters": [
           {
-            "description": "Name of the acting agent/person. Registered on first use.",
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
             "required": false,
             "schema": {
               "default": "anonymous",
-              "description": "Name of the acting agent/person. Registered on first use.",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
               "title": "X-Ontyra-Actor",
               "type": "string"
             }
           },
           {
-            "description": "Kind of actor; trust is configured per kind.",
+            "description": "Declared kind. Single-user mode only; accounts set it.",
             "in": "header",
             "name": "x-ontyra-actor-kind",
             "required": false,
             "schema": {
               "default": "agent",
-              "description": "Kind of actor; trust is configured per kind.",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
               "enum": [
                 "human",
                 "agent",
@@ -6646,24 +7215,6 @@
               ],
               "description": "Harness the actor runs in, e.g. `claude-code`.",
               "title": "X-Ontyra-Harness"
-            }
-          },
-          {
-            "description": "Owner scope name; omitted means the global owner.",
-            "in": "header",
-            "name": "x-ontyra-owner",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Owner scope name; omitted means the global owner.",
-              "title": "X-Ontyra-Owner"
             }
           }
         ],

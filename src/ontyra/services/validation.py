@@ -32,7 +32,7 @@ from ontyra.models.proposals import (
 from ontyra.ports import Store
 from ontyra.services import errors
 from ontyra.services.anchors import AnchorService
-from ontyra.services.context import Caller
+from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.ontology import OntologyService
 from ontyra.services.prepared import (
     Prepared,
@@ -70,6 +70,7 @@ def _norm(text: str) -> str:
 
 @dataclass
 class Validation:
+    owner: RecordId = GLOBAL_OWNER  # whose memory new memories join
     findings: list[Finding] = field(default_factory=lambda: [])
     prepared: list[Prepared] = field(default_factory=lambda: [])
     refs: dict[str, tuple[RecordId, RecordId]] = field(
@@ -95,8 +96,10 @@ class ProposalValidator:
         self.anchors = anchors
 
     async def validate(self, caller: Caller, request: ProposalRequest) -> Validation:
-        v = Validation()
+        v = Validation(owner=GLOBAL_OWNER if request.space == "global" else caller.owner)
         ctx = _Ctx(self, caller, v)
+        if v.owner != caller.owner and not caller.can_write(v.owner):
+            ctx.error(None, "permission_denied", "writing to the global memory needs permission")
         # Pass 1: allocate ids for adds so later ops can reference them by alias.
         adds: dict[int, tuple[RecordId, RecordId]] = {}
         for i, op in enumerate(request.ops):
@@ -164,7 +167,7 @@ class _Ctx:
         if mem.owner not in self.caller.visible_owners():
             self.error(i, "unknown_memory", f"{rid} does not exist")  # do not leak other owners
             return None
-        if mutate and mem.owner != self.caller.owner:
+        if mutate and not self.caller.can_write(mem.owner):
             self.error(i, "permission_denied", f"{rid} belongs to {mem.owner}", memory=str(rid))
             return None
         if mem.status != "active":
@@ -268,7 +271,7 @@ class _Ctx:
                 i,
                 mem,
                 rev,
-                self.caller.owner,
+                self.v.owner,
                 op.kind,
                 model,
                 op.valid_from or self.o.now(),

@@ -18,13 +18,16 @@ def _back() -> RedirectResponse:
 
 @router.get("/review", response_class=HTMLResponse)
 async def review(
-    request: Request, memory: MemoryServiceDep, changes: OntologyChangeServiceDep
+    request: Request,
+    caller: UiCallerDep,
+    memory: MemoryServiceDep,
+    changes: OntologyChangeServiceDep,
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "review.html",
         {
-            "proposals": await memory.pending(200),
+            "proposals": await memory.pending(caller, 200),
             "changes": await changes.pending(200),
             "recent": await changes.history(15),
             "nav": "review",
@@ -33,8 +36,10 @@ async def review(
 
 
 @router.get("/proposals/{proposal_id}", response_class=HTMLResponse)
-async def proposal(request: Request, proposal_id: str, memory: MemoryServiceDep) -> HTMLResponse:
-    found = await memory.get_proposal(RecordId("proposal", proposal_id))
+async def proposal(
+    request: Request, proposal_id: str, caller: UiCallerDep, memory: MemoryServiceDep
+) -> HTMLResponse:
+    found = await memory.get_proposal(caller, RecordId("proposal", proposal_id))
     return templates.TemplateResponse(request, "proposal.html", {"p": found, "nav": "review"})
 
 

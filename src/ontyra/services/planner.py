@@ -160,6 +160,8 @@ def proposal_write(
     proposal: RecordId,
     actor: RecordId,
     owner: RecordId,
+    space: str,
+    permissions: Sequence[str],
     status: str,
     decision: Decision,
     reason: str | None,
@@ -176,6 +178,8 @@ def proposal_write(
         Proposal(
             actor=actor,
             owner=owner,
+            space=space,  # type: ignore[arg-type]
+            permissions=sorted(permissions),
             status=status,  # type: ignore[arg-type]
             decision=decision,
             decision_reason=reason,

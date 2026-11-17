@@ -87,6 +87,10 @@ Op = Annotated[
 
 class ProposalRequest(Model):
     ops: Annotated[list[Op], Field(min_length=1)]
+    # Where new memories go: the caller's own memory (default) or the shared global memory,
+    # which needs the `global_write` permission. Owners are never named: they come from the
+    # authenticated account. With multi-user mode off there is only the global memory.
+    space: Literal["own", "global"] = "own"
     idempotency_key: str | None = None
     note: str | None = None
 

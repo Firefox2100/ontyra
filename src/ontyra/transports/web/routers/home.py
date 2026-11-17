@@ -21,7 +21,7 @@ async def home(
     memory: MemoryServiceDep,
     changes: OntologyChangeServiceDep,
 ) -> HTMLResponse:
-    pending = await memory.pending(200)
+    pending = await memory.pending(caller, 200)
     held = await changes.pending(200)
     kinds = {}
     for kind in ("directive", "fact", "decision", "event", "procedure", "task", "lesson"):

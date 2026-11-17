@@ -23,7 +23,8 @@ new version, rebuild the image and run `docker compose up -d` again; the data st
 
 - SurrealDB 4 on `127.0.0.1:18787`, daemon on `127.0.0.1:8787` (`ONTYRA_PORT`,
   `ONTYRA_DB_PORT` in `.env`). Both use host networking and listen on loopback only, because
-  there is no authentication yet. Do not publish the port to a network you do not trust.
+  authentication is off unless you set `ONTYRA_AUTH__TOKEN` or turn on multi-user mode
+  ([Authentication](./authentication.md)). Do not publish the port to a network you do not trust.
 - The MCP endpoint (`/mcp/`, lite tool profile) and the operator console (`/ui/`).
 - Agents' writes wait for review; a human's own writes commit at once
   ([Review and policy](./review.md)).

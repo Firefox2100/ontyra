@@ -8,7 +8,7 @@
 #   once to propose memories for anything durable it learned (`remember` tool).
 # Fails open: if the daemon is down or slow the session continues without memory.
 # Needs curl and jq. Env: ONTYRA_URL (default http://127.0.0.1:8787), ONTYRA_BUDGET_TOKENS,
-# ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
+# ONTYRA_TOKEN, ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
 # claude-code) and ONTYRA_ACTOR (default: the harness name) say who is talking.
 set -u
 input=$(cat)
@@ -22,8 +22,13 @@ harness="${ONTYRA_HARNESS:-claude-code}"
 actor="${ONTYRA_ACTOR:-${harness%%-*}}"
 state="${TMPDIR:-/tmp}/ontyra-$harness-${session:-none}"
 
+# ONTYRA_TOKEN: the credential when the daemon requires one (a single-user token, or the token
+# of an account's credential). Unset: no Authorization header is sent.
+auth=()
+[ -n "${ONTYRA_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $ONTYRA_TOKEN")
+
 post() { # post PATH JSON: fire at the daemon, print the reply
-  curl -sS --max-time 8 -X POST "$url/v1/$1" -H 'content-type: application/json' \
+  curl -sS --max-time 8 -X POST "$url/v1/$1" -H 'content-type: application/json' "${auth[@]}" \
     -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" -d "$2"
 }
 

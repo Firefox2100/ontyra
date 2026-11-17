@@ -128,6 +128,7 @@ def Ref(*tables: str) -> Any:
 # Typed link aliases: valid type expressions, so type checkers see plain `RecordId`.
 ActorRef = Annotated[RecordId, LinksTo(("actor",)), AfterValidator(check_link(("actor",)))]
 OwnerRef = Annotated[RecordId, LinksTo(("owner",)), AfterValidator(check_link(("owner",)))]
+UserRef = Annotated[RecordId, LinksTo(("user",)), AfterValidator(check_link(("user",)))]
 MemoryRef = Annotated[RecordId, LinksTo(("memory",)), AfterValidator(check_link(("memory",)))]
 ConceptRef = Annotated[RecordId, LinksTo(("concept",)), AfterValidator(check_link(("concept",)))]
 EpisodeRef = Annotated[RecordId, LinksTo(("episode",)), AfterValidator(check_link(("episode",)))]

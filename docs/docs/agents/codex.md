@@ -34,6 +34,12 @@ Ask "what do you remember about this project?". Or send a prompt and look at the
 stored rule, `curl -s localhost:8787/v1/briefing -X POST -H 'content-type: application/json' -d '{"context":{"uris":[],"signals":[]}}'`.
 Anything the agent proposes appears in the operator console under Review.
 
+## A daemon that requires a token
+
+Export `ONTYRA_TOKEN` before starting Codex (an agent credential, see
+[Authentication](../guides/authentication.md)). The hooks send it, and the MCP server entry reads
+it through `bearer_token_env_var`. If it is unset, Codex connects without credentials.
+
 ## Another daemon address
 
 Edit `url` in the plugin's `.mcp.json` and export `ONTYRA_URL` for the hooks.

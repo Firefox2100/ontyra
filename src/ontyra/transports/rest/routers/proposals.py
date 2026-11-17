@@ -43,16 +43,17 @@ async def submit(
 
 @router.get("", summary="List proposals")
 async def list_proposals(
+    caller: CallerDep,
     memory: MemoryServiceDep,
     status: Annotated[Literal["pending"], Query()] = "pending",
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
 ) -> list[Proposal]:
-    return await memory.pending(limit)
+    return await memory.pending(caller, limit)
 
 
 @router.get("/{proposal_id}", summary="Get one proposal")
-async def get_proposal(proposal_id: str, memory: MemoryServiceDep) -> Proposal:
-    return await memory.get_proposal(_id(proposal_id))
+async def get_proposal(proposal_id: str, caller: CallerDep, memory: MemoryServiceDep) -> Proposal:
+    return await memory.get_proposal(caller, _id(proposal_id))
 
 
 @router.post(

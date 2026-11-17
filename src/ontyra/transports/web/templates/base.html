@@ -44,6 +44,7 @@ form.inline { display:inline-flex; gap:6px; align-items:center; }
 {% for key, label, href in [("home","Overview","/ui/"),("review","Review","/ui/review"),("memories","Memories","/ui/memories"),("concepts","Concepts","/ui/concepts"),("recall","Recall","/ui/recall")] %}
 <a href="{{ href }}" class="{{ 'on' if nav == key }}">{{ label }}</a>
 {% endfor %}
-</nav></header>
+</nav>
+{% if request.cookies.get('ontyra_session') %}<form method="post" action="/ui/logout" style="margin-left:auto"><button type="submit">Sign out</button></form>{% endif %}</header>
 <main>{% block body %}{% endblock %}</main>
 </body></html>

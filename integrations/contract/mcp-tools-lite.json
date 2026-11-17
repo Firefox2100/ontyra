@@ -945,7 +945,7 @@
     "name": "recall"
   },
   {
-    "description": "Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`); it is validated, then committed or held for review. Read the findings: warnings may point at a duplicate you should supersede.",
+    "description": "Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`); it is validated, then committed or held for review. Side effects: a proposal is recorded; if the policy commits it, memories are added or superseded or retracted (history is kept). Read the findings: warnings may point at a duplicate you should supersede. Memories go to your own space; `space: global` writes to the shared memory and needs permission.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1358,6 +1358,14 @@
               },
               "minItems": 1,
               "type": "array"
+            },
+            "space": {
+              "default": "own",
+              "enum": [
+                "own",
+                "global"
+              ],
+              "type": "string"
             }
           },
           "required": [

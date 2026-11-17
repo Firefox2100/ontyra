@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from ontyra.models.feedback import RerankerRun, RerankerStatus, TrainOptions
-from ontyra.transports.rest.deps import CallerDep, RerankingServiceDep
+from ontyra.transports.rest.deps import AdminDep, RerankingServiceDep
 
 router = APIRouter(prefix="/reranker", tags=["feedback"])
 
@@ -26,6 +26,6 @@ async def status(service: RerankingServiceDep) -> RerankerStatus:
     "held-out pairs; every run is recorded.",
 )
 async def train(
-    caller: CallerDep, service: RerankingServiceDep, options: TrainOptions | None = None
+    caller: AdminDep, service: RerankingServiceDep, options: TrainOptions | None = None
 ) -> RerankerRun:
     return await service.train(caller, options)

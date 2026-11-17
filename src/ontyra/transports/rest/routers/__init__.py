@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from ontyra.transports.rest.routers import (
+    admin,
     concepts,
     episodes,
     explore,
@@ -28,6 +29,7 @@ VERSIONED: list[APIRouter] = [
     resources.router,
     feedback.router,
     reranker.router,
+    admin.router,
 ]
 UNVERSIONED: list[APIRouter] = [health.router]
 

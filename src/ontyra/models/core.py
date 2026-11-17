@@ -13,6 +13,7 @@ from ontyra.models.base import (
     Record,
     RecordId,
     RevRef,
+    UserRef,
 )
 from ontyra.models.kinds import KindName
 from ontyra.models.registry import REV_WILDCARD, registry
@@ -31,6 +32,38 @@ class Actor(Record):
 class Owner(Record):
     kind: Literal["global", "user", "agent"]
     name: str
+
+
+Permission = Literal["global_write", "admin"]
+
+
+@registry.table("user")
+class User(Record):
+    """An account (multi-user mode). It owns its memories through `owner`; `global_write` lets
+    it change the shared global memory and ontology, `admin` lets it manage accounts."""
+
+    name: Annotated[str, Indexed(unique=True)]
+    owner: OwnerRef
+    permissions: list[Permission] = []
+    disabled: bool = False
+    created_at: datetime
+
+
+@registry.table("credential")
+class Credential(Record):
+    """One way a user authenticates: themselves, their Codex, their Claude Code... Only the
+    SHA-256 of the token is stored. `kind` is the actor kind the credential acts as: a `human`
+    credential may review and (by policy) commit at once; an `agent` one is held for review."""
+
+    user: UserRef
+    name: str
+    kind: Literal["human", "agent"]
+    harness: str | None = None
+    token_hash: Annotated[str, Indexed(unique=True)]
+    token_hint: str
+    created_at: datetime
+    revoked_at: datetime | None = None
+    last_used_at: datetime | None = None
 
 
 @registry.table("episode", immutable=True)
@@ -133,7 +166,9 @@ class Proposal(Record):
     """An atomic batch of operations submitted by one actor (see plans/01, plans/10)."""
 
     actor: ActorRef
-    owner: OwnerRef
+    owner: OwnerRef  # the submitter's own memory
+    space: Literal["own", "global"] = "own"  # where its additions go
+    permissions: list[str] = []  # the submitter's permissions when it was made
     status: Literal["pending", "committed", "rejected"]
     decision: Literal["auto_commit", "review", "reject"]  # policy outcome at submission
     decision_reason: str | None = None

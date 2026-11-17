@@ -16,6 +16,7 @@ from ontyra.ports import Embedder
 from ontyra.services import (
     ActorService,
     AnchorService,
+    AuthService,
     ExplorationService,
     FeedbackService,
     IndexService,
@@ -42,6 +43,7 @@ class Application:
     settings: Settings
     db: Database
     actors: ActorService
+    auth: AuthService
     memory: MemoryService
     ontology: OntologyService
     ontology_changes: OntologyChangeService
@@ -98,10 +100,21 @@ class Application:
                 rerank_top_n=settings.rerank.top_n,
             )
         feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
+        actors = ActorService(store, now, settings.actor_trust)
+        token = settings.auth.token
+        admin_token = settings.auth.admin_token
         return cls(
             settings=settings,
             db=db,
-            actors=ActorService(store, now, settings.actor_trust),
+            actors=actors,
+            auth=AuthService(
+                store,
+                actors,
+                now,
+                multi_user=settings.auth.multi_user,
+                token=token.get_secret_value() if token else None,
+                admin_token=admin_token.get_secret_value() if admin_token else None,
+            ),
             memory=memory,
             ontology=ontology,
             ontology_changes=OntologyChangeService(
@@ -144,6 +157,7 @@ async def create_application(
     if apply_schema:
         await app.schema().apply()
     await app.actors.ensure_owner()
+    await app.auth.bootstrap()
     return app
 
 
@@ -177,6 +191,7 @@ def create_rest_app(settings: Settings | None = None) -> FastAPI:
         mounts=mounts,
         extra_routers=routers,
         ui_actor=cfg.ui.actor,
+        ui_session_hours=cfg.auth.ui_session_hours,
     )
     holder["app"] = app
     return app

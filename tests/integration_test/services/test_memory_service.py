@@ -100,7 +100,7 @@ async def test_invalid_fields_reject_the_whole_proposal_and_store_nothing(
     errors = [f for f in result.findings if f.severity == "error"]
     assert errors and errors[0].code == "invalid_field" and errors[0].op == 1
     assert await app.memory.list_memories(agent) == []  # all-or-nothing, incl. the valid op
-    stored = await app.memory.get_proposal(result.proposal)
+    stored = await app.memory.get_proposal(agent, result.proposal)
     assert stored.status == "rejected"  # the attempt itself is recorded
 
 
@@ -130,7 +130,7 @@ async def test_default_policy_holds_proposals_for_review(
     result = await review_app.memory.submit(agent, req(add_directive("wait for me")))
     assert (result.status, result.decision) == ("pending", "review")
     assert await review_app.memory.list_memories(agent) == []
-    pending = await review_app.memory.pending()
+    pending = await review_app.memory.pending(human)
     assert [p.id for p in pending] == [result.proposal]
     tasks = await review_app.memory.store.select("task", {"kind": "review_proposal"})
     assert len(tasks) == 1 and isinstance(tasks[0], Task) and tasks[0].status == "pending"
@@ -145,7 +145,7 @@ async def test_approve_commits_and_closes_the_review_task(
     assert approved.status == "committed"
     view = await review_app.memory.get_memory(agent, approved.created["d"])
     assert view.text == "approved"
-    assert await review_app.memory.pending() == []
+    assert await review_app.memory.pending(human) == []
     task = (await review_app.memory.store.select("task", {"kind": "review_proposal"}))[0]
     assert isinstance(task, Task) and task.status == "done"
     with pytest.raises(ProposalStateError):
@@ -160,7 +160,9 @@ async def test_reject_discards_without_creating_anything(
     rejected = await review_app.memory.reject(human, submitted.proposal, "not wanted")
     assert rejected.status == "rejected" and rejected.reason == "not wanted"
     assert await review_app.memory.list_memories(agent) == []
-    assert (await review_app.memory.get_proposal(submitted.proposal)).decided_by == human.actor_id
+    assert (
+        await review_app.memory.get_proposal(human, submitted.proposal)
+    ).decided_by == human.actor_id
 
 
 async def test_approval_revalidates_against_the_current_data(

@@ -108,3 +108,28 @@ async def test_the_daemon_serves_mcp_when_enabled(tmp_path: Path) -> None:
         async with factory(base_url="http://test") as rest:
             memories = (await rest.get("/v1/memories")).json()
     assert len(memories) == 1
+
+
+async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
+    """Clients derive "ask first?" from these hints, so none may be missing."""
+    async with server(app, "full") as client:
+        tools = {t.name: t for t in await client.list_tools()}
+    for name, tool in tools.items():
+        hints = tool.annotations
+        assert hints is not None and tool.title, f"{name} lacks annotations or a title"
+        assert hints.open_world_hint is False  # only this daemon is touched
+        assert hints.read_only_hint is not None and hints.destructive_hint is not None
+    reads = {
+        "recall", "check", "briefing", "ask", "get", "concepts", "search", "overview",
+        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes",
+    }  # fmt: skip
+    for name in reads:
+        assert tools[name].annotations.read_only_hint is True, name  # type: ignore[union-attr]
+        assert tools[name].annotations.idempotent_hint is True, name  # type: ignore[union-attr]
+    for name in set(tools) - reads:
+        assert tools[name].annotations.read_only_hint is False, name  # type: ignore[union-attr]
+    # committing can retract or replace memories; a proposal or a rejection destroys nothing
+    assert tools["approve"].annotations.destructive_hint is True  # type: ignore[union-attr]
+    assert tools["approve_ontology_change"].annotations.destructive_hint is True  # type: ignore[union-attr]
+    for name in ("remember", "propose_ontology_change", "reject", "reject_ontology_change"):
+        assert tools[name].annotations.destructive_hint is False, name  # type: ignore[union-attr]

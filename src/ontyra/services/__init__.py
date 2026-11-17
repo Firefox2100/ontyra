@@ -2,6 +2,7 @@
 
 from ontyra.services.actors import ActorService
 from ontyra.services.anchors import AnchorService
+from ontyra.services.auth import AuthService, Principal
 from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.explore import ExplorationService
 from ontyra.services.feedback import FeedbackService, RerankTrainingService
@@ -18,6 +19,7 @@ __all__ = [
     "GLOBAL_OWNER",
     "ActorService",
     "AnchorService",
+    "AuthService",
     "Caller",
     "ExplorationService",
     "FeedbackService",
@@ -27,6 +29,7 @@ __all__ = [
     "OntologyChangeService",
     "OntologyService",
     "PolicyEngine",
+    "Principal",
     "RecallEngine",
     "RecallService",
     "RerankTrainingService",

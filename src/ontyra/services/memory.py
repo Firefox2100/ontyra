@@ -13,7 +13,7 @@ from ontyra.models.proposals import Finding, ProposalRequest, ProposalResult
 from ontyra.ports import Create, Store, StoreConflictError, Update, Write
 from ontyra.services import errors
 from ontyra.services.anchors import AnchorService
-from ontyra.services.context import Caller
+from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.ontology import OntologyService
 from ontyra.services.planner import memory_writes, proposal_write
 from ontyra.services.policy import OpSummary, PolicyEngine
@@ -138,6 +138,8 @@ class MemoryService:
                 proposal=pid,
                 actor=caller.actor_id,
                 owner=caller.owner,
+                space=request.space,
+                permissions=sorted(caller.permissions),
                 status=status,
                 decision=decision,
                 reason=reason,
@@ -187,6 +189,7 @@ class MemoryService:
     async def approve(self, reviewer: Caller, proposal: RecordId) -> ProposalResult:
         """Commit a pending proposal (re-validated against the data as it is now)."""
         p = await self._pending(proposal)
+        self._may_review(reviewer, p)
         submitter = await self._caller_of(p)
         v = await self._revalidate(submitter, p)
         if not v.ok:
@@ -219,7 +222,7 @@ class MemoryService:
         )
 
     async def reject(self, reviewer: Caller, proposal: RecordId, reason: str) -> ProposalResult:
-        await self._pending(proposal)
+        self._may_review(reviewer, await self._pending(proposal))
         now = self.now()
         await self.store.apply(
             [
@@ -239,13 +242,37 @@ class MemoryService:
             proposal=proposal, status="rejected", decision="review", reason=reason
         )
 
-    async def pending(self, limit: int = 50) -> list[Proposal]:
-        rows = await self.store.select(
-            "proposal", {"status": "pending"}, limit=limit, order_by="submitted_at"
-        )
-        return [r for r in rows if isinstance(r, Proposal)]
+    @staticmethod
+    def _target(p: Proposal) -> RecordId:
+        return GLOBAL_OWNER if p.space == "global" else p.owner
 
-    async def get_proposal(self, proposal: RecordId) -> Proposal:
+    @classmethod
+    def _may_review(cls, reviewer: Caller, p: Proposal) -> None:
+        if reviewer.actor.kind != "human":
+            raise errors.PermissionDeniedError("only a human credential can review proposals")
+        if not (p.owner == reviewer.owner or reviewer.can_write(cls._target(p))):
+            raise errors.PermissionDeniedError("this proposal is not yours to review")
+
+    @classmethod
+    def _sees(cls, caller: Caller, p: Proposal) -> bool:
+        return p.owner == caller.owner or caller.can_write(cls._target(p))
+
+    async def pending(self, caller: Caller, limit: int = 50) -> list[Proposal]:
+        """Pending proposals the caller may see: its own owner's, plus the global ones when it
+        may write the global memory."""
+        rows = await self.store.select(
+            "proposal", {"status": "pending"}, limit=limit * 4, order_by="submitted_at"
+        )
+        mine = [r for r in rows if isinstance(r, Proposal) and self._sees(caller, r)]
+        return mine[:limit]
+
+    async def get_proposal(self, caller: Caller, proposal: RecordId) -> Proposal:
+        p = await self._proposal(proposal)
+        if not self._sees(caller, p):
+            raise errors.NotFoundError(f"{proposal} does not exist")
+        return p
+
+    async def _proposal(self, proposal: RecordId) -> Proposal:
         p = await self.store.get(proposal)
         if not isinstance(p, Proposal):
             raise errors.NotFoundError(f"{proposal} does not exist")
@@ -366,7 +393,7 @@ class MemoryService:
         )
 
     async def _pending(self, proposal: RecordId) -> Proposal:
-        p = await self.get_proposal(proposal)
+        p = await self._proposal(proposal)
         if p.status != "pending":
             raise errors.ProposalStateError(f"{proposal} is {p.status}, not pending")
         return p
@@ -375,10 +402,10 @@ class MemoryService:
         actor = await self.store.get(p.actor)
         if not isinstance(actor, Actor):
             raise errors.NotFoundError(f"submitting actor {p.actor} no longer exists")
-        return Caller(actor=actor, owner=p.owner)
+        return Caller(actor=actor, owner=p.owner, permissions=frozenset(p.permissions))
 
     async def _revalidate(self, caller: Caller, p: Proposal) -> Validation:
-        request = ProposalRequest.model_validate({"ops": p.ops, "note": p.note})
+        request = ProposalRequest.model_validate({"ops": p.ops, "note": p.note, "space": p.space})
         return await self.validator.validate(caller, request)
 
     async def _close_task(self, proposal: RecordId, outcome: str, now: datetime) -> list[Write]:

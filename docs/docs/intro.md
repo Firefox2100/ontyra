@@ -8,8 +8,8 @@ Ontyra is long-term memory for agents, run as a small daemon that agent harnesse
 Codex, your own) talk to over REST or MCP.
 
 :::caution Experimental
-Ontyra is an experiment. The schema may change between versions, there is no authentication yet
-(run it on loopback only), and the retrieval settings have not been tuned on a large corpus.
+Ontyra is an experiment. The schema may change between versions, authentication is optional and off by default
+(see [Authentication](./guides/authentication.md); keep it on loopback), and the retrieval settings have not been tuned on a large corpus.
 :::
 
 ## What it does
