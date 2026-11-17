@@ -1,0 +1,17 @@
+{
+  "name": "ontyra",
+  "version": "0.1.0",
+  "description": "Ontyra long-term memory: a briefing at session start, recall on each prompt, MCP tools to read and write memory, and a skill that says how.",
+  "license": "MIT",
+  "keywords": ["memory", "mcp", "ontyra"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Ontyra",
+    "shortDescription": "Long-term memory for agents",
+    "longDescription": "Connects Codex to a running Ontyra daemon: applicable rules are briefed at session start, relevant memories are recalled for each prompt, and the memory tools let the agent propose what to remember.",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"]
+  }
+}

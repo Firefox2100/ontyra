@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ontyra": {
+      "type": "http",
+      "url": "http://127.0.0.1:8787/mcp/",
+      "http_headers": {
+        "X-Ontyra-Actor": "codex",
+        "X-Ontyra-Harness": "codex"
+      }
+    }
+  }
+}

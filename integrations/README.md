@@ -8,7 +8,7 @@ import `ontyra` (a unit test enforces it): the only coupling is the contract.
 |---|---|---|
 | `contract/` | OpenAPI + MCP tool schemas, generated: `uv run python scripts/export_contract.py` (CI fails if stale) | JSON |
 | `claude-code/` | Claude Code plugin: hooks over REST, MCP config | shell, JSON |
-| `codex/` | Codex setup: MCP config, instructions snippet | TOML, Markdown |
+| `codex/` | Codex plugin: hooks over REST, MCP config, skill (marketplace at `.agents/plugins/`) | shell, JSON |
 | `dsh/` | DeepSeek Harness plugin | TypeScript |
 
 Rules: talk to the daemon over REST or MCP only; fail open (a dead daemon must never block the

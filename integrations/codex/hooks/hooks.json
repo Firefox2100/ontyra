@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ONTYRA_HARNESS=codex \"${PLUGIN_ROOT}/hooks/ontyra-hook.sh\"",
+            "timeout": 10,
+            "statusMessage": "Loading Ontyra briefing"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ONTYRA_HARNESS=codex \"${PLUGIN_ROOT}/hooks/ontyra-hook.sh\"",
+            "timeout": 10,
+            "statusMessage": "Recalling Ontyra memories"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ONTYRA_HARNESS=codex \"${PLUGIN_ROOT}/hooks/ontyra-hook.sh\"",
+            "timeout": 10,
+            "statusMessage": "Logging to Ontyra"
+          }
+        ]
+      }
+    ]
+  }
+}

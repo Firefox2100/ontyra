@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code hook: ask the Ontyra daemon what applies and hand it to the model as context.
+# Agent harness hook (Claude Code, Codex): ask the Ontyra daemon what applies and hand it to the model as context.
 #   SessionStart      -> POST /v1/briefing (redelivers after a resume or compaction)
 #   UserPromptSubmit  -> POST /v1/recall   (the prompt is the query)
 #   UserPromptSubmit and Stop also log the prompt / the assistant's last message as episodes
@@ -8,7 +8,8 @@
 #   once to propose memories for anything durable it learned (`remember` tool).
 # Fails open: if the daemon is down or slow the session continues without memory.
 # Needs curl and jq. Env: ONTYRA_URL (default http://127.0.0.1:8787), ONTYRA_BUDGET_TOKENS,
-# ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1).
+# ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
+# claude-code) and ONTYRA_ACTOR (default: the harness name) say who is talking.
 set -u
 input=$(cat)
 url="${ONTYRA_URL:-http://127.0.0.1:8787}"
@@ -17,18 +18,20 @@ cwd=$(jq -r '.cwd // empty' <<<"$input")
 session=$(jq -r '.session_id // empty' <<<"$input")
 source_kind=$(jq -r '.source // "startup"' <<<"$input")
 host=$(hostname 2>/dev/null || echo localhost)
-state="${TMPDIR:-/tmp}/ontyra-claude-${session:-none}"
+harness="${ONTYRA_HARNESS:-claude-code}"
+actor="${ONTYRA_ACTOR:-${harness%%-*}}"
+state="${TMPDIR:-/tmp}/ontyra-$harness-${session:-none}"
 
 post() { # post PATH JSON: fire at the daemon, print the reply
   curl -sS --max-time 8 -X POST "$url/v1/$1" -H 'content-type: application/json' \
-    -H 'X-Ontyra-Actor: claude' -H 'X-Ontyra-Harness: claude-code' -d "$2"
+    -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" -d "$2"
 }
 
 episode() { # episode ROLE TEXT
   [ "${ONTYRA_LOG_EPISODES:-1}" = 1 ] || return 0
   [ -n "$2" ] || return 0
-  post episodes "$(jq -n --arg s "$session" --arg r "$1" --arg c "$2" \
-    '{session: $s, role: $r, content: $c, meta: {harness: "claude-code"}}')" >/dev/null 2>&1 || true
+  post episodes "$(jq -n --arg s "$session" --arg r "$1" --arg c "$2" --arg h "$harness" \
+    '{session: $s, role: $r, content: $c, meta: {harness: $h}}')" >/dev/null 2>&1 || true
 }
 
 # Where we are: the working directory and the git root (anchors; the daemon knows the containment)
