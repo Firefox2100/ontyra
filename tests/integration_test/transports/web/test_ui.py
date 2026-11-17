@@ -32,7 +32,9 @@ async def ui(review_app: Application) -> AsyncIterator[httpx.AsyncClient]:
     """The console over an application whose policy holds everything for review."""
     app = create_app(review_app, extra_routers=ROUTERS, ui_actor="owner")
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://test", headers={"Origin": "http://test"}
+    ) as client:
         yield client
 
 

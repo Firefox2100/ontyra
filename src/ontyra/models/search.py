@@ -56,6 +56,7 @@ class Embedding(Record):
 class Delivery(Record):
     """Session recall ledger: what was already delivered to a session."""
 
+    owner: Annotated[OwnerRef, Indexed()]
     session: Annotated[str, Indexed()]
     memory: MemoryRef
     rev: RevRef
@@ -67,6 +68,7 @@ class Delivery(Record):
 class RecallTrace(Record):
     """Why each item of a recall pack was (or was not) delivered, for debugging and evaluation."""
 
+    owner: Annotated[OwnerRef, Indexed()]
     actor: ActorRef
     path: str
     session: str | None = None

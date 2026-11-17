@@ -27,6 +27,7 @@ from ontyra.models.feedback import (
     TrainOptions,
 )
 from ontyra.models.kinds import RevisionBase
+from ontyra.models.search import RecallTrace
 from ontyra.ports import Create, Store, Update
 from ontyra.ports.adapters import PromotionGate, Reranker, TrainableReranker
 from ontyra.services.context import Caller
@@ -57,6 +58,7 @@ def view(f: Feedback) -> FeedbackView:
     assert f.id is not None
     return FeedbackView(
         id=f.id,
+        owner=f.owner,
         memory=f.memory,
         query=f.query,
         label=f.label,
@@ -82,12 +84,20 @@ class FeedbackService:
 
     async def record(self, caller: Caller, request: FeedbackRequest) -> FeedbackView:
         memory = await self.store.get(request.memory)
-        if not isinstance(memory, Memory):
+        if not isinstance(memory, Memory) or memory.owner not in caller.visible_owners():
             raise NotFoundError(f"memory {request.memory} not found")
         revision = request.revision or memory.current
+        found_revision = await self.store.get(revision) if revision is not None else None
+        if not isinstance(found_revision, RevisionBase) or found_revision.memory != request.memory:
+            raise NotFoundError("the feedback revision does not belong to that memory")
+        if request.trace is not None:
+            trace = await self.store.get(request.trace)
+            if not isinstance(trace, RecallTrace) or trace.owner != caller.owner:
+                raise NotFoundError(f"trace {request.trace} not found")
         now = self.now()
         days = request.expires_in_days if request.expires_in_days is not None else self.ttl_days
         event = Feedback(
+            owner=caller.owner,
             memory=request.memory,
             revision=revision,
             query=request.query.strip(),
@@ -105,7 +115,7 @@ class FeedbackService:
         key = normalise_query(event.query)
         same = [
             f
-            for f in await self._all(memory=request.memory, state="active")
+            for f in await self._all(owner=caller.owner, memory=request.memory, state="active")
             if normalise_query(f.query) == key
         ]
         wins, losers = resolve(event, same)
@@ -127,6 +137,8 @@ class FeedbackService:
         found = await self.store.get(feedback)
         if not isinstance(found, Feedback):
             raise NotFoundError(f"feedback {feedback} not found")
+        if found.owner != caller.owner:
+            raise NotFoundError(f"feedback {feedback} not found")
         if found.source != caller.actor_id and caller.actor.kind != "human":
             raise InvalidRequestError("only the author or a human can retract feedback")
         await self.store.apply([Update(feedback, {"state": "retracted"})])
@@ -146,19 +158,21 @@ class FeedbackService:
         return len(due)
 
     async def list(
-        self, state: str | None = None, memory: RecordId | None = None
+        self, caller: Caller, state: str | None = None, memory: RecordId | None = None
     ) -> list[FeedbackView]:
-        where: dict[str, Any] = {}
+        where: dict[str, Any] = {"owner": caller.owner}
         if state:
             where["state"] = state
         if memory:
             where["memory"] = memory
         return [view(f) for f in await self._all(**where)]
 
-    async def examples(self) -> list[RerankExample]:
+    async def examples(self, owner: RecordId | None = None) -> list[RerankExample]:
         """Training pairs from the events that still count (query, text of the judged revision)."""
         await self.expire()
-        active = await self._all(state="active")
+        active = await self._all(
+            **({"state": "active", "owner": owner} if owner is not None else {"state": "active"})
+        )
         revs = await self.store.get_many([f.revision for f in active if f.revision is not None])
         out: list[RerankExample] = []
         for f in active:
@@ -174,9 +188,9 @@ class FeedbackService:
                 )
         return out
 
-    async def summary(self) -> FeedbackSummary:
+    async def summary(self, caller: Caller | None = None) -> FeedbackSummary:
         await self.expire()
-        rows = await self._all()
+        rows = await self._all(**({"owner": caller.owner} if caller else {}))
         by_label: dict[str, int] = {}
         for f in rows:
             if f.state == "active":
@@ -192,7 +206,7 @@ class FeedbackService:
             expired=count["expired"],
             retracted=count["retracted"],
             by_label=by_label,
-            trainable_examples=len(await self.examples()),
+            trainable_examples=len(await self.examples(caller.owner if caller else None)),
         )
 
 

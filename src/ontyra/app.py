@@ -114,6 +114,7 @@ class Application:
                 multi_user=settings.auth.multi_user,
                 token=token.get_secret_value() if token else None,
                 admin_token=admin_token.get_secret_value() if admin_token else None,
+                single_user_kind=settings.auth.single_user_kind,
             ),
             memory=memory,
             ontology=ontology,
@@ -192,6 +193,8 @@ def create_rest_app(settings: Settings | None = None) -> FastAPI:
         extra_routers=routers,
         ui_actor=cfg.ui.actor,
         ui_session_hours=cfg.auth.ui_session_hours,
+        ui_cookie_secure=cfg.ui_cookie_secure,
+        ui_allowed_origins=cfg.auth.ui_allowed_origins,
     )
     holder["app"] = app
     return app

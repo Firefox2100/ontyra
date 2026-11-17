@@ -34,6 +34,8 @@ def create_app(
     extra_routers: Sequence[APIRouter] = (),
     ui_actor: str | None = None,
     ui_session_hours: int = 12,
+    ui_cookie_secure: bool = False,
+    ui_allowed_origins: Sequence[str] = (),
 ) -> FastAPI:
     """Build the application.
 
@@ -58,6 +60,8 @@ def create_app(
     if ui_actor:
         app.state.ui_actor = ui_actor
     app.state.ui_session_hours = ui_session_hours
+    app.state.ui_cookie_secure = ui_cookie_secure
+    app.state.ui_allowed_origins = set(ui_allowed_origins)
     app.add_middleware(AuthMiddleware)
     install_error_handlers(app)
     for router in UNVERSIONED:

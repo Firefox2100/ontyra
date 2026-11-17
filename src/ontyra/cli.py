@@ -74,6 +74,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "serve":
         host = args.host or settings.server.host
         port = args.port or settings.server.port
+        settings = settings.for_bind(host, port)
         uvicorn.run(
             create_rest_app(settings), host=host, port=port, log_level=settings.log_level.lower()
         )

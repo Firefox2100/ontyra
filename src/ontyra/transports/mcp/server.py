@@ -212,7 +212,7 @@ def create_mcp(
         async def pending_ontology_changes(
             limit: Annotated[int, Field(ge=1, le=200)] = 50,
         ) -> list[OntologyChange]:
-            return await run(lambda s, c: s.ontology_changes.pending(limit))
+            return await run(lambda s, c: s.ontology_changes.pending(c, limit))
 
         @mcp.tool(
             title="Approve an ontology change",

@@ -15,6 +15,12 @@ docker compose up -d
 curl -s localhost:8787/health
 ```
 
+The image itself listens on loopback by default. For bridge networking, explicitly set
+`ONTYRA_SERVER__HOST=0.0.0.0`, publish the host port on `127.0.0.1`, and—only when running without
+authentication—set `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true`. For an internet-facing reverse
+proxy deployment, use `ONTYRA_SERVER__DEPLOYMENT=public` and the multi-user settings described in
+[Authentication and accounts](./authentication.md).
+
 To keep the deployment outside the checkout, copy `compose.yaml` and `.env` to a directory of
 your choice, leave `image: ontyra:local` and run `docker compose up -d` there. After pulling a
 new version, rebuild the image and run `docker compose up -d` again; the data stays in `./data`.

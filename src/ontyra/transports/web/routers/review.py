@@ -28,8 +28,8 @@ async def review(
         "review.html",
         {
             "proposals": await memory.pending(caller, 200),
-            "changes": await changes.pending(200),
-            "recent": await changes.history(15),
+            "changes": await changes.pending(caller, 200),
+            "recent": await changes.history(caller, 15),
             "nav": "review",
         },
     )

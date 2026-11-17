@@ -73,12 +73,12 @@ async def test_a_human_verdict_replaces_an_agents_for_the_same_query(
     yours = await app.feedback.record(
         human, FeedbackRequest(memory=memory_id, query="write tests", label="irrelevant")
     )
-    by_id = {f.id: f for f in await app.feedback.list()}
+    by_id = {f.id: f for f in await app.feedback.list(agent)}
     assert by_id[mine.id].state == "superseded" and by_id[yours.id].state == "active"
     again = await app.feedback.record(
         agent, FeedbackRequest(memory=memory_id, query="write tests", label="applied")
     )
-    states = {f.id: f.state for f in await app.feedback.list()}
+    states = {f.id: f.state for f in await app.feedback.list(agent)}
     assert states[again.id] == "superseded" and states[yours.id] == "active"  # trust wins, not age
 
 

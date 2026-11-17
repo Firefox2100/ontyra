@@ -16,7 +16,7 @@ FROM python:3.12-slim-bookworm
 RUN useradd --system --uid 10001 --home-dir /nonexistent ontyra
 COPY --from=build /app/.venv /app/.venv
 ENV PATH=/app/.venv/bin:$PATH PYTHONUNBUFFERED=1 \
-    ONTYRA_SERVER__HOST=0.0.0.0 ONTYRA_SERVER__PORT=8080 ONTYRA_MCP__ENABLED=true
+    ONTYRA_SERVER__HOST=127.0.0.1 ONTYRA_SERVER__PORT=8080 ONTYRA_MCP__ENABLED=true
 USER ontyra
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=5 \

@@ -66,8 +66,26 @@ async def test_the_bootstrap_admin_authenticates_and_a_wrong_token_does_not(
 async def test_multi_user_mode_needs_an_admin_token() -> None:
     with pytest.raises(ValueError, match="ADMIN_TOKEN"):
         AuthSettings(multi_user=True)
-    with pytest.raises(ValueError, match="16 characters"):
+    with pytest.raises(ValueError, match="32 characters"):
         AuthSettings(token=SecretStr("short"))
+
+
+async def test_shared_token_actor_kind_is_server_controlled(make_app) -> None:
+    app: Application = await make_app(
+        auth=AuthSettings(
+            token=SecretStr("shared-token-for-tests-0123456789"),
+            single_user_kind="agent",
+        )
+    )
+    principal = await app.auth.authenticate("shared-token-for-tests-0123456789")
+    assert principal is not None
+    caller = await app.auth.caller(
+        principal,
+        label="claimed-human",
+        kind="human",
+        harness="test",
+    )
+    assert caller.actor.kind == "agent"
 
 
 async def test_one_account_has_several_credentials_with_their_own_kind(multi: Application) -> None:
@@ -190,6 +208,38 @@ async def test_the_ontology_is_shared_so_changing_it_needs_global_write(multi: A
     with pytest.raises(errors.PermissionDeniedError):
         await multi.ontology_changes.approve(plain, held.id)
     assert (await multi.ontology_changes.approve(writer, held.id)).status == "applied"
+
+
+async def test_ontology_auto_apply_and_queues_remain_tenant_scoped(multi: Application) -> None:
+    alice = await as_user(multi, "alice-onto", "me", "human")
+    bob = await as_user(multi, "bob-onto", "me", "human")
+    writer = await as_user(multi, "ontology-writer", "me", "human", ["global_write"])
+    multi.ontology_changes.auto_apply = {"define"}
+    alice_change = await multi.ontology_changes.propose(
+        alice,
+        ChangeRequest.model_validate(
+            {
+                "change": {"op": "define", "concept": {"label": "Alice private proposal"}},
+                "rationale": "alice rationale",
+            }
+        ),
+    )
+    bob_change = await multi.ontology_changes.propose(
+        bob,
+        ChangeRequest.model_validate(
+            {
+                "change": {"op": "define", "concept": {"label": "Bob private proposal"}},
+                "rationale": "bob rationale",
+            }
+        ),
+    )
+    assert alice_change.status == bob_change.status == "pending"
+    assert [c.id for c in await multi.ontology_changes.pending(alice)] == [alice_change.id]
+    assert [c.id for c in await multi.ontology_changes.pending(bob)] == [bob_change.id]
+    assert {c.id for c in await multi.ontology_changes.pending(writer)} == {
+        alice_change.id,
+        bob_change.id,
+    }
 
 
 async def test_single_user_mode_has_no_accounts() -> None:

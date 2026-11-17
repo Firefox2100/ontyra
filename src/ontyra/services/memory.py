@@ -250,7 +250,7 @@ class MemoryService:
     def _may_review(cls, reviewer: Caller, p: Proposal) -> None:
         if reviewer.actor.kind != "human":
             raise errors.PermissionDeniedError("only a human credential can review proposals")
-        if not (p.owner == reviewer.owner or reviewer.can_write(cls._target(p))):
+        if not reviewer.can_write(cls._target(p)):
             raise errors.PermissionDeniedError("this proposal is not yours to review")
 
     @classmethod
@@ -260,11 +260,22 @@ class MemoryService:
     async def pending(self, caller: Caller, limit: int = 50) -> list[Proposal]:
         """Pending proposals the caller may see: its own owner's, plus the global ones when it
         may write the global memory."""
-        rows = await self.store.select(
-            "proposal", {"status": "pending"}, limit=limit * 4, order_by="submitted_at"
-        )
-        mine = [r for r in rows if isinstance(r, Proposal) and self._sees(caller, r)]
-        return mine[:limit]
+        if caller.can_write(GLOBAL_OWNER):
+            rows = await self.store.select(
+                "proposal",
+                {"status": "pending"},
+                where_any={"owner": caller.owner, "space": "global"},
+                limit=limit,
+                order_by="submitted_at",
+            )
+        else:
+            rows = await self.store.select(
+                "proposal",
+                {"status": "pending", "owner": caller.owner},
+                limit=limit,
+                order_by="submitted_at",
+            )
+        return [r for r in rows if isinstance(r, Proposal)]
 
     async def get_proposal(self, caller: Caller, proposal: RecordId) -> Proposal:
         p = await self._proposal(proposal)
@@ -297,9 +308,11 @@ class MemoryService:
         where: dict[str, Any] = {"status": status}
         if kind:
             where["kind"] = kind
-        rows = await self.store.select("memory", where, limit=limit, order_by="created_at")
         owners = caller.visible_owners()
-        return [await self._view(m) for m in rows if isinstance(m, Memory) and m.owner in owners]
+        rows = await self.store.select(
+            "memory", where, where_in={"owner": owners}, limit=limit, order_by="created_at"
+        )
+        return [await self._view(m) for m in rows if isinstance(m, Memory)]
 
     async def history(self, caller: Caller, memory: RecordId) -> History:
         mem = await self.store.get(memory)

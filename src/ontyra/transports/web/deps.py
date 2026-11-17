@@ -26,14 +26,29 @@ def sessions(request: Request) -> dict[str, tuple[Principal, datetime]]:
     store: dict[str, tuple[Principal, datetime]] = request.app.state.__dict__.setdefault(
         "ui_sessions", {}
     )
+    now = datetime.now(UTC)
+    for sid, (_, expires) in list(store.items()):
+        if expires < now:
+            store.pop(sid, None)
     return store
+
+
+def _principal_key(principal: Principal) -> str:
+    if principal.credential is not None and principal.credential.id is not None:
+        return str(principal.credential.id)
+    return "single-user"
 
 
 def open_session(request: Request, principal: Principal) -> tuple[str, int]:
     hours = getattr(request.app.state, "ui_session_hours", 12)
     expires = datetime.now(UTC) + timedelta(hours=hours)
     sid = secrets.token_urlsafe(32)
-    sessions(request)[sid] = (principal, expires)
+    store = sessions(request)
+    key = _principal_key(principal)
+    for old_sid, (old_principal, _) in list(store.items()):
+        if _principal_key(old_principal) == key:
+            store.pop(old_sid, None)
+    store[sid] = (principal, expires)
     return sid, hours * 3600
 
 
@@ -47,7 +62,11 @@ async def get_ui_caller(request: Request, services: ServicesDep) -> Caller:
     entry = sessions(request).get(request.cookies.get(SESSION_COOKIE, ""))
     if entry is None or entry[1] < datetime.now(UTC):
         raise HTTPException(303, headers={"Location": "/ui/login"})
-    return await services.auth.caller(entry[0], label=name, kind="human", harness="web-ui")
+    principal = await services.auth.refresh(entry[0])
+    if principal is None:
+        sessions(request).pop(request.cookies.get(SESSION_COOKIE, ""), None)
+        raise HTTPException(303, headers={"Location": "/ui/login"})
+    return await services.auth.caller(principal, label=name, kind="human", harness="web-ui")
 
 
 UiCallerDep = Annotated[Caller, Depends(get_ui_caller)]
@@ -56,7 +75,13 @@ UiCallerDep = Annotated[Caller, Depends(get_ui_caller)]
 async def same_origin(request: Request) -> None:
     """Refuse a state-changing request that a browser sends from another site's page."""
     origin = request.headers.get("origin") or request.headers.get("referer")
-    if origin and urlparse(origin).netloc != request.headers.get("host"):
+    if not origin:
+        raise HTTPException(403, "origin header required")
+    parsed = urlparse(origin)
+    candidate = f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+    configured: set[str] = getattr(request.app.state, "ui_allowed_origins", set())
+    request_origin = f"{request.url.scheme}://{request.headers.get('host', '').lower()}"
+    if candidate not in (configured or {request_origin}):
         raise HTTPException(403, "cross-site request refused")
 
 

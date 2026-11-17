@@ -12,7 +12,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
-from ontyra.models.base import ActorRef, Indexed, Model, Record, RecordId
+from ontyra.models.base import ActorRef, Indexed, Model, OwnerRef, Record, RecordId
 from ontyra.models.ontology import ConceptDefinition, RelationRequest
 from ontyra.models.registry import registry
 
@@ -55,6 +55,7 @@ Change = Annotated[
 
 @registry.table("ontology_change")
 class OntologyChange(Record):
+    owner: Annotated[OwnerRef, Indexed()]
     change: dict[str, Any]  # a `Change`, as data
     op: Annotated[str, Indexed()]
     rationale: str

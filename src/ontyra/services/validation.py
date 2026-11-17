@@ -211,7 +211,7 @@ class _Ctx:
     async def _check_evidence(self, i: int, evidence: Sequence[Evidence]) -> None:
         for ev in evidence:
             ep = await self.o.store.get(ev.episode)
-            if not isinstance(ep, Episode):
+            if not isinstance(ep, Episode) or ep.owner != self.v.owner:
                 self.error(i, "unknown_episode", f"evidence episode {ev.episode} does not exist")
             elif ev.quote is not None and _norm(ev.quote) not in _norm(ep.content):
                 self.error(
@@ -263,6 +263,10 @@ class _Ctx:
         for token in op.derived_from:
             src = await self._resolve(i, token)
             if src is not None:
+                source_memory = await self.o.store.get(src[0])
+                if not isinstance(source_memory, Memory) or source_memory.owner != self.v.owner:
+                    self.error(i, "owner_mismatch", "derived memories must have the same owner")
+                    continue
                 sources.append(src[1])
         self._unscoped(i, model)
         await self._similar(i, op.kind, model)
@@ -437,6 +441,15 @@ class _Ctx:
         if src[0] == dst[0]:
             self.error(i, "self_link", "cannot link a memory to itself")
             return
+        source_memory = await self.o.store.get(src[0])
+        target_memory = await self.o.store.get(dst[0])
+        if (
+            not isinstance(source_memory, Memory)
+            or not isinstance(target_memory, Memory)
+            or source_memory.owner != target_memory.owner
+        ):
+            self.error(i, "owner_mismatch", "linked memories must have the same owner")
+            return
         if op.relation == "promoted_to" and not (
             src[1].table == "lesson_rev" and dst[1].table in ("directive_rev", "procedure_rev")
         ):
@@ -445,7 +458,15 @@ class _Ctx:
         self.v.prepared.append(PreparedLink(i, op.relation, src[1], dst[1], op.reason))
 
     async def annotate(self, i: int, op: Annotate) -> None:
-        if op.target.table not in registry.tables or await self.o.store.get(op.target) is None:
+        target = await self.o.store.get(op.target) if op.target.table in registry.tables else None
+        owner = getattr(target, "owner", None)
+        memory = getattr(target, "memory", None)
+        if owner is None and isinstance(memory, RecordId):
+            parent = await self.o.store.get(memory)
+            owner = parent.owner if isinstance(parent, Memory) else None
+        if owner is None and target is not None:
+            owner = GLOBAL_OWNER
+        if target is None or not isinstance(owner, RecordId) or not self.caller.can_write(owner):
             self.error(i, "unknown_target", f"{op.target} does not exist")
             return
         self.v.prepared.append(PreparedAnnotate(i, op.target, op.kind, op.text))

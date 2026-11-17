@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from ontyra.models.base import ActorRef, Indexed, MemoryRef, Model, Record, RecordId
+from ontyra.models.base import ActorRef, Indexed, MemoryRef, Model, OwnerRef, Record, RecordId
 from ontyra.models.registry import registry
 
 FeedbackLabel = Literal["applied", "helpful", "missed", "irrelevant", "outdated", "wrong"]
@@ -30,6 +30,7 @@ FeedbackState = Literal["active", "superseded", "expired", "retracted"]
 class Feedback(Record):
     """One judgement of one memory for one query (kept until it expires or is superseded)."""
 
+    owner: Annotated[OwnerRef, Indexed()]
     memory: Annotated[MemoryRef, Indexed()]
     revision: RecordId | None = None  # the revision judged (its text is what a reranker sees)
     query: str
@@ -78,6 +79,7 @@ class FeedbackRequest(Model):
 
 class FeedbackView(Model):
     id: RecordId
+    owner: RecordId
     memory: RecordId
     query: str
     label: FeedbackLabel

@@ -45,7 +45,13 @@ async def login(
     sid, max_age = open_session(request, principal)
     response = RedirectResponse("/ui/", status_code=303)
     response.set_cookie(
-        SESSION_COOKIE, sid, max_age=max_age, httponly=True, samesite="strict", path="/ui"
+        SESSION_COOKIE,
+        sid,
+        max_age=max_age,
+        httponly=True,
+        secure=getattr(request.app.state, "ui_cookie_secure", False),
+        samesite="strict",
+        path="/ui",
     )
     return response
 

@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
+from pydantic import Field, FiniteFloat
+
 from ontyra.models.base import Model
+
+Probability = Annotated[FiniteFloat, Field(ge=0.0, le=1.0)]
 
 
 class Judgement(Model):
@@ -14,6 +20,6 @@ class Judgement(Model):
     it. `none` is the probability that nothing applies, when the format offers that outcome.
     """
 
-    scores: list[float | None]
-    none: float | None = None
+    scores: list[Probability | None]
+    none: Probability | None = None
     model: str | None = None

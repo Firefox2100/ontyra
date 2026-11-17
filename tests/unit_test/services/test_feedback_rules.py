@@ -13,6 +13,7 @@ T0 = datetime(2026, 11, 15, 12, 0, tzinfo=UTC)
 
 def event(weight: float, minutes: int, relevance: float = 1.0) -> Feedback:
     return Feedback(
+        owner=RecordId("owner", "global"),
         memory=RecordId("memory", "m"),
         query="q",
         label="applied" if relevance else "irrelevant",

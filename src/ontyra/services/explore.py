@@ -308,7 +308,7 @@ class ExplorationService:
                 summary=f"{len(pre) + len(pre_text)} prerequisite(s)",
             )
         if q == "explain":
-            return await self._explain(request)
+            return await self._explain(caller, request)
         raise errors.InvalidRequestError(f"unknown question {q}")
 
     @staticmethod
@@ -345,12 +345,13 @@ class ExplorationService:
         ]
         gone: list[dict[str, Any]] = []
         for status in ("superseded", "retracted"):
-            for m in await self.store.select("memory", {"status": status}, limit=2000):
-                if (
-                    not isinstance(m, Memory)
-                    or m.owner not in caller.visible_owners()
-                    or m.current is None
-                ):
+            for m in await self.store.select(
+                "memory",
+                {"status": status},
+                where_in={"owner": caller.visible_owners()},
+                limit=2000,
+            ):
+                if not isinstance(m, Memory) or m.current is None:
                     continue
                 st = await self.store.get(rev_state_id(m.current))
                 when = (
@@ -369,11 +370,11 @@ class ExplorationService:
             ),
         )
 
-    async def _explain(self, request: AskRequest) -> AskResult:
+    async def _explain(self, caller: Caller, request: AskRequest) -> AskResult:
         if request.trace is None:
             raise errors.InvalidRequestError("explain needs a recall `trace` id")
         trace = await self.store.get(request.trace)
-        if not isinstance(trace, RecallTrace):
+        if not isinstance(trace, RecallTrace) or trace.owner != caller.owner:
             raise errors.NotFoundError(f"{request.trace} does not exist")
         items = trace.items
         if request.memory is not None:

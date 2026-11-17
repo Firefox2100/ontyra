@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import importlib
 import json
 import random
 import threading
@@ -141,8 +142,8 @@ class CrossEncoderReranker:
 
     def _load(self) -> Any:
         if self._model is None:
-            from sentence_transformers import CrossEncoder
-
+            sentence_transformers: Any = importlib.import_module("sentence_transformers")
+            CrossEncoder: Any = sentence_transformers.CrossEncoder
             self._model = CrossEncoder(
                 self._path(self._version), device=self._device, max_length=self._max_length
             )
@@ -183,7 +184,7 @@ class CrossEncoderReranker:
         return [float(s) for s in out]
 
     def _train(self, examples: list[RerankExample], opt: TrainOptions) -> TrainResult:
-        import torch
+        torch: Any = importlib.import_module("torch")
 
         rng = random.Random(opt.seed)
         shuffled = examples[:]

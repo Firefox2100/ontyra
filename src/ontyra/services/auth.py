@@ -51,6 +51,7 @@ class AuthService:
         multi_user: bool = False,
         token: str | None = None,
         admin_token: str | None = None,
+        single_user_kind: str = "human",
     ) -> None:
         self.store = store
         self.actors = actors
@@ -58,6 +59,7 @@ class AuthService:
         self.multi_user = multi_user
         self.token = token
         self.admin_token = admin_token
+        self.single_user_kind = single_user_kind
 
     @property
     def required(self) -> bool:
@@ -125,13 +127,29 @@ class AuthService:
             await self.store.apply([Update(cred_id, {"last_used_at": now})])
         return Principal(user=user, credential=cred)
 
+    async def refresh(self, principal: Principal) -> Principal | None:
+        """Revalidate a UI session so revocation, disablement and permission changes are live."""
+        if not self.multi_user:
+            return principal
+        if principal.credential is None or principal.credential.id is None:
+            return None
+        cred = await self.store.get(principal.credential.id)
+        if not isinstance(cred, Credential) or cred.revoked_at is not None:
+            return None
+        user = await self.store.get(cred.user)
+        if not isinstance(user, User) or user.disabled:
+            return None
+        return Principal(user=user, credential=cred)
+
     async def caller(
         self, principal: Principal, *, label: str, kind: str, harness: str | None
     ) -> Caller:
-        """The caller for a principal. In single-user mode the self-declared label, kind and
-        harness are used (not authenticated: the optional token guards the door, not identity).
-        In multi-user mode they come from the credential and the arguments are ignored."""
+        """The caller for a principal. Open mode uses self-declared labels. A configured shared
+        token binds every caller to the server-configured kind. Multi-user identity comes from
+        the stored credential; request identity headers are ignored."""
         if principal.user is None or principal.credential is None:
+            if self.token is not None:
+                kind = self.single_user_kind
             return await self.actors.caller(kind=kind, name=label, harness=harness)
         user, cred = principal.user, principal.credential
         assert cred.id is not None

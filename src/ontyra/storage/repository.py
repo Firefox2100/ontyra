@@ -79,6 +79,8 @@ class SurrealStore:
         table: str,
         where: Mapping[str, Any] | None = None,
         *,
+        where_in: Mapping[str, Sequence[Any]] | None = None,
+        where_any: Mapping[str, Any] | None = None,
         limit: int = 100,
         order_by: str | None = None,
         descending: bool = False,
@@ -89,6 +91,15 @@ class SurrealStore:
         for n, (key, value) in enumerate((where or {}).items()):
             params[f"w{n}"] = value
             clauses.append(f"{_ident(key)} = $w{n}")
+        for n, (key, values) in enumerate((where_in or {}).items()):
+            params[f"wi{n}"] = list(values)
+            clauses.append(f"{_ident(key)} IN $wi{n}")
+        any_clauses: list[str] = []
+        for n, (key, value) in enumerate((where_any or {}).items()):
+            params[f"wa{n}"] = value
+            any_clauses.append(f"{_ident(key)} = $wa{n}")
+        if any_clauses:
+            clauses.append("(" + " OR ".join(any_clauses) + ")")
         sql = f"SELECT * FROM {table}"
         if clauses:
             sql += " WHERE " + " AND ".join(clauses)

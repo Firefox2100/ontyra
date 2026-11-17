@@ -5,7 +5,9 @@ Variables use the `ONTYRA_` prefix and `__` for nesting, e.g. `ONTYRA_DB__URL`.
 
 from __future__ import annotations
 
+import ipaddress
 from typing import Any, Literal
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,10 +28,12 @@ class DbSettings(BaseModel):
 
 
 class ServerSettings(BaseModel):
-    """HTTP daemon (`ONTYRA_SERVER__*`). No authentication yet: keep it on localhost."""
+    """HTTP daemon (`ONTYRA_SERVER__*`). Public binding needs the documented auth/proxy setup."""
 
     host: str = "127.0.0.1"
     port: int = 8080
+    deployment: Literal["local", "public"] = "local"
+    allow_open_non_loopback: bool = False
 
 
 class EmbeddingSettings(BaseModel):
@@ -117,8 +121,7 @@ class McpSettings(BaseModel):
     """MCP server (`ONTYRA_MCP__*`), served by the daemon at `path` (streamable HTTP).
 
     Needs the `mcp` extra. `lite` is a handful of tools for weak tool-callers; `full` adds
-    search, browsing and review. The caller is identified like the REST API (`X-Ontyra-*`
-    headers, no authentication yet), so keep the daemon on localhost.
+    search, browsing and review. Authentication and caller identity are shared with REST.
     """
 
     enabled: bool = False
@@ -129,8 +132,8 @@ class McpSettings(BaseModel):
 class UiSettings(BaseModel):
     """Operator console (`ONTYRA_UI__*`) served at `/ui` by the daemon (plans/19).
 
-    It acts as a `human` caller named `actor` and can approve and reject, with no login: keep the
-    daemon on localhost. State-changing requests from another site's page are refused.
+    In open mode it acts as the configured human `actor`; authenticated modes use a human
+    credential. State-changing requests require an allowed browser origin.
     """
 
     enabled: bool = False
@@ -149,20 +152,42 @@ class AuthSettings(BaseModel):
     multi_user: bool = False
     token: SecretStr | None = None
     admin_token: SecretStr | None = None
+    single_user_kind: Literal["human", "agent"] = "human"
     ui_session_hours: int = 12
+    ui_cookie_secure: bool | None = None
+    ui_allowed_origins: list[str] = []
 
     @field_validator("token", "admin_token", mode="before")
     @classmethod
     def _blank_is_unset(cls, value: object) -> object:
         return None if value == "" else value  # an empty variable in a compose file
 
+    @field_validator("ui_allowed_origins")
+    @classmethod
+    def _origins(cls, values: list[str]) -> list[str]:
+        out: list[str] = []
+        for value in values:
+            parsed = urlparse(value)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.username is not None
+                or parsed.path not in {"", "/"}
+                or parsed.params
+                or parsed.query
+                or parsed.fragment
+            ):
+                raise ValueError(f"auth.ui_allowed_origins contains an invalid origin: {value!r}")
+            out.append(f"{parsed.scheme.lower()}://{parsed.netloc.lower()}")
+        return out
+
     @model_validator(mode="after")
     def _check(self) -> AuthSettings:
         if self.multi_user and self.admin_token is None:
             raise ValueError("multi-user mode needs ONTYRA_AUTH__ADMIN_TOKEN (the bootstrap admin)")
         for name, secret in (("token", self.token), ("admin_token", self.admin_token)):
-            if secret is not None and len(secret.get_secret_value()) < 16:
-                raise ValueError(f"auth.{name} must be at least 16 characters")
+            if secret is not None and len(secret.get_secret_value()) < 32:
+                raise ValueError(f"auth.{name} must be at least 32 characters")
         return self
 
 
@@ -191,6 +216,43 @@ class Settings(BaseSettings):
     ui: UiSettings = UiSettings()
     auth: AuthSettings = AuthSettings()
     log_level: str = "INFO"
+
+    @model_validator(mode="after")
+    def _deployment_security(self) -> Settings:
+        try:
+            loopback = ipaddress.ip_address(self.server.host).is_loopback
+        except ValueError:
+            loopback = self.server.host.casefold() == "localhost"
+        auth_required = self.auth.multi_user or self.auth.token is not None
+        if (
+            self.server.deployment == "local"
+            and not loopback
+            and not auth_required
+            and not self.server.allow_open_non_loopback
+        ):
+            raise ValueError(
+                "an open non-loopback listener needs ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true"
+            )
+        if self.server.deployment == "public":
+            if not self.auth.multi_user:
+                raise ValueError("public deployment requires multi-user authentication")
+            if self.ui.enabled and not self.auth.ui_allowed_origins:
+                raise ValueError("a public UI requires ONTYRA_AUTH__UI_ALLOWED_ORIGINS")
+            if self.ui.enabled and self.auth.ui_cookie_secure is False:
+                raise ValueError("a public UI cannot disable secure session cookies")
+        return self
+
+    @property
+    def ui_cookie_secure(self) -> bool:
+        if self.auth.ui_cookie_secure is not None:
+            return self.auth.ui_cookie_secure
+        return self.server.deployment == "public"
+
+    def for_bind(self, host: str, port: int) -> Settings:
+        """Revalidate command-line bind overrides against the deployment security policy."""
+        values = self.model_dump(mode="python")
+        values["server"] = {**values["server"], "host": host, "port": port}
+        return Settings.model_validate(values)
 
 
 def load_settings(env_file: str | None = ".env") -> Settings:

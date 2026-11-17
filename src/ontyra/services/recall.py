@@ -7,8 +7,8 @@ Stages: 1 resolve context → 2 candidates (lanes) → 3 visibility → 4 qualif
 
 from __future__ import annotations
 
+import hashlib
 import math
-import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -420,11 +420,13 @@ class RecallService:
         return kept, dropped
 
     async def _ledger(
-        self, session: str | None, kept: list[Candidate], *, redeliver: bool
+        self, caller: Caller, session: str | None, kept: list[Candidate], *, redeliver: bool
     ) -> tuple[list[Candidate], list[Notice], list[dict[str, Any]]]:
         if not session:
             return kept, [], []
-        rows = await self.store.select("delivery", {"session": session}, limit=5000)
+        rows = await self.store.select(
+            "delivery", {"owner": caller.owner, "session": session}, limit=5000
+        )
         deliveries = [d for d in rows if isinstance(d, Delivery)]
         delivered_revs = {d.rev for d in deliveries}
         notices = await self._notices(deliveries)
@@ -524,6 +526,7 @@ class RecallService:
             Create.of(
                 trace_id,
                 RecallTrace(
+                    owner=caller.owner,
                     actor=caller.actor_id,
                     path=path,
                     session=request.context.session,
@@ -552,11 +555,12 @@ class RecallService:
                 )
             )
             if request.context.session:
-                key = f"{request.context.session}|{i.revision}"
+                key = f"{caller.owner}|{request.context.session}|{i.revision}"
                 writes.append(
                     Upsert.of(
-                        RecordId("delivery", re.sub(r"\W", "_", key)),
+                        RecordId("delivery", hashlib.sha256(key.encode()).hexdigest()),
                         Delivery(
+                            owner=caller.owner,
                             session=request.context.session,
                             memory=i.memory,
                             rev=i.revision,
@@ -699,7 +703,7 @@ class RecallService:
         kept, cautions, d1 = await self.precedence(ranked)
         kept, d2 = self.collapse(kept)
         kept, notices, d3 = await self._ledger(
-            request.context.session, kept, redeliver=request.redeliver
+            caller, request.context.session, kept, redeliver=request.redeliver
         )
         budget = request.budget_tokens or (
             self.cfg.briefing_budget_tokens

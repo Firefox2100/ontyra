@@ -39,7 +39,7 @@ async def test_feedback_roundtrip_over_rest(client: httpx.AsyncClient) -> None:
 async def test_reranker_status_and_training_without_a_trainable_reranker(
     client: httpx.AsyncClient,
 ) -> None:
-    status = (await client.get("/v1/reranker")).json()
+    status = (await client.get("/v1/reranker", headers=HUMAN)).json()
     assert status["trainable"] is False and status["reranker"] is None
     refused = await client.post("/v1/reranker/train", headers=HUMAN)
     assert refused.status_code == 422

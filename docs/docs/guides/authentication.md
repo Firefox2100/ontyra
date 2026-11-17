@@ -15,10 +15,21 @@ the authenticated account when they are on.
 A token is sent as `Authorization: Bearer <token>`, on REST, on MCP and (as a sign-in) in the
 console. `/health` and the API docs stay open.
 
-:::caution Still not for the internet
-Tokens travel in clear text over plain HTTP. Keep the daemon on loopback, or put it behind a
-reverse proxy that terminates TLS.
+:::caution Public deployments need the complete boundary
+Open and single-token modes are not multi-tenant internet modes. For a public deployment, enable
+`ONTYRA_SERVER__DEPLOYMENT=public`, enable multi-user auth, and place Ontyra behind a reverse
+proxy or load balancer that terminates TLS,
+applies HSTS, rate and body-size limits, and controls trusted forwarded headers. Keep SurrealDB and
+model adapters private. If the console is enabled, set
+`ONTYRA_AUTH__UI_ALLOWED_ORIGINS='["https://memory.example.com"]'`; public mode makes the cookie
+Secure automatically. Explicitly setting `ONTYRA_AUTH__UI_COOKIE_SECURE=false` is refused.
 :::
+
+Local mode is the default. It supports loopback, plain HTTP, and open or single-token use. An open
+listener on a non-loopback address is refused unless
+`ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true` explicitly acknowledges it. This is intended for a
+bridge-network container whose host publication is still restricted to `127.0.0.1`, not for public
+exposure.
 
 ## Open and single-token mode
 
@@ -27,14 +38,15 @@ label themselves with `X-Ontyra-Actor`, `X-Ontyra-Actor-Kind` and `X-Ontyra-Harn
 daemon uses to apply the review policy (a `human` may auto-commit, an `agent` waits). These
 labels are not authenticated.
 
-To require a token (at least 16 characters):
+To require a token (at least 32 characters):
 
 ```bash
 export ONTYRA_AUTH__TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 ```
 
 Give clients the same value as `ONTYRA_TOKEN` (the Claude Code and Codex plugins send it when
-it is set). There is exactly one token, and it opens everything.
+it is set). There is exactly one token, and it opens everything. Its actor kind is fixed by
+`ONTYRA_AUTH__SINGLE_USER_KIND=human|agent` (default `human`); request headers cannot elevate it.
 
 ## Multi-user mode
 
@@ -61,7 +73,7 @@ Start the daemon with a bootstrap token for the built-in `admin` account:
 
 ```bash
 export ONTYRA_AUTH__MULTI_USER=true
-export ONTYRA_AUTH__ADMIN_TOKEN="a-long-random-secret"
+export ONTYRA_AUTH__ADMIN_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 uv run ontyra serve
 ```
 
@@ -92,7 +104,14 @@ In multi-user mode the `X-Ontyra-*` headers are ignored. The caller's name is `a
 
 With any token required, `/ui/login` asks for a token and starts a cookie session (HttpOnly,
 same-site strict, `ONTYRA_AUTH__UI_SESSION_HOURS`, default 12; a restart signs everyone out).
-Only a human credential (or the single token) can sign in.
+Only a human credential (or the single token) can sign in. Every state-changing form requires an
+allowed `Origin` or `Referer`, and multi-user sessions re-check credential revocation, account
+disablement and permissions on each request. Public HTTPS deployments must enable the secure
+cookie and configure the exact external origin as shown above.
+
+Ontyra does not fetch anchor URIs supplied in requests. The only outbound HTTP destinations are
+operator-configured embedding, reranking and decision adapters; do not point those settings at
+untrusted services.
 
 ## MCP tools and permission prompts
 

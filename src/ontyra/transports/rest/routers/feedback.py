@@ -25,14 +25,17 @@ async def record(
 
 @router.get("", summary="List feedback events")
 async def list_feedback(
-    service: FeedbackServiceDep, state: str | None = None, memory: str | None = None
+    caller: CallerDep,
+    service: FeedbackServiceDep,
+    state: str | None = None,
+    memory: str | None = None,
 ) -> list[FeedbackView]:
-    return await service.list(state, RecordId.parse(f"memory:{memory}") if memory else None)
+    return await service.list(caller, state, RecordId.parse(f"memory:{memory}") if memory else None)
 
 
 @router.get("/summary", summary="Counts by state and label, and how many pairs can train")
-async def summary(service: FeedbackServiceDep) -> FeedbackSummary:
-    return await service.summary()
+async def summary(caller: CallerDep, service: FeedbackServiceDep) -> FeedbackSummary:
+    return await service.summary(caller)
 
 
 @router.post("/{feedback_id}/retract", summary="Withdraw a feedback event")

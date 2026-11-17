@@ -1,4 +1,5 @@
 import pytest
+from pydantic import SecretStr
 
 from ontyra.config import Settings, load_settings
 
@@ -65,5 +66,48 @@ def test_a_blank_token_means_none_and_a_short_one_is_refused() -> None:
     from ontyra.config import AuthSettings
 
     assert AuthSettings(token="").token is None  # type: ignore[arg-type]  # an empty compose variable
-    with pytest.raises(ValueError, match="at least 16"):
+    with pytest.raises(ValueError, match="at least 32"):
         AuthSettings(token="short")  # type: ignore[arg-type]
+
+
+def test_local_deployment_allows_open_plain_http_on_loopback() -> None:
+    settings = Settings.model_validate({})
+    assert settings.server.deployment == "local"
+    assert not settings.ui_cookie_secure
+
+
+def test_open_non_loopback_needs_an_explicit_local_acknowledgement() -> None:
+    with pytest.raises(ValueError, match="ALLOW_OPEN_NON_LOOPBACK"):
+        Settings.model_validate({"server": {"host": "0.0.0.0"}})
+    with pytest.raises(ValueError, match="ALLOW_OPEN_NON_LOOPBACK"):
+        Settings.model_validate({}).for_bind("0.0.0.0", 8080)
+    settings = Settings.model_validate(
+        {"server": {"host": "0.0.0.0", "allow_open_non_loopback": True}}
+    )
+    assert settings.server.allow_open_non_loopback
+
+
+def test_public_deployment_requires_multi_user_auth_and_hardens_the_ui() -> None:
+    with pytest.raises(ValueError, match="multi-user"):
+        Settings.model_validate({"server": {"deployment": "public"}})
+    token = SecretStr("a" * 32)
+    with pytest.raises(ValueError, match="UI_ALLOWED_ORIGINS"):
+        Settings.model_validate(
+            {
+                "server": {"deployment": "public"},
+                "auth": {"multi_user": True, "admin_token": token},
+                "ui": {"enabled": True},
+            }
+        )
+    settings = Settings.model_validate(
+        {
+            "server": {"deployment": "public"},
+            "auth": {
+                "multi_user": True,
+                "admin_token": token,
+                "ui_allowed_origins": ["https://memory.example.com"],
+            },
+            "ui": {"enabled": True},
+        }
+    )
+    assert settings.ui_cookie_secure

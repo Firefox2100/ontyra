@@ -15,8 +15,8 @@ from fastmcp.client.transports import StreamableHttpTransport
 from ontyra.app import create_rest_app
 from ontyra.config import Settings
 
-TOKEN = "single-user-token-0123456789"
-ADMIN = "admin-token-for-tests-0123456789"
+TOKEN = "single-user-token-0123456789abcdef"
+ADMIN = "admin-token-for-tests-0123456789abcdef"
 PROPOSAL: dict[str, Any] = {
     "ops": [
         {
@@ -88,6 +88,16 @@ async def test_a_single_user_token_is_required_when_configured(pair: Pair) -> No
 
 
 @single
+async def test_shared_token_actor_kind_is_bound_by_server_configuration(pair: Pair) -> None:
+    app, _ = pair
+    auth = app.state.services.auth
+    principal = await auth.authenticate(TOKEN)
+    assert principal is not None
+    caller = await auth.caller(principal, label="claimed-agent", kind="agent", harness="test")
+    assert caller.actor.kind == "human"
+
+
+@single
 async def test_the_single_user_token_guards_mcp_too(pair: Pair) -> None:
     app, _ = pair
 
@@ -148,9 +158,17 @@ async def test_the_admin_issues_accounts_and_credentials_and_isolation_follows(p
 
     # alice's human credential commits at once? the test policy is auto_commit for everyone
     alice, bob = bearer(issued["alice.me"]), bearer(issued["bob.me"])
-    assert (await c.post("/v1/proposals", json=PROPOSAL, headers=alice)).status_code == 201
-    assert len((await c.get("/v1/memories", headers=alice)).json()) == 1
+    created = await c.post("/v1/proposals", json=PROPOSAL, headers=alice)
+    assert created.status_code == 201
+    alice_memories = (await c.get("/v1/memories", headers=alice)).json()
+    assert len(alice_memories) == 1
+    memory_id = alice_memories[0]["memory"].split(":", 1)[1]
     assert (await c.get("/v1/memories", headers=bob)).json() == []
+    feedback = {"memory": f"memory:{memory_id}", "query": "x", "label": "helpful"}
+    assert (await c.post("/v1/feedback", json=feedback, headers=alice)).status_code == 201
+    assert len((await c.get("/v1/feedback", headers=alice)).json()) == 1
+    assert (await c.post("/v1/feedback", json=feedback, headers=bob)).status_code == 404
+    assert (await c.get("/v1/feedback", headers=bob)).json() == []
     # an owner or kind header changes nothing: the account decides
     sneaky = {
         **bob,
@@ -189,6 +207,8 @@ async def test_only_an_admin_manages_accounts_and_only_global_writers_change_the
     assert (await c.post("/v1/admin/users", json={"name": "x"}, headers=carol)).status_code == 403
     assert (await c.post("/v1/concepts", json={"label": "thing"}, headers=carol)).status_code == 403
     assert (await c.post("/v1/concepts", json={"label": "thing"}, headers=admin)).status_code == 201
+    assert (await c.get("/v1/reranker", headers=carol)).status_code == 403
+    assert (await c.get("/v1/reranker", headers=admin)).status_code == 200
     assert (await c.post("/v1/reranker/train", headers=carol)).status_code == 403
     await c.patch("/v1/admin/users/carol", json={"permissions": ["global_write"]}, headers=admin)
     assert (await c.post("/v1/concepts", json={"label": "other"}, headers=carol)).status_code == 201
@@ -235,7 +255,7 @@ async def test_mcp_resolves_the_account_from_the_credential(pair: Pair) -> None:
 
 @multi
 async def test_the_console_signs_in_with_a_human_credential_only(pair: Pair) -> None:
-    _, c = pair
+    app, c = pair
     admin = bearer(ADMIN)
     await c.post("/v1/admin/users", json={"name": "erin"}, headers=admin)
     agent_token = (
@@ -246,11 +266,51 @@ async def test_the_console_signs_in_with_a_human_credential_only(pair: Pair) -> 
     page = await c.get("/ui/review")
     assert page.status_code == 303 and page.headers["location"] == "/ui/login"
     assert (await c.get("/ui/login")).status_code == 200
-    assert (await c.post("/ui/login", data={"token": "nope"})).status_code == 401
-    assert (await c.post("/ui/login", data={"token": agent_token})).status_code == 401
-    ok = await c.post("/ui/login", data={"token": ADMIN})
+    assert (await c.post("/ui/login", data={"token": ADMIN})).status_code == 403
+    assert (
+        await c.post(
+            "/ui/login", data={"token": ADMIN}, headers={"Origin": "https://attacker.test"}
+        )
+    ).status_code == 403
+    origin = {"Origin": "http://test"}
+    assert (await c.post("/ui/login", data={"token": "nope"}, headers=origin)).status_code == 401
+    assert (
+        await c.post("/ui/login", data={"token": agent_token}, headers=origin)
+    ).status_code == 401
+    ok = await c.post("/ui/login", data={"token": ADMIN}, headers=origin)
     assert ok.status_code == 303 and "ontyra_session" in ok.headers["set-cookie"]
     assert "httponly" in ok.headers["set-cookie"].lower()
+    assert "secure" not in ok.headers["set-cookie"].lower()  # local plain-HTTP profile
+    await c.post("/ui/login", data={"token": ADMIN}, headers=origin)
+    assert len(app.state.ui_sessions) == 1
     assert (await c.get("/ui/review")).status_code == 200  # the client keeps the cookie
-    await c.post("/ui/logout")
+    await c.post("/ui/logout", headers=origin)
     assert (await c.get("/ui/review")).status_code == 303
+
+
+async def test_public_profile_issues_a_secure_console_cookie(tmp_path: Path) -> None:
+    settings = Settings.model_validate(
+        {
+            "server": {"deployment": "public"},
+            "auth": {
+                "multi_user": True,
+                "admin_token": ADMIN,
+                "ui_allowed_origins": ["https://memory.example.com"],
+            },
+            "ui": {"enabled": True},
+        }
+    )
+    settings.db.url = f"surrealkv://{tmp_path}/public-auth"
+    settings.db.namespace = settings.db.database = "public_auth"
+    app = create_rest_app(settings)
+    async with (
+        app.router.lifespan_context(app),
+        httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="https://memory.example.com"
+        ) as client,
+    ):
+        response = await client.post(
+            "/ui/login", data={"token": ADMIN}, headers={"Origin": "https://memory.example.com"}
+        )
+    assert response.status_code == 303
+    assert "secure" in response.headers["set-cookie"].lower()

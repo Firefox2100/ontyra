@@ -35,11 +35,12 @@ async def propose(
 
 @router.get("", summary="Ontology changes: held for review (default) or the recent history")
 async def list_changes(
+    caller: CallerDep,
     service: OntologyChangeServiceDep,
     pending: Annotated[bool, Query()] = True,
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
 ) -> list[OntologyChange]:
-    return await (service.pending(limit) if pending else service.history(limit))
+    return await (service.pending(caller, limit) if pending else service.history(caller, limit))
 
 
 @router.post("/{change_id}/approve", summary="Approve and apply a held change (human only)")

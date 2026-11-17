@@ -30,11 +30,13 @@ class Store(Protocol):
         table: str,
         where: Mapping[str, Any] | None = None,
         *,
+        where_in: Mapping[str, Sequence[Any]] | None = None,
+        where_any: Mapping[str, Any] | None = None,
         limit: int = 100,
         order_by: str | None = None,
         descending: bool = False,
     ) -> list[Record]:
-        """Records of `table` whose fields equal the `where` values."""
+        """Records matching equality/IN filters and an optional OR equality group."""
         ...
 
     async def revisions(self, memory: RecordId) -> list[Record]:

@@ -3,6 +3,7 @@ model) and any LangChain decision model (`langchain_core.decisions.BaseDecisionM
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -98,7 +99,12 @@ class SystemOneDecider:
 
 
 def _number(value: Any) -> float | None:
-    return float(value) if isinstance(value, (int, float)) else None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    if not math.isfinite(number) or not 0.0 <= number <= 1.0:
+        raise ValueError(f"invalid probability: {value!r}")
+    return number
 
 
 def _said(response: Any) -> str:
@@ -148,8 +154,11 @@ class LangChainDecider:
             probabilities = response.choices["pick"].probabilities
         except Exception as exc:  # the integration's own errors: any of them means "no verdict"
             raise DecisionError(f"{self._name} could not decide: {exc!r}") from exc
-        return Judgement(
-            scores=[_number(probabilities.get(f"m{i}")) for i in range(len(texts))],
-            none=_number(probabilities.get(NONE_KEY)),
-            model=self._name,
-        )
+        try:
+            return Judgement(
+                scores=[_number(probabilities.get(f"m{i}")) for i in range(len(texts))],
+                none=_number(probabilities.get(NONE_KEY)),
+                model=self._name,
+            )
+        except ValueError as exc:
+            raise DecisionError(f"{self._name} gave invalid probabilities: {exc!r}") from exc

@@ -1120,6 +1120,14 @@
             ],
             "title": "Note"
           },
+          "owner": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
           "query": {
             "title": "Query",
             "type": "string"
@@ -1153,6 +1161,7 @@
         },
         "required": [
           "id",
+          "owner",
           "memory",
           "query",
           "label",
@@ -1753,6 +1762,14 @@
             "title": "Op",
             "type": "string"
           },
+          "owner": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
           "proposed_by": {
             "description": "A record id as `table:id`.",
             "examples": [
@@ -1792,6 +1809,7 @@
           }
         },
         "required": [
+          "owner",
           "change",
           "op",
           "rationale",
@@ -5122,6 +5140,55 @@
               ],
               "title": "Memory"
             }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
           }
         ],
         "responses": {
@@ -5250,6 +5317,57 @@
     "/v1/feedback/summary": {
       "get": {
         "operationId": "summary_v1_feedback_summary_get",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5260,6 +5378,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Counts by state and label, and how many pairs can train",
@@ -5917,6 +6045,55 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
             }
           }
         ],
@@ -6929,6 +7106,57 @@
       "get": {
         "description": "Which reranker is configured, whether it can be retrained (hosted ones cannot), its active version, the feedback available and recent training runs.",
         "operationId": "status_v1_reranker_get",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6939,6 +7167,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Reranker status",

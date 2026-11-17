@@ -40,7 +40,7 @@ async def test_an_agent_proposal_waits_and_a_human_applies_it(
     done = await app.ontology_changes.approve(human, held.id)
     assert done.status == "applied"
     assert [c.label for c in await app.ontology.lookup(human, "poetry")] == ["Poetry"]
-    assert not await app.ontology_changes.pending()
+    assert not await app.ontology_changes.pending(human)
     after = await app.ontology_changes.store.select("task", {"kind": "review_ontology_change"})
     assert after[0].status == "done"  # type: ignore[attr-defined]
 

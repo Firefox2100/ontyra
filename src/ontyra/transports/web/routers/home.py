@@ -22,7 +22,7 @@ async def home(
     changes: OntologyChangeServiceDep,
 ) -> HTMLResponse:
     pending = await memory.pending(caller, 200)
-    held = await changes.pending(200)
+    held = await changes.pending(caller, 200)
     kinds = {}
     for kind in ("directive", "fact", "decision", "event", "procedure", "task", "lesson"):
         kinds[kind] = len(await memory.list_memories(caller, kind=kind, limit=500))  # type: ignore[arg-type]

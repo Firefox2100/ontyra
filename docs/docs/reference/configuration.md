@@ -32,6 +32,8 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 |---|---|---|
 | `ONTYRA_SERVER__HOST` | str | `127.0.0.1` |
 | `ONTYRA_SERVER__PORT` | int | `8080` |
+| `ONTYRA_SERVER__DEPLOYMENT` | `local` \| `public` | `local` |
+| `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK` | bool | `False` |
 
 ## policy
 
@@ -140,5 +142,8 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_AUTH__MULTI_USER` | bool | `False` |
 | `ONTYRA_AUTH__TOKEN` | pydantic.types.SecretStr \| None | unset |
 | `ONTYRA_AUTH__ADMIN_TOKEN` | pydantic.types.SecretStr \| None | unset |
+| `ONTYRA_AUTH__SINGLE_USER_KIND` | `human` \| `agent` | `human` |
 | `ONTYRA_AUTH__UI_SESSION_HOURS` | int | `12` |
+| `ONTYRA_AUTH__UI_COOKIE_SECURE` | bool \| None | unset |
+| `ONTYRA_AUTH__UI_ALLOWED_ORIGINS` | list | `[]` |
 

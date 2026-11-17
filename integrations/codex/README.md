@@ -43,4 +43,6 @@ Remove: `codex plugin remove ontyra@ontyra`, `codex plugin marketplace remove on
 the shared skill (a unit test checks they are identical); the harness is chosen by `ONTYRA_HARNESS`
 in `hooks/hooks.json`.
 
-Verified against Codex CLI 0.164 documentation; not yet exercised in a live Codex session.
+Verified against Codex CLI 0.164 documentation and exercised in a live Codex session: MCP
+tools, session briefing, and per-prompt recall injection all returned context from the deployed
+daemon.

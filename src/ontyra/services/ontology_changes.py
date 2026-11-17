@@ -124,6 +124,7 @@ class OntologyChangeService:
         now = self.now()
         cid = RecordId("ontology_change", new_id())
         record = OntologyChange(
+            owner=caller.owner,
             change=request.change.model_dump(mode="json"),
             op=request.change.op,
             rationale=request.rationale,
@@ -132,7 +133,9 @@ class OntologyChangeService:
             created_at=now,
             advice=advice,
         )
-        if caller.can_review(GLOBAL_OWNER) or request.change.op in self.auto_apply:
+        if caller.can_review(GLOBAL_OWNER) or (
+            caller.can_write(GLOBAL_OWNER) and request.change.op in self.auto_apply
+        ):
             await self._apply(caller, request.change)
             record.status = "applied"
             record.decided_by = caller.actor_id
@@ -221,15 +224,17 @@ class OntologyChangeService:
         await self._close_task(change, reviewer)
         return ChangeResult(id=change, status="rejected", op=rec.op, reason=reason)
 
-    async def pending(self, limit: int = 50) -> list[OntologyChange]:
-        rows = await self.store.select(
-            "ontology_change", {"status": "pending"}, limit=limit, order_by="created_at"
-        )
+    async def pending(self, caller: Caller, limit: int = 50) -> list[OntologyChange]:
+        where: dict[str, object] = {"status": "pending"}
+        if not caller.can_write(GLOBAL_OWNER):
+            where["owner"] = caller.owner
+        rows = await self.store.select("ontology_change", where, limit=limit, order_by="created_at")
         return [r for r in rows if isinstance(r, OntologyChange)]
 
-    async def history(self, limit: int = 50) -> list[OntologyChange]:
+    async def history(self, caller: Caller, limit: int = 50) -> list[OntologyChange]:
+        where = None if caller.can_write(GLOBAL_OWNER) else {"owner": caller.owner}
         rows = await self.store.select(
-            "ontology_change", None, limit=limit, order_by="created_at", descending=True
+            "ontology_change", where, limit=limit, order_by="created_at", descending=True
         )
         return [r for r in rows if isinstance(r, OntologyChange)]
 

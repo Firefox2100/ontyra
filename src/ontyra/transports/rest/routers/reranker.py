@@ -14,7 +14,7 @@ router = APIRouter(prefix="/reranker", tags=["feedback"])
     description="Which reranker is configured, whether it can be retrained (hosted ones "
     "cannot), its active version, the feedback available and recent training runs.",
 )
-async def status(service: RerankingServiceDep) -> RerankerStatus:
+async def status(_caller: AdminDep, service: RerankingServiceDep) -> RerankerStatus:
     return await service.status()
 
 
