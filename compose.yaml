@@ -1,0 +1,56 @@
+# Ontyra, production-style: SurrealDB + the daemon (REST and MCP on one port).
+#   cp .env.example .env   # set ONTYRA_DB_PASSWORD
+#   docker compose up -d
+# State lives in ./data (bind mount). Both services use host networking and listen on loopback
+# only (there is no authentication yet): the daemon on ONTYRA_PORT, the database on ONTYRA_DB_PORT.
+# (Host networking also avoids creating a Docker network, and reaches a local model server at
+# localhost.) The image is built from this repository:
+#   docker build --build-arg VERSION=0.1.0 -t ontyra:local .
+name: ontyra
+
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v4.0.1
+    restart: unless-stopped
+    network_mode: host
+    user: root
+    command: start --user root --pass ${ONTYRA_DB_PASSWORD:?set it in .env} --bind 127.0.0.1:${ONTYRA_DB_PORT:-18787} surrealkv:/data/ontyra.db
+    volumes:
+      - ./data/surrealdb:/data
+    healthcheck:
+      test: ["CMD", "/surreal", "isready", "--endpoint", "http://127.0.0.1:${ONTYRA_DB_PORT:-18787}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ontyra:
+    image: ontyra:local
+    build:
+      context: .
+      args:
+        VERSION: ${ONTYRA_VERSION:-0.1.0}
+    restart: unless-stopped
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    network_mode: host
+    environment:
+      ONTYRA_DB__URL: ws://127.0.0.1:${ONTYRA_DB_PORT:-18787}/rpc
+      ONTYRA_SERVER__HOST: 127.0.0.1
+      ONTYRA_SERVER__PORT: ${ONTYRA_PORT:-8787}
+      ONTYRA_DB__PASSWORD: ${ONTYRA_DB_PASSWORD}
+      ONTYRA_MCP__PROFILE: lite
+      # the operator console at /ui (acts as a human, no login: loopback only)
+      ONTYRA_UI__ENABLED: "true"
+      # an agent's `remember` waits for a human's approval; a human's own writes commit at once
+      ONTYRA_POLICY__DEFAULT: review
+      ONTYRA_POLICY__RULES: '[{"actor_kinds":["human"],"decision":"auto_commit"}]'  # a human's own writes
+      # embeddings and (optionally) reranking from a local OpenAI-compatible server
+      ONTYRA_EMBEDDING__PROVIDER: langchain
+      ONTYRA_EMBEDDING__CLASS_PATH: langchain_openai.OpenAIEmbeddings
+      ONTYRA_EMBEDDING__KWARGS: '{"model":"${ONTYRA_EMBED_MODEL:-qwen3-embedding-8b}","base_url":"${ONTYRA_EMBED_URL:-http://127.0.0.1:8081/v1}","api_key":"none","check_embedding_ctx_length":false}'
+      ONTYRA_EMBEDDING__DIMENSION: ${ONTYRA_EMBED_DIM:-4096}
+      ONTYRA_EMBEDDING__QUERY_PREFIX: "Instruct: Given a task or message from a developer, retrieve the stored notes that apply\nQuery:"
+      # the benchmarked retrieval setup (plans/21); abstain_cosine is calibrated for qwen3-embedding-8b
+      ONTYRA_RECALL__ENGINE: fusion
+      ONTYRA_RECALL__ABSTAIN_COSINE: ${ONTYRA_ABSTAIN_COSINE:-0.452}

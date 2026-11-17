@@ -1,0 +1,16 @@
+.git
+.venv
+.idea
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.pyright
+tests
+spikes
+plans
+references
+integrations
+AGENTS.md
+.env
+dist
+build

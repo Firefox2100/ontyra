@@ -1,0 +1,1760 @@
+[
+  {
+    "description": "Approve a held proposal (only a human reviewer's call).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal"
+      ],
+      "type": "object"
+    },
+    "name": "approve"
+  },
+  {
+    "description": "Approve and apply a held ontology change (a human's call).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "change"
+      ],
+      "type": "object"
+    },
+    "name": "approve_ontology_change"
+  },
+  {
+    "description": "Structural questions answered exactly (what applies here, history\u2026).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "context": {
+              "additionalProperties": false,
+              "default": {
+                "session": null,
+                "signals": [],
+                "uris": []
+              },
+              "description": "Where and in what circumstances the agent is working. All parts are optional.",
+              "properties": {
+                "session": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "signals": {
+                  "default": [],
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "value": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "concept"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "uris": {
+                  "default": [],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "memory": {
+              "anyOf": [
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "question": {
+              "enum": [
+                "applies_here",
+                "supersession_chain",
+                "absence",
+                "conflicts",
+                "changes_since",
+                "prerequisites_of",
+                "explain"
+              ],
+              "type": "string"
+            },
+            "since": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "topic": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "trace": {
+              "anyOf": [
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "question"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "ask"
+  },
+  {
+    "description": "Everything that applies at this location, without a question: use at session start, on a project change, or after context compaction (`redeliver`).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "budget_tokens": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "context": {
+              "additionalProperties": false,
+              "default": {
+                "session": null,
+                "signals": [],
+                "uris": []
+              },
+              "description": "Where and in what circumstances the agent is working. All parts are optional.",
+              "properties": {
+                "session": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "signals": {
+                  "default": [],
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "value": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "concept"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "uris": {
+                  "default": [],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "decide": {
+              "default": true,
+              "type": "boolean"
+            },
+            "hints": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kinds": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "fact",
+                  "directive",
+                  "decision",
+                  "event",
+                  "procedure",
+                  "task",
+                  "lesson"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "profile": {
+              "default": "rich",
+              "enum": [
+                "compact",
+                "rich"
+              ],
+              "type": "string"
+            },
+            "query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "redeliver": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "briefing"
+  },
+  {
+    "description": "Before an action with side effects: the directives, prerequisites and lessons that apply to this intent, plus every applicable `must` directive.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "additionalProperties": false,
+          "default": {
+            "session": null,
+            "signals": [],
+            "uris": []
+          },
+          "description": "Where and in what circumstances the agent is working. All parts are optional.",
+          "properties": {
+            "session": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "signals": {
+              "default": [],
+              "items": {
+                "additionalProperties": false,
+                "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                "properties": {
+                  "concept": {
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "required": [
+                  "concept"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "uris": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "intent": {
+          "description": "What you are about to do",
+          "type": "string"
+        }
+      },
+      "required": [
+        "intent"
+      ],
+      "type": "object"
+    },
+    "name": "check"
+  },
+  {
+    "description": "Find concepts by label or alias (`python`, `ssh`) to get the ids that `about`, anchors and qualifiers refer to, with their relations. Empty: no such concept; propose one with `propose_ontology_change` rather than guessing an id.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "term": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "term"
+      ],
+      "type": "object"
+    },
+    "name": "concepts"
+  },
+  {
+    "description": "One memory by id (`memory:abc` or `abc`), optionally with `expand`: history, links, evidence, applies.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "additionalProperties": false,
+          "default": {
+            "session": null,
+            "signals": [],
+            "uris": []
+          },
+          "description": "Where and in what circumstances the agent is working. All parts are optional.",
+          "properties": {
+            "session": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "signals": {
+              "default": [],
+              "items": {
+                "additionalProperties": false,
+                "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                "properties": {
+                  "concept": {
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "required": [
+                  "concept"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "uris": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "expand": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "memory": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "memory"
+      ],
+      "type": "object"
+    },
+    "name": "get"
+  },
+  {
+    "description": "List memories by kind and status.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "fact",
+                "directive",
+                "decision",
+                "event",
+                "procedure",
+                "task",
+                "lesson"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "status": {
+          "default": "active",
+          "enum": [
+            "active",
+            "superseded",
+            "retracted",
+            "expired"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "name": "list_memories"
+  },
+  {
+    "description": "What is connected to a memory or concept (`table`, `id`).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "table",
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "name": "neighbors"
+  },
+  {
+    "description": "Orientation card: counts, concepts, anchors, recent changes.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "additionalProperties": false,
+          "description": "Where and in what circumstances the agent is working. All parts are optional.",
+          "properties": {
+            "session": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "signals": {
+              "default": [],
+              "items": {
+                "additionalProperties": false,
+                "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                "properties": {
+                  "concept": {
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "required": [
+                  "concept"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "uris": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "context"
+      ],
+      "type": "object"
+    },
+    "name": "overview"
+  },
+  {
+    "description": "Ontology changes held for review.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "pending_ontology_changes"
+  },
+  {
+    "description": "Proposals held for review.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "pending_proposals"
+  },
+  {
+    "description": "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, or `deprecate`. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "change": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "concept": {
+                      "additionalProperties": false,
+                      "description": "Request: create a concept. The id is derived from the label.",
+                      "properties": {
+                        "aliases": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "definition": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "dimension": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "memory",
+                                "duration"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "is_a": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "scheme": {
+                          "default": "domain",
+                          "enum": [
+                            "domain",
+                            "qualifier"
+                          ],
+                          "type": "string"
+                        },
+                        "value_type": {
+                          "default": "bool",
+                          "enum": [
+                            "bool",
+                            "version",
+                            "number",
+                            "enum",
+                            "string"
+                          ],
+                          "type": "string"
+                        },
+                        "values": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "version_scheme": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "semver",
+                                "pep440",
+                                "dotted",
+                                "distro"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        }
+                      },
+                      "required": [
+                        "label"
+                      ],
+                      "type": "object"
+                    },
+                    "op": {
+                      "const": "define",
+                      "default": "define",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "op": {
+                      "const": "relate",
+                      "default": "relate",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": [
+                            "is_a",
+                            "part_of",
+                            "instance_of",
+                            "same_as",
+                            "alternative_to",
+                            "replaced_by",
+                            "depends_on",
+                            "disjoint_with"
+                          ],
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relation",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "relation",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "alias": {
+                      "type": "string"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "add_alias",
+                      "default": "add_alias",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "alias",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "deprecate",
+                      "default": "deprecate",
+                      "type": "string"
+                    },
+                    "replaced_by": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "into": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "merge",
+                      "default": "merge",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "into",
+                    "op"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "rationale": {
+              "description": "Why: what you saw that makes this change right",
+              "type": "string"
+            }
+          },
+          "required": [
+            "change",
+            "rationale"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "propose_ontology_change"
+  },
+  {
+    "description": "Memories relevant to a message in a context. Empty (`silent`) when nothing clears the relevance bar. `rendered` is ready to read. Call before starting a task.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "budget_tokens": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "context": {
+              "additionalProperties": false,
+              "default": {
+                "session": null,
+                "signals": [],
+                "uris": []
+              },
+              "description": "Where and in what circumstances the agent is working. All parts are optional.",
+              "properties": {
+                "session": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "signals": {
+                  "default": [],
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "value": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "concept"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "uris": {
+                  "default": [],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "decide": {
+              "default": true,
+              "type": "boolean"
+            },
+            "hints": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kinds": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "fact",
+                  "directive",
+                  "decision",
+                  "event",
+                  "procedure",
+                  "task",
+                  "lesson"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "profile": {
+              "default": "rich",
+              "enum": [
+                "compact",
+                "rich"
+              ],
+              "type": "string"
+            },
+            "query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "redeliver": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "recall"
+  },
+  {
+    "description": "Reject a held proposal with a reason.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "name": "reject"
+  },
+  {
+    "description": "Reject a held ontology change with a reason.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "change",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "name": "reject_ontology_change"
+  },
+  {
+    "description": "Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`); it is validated, then committed or held for review. Read the findings: warnings may point at a duplicate you should supersede.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "additionalProperties": false,
+          "properties": {
+            "idempotency_key": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "ops": {
+              "items": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "Create a new memory (item + first revision).",
+                    "properties": {
+                      "derived_from": {
+                        "default": [],
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "description": "A record id as `table:id`.",
+                              "examples": [
+                                "memory:0194f3a1b2c3d4e5f6a7"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "evidence": {
+                        "default": [],
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "A source episode; if `quote` is given it must literally occur in that episode.",
+                          "properties": {
+                            "episode": {
+                              "description": "A record id as `table:id`.",
+                              "examples": [
+                                "memory:0194f3a1b2c3d4e5f6a7"
+                              ],
+                              "type": "string"
+                            },
+                            "quote": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null
+                            }
+                          },
+                          "required": [
+                            "episode"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "fields": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "kind": {
+                        "enum": [
+                          "fact",
+                          "directive",
+                          "decision",
+                          "event",
+                          "procedure",
+                          "task",
+                          "lesson"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "add",
+                        "default": "add",
+                        "type": "string"
+                      },
+                      "ref": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "valid_from": {
+                        "anyOf": [
+                          {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "fields",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "New revision of an existing memory; `fields` overlay the current revision.",
+                    "properties": {
+                      "evidence": {
+                        "default": [],
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "A source episode; if `quote` is given it must literally occur in that episode.",
+                          "properties": {
+                            "episode": {
+                              "description": "A record id as `table:id`.",
+                              "examples": [
+                                "memory:0194f3a1b2c3d4e5f6a7"
+                              ],
+                              "type": "string"
+                            },
+                            "quote": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null
+                            }
+                          },
+                          "required": [
+                            "episode"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "fields": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "memory": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "revise",
+                        "default": "revise",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "reason_code": {
+                        "default": "refined",
+                        "enum": [
+                          "corrected",
+                          "outdated",
+                          "refined",
+                          "merged",
+                          "resolved_contradiction",
+                          "source_retracted"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "memory",
+                      "fields",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "`new` (a `ref` from this proposal, or an existing memory id) replaces `target`.",
+                    "properties": {
+                      "new": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "op": {
+                        "const": "supersede",
+                        "default": "supersede",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "reason_code": {
+                        "enum": [
+                          "corrected",
+                          "outdated",
+                          "refined",
+                          "merged",
+                          "resolved_contradiction",
+                          "source_retracted"
+                        ],
+                        "type": "string"
+                      },
+                      "target": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "new",
+                      "target",
+                      "reason_code",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Declare a memory wrong/polluted. Dependents derived from it are flagged stale.",
+                    "properties": {
+                      "memory": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "retract",
+                        "default": "retract",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "memory",
+                      "reason",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "op": {
+                        "const": "link",
+                        "default": "link",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "relation": {
+                        "enum": [
+                          "contradicts",
+                          "overrides",
+                          "refines",
+                          "promoted_to"
+                        ],
+                        "type": "string"
+                      },
+                      "source": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "target": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "relation",
+                      "source",
+                      "target",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "default": "comment",
+                        "enum": [
+                          "comment",
+                          "tag",
+                          "flag"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "annotate",
+                        "default": "annotate",
+                        "type": "string"
+                      },
+                      "target": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "text",
+                      "op"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "ops"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "proposal"
+      ],
+      "type": "object"
+    },
+    "name": "remember"
+  },
+  {
+    "description": "Hybrid search with facet counts to narrow the next query.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "concept": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "context": {
+              "additionalProperties": false,
+              "default": {
+                "session": null,
+                "signals": [],
+                "uris": []
+              },
+              "description": "Where and in what circumstances the agent is working. All parts are optional.",
+              "properties": {
+                "session": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "signals": {
+                  "default": [],
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "value": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "concept"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "uris": {
+                  "default": [],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "kinds": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "fact",
+                  "directive",
+                  "decision",
+                  "event",
+                  "procedure",
+                  "task",
+                  "lesson"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "search"
+  }
+]

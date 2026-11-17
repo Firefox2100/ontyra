@@ -1,0 +1,5 @@
+{
+  "name": "ontyra",
+  "description": "Ontyra memory for Claude Code: briefing at session start, recall on each prompt, and the Ontyra MCP tools.",
+  "version": "0.1.0"
+}

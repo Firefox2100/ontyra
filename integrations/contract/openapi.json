@@ -1,0 +1,6709 @@
+{
+  "components": {
+    "schemas": {
+      "AddMemory": {
+        "additionalProperties": false,
+        "description": "Create a new memory (item + first revision).",
+        "properties": {
+          "derived_from": {
+            "default": [],
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "title": "RecordId",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Derived From",
+            "type": "array"
+          },
+          "evidence": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "fields": {
+            "additionalProperties": true,
+            "title": "Fields",
+            "type": "object"
+          },
+          "kind": {
+            "enum": [
+              "fact",
+              "directive",
+              "decision",
+              "event",
+              "procedure",
+              "task",
+              "lesson"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "op": {
+            "const": "add",
+            "default": "add",
+            "title": "Op",
+            "type": "string"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          }
+        },
+        "required": [
+          "kind",
+          "fields"
+        ],
+        "title": "AddMemory",
+        "type": "object"
+      },
+      "AliasChange": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "title": "Alias",
+            "type": "string"
+          },
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "op": {
+            "const": "add_alias",
+            "default": "add_alias",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept",
+          "alias"
+        ],
+        "title": "AliasChange",
+        "type": "object"
+      },
+      "Annotate": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "default": "comment",
+            "enum": [
+              "comment",
+              "tag",
+              "flag"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "op": {
+            "const": "annotate",
+            "default": "annotate",
+            "title": "Op",
+            "type": "string"
+          },
+          "target": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "text"
+        ],
+        "title": "Annotate",
+        "type": "object"
+      },
+      "AskRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/RecallContext",
+            "default": {
+              "signals": [],
+              "uris": []
+            }
+          },
+          "memory": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory"
+          },
+          "question": {
+            "enum": [
+              "applies_here",
+              "supersession_chain",
+              "absence",
+              "conflicts",
+              "changes_since",
+              "prerequisites_of",
+              "explain"
+            ],
+            "title": "Question",
+            "type": "string"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          },
+          "trace": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "AskRequest",
+        "type": "object"
+      },
+      "AskResult": {
+        "additionalProperties": false,
+        "properties": {
+          "affordances": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Affordances",
+            "type": "array"
+          },
+          "answer": {
+            "additionalProperties": true,
+            "title": "Answer",
+            "type": "object"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "answer",
+          "summary"
+        ],
+        "title": "AskResult",
+        "type": "object"
+      },
+      "Caution": {
+        "additionalProperties": false,
+        "properties": {
+          "memory": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "Caution",
+        "type": "object"
+      },
+      "ChangeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "change": {
+            "discriminator": {
+              "mapping": {
+                "add_alias": "#/components/schemas/AliasChange",
+                "define": "#/components/schemas/DefineChange",
+                "deprecate": "#/components/schemas/DeprecateChange",
+                "merge": "#/components/schemas/MergeChange",
+                "relate": "#/components/schemas/RelateChange"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DefineChange"
+              },
+              {
+                "$ref": "#/components/schemas/RelateChange"
+              },
+              {
+                "$ref": "#/components/schemas/AliasChange"
+              },
+              {
+                "$ref": "#/components/schemas/DeprecateChange"
+              },
+              {
+                "$ref": "#/components/schemas/MergeChange"
+              }
+            ],
+            "title": "Change"
+          },
+          "rationale": {
+            "description": "Why: what you saw that makes this change right",
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "change",
+          "rationale"
+        ],
+        "title": "ChangeRequest",
+        "type": "object"
+      },
+      "ChangeResult": {
+        "additionalProperties": false,
+        "properties": {
+          "advice": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Advice",
+            "type": "array"
+          },
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "op": {
+            "title": "Op",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "applied",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "op"
+        ],
+        "title": "ChangeResult",
+        "type": "object"
+      },
+      "CheckRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/RecallContext",
+            "default": {
+              "signals": [],
+              "uris": []
+            }
+          },
+          "intent": {
+            "title": "Intent",
+            "type": "string"
+          }
+        },
+        "required": [
+          "intent"
+        ],
+        "title": "CheckRequest",
+        "type": "object"
+      },
+      "CheckResult": {
+        "additionalProperties": false,
+        "properties": {
+          "pack": {
+            "$ref": "#/components/schemas/RecallPack"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "clear",
+              "caution"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "summary",
+          "pack"
+        ],
+        "title": "CheckResult",
+        "type": "object"
+      },
+      "ConceptDefinition": {
+        "additionalProperties": false,
+        "description": "Request: create a concept. The id is derived from the label.",
+        "properties": {
+          "aliases": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "dimension": {
+            "anyOf": [
+              {
+                "enum": [
+                  "memory",
+                  "duration"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension"
+          },
+          "is_a": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Is A",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "scheme": {
+            "default": "domain",
+            "enum": [
+              "domain",
+              "qualifier"
+            ],
+            "title": "Scheme",
+            "type": "string"
+          },
+          "value_type": {
+            "default": "bool",
+            "enum": [
+              "bool",
+              "version",
+              "number",
+              "enum",
+              "string"
+            ],
+            "title": "Value Type",
+            "type": "string"
+          },
+          "values": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "version_scheme": {
+            "anyOf": [
+              {
+                "enum": [
+                  "semver",
+                  "pep440",
+                  "dotted",
+                  "distro"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Scheme"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "ConceptDefinition",
+        "type": "object"
+      },
+      "ConceptView": {
+        "additionalProperties": false,
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "dimension": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension"
+          },
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "memories": {
+            "default": 0,
+            "title": "Memories",
+            "type": "integer"
+          },
+          "relations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RelationView"
+            },
+            "title": "Relations",
+            "type": "array"
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced By"
+          },
+          "scheme": {
+            "title": "Scheme",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "value_type": {
+            "title": "Value Type",
+            "type": "string"
+          },
+          "version_scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Scheme"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "scheme",
+          "aliases",
+          "definition",
+          "value_type",
+          "version_scheme",
+          "dimension",
+          "status",
+          "replaced_by"
+        ],
+        "title": "ConceptView",
+        "type": "object"
+      },
+      "DefineChange": {
+        "additionalProperties": false,
+        "properties": {
+          "concept": {
+            "$ref": "#/components/schemas/ConceptDefinition"
+          },
+          "op": {
+            "const": "define",
+            "default": "define",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept"
+        ],
+        "title": "DefineChange",
+        "type": "object"
+      },
+      "DeprecateChange": {
+        "additionalProperties": false,
+        "properties": {
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "op": {
+            "const": "deprecate",
+            "default": "deprecate",
+            "title": "Op",
+            "type": "string"
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced By"
+          }
+        },
+        "required": [
+          "concept"
+        ],
+        "title": "DeprecateChange",
+        "type": "object"
+      },
+      "EpisodeIn": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Meta",
+            "type": "object"
+          },
+          "role": {
+            "description": "Who produced this content, e.g. `user`, `assistant`, `tool`.",
+            "title": "Role",
+            "type": "string"
+          },
+          "session": {
+            "description": "Session or conversation identifier.",
+            "title": "Session",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session",
+          "role",
+          "content"
+        ],
+        "title": "EpisodeIn",
+        "type": "object"
+      },
+      "EpisodeOut": {
+        "properties": {
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "EpisodeOut",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "description": "A source episode; if `quote` is given it must literally occur in that episode.",
+        "properties": {
+          "episode": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          }
+        },
+        "required": [
+          "episode"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "FeedbackRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          },
+          "label": {
+            "enum": [
+              "applied",
+              "helpful",
+              "missed",
+              "irrelevant",
+              "outdated",
+              "wrong"
+            ],
+            "title": "Label",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session"
+          },
+          "trace": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace"
+          }
+        },
+        "required": [
+          "memory",
+          "query",
+          "label"
+        ],
+        "title": "FeedbackRequest",
+        "type": "object"
+      },
+      "FeedbackSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "by_label": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Label",
+            "type": "object"
+          },
+          "expired": {
+            "title": "Expired",
+            "type": "integer"
+          },
+          "retracted": {
+            "title": "Retracted",
+            "type": "integer"
+          },
+          "superseded": {
+            "title": "Superseded",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "trainable_examples": {
+            "title": "Trainable Examples",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "active",
+          "superseded",
+          "expired",
+          "retracted",
+          "by_label",
+          "trainable_examples"
+        ],
+        "title": "FeedbackSummary",
+        "type": "object"
+      },
+      "FeedbackView": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "label": {
+            "enum": [
+              "applied",
+              "helpful",
+              "missed",
+              "irrelevant",
+              "outdated",
+              "wrong"
+            ],
+            "title": "Label",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "source": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "source_kind": {
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "active",
+              "superseded",
+              "expired",
+              "retracted"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "memory",
+          "query",
+          "label",
+          "state",
+          "source",
+          "source_kind",
+          "weight",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "FeedbackView",
+        "type": "object"
+      },
+      "Finding": {
+        "additionalProperties": false,
+        "description": "One validation observation. `error` blocks the proposal; others are advice.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Data",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "op": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Op"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "title": "Finding",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "History": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "revisions": {
+            "items": {
+              "$ref": "#/components/schemas/RevisionView"
+            },
+            "title": "Revisions",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memory",
+          "kind",
+          "status",
+          "revisions"
+        ],
+        "title": "History",
+        "type": "object"
+      },
+      "LinkMemories": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "link",
+            "default": "link",
+            "title": "Op",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "relation": {
+            "enum": [
+              "contradicts",
+              "overrides",
+              "refines",
+              "promoted_to"
+            ],
+            "title": "Relation",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              }
+            ],
+            "title": "Source"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "required": [
+          "relation",
+          "source",
+          "target"
+        ],
+        "title": "LinkMemories",
+        "type": "object"
+      },
+      "MemoryDetail": {
+        "additionalProperties": false,
+        "description": "`get` with optional expansions (history, links, evidence, applicability).",
+        "properties": {
+          "applies": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applies"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/History"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "links": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Links"
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemoryView"
+          }
+        },
+        "required": [
+          "memory"
+        ],
+        "title": "MemoryDetail",
+        "type": "object"
+      },
+      "MemoryView": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "owner": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "revision": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "stale": {
+            "default": false,
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "memory",
+          "kind",
+          "owner",
+          "status",
+          "revision",
+          "seq",
+          "text",
+          "content",
+          "state",
+          "lifecycle"
+        ],
+        "title": "MemoryView",
+        "type": "object"
+      },
+      "MergeChange": {
+        "additionalProperties": false,
+        "properties": {
+          "into": {
+            "title": "Into",
+            "type": "string"
+          },
+          "op": {
+            "const": "merge",
+            "default": "merge",
+            "title": "Op",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "into"
+        ],
+        "title": "MergeChange",
+        "type": "object"
+      },
+      "More": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "hint": {
+            "title": "Hint",
+            "type": "string"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          }
+        },
+        "required": [
+          "section",
+          "count",
+          "hint"
+        ],
+        "title": "More",
+        "type": "object"
+      },
+      "Neighbors": {
+        "additionalProperties": false,
+        "properties": {
+          "center": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "concepts": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Concepts",
+            "type": "array"
+          },
+          "links": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "memories": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Memories",
+            "type": "array"
+          }
+        },
+        "required": [
+          "center"
+        ],
+        "title": "Neighbors",
+        "type": "object"
+      },
+      "Notice": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "superseded",
+              "retracted"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced By"
+          }
+        },
+        "required": [
+          "kind",
+          "memory",
+          "message"
+        ],
+        "title": "Notice",
+        "type": "object"
+      },
+      "OntologyChange": {
+        "additionalProperties": false,
+        "properties": {
+          "advice": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Advice",
+            "type": "array"
+          },
+          "change": {
+            "additionalProperties": true,
+            "title": "Change",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "op": {
+            "title": "Op",
+            "type": "string"
+          },
+          "proposed_by": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "proposer_kind": {
+            "title": "Proposer Kind",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "default": "pending",
+            "enum": [
+              "pending",
+              "applied",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "change",
+          "op",
+          "rationale",
+          "proposed_by",
+          "proposer_kind",
+          "created_at"
+        ],
+        "title": "OntologyChange",
+        "type": "object"
+      },
+      "Overview": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor_chain": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Anchor Chain",
+            "type": "array"
+          },
+          "concepts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Concepts",
+            "type": "array"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "qualifiers_observed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Qualifiers Observed",
+            "type": "array"
+          },
+          "recent": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recent",
+            "type": "array"
+          },
+          "verbs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Verbs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "counts",
+          "concepts",
+          "anchor_chain",
+          "qualifiers_observed",
+          "recent",
+          "verbs"
+        ],
+        "title": "Overview",
+        "type": "object"
+      },
+      "Proposal": {
+        "additionalProperties": false,
+        "description": "An atomic batch of operations submitted by one actor (see plans/01, plans/10).",
+        "properties": {
+          "actor": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decision": {
+            "enum": [
+              "auto_commit",
+              "review",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Reason"
+          },
+          "findings": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "ops": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ops",
+            "type": "array"
+          },
+          "owner": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "result": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Result",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "committed",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor",
+          "owner",
+          "status",
+          "decision",
+          "submitted_at",
+          "ops"
+        ],
+        "title": "Proposal",
+        "type": "object"
+      },
+      "ProposalRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "ops": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add": "#/components/schemas/AddMemory",
+                  "annotate": "#/components/schemas/Annotate",
+                  "link": "#/components/schemas/LinkMemories",
+                  "retract": "#/components/schemas/RetractMemory",
+                  "revise": "#/components/schemas/ReviseMemory",
+                  "supersede": "#/components/schemas/SupersedeMemory"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AddMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/ReviseMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/SupersedeMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/RetractMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/LinkMemories"
+                },
+                {
+                  "$ref": "#/components/schemas/Annotate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Ops",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ops"
+        ],
+        "title": "ProposalRequest",
+        "type": "object"
+      },
+      "ProposalResult": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "additionalProperties": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "type": "string"
+            },
+            "default": {},
+            "title": "Created",
+            "type": "object"
+          },
+          "decision": {
+            "enum": [
+              "auto_commit",
+              "review",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "duplicate_of_idempotency_key": {
+            "default": false,
+            "title": "Duplicate Of Idempotency Key",
+            "type": "boolean"
+          },
+          "findings": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "proposal": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "committed",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal",
+          "status",
+          "decision"
+        ],
+        "title": "ProposalResult",
+        "type": "object"
+      },
+      "RecallContext": {
+        "additionalProperties": false,
+        "description": "Where and in what circumstances the agent is working. All parts are optional.",
+        "properties": {
+          "session": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session"
+          },
+          "signals": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Signal"
+            },
+            "title": "Signals",
+            "type": "array"
+          },
+          "uris": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Uris",
+            "type": "array"
+          }
+        },
+        "title": "RecallContext",
+        "type": "object"
+      },
+      "RecallItem": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor"
+          },
+          "anchor_distance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Distance"
+          },
+          "caveats": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "checks": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Detail",
+            "type": "object"
+          },
+          "flags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "fact",
+              "directive",
+              "decision",
+              "event",
+              "procedure",
+              "task",
+              "lesson"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "polarity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Polarity"
+          },
+          "relevance": {
+            "title": "Relevance",
+            "type": "number"
+          },
+          "revision": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "why": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Why",
+            "type": "array"
+          }
+        },
+        "required": [
+          "memory",
+          "revision",
+          "kind",
+          "text",
+          "score",
+          "relevance"
+        ],
+        "title": "RecallItem",
+        "type": "object"
+      },
+      "RecallPack": {
+        "additionalProperties": false,
+        "properties": {
+          "affordances": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Affordances",
+            "type": "array"
+          },
+          "applicable": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecallItem"
+            },
+            "title": "Applicable",
+            "type": "array"
+          },
+          "cautions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Caution"
+            },
+            "title": "Cautions",
+            "type": "array"
+          },
+          "context": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecallItem"
+            },
+            "title": "Context",
+            "type": "array"
+          },
+          "how_to": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecallItem"
+            },
+            "title": "How To",
+            "type": "array"
+          },
+          "more": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/More"
+            },
+            "title": "More",
+            "type": "array"
+          },
+          "must_follow": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecallItem"
+            },
+            "title": "Must Follow",
+            "type": "array"
+          },
+          "notices": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Notice"
+            },
+            "title": "Notices",
+            "type": "array"
+          },
+          "open_tasks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecallItem"
+            },
+            "title": "Open Tasks",
+            "type": "array"
+          },
+          "path": {
+            "enum": [
+              "recall",
+              "briefing",
+              "check"
+            ],
+            "title": "Path",
+            "type": "string"
+          },
+          "rendered": {
+            "default": "",
+            "title": "Rendered",
+            "type": "string"
+          },
+          "silent": {
+            "default": true,
+            "title": "Silent",
+            "type": "boolean"
+          },
+          "tokens": {
+            "default": 0,
+            "title": "Tokens",
+            "type": "integer"
+          },
+          "trace": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace"
+          },
+          "unresolved": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Unresolved",
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "RecallPack",
+        "type": "object"
+      },
+      "RecallRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "budget_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Tokens"
+          },
+          "context": {
+            "$ref": "#/components/schemas/RecallContext",
+            "default": {
+              "signals": [],
+              "uris": []
+            }
+          },
+          "decide": {
+            "default": true,
+            "title": "Decide",
+            "type": "boolean"
+          },
+          "hints": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Hints",
+            "type": "array"
+          },
+          "kinds": {
+            "default": [],
+            "items": {
+              "enum": [
+                "fact",
+                "directive",
+                "decision",
+                "event",
+                "procedure",
+                "task",
+                "lesson"
+              ],
+              "type": "string"
+            },
+            "title": "Kinds",
+            "type": "array"
+          },
+          "profile": {
+            "default": "rich",
+            "enum": [
+              "compact",
+              "rich"
+            ],
+            "title": "Profile",
+            "type": "string"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "redeliver": {
+            "default": false,
+            "title": "Redeliver",
+            "type": "boolean"
+          }
+        },
+        "title": "RecallRequest",
+        "type": "object"
+      },
+      "RejectBody": {
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "RejectBody",
+        "type": "object"
+      },
+      "RejectIn": {
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "RejectIn",
+        "type": "object"
+      },
+      "RelateChange": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "relate",
+            "default": "relate",
+            "title": "Op",
+            "type": "string"
+          },
+          "relation": {
+            "$ref": "#/components/schemas/RelationRequest"
+          }
+        },
+        "required": [
+          "relation"
+        ],
+        "title": "RelateChange",
+        "type": "object"
+      },
+      "RelationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "relation": {
+            "enum": [
+              "is_a",
+              "part_of",
+              "instance_of",
+              "same_as",
+              "alternative_to",
+              "replaced_by",
+              "depends_on",
+              "disjoint_with"
+            ],
+            "title": "Relation",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "relation",
+          "target"
+        ],
+        "title": "RelationRequest",
+        "type": "object"
+      },
+      "RelationView": {
+        "additionalProperties": false,
+        "properties": {
+          "direction": {
+            "enum": [
+              "out",
+              "in"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "other": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "relation": {
+            "title": "Relation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "relation",
+          "other",
+          "label"
+        ],
+        "title": "RelationView",
+        "type": "object"
+      },
+      "RerankerRun": {
+        "additionalProperties": false,
+        "description": "One training run of a reranker: what went in, how it did, whether it was activated.",
+        "properties": {
+          "activated": {
+            "title": "Activated",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "examples": {
+            "title": "Examples",
+            "type": "integer"
+          },
+          "gate": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Metrics",
+            "type": "object"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reranker": {
+            "title": "Reranker",
+            "type": "string"
+          },
+          "started_by": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reranker",
+          "version",
+          "examples",
+          "activated",
+          "started_by",
+          "created_at"
+        ],
+        "title": "RerankerRun",
+        "type": "object"
+      },
+      "RerankerStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "feedback": {
+            "$ref": "#/components/schemas/FeedbackSummary"
+          },
+          "min_examples": {
+            "title": "Min Examples",
+            "type": "integer"
+          },
+          "reranker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reranker"
+          },
+          "runs": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Runs",
+            "type": "array"
+          },
+          "trainable": {
+            "title": "Trainable",
+            "type": "boolean"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "reranker",
+          "trainable",
+          "version",
+          "feedback",
+          "min_examples"
+        ],
+        "title": "RerankerStatus",
+        "type": "object"
+      },
+      "Resource": {
+        "additionalProperties": false,
+        "description": "A registered anchor. Containment is mostly syntactic (path segments); this record adds\nexplicit containment (`parents`) and equivalence (`same_as`) on top (plans/01).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "instance_of": {
+            "default": [],
+            "items": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "title": "RecordId",
+              "type": "string"
+            },
+            "title": "Instance Of",
+            "type": "array"
+          },
+          "kind": {
+            "default": "other",
+            "enum": [
+              "host",
+              "account",
+              "project",
+              "dir",
+              "file",
+              "repo",
+              "url",
+              "harness",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "parents": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Parents",
+            "type": "array"
+          },
+          "same_as": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Same As",
+            "type": "array"
+          },
+          "uri": {
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri",
+          "created_at"
+        ],
+        "title": "Resource",
+        "type": "object"
+      },
+      "ResourceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "instance_of": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Instance Of",
+            "type": "array"
+          },
+          "kind": {
+            "default": "other",
+            "enum": [
+              "host",
+              "account",
+              "project",
+              "dir",
+              "file",
+              "repo",
+              "url",
+              "harness",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "parents": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Parents",
+            "type": "array"
+          },
+          "same_as": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Same As",
+            "type": "array"
+          },
+          "uri": {
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri"
+        ],
+        "title": "ResourceRequest",
+        "type": "object"
+      },
+      "RetractMemory": {
+        "additionalProperties": false,
+        "description": "Declare a memory wrong/polluted. Dependents derived from it are flagged stale.",
+        "properties": {
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "op": {
+            "const": "retract",
+            "default": "retract",
+            "title": "Op",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memory",
+          "reason"
+        ],
+        "title": "RetractMemory",
+        "type": "object"
+      },
+      "ReviseMemory": {
+        "additionalProperties": false,
+        "description": "New revision of an existing memory; `fields` overlay the current revision.",
+        "properties": {
+          "evidence": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "fields": {
+            "additionalProperties": true,
+            "title": "Fields",
+            "type": "object"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "op": {
+            "const": "revise",
+            "default": "revise",
+            "title": "Op",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reason_code": {
+            "default": "refined",
+            "enum": [
+              "corrected",
+              "outdated",
+              "refined",
+              "merged",
+              "resolved_contradiction",
+              "source_retracted"
+            ],
+            "title": "Reason Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memory",
+          "fields"
+        ],
+        "title": "ReviseMemory",
+        "type": "object"
+      },
+      "RevisionView": {
+        "additionalProperties": false,
+        "properties": {
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "reasons": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SupersessionReason"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "revision": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "superseded_by": {
+            "default": [],
+            "items": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "title": "RecordId",
+              "type": "string"
+            },
+            "title": "Superseded By",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "revision",
+          "seq",
+          "text",
+          "state",
+          "lifecycle",
+          "recorded_at"
+        ],
+        "title": "RevisionView",
+        "type": "object"
+      },
+      "SearchHit": {
+        "additionalProperties": false,
+        "properties": {
+          "applies": {
+            "default": "unknown",
+            "enum": [
+              "yes",
+              "no",
+              "unknown"
+            ],
+            "title": "Applies",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "fact",
+              "directive",
+              "decision",
+              "event",
+              "procedure",
+              "task",
+              "lesson"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "revision": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "why": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Why",
+            "type": "array"
+          }
+        },
+        "required": [
+          "memory",
+          "revision",
+          "kind",
+          "text",
+          "score"
+        ],
+        "title": "SearchHit",
+        "type": "object"
+      },
+      "SearchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "concept": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept"
+          },
+          "context": {
+            "$ref": "#/components/schemas/RecallContext",
+            "default": {
+              "signals": [],
+              "uris": []
+            }
+          },
+          "kinds": {
+            "default": [],
+            "items": {
+              "enum": [
+                "fact",
+                "directive",
+                "decision",
+                "event",
+                "procedure",
+                "task",
+                "lesson"
+              ],
+              "type": "string"
+            },
+            "title": "Kinds",
+            "type": "array"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "SearchRequest",
+        "type": "object"
+      },
+      "SearchResult": {
+        "additionalProperties": false,
+        "properties": {
+          "affordances": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Affordances",
+            "type": "array"
+          },
+          "facets": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Facets",
+            "type": "object"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "hits",
+          "facets"
+        ],
+        "title": "SearchResult",
+        "type": "object"
+      },
+      "Signal": {
+        "additionalProperties": false,
+        "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+        "properties": {
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "concept"
+        ],
+        "title": "Signal",
+        "type": "object"
+      },
+      "SupersedeMemory": {
+        "additionalProperties": false,
+        "description": "`new` (a `ref` from this proposal, or an existing memory id) replaces `target`.",
+        "properties": {
+          "new": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              }
+            ],
+            "title": "New"
+          },
+          "op": {
+            "const": "supersede",
+            "default": "supersede",
+            "title": "Op",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reason_code": {
+            "enum": [
+              "corrected",
+              "outdated",
+              "refined",
+              "merged",
+              "resolved_contradiction",
+              "source_retracted"
+            ],
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "target": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          }
+        },
+        "required": [
+          "new",
+          "target",
+          "reason_code"
+        ],
+        "title": "SupersedeMemory",
+        "type": "object"
+      },
+      "SupersessionReason": {
+        "additionalProperties": false,
+        "description": "Why a revision was replaced (the `supersedes` edge's own fields).",
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason_code"
+        ],
+        "title": "SupersessionReason",
+        "type": "object"
+      },
+      "TrainOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "activate": {
+            "default": true,
+            "title": "Activate",
+            "type": "boolean"
+          },
+          "batch_size": {
+            "default": 16,
+            "title": "Batch Size",
+            "type": "integer"
+          },
+          "epochs": {
+            "default": 4,
+            "title": "Epochs",
+            "type": "integer"
+          },
+          "learning_rate": {
+            "default": 2e-05,
+            "title": "Learning Rate",
+            "type": "number"
+          },
+          "min_examples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Examples"
+          },
+          "seed": {
+            "default": 13,
+            "title": "Seed",
+            "type": "integer"
+          },
+          "validation_fraction": {
+            "default": 0.15,
+            "title": "Validation Fraction",
+            "type": "number"
+          }
+        },
+        "title": "TrainOptions",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Structured, typed memory for agents. Writes go through **proposals** (validated, then\ncommitted or held for review by policy); reads return current memories with their history.\n\nThere is no authentication yet. Identify the caller with `X-Ontyra-Actor` (and optionally\n`X-Ontyra-Actor-Kind`, `X-Ontyra-Harness`, `X-Ontyra-Owner`); run on localhost only.\n",
+    "title": "Ontyra"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/ask": {
+      "post": {
+        "operationId": "ask_v1_ask_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Structural questions answered exactly",
+        "tags": [
+          "explore"
+        ]
+      }
+    },
+    "/v1/briefing": {
+      "post": {
+        "description": "Everything that applies here, with no question: the complete set of applicable directives plus facts and decisions anchored at this location. Use at session start, when the project changes, or after context compaction (`redeliver: true`).",
+        "operationId": "briefing_v1_briefing_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecallPack"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Environment-driven briefing (path C)",
+        "tags": [
+          "recall"
+        ]
+      }
+    },
+    "/v1/check": {
+      "post": {
+        "description": "Before an action with side effects: applicable directives, prerequisites and lessons for this intent, plus every applicable `must` directive.",
+        "operationId": "check_v1_check_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pre-action check (path E)",
+        "tags": [
+          "recall"
+        ]
+      }
+    },
+    "/v1/concepts": {
+      "get": {
+        "operationId": "list_concepts_v1_concepts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "term",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Term"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scheme",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scheme"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConceptView"
+                  },
+                  "title": "Response List Concepts V1 Concepts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List concepts, or resolve a term by label/alias with `term`",
+        "tags": [
+          "ontology"
+        ]
+      },
+      "post": {
+        "operationId": "define_v1_concepts_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConceptDefinition"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a concept",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/concepts/relations": {
+      "post": {
+        "operationId": "relate_v1_concepts_relations_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Relate two concepts (is_a, part_of, same_as, \u2026)",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/concepts/{concept_id}": {
+      "get": {
+        "operationId": "get_concept_v1_concepts__concept_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "concept_id",
+            "required": true,
+            "schema": {
+              "title": "Concept Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "One concept with its relations",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/episodes": {
+      "post": {
+        "description": "Episodes are the lossless, immutable interaction log. Proposals can cite an episode as evidence, and a quoted passage must literally occur in it.",
+        "operationId": "record_episode_v1_episodes_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EpisodeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EpisodeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record an interaction event",
+        "tags": [
+          "episodes"
+        ]
+      }
+    },
+    "/v1/feedback": {
+      "get": {
+        "operationId": "list_feedback_v1_feedback_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "memory",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Memory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeedbackView"
+                  },
+                  "title": "Response List Feedback V1 Feedback Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List feedback events",
+        "tags": [
+          "feedback"
+        ]
+      },
+      "post": {
+        "description": "Judge one memory for one query: `applied`, `helpful`, `missed` (it should have come back), `irrelevant`, `outdated` or `wrong`. Events are kept; a more trusted verdict for the same memory and query replaces a less trusted one, and events expire.",
+        "operationId": "record_v1_feedback_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record feedback on a recalled memory",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/summary": {
+      "get": {
+        "operationId": "summary_v1_feedback_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Counts by state and label, and how many pairs can train",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/{feedback_id}/retract": {
+      "post": {
+        "operationId": "retract_v1_feedback__feedback_id__retract_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "title": "Feedback Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw a feedback event",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/memories": {
+      "get": {
+        "description": "Memories visible to the caller (their own and global), newest revision each. Superseded and retracted memories are hidden unless `status` asks for them.",
+        "operationId": "list_memories_v1_memories_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "fact",
+                    "directive",
+                    "decision",
+                    "event",
+                    "procedure",
+                    "task",
+                    "lesson"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "enum": [
+                "active",
+                "superseded",
+                "retracted",
+                "expired"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryView"
+                  },
+                  "title": "Response List Memories V1 Memories Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List memories",
+        "tags": [
+          "memories"
+        ]
+      }
+    },
+    "/v1/memories/{memory_id}": {
+      "get": {
+        "operationId": "get_memory_v1_memories__memory_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memory_id",
+            "required": true,
+            "schema": {
+              "title": "Memory Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get one memory (current revision)",
+        "tags": [
+          "memories"
+        ]
+      }
+    },
+    "/v1/memories/{memory_id}/detail": {
+      "get": {
+        "description": "`expand` may repeat: history, links, evidence, applies.",
+        "operationId": "detail_v1_memories__memory_id__detail_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memory_id",
+            "required": true,
+            "schema": {
+              "title": "Memory Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expand"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "One memory with expansions",
+        "tags": [
+          "explore"
+        ]
+      }
+    },
+    "/v1/memories/{memory_id}/history": {
+      "get": {
+        "description": "Every revision, oldest first, with its validity interval and which revisions superseded it and why.",
+        "operationId": "history_v1_memories__memory_id__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memory_id",
+            "required": true,
+            "schema": {
+              "title": "Memory Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/History"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revision history with supersession reasons",
+        "tags": [
+          "memories"
+        ]
+      }
+    },
+    "/v1/neighbors/{table}/{item_id}": {
+      "get": {
+        "operationId": "neighbors_v1_neighbors__table___item_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "table",
+            "required": true,
+            "schema": {
+              "title": "Table",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Neighbors"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What is connected to a memory or concept",
+        "tags": [
+          "explore"
+        ]
+      }
+    },
+    "/v1/ontology/changes": {
+      "get": {
+        "operationId": "list_changes_v1_ontology_changes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pending",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Pending",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OntologyChange"
+                  },
+                  "title": "Response List Changes V1 Ontology Changes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ontology changes: held for review (default) or the recent history",
+        "tags": [
+          "ontology"
+        ]
+      },
+      "post": {
+        "description": "Add, relate, alias, merge or deprecate concepts. A human's change applies at once; an agent's is held for review (unless its op is configured to auto-apply). The result's `advice` lists similar existing concepts: prefer an alias or a merge to a duplicate.",
+        "operationId": "propose_v1_ontology_changes_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Propose an ontology change",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/{change_id}/approve": {
+      "post": {
+        "operationId": "approve_v1_ontology_changes__change_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "title": "Change Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve and apply a held change (human only)",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/{change_id}/reject": {
+      "post": {
+        "operationId": "reject_v1_ontology_changes__change_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "title": "Change Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject a held change (human only)",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/overview": {
+      "post": {
+        "description": "Counts per kind, top concepts, the anchor chain and qualifiers in force, recent changes and the available verbs.",
+        "operationId": "overview_v1_overview_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallContext"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Orientation card",
+        "tags": [
+          "explore"
+        ]
+      }
+    },
+    "/v1/proposals": {
+      "get": {
+        "operationId": "list_proposals_v1_proposals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "const": "pending",
+              "default": "pending",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Proposal"
+                  },
+                  "title": "Response List Proposals V1 Proposals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List proposals",
+        "tags": [
+          "proposals"
+        ]
+      },
+      "post": {
+        "description": "The only way to write memories. A proposal is an all-or-nothing batch of operations (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`). It is validated, then the commit policy decides: **201** committed, **202** held for review, **422** rejected (the body lists the findings). Warnings and info findings are advice, e.g. a possible duplicate you may want to supersede.",
+        "operationId": "submit_v1_proposals_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Propose changes to memory",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
+    "/v1/proposals/{proposal_id}": {
+      "get": {
+        "operationId": "get_proposal_v1_proposals__proposal_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Proposal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get one proposal",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
+    "/v1/proposals/{proposal_id}/approve": {
+      "post": {
+        "description": "Re-validates against the data as it is now, then commits atomically.",
+        "operationId": "approve_v1_proposals__proposal_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve a pending proposal",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
+    "/v1/proposals/{proposal_id}/reject": {
+      "post": {
+        "operationId": "reject_v1_proposals__proposal_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject a pending proposal",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
+    "/v1/recall": {
+      "post": {
+        "description": "What is relevant to this message in this context. Returns an empty pack (`silent: true`) when nothing clears the relevance threshold; `rendered` is ready to inject.",
+        "operationId": "recall_v1_recall_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecallPack"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Input-driven recall (path B)",
+        "tags": [
+          "recall"
+        ]
+      }
+    },
+    "/v1/reranker": {
+      "get": {
+        "description": "Which reranker is configured, whether it can be retrained (hosted ones cannot), its active version, the feedback available and recent training runs.",
+        "operationId": "status_v1_reranker_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RerankerStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Reranker status",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/reranker/train": {
+      "post": {
+        "description": "Started by a human, never automatically. Needs a trainable reranker and enough feedback pairs. The result is activated only if it beats the version it started from on held-out pairs; every run is recorded.",
+        "operationId": "train_v1_reranker_train_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/TrainOptions"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Options"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RerankerRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retrain the reranker from the feedback that still counts",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/resources": {
+      "get": {
+        "operationId": "list_resources_v1_resources_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Resource"
+                  },
+                  "title": "Response List Resources V1 Resources Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List registered resources",
+        "tags": [
+          "anchors"
+        ]
+      },
+      "post": {
+        "description": "Adds explicit containment (`parents`), equivalence (`same_as`) and concept membership (`instance_of`) to a URI. Paths below a registered resource need no registration: containment by path segment is automatic.",
+        "operationId": "register_v1_resources_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resource"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register a resource",
+        "tags": [
+          "anchors"
+        ]
+      }
+    },
+    "/v1/search": {
+      "post": {
+        "description": "Hybrid search (full-text, vector, concept). Results carry facet counts so the caller narrows by choosing a facet instead of composing a query.",
+        "operationId": "search_v1_search_post",
+        "parameters": [
+          {
+            "description": "Name of the acting agent/person. Registered on first use.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "Name of the acting agent/person. Registered on first use.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kind of actor; trust is configured per kind.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Kind of actor; trust is configured per kind.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          },
+          {
+            "description": "Owner scope name; omitted means the global owner.",
+            "in": "header",
+            "name": "x-ontyra-owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner scope name; omitted means the global owner.",
+              "title": "X-Ontyra-Owner"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search memories",
+        "tags": [
+          "explore"
+        ]
+      }
+    }
+  }
+}

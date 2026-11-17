@@ -1,0 +1,11 @@
+{
+  "name": "ontyra",
+  "owner": { "name": "Ontyra" },
+  "plugins": [
+    {
+      "name": "ontyra",
+      "source": "./claude-code",
+      "description": "Ontyra memory: briefing at session start, recall on each prompt, MCP tools, and a memory skill."
+    }
+  ]
+}

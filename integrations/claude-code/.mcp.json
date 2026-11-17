@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ontyra": {
+      "type": "http",
+      "url": "${ONTYRA_URL:-http://127.0.0.1:8787}/mcp/",
+      "headers": {
+        "X-Ontyra-Actor": "claude",
+        "X-Ontyra-Harness": "claude-code"
+      }
+    }
+  }
+}
