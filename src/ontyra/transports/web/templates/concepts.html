@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Concepts{% endblock %}
+{% block body %}
+<h1>Concepts</h1>
+<form class="row" method="get" action="/ui/concepts" style="margin-bottom:14px">
+  <input type="text" name="term" value="{{ term }}" placeholder="label or alias"><button>Look up</button>
+  <span class="muted small">{{ rows|length }} shown</span>
+</form>
+{% for c in rows %}
+<div class="card">
+  <div class="row"><b>{{ c.label }}</b><code>{{ c.id }}</code><span class="tag">{{ c.scheme }}</span>
+    {% if c.status != 'active' %}<span class="tag warn">{{ c.status }}{% if c.replaced_by %} → {{ c.replaced_by }}{% endif %}</span>{% endif %}</div>
+  {% if c.aliases %}<div class="small muted">aliases: {{ c.aliases | join(', ') }}</div>{% endif %}
+  {% if c.definition %}<div class="small">{{ c.definition }}</div>{% endif %}
+  {% if c.relations %}<div class="small muted">{% for r in c.relations %}{{ r.direction }} <code>{{ r.relation }}</code> {{ r.label }}{{ '; ' if not loop.last }}{% endfor %}</div>{% endif %}
+</div>
+{% else %}<div class="empty">No concepts{% if term %} match “{{ term }}”{% endif %}. Agents propose them; see Review.</div>{% endfor %}
+{% endblock %}

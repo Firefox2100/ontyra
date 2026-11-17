@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Overview</h1>
+<div class="card row">
+  <div><a href="/ui/review"><b>{{ pending }}</b> proposal{{ '' if pending == 1 else 's' }} waiting</a></div>
+  <div><a href="/ui/review"><b>{{ held }}</b> ontology change{{ '' if held == 1 else 's' }} waiting</a></div>
+</div>
+<h2>Active memories</h2>
+<div class="card">
+<table>{% for kind, n in kinds.items() %}
+<tr><td><a href="/ui/memories?kind={{ kind }}">{{ kind }}</a></td><td>{{ n }}</td></tr>
+{% endfor %}</table>
+</div>
+<p class="muted small">This console acts as a human caller and has no login: keep the daemon on localhost.</p>
+{% endblock %}

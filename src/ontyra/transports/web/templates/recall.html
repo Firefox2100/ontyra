@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Recall{% endblock %}
+{% block body %}
+<h1>Recall playground</h1>
+<form class="card" method="get" action="/ui/recall">
+  <div class="row"><input type="text" name="query" value="{{ query }}" placeholder="a message, as the user would send it" style="flex:1">
+    <select name="mode"><option value="recall" {{ 'selected' if mode == 'recall' }}>recall</option><option value="briefing" {{ 'selected' if mode == 'briefing' }}>briefing</option></select></div>
+  <div class="row" style="margin-top:8px"><input type="text" name="uri" value="{{ uri }}" placeholder="location URIs, comma separated (file://host/path)" style="flex:1">
+    <input type="text" name="signals" value="{{ signals }}" placeholder="signals: python, linux"><button class="go">Run</button></div>
+  <div class="small muted" style="margin-top:6px">No session is sent, so this never touches a real session's delivery ledger. A trace is still stored.</div>
+</form>
+{% if pack %}
+<h2>{{ 'Silent' if pack.silent else 'Result' }} <span class="muted small">{{ pack.tokens }} tokens</span></h2>
+{% for title, items in [('Must follow', pack.must_follow), ('Applicable', pack.applicable), ('Context', pack.context), ('How to', pack.how_to), ('Open tasks', pack.open_tasks)] %}
+{% if items %}<h2 style="font-size:15px">{{ title }}</h2>
+{% for i in items %}<div class="card">
+  <div class="row"><span class="tag {{ 'must' if i.strength == 'must' }}">{{ i.kind }}{% if i.strength %} · {{ i.strength }}{% endif %}</span>
+    <a href="/ui/memories/{{ i.memory.id }}">{{ i.text }}</a></div>
+  <div class="small muted">score {{ '%.2f' % i.score }} · relevance {{ '%.2f' % i.relevance }}{% if i.anchor %} · anchor <code>{{ i.anchor }}</code>{% endif %}</div>
+  {% for w in i.why %}<div class="small muted">{{ w }}</div>{% endfor %}
+  {% for c in i.caveats %}<div class="small"><span class="tag warn">caveat</span> {{ c }}</div>{% endfor %}
+</div>{% endfor %}{% endif %}{% endfor %}
+{% for c in pack.cautions %}<div class="card"><span class="tag warn">caution</span> {{ c | tojson }}</div>{% endfor %}
+{% if pack.unresolved %}<div class="card small"><span class="tag warn">unknown signals</span> {{ pack.unresolved | join(', ') }} — no such concept; an agent can propose it.</div>{% endif %}
+{% if pack.rendered %}<h2 style="font-size:15px">As injected</h2><pre>{{ pack.rendered }}</pre>{% endif %}
+{% if pack.trace %}<div class="muted small">trace <code>{{ pack.trace }}</code></div>{% endif %}
+{% endif %}
+{% endblock %}

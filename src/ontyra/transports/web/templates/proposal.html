@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Proposal{% endblock %}
+{% block body %}
+<h1>Proposal <span class="tag {{ 'ok' if p.status == 'committed' else ('warn' if p.status == 'pending' else 'must') }}">{{ p.status }}</span></h1>
+<div class="card small muted">
+  submitted {{ p.submitted_at.strftime('%Y-%m-%d %H:%M') }} · policy: {{ p.decision_reason }}
+  {% if p.note %}<br>{{ p.note }}{% endif %}
+</div>
+{% if p.findings %}<h2>Findings</h2><div class="card">
+{% for f in p.findings %}<div><span class="tag {{ 'must' if f.severity == 'error' else 'warn' }}">{{ f.severity }}</span>
+<code>{{ f.code }}</code> {{ f.message }}</div>{% endfor %}</div>{% endif %}
+<h2>Operations</h2>
+{% for op in p.ops %}
+<div class="card">
+  <div class="row"><span class="tag">{{ op.op }}</span>{% if op.kind %}<span class="tag">{{ op.kind }}</span>{% endif %}
+    {% if op.fields and op.fields.strength %}<span class="tag {{ 'must' if op.fields.strength == 'must' }}">{{ op.fields.strength }}</span>{% endif %}
+    {% if op.fields and op.fields.scope == 'universal' %}<span class="tag">universal</span>{% endif %}</div>
+  {% if op.fields and op.fields.text %}<div style="margin-top:6px">{{ op.fields.text }}</div>{% endif %}
+  {% if op.fields and op.fields.anchors %}<div class="small muted">anchors: {% for a in op.fields.anchors %}<code>{{ a.uri }}</code> {% endfor %}</div>{% endif %}
+  <details><summary class="small muted">raw</summary><pre>{{ op | tojson(indent=2) }}</pre></details>
+</div>
+{% endfor %}
+{% if p.status == 'pending' %}
+<div class="row">
+  <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/approve"><button class="go">Approve</button></form>
+  <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/reject">
+    <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+</div>{% endif %}
+{% endblock %}

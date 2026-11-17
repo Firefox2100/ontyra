@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Memories{% endblock %}
+{% block body %}
+<h1>Memories</h1>
+<form class="row" method="get" action="/ui/memories" style="margin-bottom:14px">
+  <select name="kind"><option value="">all kinds</option>{% for k in kinds %}<option {{ 'selected' if k == kind }}>{{ k }}</option>{% endfor %}</select>
+  <select name="status">{% for s in statuses %}<option {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}</select>
+  <button>Filter</button><span class="muted small">{{ rows|length }} shown</span>
+</form>
+<div class="card"><table>
+<tr><th>Kind</th><th>Text</th><th>Rev</th></tr>
+{% for m in rows %}
+<tr><td><span class="tag {{ 'must' if m.content.get('strength') == 'must' }}">{{ m.kind }}{% if m.content.get('strength') %} · {{ m.content.get('strength') }}{% endif %}</span></td>
+<td><a href="/ui/memories/{{ m.memory.id }}">{{ m.text }}</a>{% if m.stale %} <span class="tag warn">stale</span>{% endif %}</td>
+<td class="muted">{{ m.seq }}</td></tr>
+{% else %}<tr><td colspan="3" class="empty">No memories match.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

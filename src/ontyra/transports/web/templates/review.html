@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Review{% endblock %}
+{% block body %}
+<h1>Review</h1>
+<h2>Proposals ({{ proposals|length }})</h2>
+{% for p in proposals %}
+<div class="card">
+  <div class="row"><a href="/ui/proposals/{{ p.id.id }}"><b>{{ p.ops|length }} op{{ '' if p.ops|length == 1 else 's' }}</b></a>
+    <span class="tag">{{ p.decision_reason }}</span>
+    <span class="muted small">{{ p.submitted_at.strftime('%Y-%m-%d %H:%M') }}</span></div>
+  {% if p.note %}<div class="muted small">{{ p.note }}</div>{% endif %}
+  <div class="row" style="margin-top:10px">
+    <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/approve"><button class="go">Approve</button></form>
+    <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/reject">
+      <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+    <a class="small" href="/ui/proposals/{{ p.id.id }}">details</a>
+  </div>
+</div>
+{% else %}<div class="empty">Nothing waiting.</div>{% endfor %}
+
+<h2>Ontology changes ({{ changes|length }})</h2>
+{% for c in changes %}
+<div class="card">
+  <div class="row"><span class="tag">{{ c.op }}</span><b>{{ c.change | tojson }}</b></div>
+  <div class="small">{{ c.rationale }}</div>
+  {% for a in c.advice %}<div class="small"><span class="tag warn">advice</span> {{ a }}</div>{% endfor %}
+  <div class="row" style="margin-top:10px">
+    <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/approve"><button class="go">Approve</button></form>
+    <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/reject">
+      <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+  </div>
+</div>
+{% else %}<div class="empty">Nothing waiting.</div>{% endfor %}
+
+{% if recent %}<h2>Recent ontology changes</h2>
+<div class="card"><table>{% for c in recent %}
+<tr><td><span class="tag {{ 'ok' if c.status == 'applied' else '' }}">{{ c.status }}</span></td><td>{{ c.op }}</td>
+<td class="small">{{ c.rationale }}</td></tr>{% endfor %}</table></div>{% endif %}
+{% endblock %}
