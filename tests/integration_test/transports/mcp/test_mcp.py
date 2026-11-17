@@ -38,7 +38,16 @@ def server(app: Application, profile: str = "lite") -> Client:  # type: ignore[t
 async def test_lite_profile_lists_a_handful_of_tools(app: Application) -> None:
     async with server(app) as client:
         names = {t.name for t in await client.list_tools()}
-    assert names == {"recall", "check", "briefing", "ask", "get", "remember"}
+    assert names == {
+        "recall",
+        "check",
+        "briefing",
+        "ask",
+        "get",
+        "remember",
+        "concepts",
+        "propose_ontology_change",
+    }
 
 
 async def test_full_profile_adds_browsing_and_review(app: Application) -> None:

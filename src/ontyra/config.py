@@ -103,6 +103,16 @@ class DecisionSettings(BaseModel):
     timeout: float = 30.0  # seconds; a slower answer counts as no answer
 
 
+class OntologySettings(BaseModel):
+    """Ontology change proposals (`ONTYRA_ONTOLOGY__*`).
+
+    A human's change applies at once; an agent's waits for review unless its op is listed in
+    `auto_apply` (ops: define, relate, add_alias, deprecate, merge), e.g. `["add_alias"]`.
+    """
+
+    auto_apply: list[str] = []
+
+
 class McpSettings(BaseModel):
     """MCP server (`ONTYRA_MCP__*`), served by the daemon at `path` (streamable HTTP).
 
@@ -114,6 +124,17 @@ class McpSettings(BaseModel):
     enabled: bool = False
     profile: Literal["lite", "full"] = "lite"
     path: str = "/mcp"
+
+
+class UiSettings(BaseModel):
+    """Operator console (`ONTYRA_UI__*`) served at `/ui` by the daemon (plans/19).
+
+    It acts as a `human` caller named `actor` and can approve and reject, with no login: keep the
+    daemon on localhost. State-changing requests from another site's page are refused.
+    """
+
+    enabled: bool = False
+    actor: str = "owner"
 
 
 class Settings(BaseSettings):
@@ -136,7 +157,9 @@ class Settings(BaseSettings):
     rerank: RerankSettings = RerankSettings()
     decision: DecisionSettings = DecisionSettings()
     recall: RecallSettings = RecallSettings()
+    ontology: OntologySettings = OntologySettings()
     mcp: McpSettings = McpSettings()
+    ui: UiSettings = UiSettings()
     log_level: str = "INFO"
 
 

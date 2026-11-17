@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from ontyra.adapters import build_decider, build_embedder, build_reranker
 from ontyra.config import Settings, load_settings
@@ -20,6 +20,7 @@ from ontyra.services import (
     FeedbackService,
     IndexService,
     MemoryService,
+    OntologyChangeService,
     OntologyService,
     PolicyEngine,
     RecallService,
@@ -43,6 +44,7 @@ class Application:
     actors: ActorService
     memory: MemoryService
     ontology: OntologyService
+    ontology_changes: OntologyChangeService
     anchors: AnchorService
     indexer: IndexService
     recall: RecallService
@@ -102,6 +104,9 @@ class Application:
             actors=ActorService(store, now, settings.actor_trust),
             memory=memory,
             ontology=ontology,
+            ontology_changes=OntologyChangeService(
+                store, ontology, now, settings.ontology.auto_apply
+            ),
             anchors=anchors,
             indexer=indexer,
             recall=recall,
@@ -162,6 +167,16 @@ def create_rest_app(settings: Settings | None = None) -> FastAPI:
         mounts[cfg.mcp.path] = create_mcp_app(
             lambda: holder["app"].state.services, profile=cfg.mcp.profile
         )
-    app = create_app(open_services=lambda: open_application(cfg), mounts=mounts)
+    routers: list[APIRouter] = []
+    if cfg.ui.enabled:
+        from ontyra.transports.web import ROUTERS
+
+        routers = ROUTERS
+    app = create_app(
+        open_services=lambda: open_application(cfg),
+        mounts=mounts,
+        extra_routers=routers,
+        ui_actor=cfg.ui.actor,
+    )
     holder["app"] = app
     return app

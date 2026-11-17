@@ -13,6 +13,7 @@ from ontyra.services import (
     ExplorationService,
     FeedbackService,
     MemoryService,
+    OntologyChangeService,
     OntologyService,
     RecallService,
     RerankTrainingService,
@@ -30,6 +31,9 @@ class Services(Protocol):
 
     @property
     def ontology(self) -> OntologyService: ...
+
+    @property
+    def ontology_changes(self) -> OntologyChangeService: ...
 
     @property
     def anchors(self) -> AnchorService: ...
@@ -67,6 +71,13 @@ def get_ontology_service(services: ServicesDep) -> OntologyService:
 
 
 OntologyServiceDep = Annotated[OntologyService, Depends(get_ontology_service)]
+
+
+def get_ontology_change_service(services: ServicesDep) -> OntologyChangeService:
+    return services.ontology_changes
+
+
+OntologyChangeServiceDep = Annotated[OntologyChangeService, Depends(get_ontology_change_service)]
 
 
 def get_anchor_service(services: ServicesDep) -> AnchorService:

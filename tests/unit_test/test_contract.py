@@ -26,3 +26,11 @@ def test_integrations_do_not_import_the_daemon() -> None:
         if pattern.search(p.read_text(encoding="utf-8"))
     ]
     assert not offenders, f"integrations must use REST/MCP only: {offenders}"
+
+
+def test_the_plugin_skill_is_the_shared_skill() -> None:
+    shared = (ROOT / "integrations/skills/ontyra-memory/SKILL.md").read_text(encoding="utf-8")
+    plugin = (ROOT / "integrations/claude-code/skills/ontyra-memory/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert shared == plugin, "copy integrations/skills/ontyra-memory/SKILL.md into the plugin"

@@ -577,8 +577,6 @@ class RecallService:
         checks = sorted({c for i in pack.items() for c in i.checks})
         if checks:
             out.append("verify before acting: " + "; ".join(checks))
-        if pack.unresolved:
-            out.append("unknown context signals ignored: " + ", ".join(pack.unresolved))
         if pack.items():
             out.append("get(<memory id>, expand=...) shows evidence, links and history")
         return out

@@ -8,6 +8,7 @@ from ontyra.services.feedback import FeedbackService, RerankTrainingService
 from ontyra.services.indexing import IndexService
 from ontyra.services.memory import MemoryService
 from ontyra.services.ontology import OntologyService
+from ontyra.services.ontology_changes import OntologyChangeService
 from ontyra.services.policy import PolicyEngine
 from ontyra.services.recall import RecallService
 from ontyra.services.recall_engine import RecallEngine
@@ -23,6 +24,7 @@ __all__ = [
     "FusionRecallService",
     "IndexService",
     "MemoryService",
+    "OntologyChangeService",
     "OntologyService",
     "PolicyEngine",
     "RecallEngine",

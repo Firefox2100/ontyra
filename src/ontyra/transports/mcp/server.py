@@ -12,6 +12,8 @@ from pydantic import Field
 
 from ontyra.models import RecordId
 from ontyra.models.core import Proposal
+from ontyra.models.ontology import ConceptView
+from ontyra.models.ontology_change import ChangeRequest, ChangeResult, OntologyChange
 from ontyra.models.proposals import ProposalRequest, ProposalResult
 from ontyra.models.recall import (
     AskRequest,
@@ -130,7 +132,39 @@ def create_mcp(
     async def remember(proposal: ProposalRequest) -> ProposalResult:
         return await run(lambda s, c: s.memory.submit(c, proposal))
 
+    @mcp.tool(
+        description="Find concepts by label or alias (`python`, `ssh`) to get the ids that "
+        "`about`, anchors and qualifiers refer to, with their relations. Empty: no such concept; "
+        "propose one with `propose_ontology_change` rather than guessing an id."
+    )
+    async def concepts(term: str) -> list[ConceptView]:
+        return await run(lambda s, c: s.ontology.lookup(c, term))
+
+    @mcp.tool(
+        description="Propose an ontology change: `define` a concept, `relate` two, "
+        "`add_alias`, `merge` duplicates, or `deprecate`. Held for review unless a human "
+        "makes it. Check `concepts` first; read `advice` for similar existing concepts."
+    )
+    async def propose_ontology_change(request: ChangeRequest) -> ChangeResult:
+        return await run(lambda s, c: s.ontology_changes.propose(c, request))
+
     if profile == "full":
+
+        @mcp.tool(description="Ontology changes held for review.")
+        async def pending_ontology_changes(
+            limit: Annotated[int, Field(ge=1, le=200)] = 50,
+        ) -> list[OntologyChange]:
+            return await run(lambda s, c: s.ontology_changes.pending(limit))
+
+        @mcp.tool(description="Approve and apply a held ontology change (a human's call).")
+        async def approve_ontology_change(change: str) -> ChangeResult:
+            rid = RecordId("ontology_change", change.removeprefix("ontology_change:"))
+            return await run(lambda s, c: s.ontology_changes.approve(c, rid))
+
+        @mcp.tool(description="Reject a held ontology change with a reason.")
+        async def reject_ontology_change(change: str, reason: str) -> ChangeResult:
+            rid = RecordId("ontology_change", change.removeprefix("ontology_change:"))
+            return await run(lambda s, c: s.ontology_changes.reject(c, rid, reason))
 
         @mcp.tool(description="Hybrid search with facet counts to narrow the next query.")
         async def search(request: SearchRequest) -> SearchResult:

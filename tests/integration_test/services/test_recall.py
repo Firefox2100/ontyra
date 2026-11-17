@@ -303,7 +303,7 @@ async def test_unresolved_signals_are_reported_not_fatal(
         app, agent, "uv lock files", RecallContext(signals=[Signal(concept="templeos")])
     )
     assert not pack.silent and pack.unresolved == ["templeos"]
-    assert any("templeos" in a for a in pack.affordances)
+    assert "templeos" not in pack.rendered  # reported in the pack, not injected as noise
 
 
 # ---- briefing: completeness ------------------------------------------------------------

@@ -89,6 +89,12 @@ class OntologyService:
         if not ids:
             slug = RecordId("concept", concept_slug(term)) if term.strip() else None
             ids = [slug] if slug is not None and slug in onto.concepts else []
+        # a deprecated concept is not listed next to the one that replaced it
+        ids = [
+            i
+            for i in ids
+            if not (onto.concepts[i].status == "deprecated" and onto.concepts[i].replaced_by in ids)
+        ]
         return [await self._view(caller, onto.concepts[i], onto) for i in ids]
 
     async def list(
