@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ontyra.config import DecisionSettings, EmbeddingSettings, RerankSettings
+from ontyra.models.consolidation import ConsolidationSettings
 from ontyra.models.recall import RecallSettings
 
 
@@ -41,6 +42,8 @@ class Profile(BaseModel):
     reranker: dict[str, Any] = Field(default_factory=dict)
     # decision model: any `ONTYRA_DECISION__*` setting (provider systemone | langchain, url, ...)
     decision: dict[str, Any] = Field(default_factory=dict)
+    # duplicate scan: any `ONTYRA_CONSOLIDATION__*` setting (candidate_cosine, duplicate_cosine, ...)
+    consolidation: dict[str, Any] = Field(default_factory=dict)
     rerank_class_path: str | None = None  # shortcut for a LangChain compressor
     rerank_kwargs: dict[str, Any] = Field(default_factory=dict)
     # overrides of `ONTYRA_RECALL__*` for this profile (e.g. {"vector_floor": 0.5})
@@ -76,6 +79,9 @@ class Profile(BaseModel):
         return RerankSettings(
             provider="langchain", class_path=self.rerank_class_path, kwargs=self.rerank_kwargs
         )
+
+    def consolidation_settings(self) -> ConsolidationSettings:
+        return ConsolidationSettings.model_validate(self.consolidation)
 
     def decision_settings(self) -> DecisionSettings:
         return DecisionSettings.model_validate(self.decision)

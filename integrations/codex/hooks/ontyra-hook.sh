@@ -8,7 +8,7 @@
 #   once to propose memories for anything durable it learned (`remember` tool).
 # Fails open: if the daemon is down or slow the session continues without memory.
 # Needs curl and jq. Env: ONTYRA_URL (default http://127.0.0.1:8787), ONTYRA_BUDGET_TOKENS,
-# ONTYRA_TOKEN, ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
+# ONTYRA_TOKEN, ONTYRA_PROFILE (compact|rich, default compact: no scores or anchors in the text), ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
 # claude-code) and ONTYRA_ACTOR (default: the harness name) say who is talking.
 set -u
 input=$(cat)
@@ -77,8 +77,10 @@ case "$event" in
     ;;
   SessionStart)
     path=briefing
+    # Only a compaction or /clear loses what was delivered; a resumed conversation still holds it,
+    # so the daemon's session ledger sends just what is new or changed.
     redeliver=false
-    [ "$source_kind" = "startup" ] || redeliver=true
+    case "$source_kind" in compact | clear) redeliver=true ;; esac
     query=null
     ;;
   UserPromptSubmit)
@@ -94,9 +96,9 @@ esac
 body=$(jq -n \
   --argjson uris "$uris" --argjson signals "$signals" --arg session "$session" \
   --argjson query "$query" --argjson redeliver "$redeliver" \
-  --argjson budget "${ONTYRA_BUDGET_TOKENS:-null}" \
+  --argjson budget "${ONTYRA_BUDGET_TOKENS:-null}" --arg profile "${ONTYRA_PROFILE:-compact}" \
   '{context: {uris: $uris, signals: $signals, session: $session},
-    query: $query, redeliver: $redeliver, budget_tokens: $budget}') || exit 0
+    query: $query, redeliver: $redeliver, budget_tokens: $budget, profile: $profile}') || exit 0
 
 reply=$(post "$path" "$body") || exit 0
 

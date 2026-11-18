@@ -68,12 +68,15 @@ async def play(
     domains: dict[str, str] | None = None,
     probe: Probe | None = None,
     universal: frozenset[str] = frozenset(),
+    twins: dict[str, str] | None = None,
 ) -> list[StepScore]:
     """Run the case's first request and its `then` requests (one session when it has any)."""
     session = case.id if case.then else None
     scores: list[StepScore] = []
     for step in [case, *case.then]:
-        scores.append(await _one(app, caller, step, keys, session, domains, probe, universal))
+        scores.append(
+            await _one(app, caller, step, keys, session, domains, probe, universal, twins)
+        )
     return scores
 
 
@@ -86,6 +89,7 @@ async def _one(
     domains: dict[str, str] | None,
     probe: Probe | None,
     universal: frozenset[str] = frozenset(),
+    twins: dict[str, str] | None = None,
 ) -> StepScore:
     context = step.context.model_copy(update={"session": session or step.context.session})
     rows = await probe.rows(step, session) if probe is not None else None
@@ -100,7 +104,14 @@ async def _one(
         pack = await run(caller, request)
     ms = (time.perf_counter() - started) * 1000
     scored = score_step(
-        step, pack, keys, verdict=verdict, ms=ms, domains=domains, universal=universal
+        step,
+        pack,
+        keys,
+        verdict=verdict,
+        ms=ms,
+        domains=domains,
+        universal=universal,
+        twins=twins,
     )
     scored.rows = rows
     return scored

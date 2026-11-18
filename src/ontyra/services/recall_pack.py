@@ -35,6 +35,11 @@ def estimate_tokens(text: str) -> int:
 
 def render_item(item: RecallItem, profile: Literal["compact", "rich"]) -> str:
     head = item.text
+    if profile == "compact" and item.kind == "directive":
+        # the short imperative; the full statement and rationale stay one `get` away
+        rule = item.detail.get("rule")
+        if isinstance(rule, str) and rule.strip():
+            head = rule.strip()
     if (
         item.kind == "directive"
         and item.polarity == "avoid"

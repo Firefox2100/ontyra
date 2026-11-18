@@ -7,6 +7,7 @@ split, never averaged across them.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -86,8 +87,10 @@ def score_step(
     ms: float = 0.0,
     domains: dict[str, str] | None = None,
     universal: frozenset[str] = frozenset(),
+    twins: Mapping[str, str] | None = None,
 ) -> StepScore:
-    """`universal`: keys of `scope: universal` memories. They are meant to appear whatever the
+    """`twins`: planted duplicate key -> the key it restates; returning one is never a false
+    positive when the original is expected or allowed, and it satisfies an `include` of the original. `universal`: keys of `scope: universal` memories. They are meant to appear whatever the
     situation, so returning one is never a false positive (a case still may require one)."""
     items, unknown = returned_items(pack, keys)
     got = [i.key for i in items]
@@ -95,9 +98,19 @@ def score_step(
     allowed = wanted | set(step.allow)
 
     def ok(key: str) -> bool:
-        return key in allowed or key in universal or key.startswith(tuple(step.allow_prefix))
+        original = (twins or {}).get(key)  # a planted duplicate is fine wherever its original is
+        return (
+            key in allowed
+            or key in universal
+            or key.startswith(tuple(step.allow_prefix))
+            or (original is not None and original in allowed)
+        )
 
-    missing = [k for k in step.include if k not in got]
+    restated = {orig: [d for d, o in (twins or {}).items() if o == orig] for orig in step.include}
+    # a restatement of a required memory delivers the same information
+    missing = [
+        k for k in step.include if k not in got and not any(d in got for d in restated.get(k, []))
+    ]
     leaked = [k for k in step.exclude if k in got]
     unexpected = [k for k in got if not ok(k) and k not in step.exclude]
     near = {(domains or {}).get(k) for k in step.include} - {None}

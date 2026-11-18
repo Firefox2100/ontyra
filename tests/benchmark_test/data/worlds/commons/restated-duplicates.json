@@ -1,0 +1,684 @@
+{
+  "memories": [
+    {
+      "key": "st-digits-again",
+      "kind": "directive",
+      "text": "Round p-values to three decimals and effect sizes to two decimals.",
+      "duplicate_of": "st-digits",
+      "about": [
+        "p_value",
+        "statistics"
+      ],
+      "note": "restates st-digits (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "rs-access-again",
+      "kind": "directive",
+      "text": "When a paper is behind a paywall, go to the publisher or archive over the campus network before hunting for alternative copies.",
+      "duplicate_of": "rs-access",
+      "about": [
+        "paywalled_article",
+        "university_network"
+      ],
+      "strength": "prefer",
+      "note": "restates rs-access (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-weekend-again",
+      "kind": "directive",
+      "text": "Saturdays and Sundays are for personal plans only: no work meetings, no deadlines.",
+      "duplicate_of": "dl-weekend",
+      "about": [
+        "scheduling_preference"
+      ],
+      "q": [
+        "necessary:day_type = weekend"
+      ],
+      "note": "restates dl-weekend (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-weekday-focus-again",
+      "kind": "directive",
+      "text": "On weekdays keep Tuesday and Thursday mornings free for focused research.",
+      "duplicate_of": "dl-weekday-focus",
+      "about": [
+        "scheduling_preference"
+      ],
+      "q": [
+        "necessary:day_type = weekday"
+      ],
+      "note": "restates dl-weekday-focus (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "li-theme-again",
+      "kind": "decision",
+      "text": "The chapter is structured by theme rather than by chronology, since the novels overlap in time.",
+      "duplicate_of": "li-theme",
+      "at": [
+        "file:///home/mira/research/diaspora-novels"
+      ],
+      "fields": {
+        "alternatives": [
+          "chronological order"
+        ],
+        "decided_at": "2026-03-10T09:00:00Z",
+        "chosen": "theme-based chapter structure"
+      },
+      "note": "restates li-theme (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "wr-ieee-again",
+      "kind": "fact",
+      "text": "In IEEE format citations are bracketed numbers assigned by first appearance.",
+      "duplicate_of": "wr-ieee",
+      "about": [
+        "ieee_style"
+      ],
+      "fields": {
+        "subject": "ieee_style",
+        "predicate": "format",
+        "object": "numbered in square brackets"
+      },
+      "note": "restates wr-ieee (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ws-expose-dir-again",
+      "kind": "directive",
+      "text": "To expose a service on a work server, put it behind the installed Apache reverse proxy on port 8888, or stop Apache and listen on 8888 directly; no other port is reachable.",
+      "duplicate_of": "ws-expose-dir",
+      "about": [
+        "port_8888",
+        "apache",
+        "reverse_proxy"
+      ],
+      "q": [
+        "necessary:work_server"
+      ],
+      "strength": "must",
+      "note": "restates ws-expose-dir (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "so-apa-again",
+      "kind": "directive",
+      "text": "Cite sources in APA 7 author-date format when writing for the social sciences.",
+      "duplicate_of": "so-apa",
+      "about": [
+        "apa_style"
+      ],
+      "at": [
+        "file:///home/mira/research/survey-2026"
+      ],
+      "note": "restates so-apa (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "da-econ-again",
+      "kind": "fact",
+      "text": "For economic time series use FRED, Eurostat or the World Bank's open data.",
+      "duplicate_of": "da-econ",
+      "about": [
+        "economic_data"
+      ],
+      "fields": {
+        "subject": "economic_data",
+        "predicate": "where to find",
+        "object": "FRED, Eurostat, World Bank"
+      },
+      "note": "restates da-econ (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ws-home-lesson-again",
+      "kind": "lesson",
+      "text": "Large downloads and database files in the home directory exhaust its small quota; keep them under /local.",
+      "duplicate_of": "ws-home-lesson",
+      "about": [
+        "home_directory_quota",
+        "work_server"
+      ],
+      "q": [
+        "necessary:work_server"
+      ],
+      "fields": {
+        "do_instead": "work under /local",
+        "situation": "a download, build or database fills the home directory on a work server",
+        "insight": "the home quota is tiny"
+      },
+      "note": "restates ws-home-lesson (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "da-units-again",
+      "kind": "lesson",
+      "text": "Dataset units once disagreed with the docs, so check units and summary stats immediately after a download.",
+      "duplicate_of": "da-units",
+      "about": [
+        "dataset_licence"
+      ],
+      "fields": {
+        "do_instead": "check units and summary statistics after download",
+        "situation": "a freshly downloaded dataset gives odd magnitudes",
+        "insight": "the file's units differed from the documentation"
+      },
+      "note": "restates da-units (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ws-port-fact-again",
+      "kind": "fact",
+      "text": "Work servers expose just port 8888 behind an unconfigurable load balancer; the one thing you can do is point a domain at a server.",
+      "duplicate_of": "ws-port-fact",
+      "about": [
+        "port_8888",
+        "load_balancer",
+        "work_server"
+      ],
+      "q": [
+        "necessary:work_server"
+      ],
+      "fields": {
+        "subject": "work_server",
+        "predicate": "network access",
+        "object": "only port 8888 behind a load balancer"
+      },
+      "note": "restates ws-port-fact (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dp-stack-again",
+      "kind": "directive",
+      "text": "Prefer Python, MongoDB, React and Neo4j over comparable technologies.",
+      "duplicate_of": "dp-stack",
+      "about": [
+        "technology_stack",
+        "mongodb",
+        "neo4j",
+        "react",
+        "python"
+      ],
+      "strength": "prefer",
+      "scope": "universal",
+      "note": "restates dp-stack (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "fi-depr-again",
+      "kind": "fact",
+      "text": "Straight-line depreciation: three years for laptops, eight for furniture.",
+      "duplicate_of": "fi-depr",
+      "about": [
+        "depreciation"
+      ],
+      "fields": {
+        "subject": "depreciation",
+        "predicate": "useful life",
+        "object": "laptops 3 years, furniture 8 years"
+      },
+      "note": "restates fi-depr (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "mh-books-again",
+      "kind": "directive",
+      "text": "Recommend translated literary fiction, not thrillers; reading pace is roughly twenty pages a night.",
+      "duplicate_of": "mh-books",
+      "about": [
+        "books_to_read"
+      ],
+      "note": "restates mh-books (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "wr-table-again",
+      "kind": "directive",
+      "text": "Format tables without vertical lines, with units in the column headers and numbers aligned on the decimal point.",
+      "duplicate_of": "wr-table",
+      "about": [
+        "table_formatting"
+      ],
+      "note": "restates wr-table (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-commute-again",
+      "kind": "fact",
+      "text": "Getting to work takes 25 minutes on the train out of Rotterdam Centraal, normally the 8:12.",
+      "duplicate_of": "dl-commute",
+      "about": [
+        "commute"
+      ],
+      "fields": {
+        "subject": "commute",
+        "predicate": "route",
+        "object": "train from Rotterdam Centraal, 8:12"
+      },
+      "note": "restates dl-commute (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ch-yield-again",
+      "kind": "procedure",
+      "text": "Compute percent yield as 100 times the actual yield over the theoretical yield, taking the theoretical value from the limiting reagent.",
+      "duplicate_of": "ch-yield",
+      "about": [
+        "percent_yield"
+      ],
+      "fields": {
+        "trigger": "calculate percent yield",
+        "steps": [
+          "find the limiting reagent",
+          "compute the theoretical yield from it",
+          "divide the actual yield by the theoretical yield and multiply by 100"
+        ]
+      },
+      "note": "restates ch-yield (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "bi-replicate-again",
+      "kind": "directive",
+      "text": "A biological replicate is an independent animal or culture; technical replicates do not count toward n.",
+      "duplicate_of": "bi-replicate",
+      "about": [
+        "biological_replicate",
+        "statistics"
+      ],
+      "strength": "must",
+      "note": "restates bi-replicate (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dm-batch-again",
+      "kind": "lesson",
+      "text": "On the 24GB GPU a batch of 512 hit out-of-memory, whereas 256 plus gradient accumulation worked.",
+      "duplicate_of": "dm-batch",
+      "about": [
+        "nvidia_gpu"
+      ],
+      "at": [
+        "file:///home/mira/src/pipeline-ml"
+      ],
+      "fields": {
+        "do_instead": "use batch 256 with gradient accumulation",
+        "situation": "a training run crashes with CUDA out of memory",
+        "insight": "batch 512 does not fit in 24 GB"
+      },
+      "note": "restates dm-batch (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-ask-send-again",
+      "kind": "directive",
+      "text": "Never send an email or message on the user's behalf without checking first, though writing drafts is okay.",
+      "duplicate_of": "dl-ask-send",
+      "about": [
+        "email_sending"
+      ],
+      "strength": "must",
+      "scope": "universal",
+      "note": "restates dl-ask-send (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "cr-baseline-again",
+      "kind": "directive",
+      "text": "Before claiming gains from a graph model, include a strong simple baseline such as logistic regression or an MLP.",
+      "duplicate_of": "cr-baseline",
+      "about": [
+        "baseline_model"
+      ],
+      "at": [
+        "file:///home/mira/research/graph-nn"
+      ],
+      "note": "restates cr-baseline (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "d-vitest-again",
+      "kind": "directive",
+      "text": "Lanternkit's test runner must be vitest, and jest should not be introduced.",
+      "duplicate_of": "d-vitest",
+      "fields": {
+        "strength": "must",
+        "about": [
+          "concept:vitest"
+        ],
+        "anchors": [
+          {
+            "uri": "file:///home/mira/src/lanternkit"
+          }
+        ]
+      },
+      "note": "restates d-vitest (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-bday-again",
+      "kind": "fact",
+      "text": "Birthdays: the user on March 12th, Alex on August 3rd.",
+      "duplicate_of": "dl-bday",
+      "about": [
+        "birthday",
+        "alex"
+      ],
+      "fields": {
+        "subject": "the_user",
+        "predicate": "birthdays",
+        "object": "user 12 March, Alex 3 August"
+      },
+      "note": "restates dl-bday (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "cr-compute-again",
+      "kind": "fact",
+      "text": "The compute budget is two GPU-weeks per paper; record GPU-hours in the experiment sheet.",
+      "duplicate_of": "cr-compute",
+      "about": [
+        "compute_budget"
+      ],
+      "at": [
+        "file:///home/mira/research/graph-nn"
+      ],
+      "fields": {
+        "subject": "compute_budget",
+        "predicate": "limit",
+        "object": "2 GPU-weeks per paper"
+      },
+      "note": "restates cr-compute (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "st-bh-again",
+      "kind": "decision",
+      "text": "For screening gene expression we went with Benjamini-Hochberg because Bonferroni's correction was too strict.",
+      "duplicate_of": "st-bh",
+      "about": [
+        "multiple_comparisons"
+      ],
+      "at": [
+        "file:///home/mira/research/stats-core"
+      ],
+      "fields": {
+        "alternatives": [
+          "Bonferroni"
+        ],
+        "decided_at": "2026-02-25T09:00:00Z",
+        "chosen": "Benjamini-Hochberg"
+      },
+      "note": "restates st-bh (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ad-leave-again",
+      "kind": "procedure",
+      "text": "To take annual leave, file the request in the HR portal two or more weeks in advance, get your manager's sign-off, then put it on the team calendar.",
+      "duplicate_of": "ad-leave",
+      "about": [
+        "leave_request"
+      ],
+      "at": [
+        "https://wiki.northwind.example/hr"
+      ],
+      "fields": {
+        "trigger": "request leave",
+        "steps": [
+          "submit the request in the HR portal at least two weeks ahead",
+          "wait for the manager's approval",
+          "add the absence to the team calendar"
+        ]
+      },
+      "note": "restates ad-leave (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "st-corr-again",
+      "kind": "directive",
+      "text": "Plot the data first and report the correlation coefficient with its confidence interval; correlation is not causation.",
+      "duplicate_of": "st-corr",
+      "about": [
+        "correlation",
+        "statistics"
+      ],
+      "note": "restates st-corr (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-train-lesson-again",
+      "kind": "lesson",
+      "text": "Changing trains at Utrecht with only 7 minutes failed two times, so plan for 15 minutes or more between connections.",
+      "duplicate_of": "dl-train-lesson",
+      "about": [
+        "commute"
+      ],
+      "fields": {
+        "do_instead": "allow fifteen minutes between trains",
+        "situation": "planning a journey with a train change",
+        "insight": "short connections fail when trains run late"
+      },
+      "note": "restates dl-train-lesson (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "st-model-again",
+      "kind": "directive",
+      "text": "The methods section must spell out the whole model formula including all predictors and interactions.",
+      "duplicate_of": "st-model",
+      "about": [
+        "statistical_model",
+        "statistics"
+      ],
+      "note": "restates st-model (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-teach-again",
+      "kind": "directive",
+      "text": "When the user wants to learn a topic, explain it step by step with an example and define each technical term.",
+      "duplicate_of": "dl-teach",
+      "about": [
+        "reply_style"
+      ],
+      "note": "restates dl-teach (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dm-ts-strict-again",
+      "kind": "decision",
+      "text": "Storefront runs TypeScript in strict mode, since undefined access caused the majority of bugs in production.",
+      "duplicate_of": "dm-ts-strict",
+      "about": [
+        "typescript"
+      ],
+      "at": [
+        "file:///home/mira/src/storefront"
+      ],
+      "fields": {
+        "alternatives": [
+          "loose mode"
+        ],
+        "decided_at": "2026-05-20T09:00:00Z",
+        "chosen": "strict mode"
+      },
+      "note": "restates dm-ts-strict (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "wr-blind-again",
+      "kind": "directive",
+      "text": "In a double-blind review submission, strip your own name and any self-identifying references.",
+      "duplicate_of": "wr-blind",
+      "about": [
+        "double_blind_review"
+      ],
+      "strength": "must",
+      "note": "restates wr-blind (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ps-debrief-again",
+      "kind": "directive",
+      "text": "Debrief every participant after the session; deception needs ethics approval beforehand.",
+      "duplicate_of": "ps-debrief",
+      "about": [
+        "debriefing",
+        "ethics_board"
+      ],
+      "at": [
+        "file:///home/mira/research/sleep-study"
+      ],
+      "strength": "must",
+      "note": "restates ps-debrief (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dm-secrets-again",
+      "kind": "directive",
+      "text": "Secrets and .env files must stay out of version control; pull credentials using the vault command-line tool.",
+      "duplicate_of": "dm-secrets",
+      "about": [
+        "secret"
+      ],
+      "strength": "must",
+      "polarity": "avoid",
+      "note": "restates dm-secrets (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "d-no-force-push-again",
+      "kind": "directive",
+      "text": "Do not force-push to the main branch, ever.",
+      "duplicate_of": "d-no-force-push",
+      "about": [
+        "software_project"
+      ],
+      "fields": {
+        "strength": "must",
+        "polarity": "avoid"
+      },
+      "note": "restates d-no-force-push (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "da-text-again",
+      "kind": "fact",
+      "text": "For text corpora go to Hugging Face or Common Crawl, and verify the licence of every dataset before using it.",
+      "duplicate_of": "da-text",
+      "about": [
+        "text_corpus_data",
+        "dataset_licence"
+      ],
+      "fields": {
+        "subject": "text_corpus_data",
+        "predicate": "where to find",
+        "object": "Hugging Face, Common Crawl"
+      },
+      "note": "restates da-text (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ch-ether-again",
+      "kind": "directive",
+      "text": "Peroxide-forming ethers must be kept under nitrogen, dated when opened, and thrown away after half a year.",
+      "duplicate_of": "ch-ether",
+      "about": [
+        "peroxide_former"
+      ],
+      "at": [
+        "file:///home/mira/research/polymer-lab"
+      ],
+      "strength": "must",
+      "note": "restates ch-ether (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-metric-again",
+      "kind": "directive",
+      "text": "Use the metric system for all measurements, Celsius for temperature.",
+      "duplicate_of": "dl-metric",
+      "about": [
+        "unit_preference"
+      ],
+      "strength": "must",
+      "scope": "universal",
+      "note": "restates dl-metric (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ph-drift-again",
+      "kind": "lesson",
+      "text": "Calibration was thrown off by room temperature drift, so record the temperature for each run.",
+      "duplicate_of": "ph-drift",
+      "about": [
+        "detector_calibration"
+      ],
+      "at": [
+        "file:///home/mira/research/neutrino-detector"
+      ],
+      "fields": {
+        "do_instead": "log the temperature with every run",
+        "situation": "gain values drift between calibration days",
+        "insight": "the electronics depend on room temperature"
+      },
+      "note": "restates ph-drift (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "ad-minutes-board-again",
+      "kind": "directive",
+      "text": "Keep board minutes in the board folder alone; they are confidential and must not go on the team's shared drive.",
+      "duplicate_of": "ad-minutes-board",
+      "about": [
+        "meeting_minutes"
+      ],
+      "at": [
+        "https://wiki.northwind.example/board"
+      ],
+      "strength": "must",
+      "note": "restates ad-minutes-board (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "so-mixed-again",
+      "kind": "decision",
+      "text": "To include older respondents the survey uses two modes: online and telephone.",
+      "duplicate_of": "so-mixed",
+      "about": [
+        "survey_sampling"
+      ],
+      "at": [
+        "file:///home/mira/research/survey-2026"
+      ],
+      "fields": {
+        "alternatives": [
+          "web only"
+        ],
+        "decided_at": "2026-01-15T09:00:00Z",
+        "chosen": "web plus phone"
+      },
+      "note": "restates so-mixed (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "wr-latex-again",
+      "kind": "fact",
+      "text": "Use the journal's LaTeX template and manage the bibliography with biblatex in the journal's style.",
+      "duplicate_of": "wr-latex",
+      "about": [
+        "latex_template"
+      ],
+      "fields": {
+        "subject": "latex_template",
+        "predicate": "practice",
+        "object": "journal template, biblatex"
+      },
+      "note": "restates wr-latex (light edit); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dm-docstring-again",
+      "kind": "directive",
+      "text": "Docstrings in the pipeline-ml project follow the Google convention.",
+      "duplicate_of": "dm-docstring",
+      "at": [
+        "file:///home/mira/src/pipeline-ml"
+      ],
+      "strength": "prefer",
+      "note": "restates dm-docstring (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "dl-programmer-again",
+      "kind": "fact",
+      "text": "Trained as a programmer, the user currently heads a research group.",
+      "duplicate_of": "dl-programmer",
+      "about": [
+        "the_user"
+      ],
+      "fields": {
+        "subject": "the_user",
+        "predicate": "occupation",
+        "object": "programmer, research group lead"
+      },
+      "note": "restates dl-programmer (paraphrase); the consolidation scan should cluster them"
+    },
+    {
+      "key": "wr-desk-again",
+      "kind": "lesson",
+      "text": "A manuscript was desk-rejected for exceeding the word limit; read the author guidelines before writing.",
+      "duplicate_of": "wr-desk",
+      "about": [
+        "desk_rejection"
+      ],
+      "fields": {
+        "do_instead": "read the author guidelines first",
+        "situation": "a paper is rejected immediately without review",
+        "insight": "it exceeded the journal's word limit"
+      },
+      "note": "restates wr-desk (light edit); the consolidation scan should cluster them"
+    }
+  ]
+}

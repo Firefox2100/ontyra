@@ -13,6 +13,7 @@ from pydantic import BaseModel, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ontyra.models import PolicyConfig
+from ontyra.models.consolidation import ConsolidationSettings
 from ontyra.models.recall import RecallSettings
 
 
@@ -104,6 +105,7 @@ class DecisionSettings(BaseModel):
     name: str | None = None  # reported in traces; defaults to the model or class path
     format: Literal["choice", "noul"] = "choice"
     memory_chars: int = 100  # each candidate is cut to this many characters in the request
+    compare_chars: int = 300  # each memory of a duplicate check is cut to this many characters
     timeout: float = 30.0  # seconds; a slower answer counts as no answer
 
 
@@ -210,6 +212,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingSettings = EmbeddingSettings()
     rerank: RerankSettings = RerankSettings()
     decision: DecisionSettings = DecisionSettings()
+    consolidation: ConsolidationSettings = ConsolidationSettings()
     recall: RecallSettings = RecallSettings()
     ontology: OntologySettings = OntologySettings()
     mcp: McpSettings = McpSettings()

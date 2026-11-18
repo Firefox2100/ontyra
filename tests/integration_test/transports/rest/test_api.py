@@ -164,3 +164,20 @@ async def test_openapi_document_is_served(client: httpx.AsyncClient) -> None:
     assert doc["info"]["title"] == "Ontyra"
     schemas = doc["components"]["schemas"]
     assert {"ProposalRequest", "ProposalResult", "MemoryView", "History"} <= set(schemas)
+
+
+async def test_the_duplicate_scan_is_a_read_only_report(client: httpx.AsyncClient) -> None:
+    text = "Use uv for Python dependency management and never run pip install directly."
+    for ref in ("a", "b"):
+        added = await client.post(
+            "/v1/proposals", json={"ops": [directive(text, ref)]}, headers=HUMAN
+        )
+        assert added.status_code == 201, added.text
+    r = await client.post("/v1/consolidation/scan", json={}, headers=HUMAN)
+    assert r.status_code == 200, r.text
+    report = r.json()
+    assert report["scanned"] == 2 and report["decision_model"] is None
+    assert set(report) >= {"duplicates", "updates", "rejected", "model_errors", "unembedded"}
+    assert (
+        await client.post("/v1/consolidation/scan", json={"kinds": ["nope"]})
+    ).status_code == 422

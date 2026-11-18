@@ -14,6 +14,10 @@ CHOICE = "Which stored memory matters most for the situation?"
 NONE = "None of these memories applies to the situation."
 NOUL = "Does this stored memory apply to the situation?"
 NONE_KEY = "none"
+SAME = (
+    "Do memory A and memory B state the same thing, only worded differently? "
+    "Different values or different facts mean no."
+)
 
 Format = Literal["choice", "noul"]
 
@@ -37,6 +41,7 @@ class SystemOneDecider:
         api_key: str | None = None,
         format: Format = "choice",
         memory_chars: int = 100,
+        compare_chars: int = 300,
         timeout: float = 30.0,
         transport: Any = None,
     ) -> None:
@@ -45,6 +50,7 @@ class SystemOneDecider:
         self._headers = {"authorization": f"Bearer {api_key}"} if api_key else {}
         self._format = format
         self._chars = memory_chars
+        self._compare_chars = compare_chars
         self._timeout = timeout
         self._transport = transport  # tests inject an httpx transport
 
@@ -82,6 +88,35 @@ class SystemOneDecider:
             return self._read(response.json()["answers"], len(memories))
         except (KeyError, TypeError, ValueError) as exc:
             raise DecisionError(f"{self._url} gave an answer that cannot be read: {exc!r}") from exc
+
+    async def same(self, a: str, b: str) -> float:
+        import httpx
+
+        state = (
+            f"Memory A: {clip(a, self._compare_chars)}\nMemory B: {clip(b, self._compare_chars)}"
+        )
+        body = {
+            "model": self._model,
+            "state": state,
+            "questions": {"same": {"type": "noul", "instructions": SAME}},
+        }
+        try:
+            async with httpx.AsyncClient(
+                timeout=self._timeout, transport=self._transport
+            ) as client:
+                response = await client.post(self._url, headers=self._headers, json=body)
+        except httpx.HTTPError as exc:
+            raise DecisionError(f"{self._url} could not be reached: {exc!r}") from exc
+        if response.status_code >= 400:
+            raise DecisionError(f"{self._url} answered {response.status_code}: {_said(response)}")
+        try:
+            answer = response.json()["answers"]["same"]
+            score = _number(answer.get("noul_raw", answer["noul"]))
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise DecisionError(f"{self._url} gave an answer that cannot be read: {exc!r}") from exc
+        if score is None:
+            raise DecisionError(f"{self._url} gave no score")
+        return score
 
     def _read(self, answers: dict[str, Any], n: int) -> Judgement:
         if self._format == "noul":
@@ -121,12 +156,19 @@ class LangChainDecider:
     `SystemOneDecider`, asked through the model's own `ainvoke`."""
 
     def __init__(
-        self, model: Any, *, name: str, format: Format = "choice", memory_chars: int = 100
+        self,
+        model: Any,
+        *,
+        name: str,
+        format: Format = "choice",
+        memory_chars: int = 100,
+        compare_chars: int = 300,
     ) -> None:
         self._model = model
         self._name = name
         self._format = format
         self._chars = memory_chars
+        self._compare_chars = compare_chars
 
     @property
     def name(self) -> str:
@@ -162,3 +204,20 @@ class LangChainDecider:
             )
         except ValueError as exc:
             raise DecisionError(f"{self._name} gave invalid probabilities: {exc!r}") from exc
+
+    async def same(self, a: str, b: str) -> float:
+        from langchain_core.decisions import Noul
+
+        state = (
+            f"Memory A: {clip(a, self._compare_chars)}\nMemory B: {clip(b, self._compare_chars)}"
+        )
+        try:
+            response = await self._model.ainvoke(
+                {"state": state, "questions": {"same": Noul(instructions=SAME)}}
+            )
+            score = _number(response.nouls["same"].noul)
+        except Exception as exc:  # the integration's own errors: any of them means "no verdict"
+            raise DecisionError(f"{self._name} could not decide: {exc!r}") from exc
+        if score is None:
+            raise DecisionError(f"{self._name} gave no score")
+        return score

@@ -3,7 +3,7 @@
 A Claude Code plugin: memory without the agent having to ask.
 
 - **Hooks** (`hooks/ontyra-hook.sh`, curl + jq over the REST API): a briefing at session
-  start (redelivered after resume/compaction) and recall on every prompt, injected as context.
+  start (redelivered after a compaction or /clear; a resumed session only gets what is new) and recall on every prompt, injected as context.
   Fails open when the daemon is unreachable. Location is the working directory and the git
   root (`file://host/path`); the daemon derives containment.
 - **Episodes**: every prompt and the assistant's last message (Stop hook) are logged to

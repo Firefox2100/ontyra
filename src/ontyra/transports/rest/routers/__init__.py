@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from ontyra.transports.rest.routers import (
     admin,
     concepts,
+    consolidation,
     episodes,
     explore,
     feedback,
@@ -24,6 +25,7 @@ VERSIONED: list[APIRouter] = [
     memories.router,
     recall.router,
     explore.router,
+    consolidation.router,
     concepts.router,
     ontology_changes.router,
     resources.router,

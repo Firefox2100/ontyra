@@ -12,11 +12,12 @@ from fastapi import APIRouter, FastAPI
 
 from ontyra.adapters import build_decider, build_embedder, build_reranker
 from ontyra.config import Settings, load_settings
-from ontyra.ports import Embedder
+from ontyra.ports import Embedder, StatementComparer
 from ontyra.services import (
     ActorService,
     AnchorService,
     AuthService,
+    ConsolidationService,
     ExplorationService,
     FeedbackService,
     IndexService,
@@ -52,6 +53,7 @@ class Application:
     recall: RecallService
     explore: ExplorationService
     feedback: FeedbackService
+    consolidation: ConsolidationService
     reranking: RerankTrainingService
     embedder: Embedder | None
 
@@ -99,6 +101,8 @@ class Application:
                 reranker=reranker,
                 rerank_top_n=settings.rerank.top_n,
             )
+        comparer = decider if isinstance(decider, StatementComparer) else None
+        consolidation = ConsolidationService(store, embedder, settings.consolidation, comparer)
         feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
         actors = ActorService(store, now, settings.actor_trust)
         token = settings.auth.token
@@ -126,6 +130,7 @@ class Application:
             recall=recall,
             explore=ExplorationService(store, memory, ontology, recall, now),
             feedback=feedback,
+            consolidation=consolidation,
             reranking=RerankTrainingService(
                 store, feedback, reranker, now, settings.rerank.min_examples
             ),

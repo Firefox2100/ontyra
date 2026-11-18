@@ -34,6 +34,18 @@ class Decider(Protocol):
     async def judge(self, situation: str, memories: Sequence[str]) -> Judgement: ...
 
 
+@runtime_checkable
+class StatementComparer(Protocol):
+    """A model that says whether two memories state the same thing (only worded differently;
+    different values or different facts mean no): a probability, in one pass, no generated
+    text. Optional, and advice only. Raises `DecisionError`."""
+
+    @property
+    def name(self) -> str: ...
+
+    async def same(self, a: str, b: str) -> float: ...
+
+
 class Reranker(Protocol):
     """Scores candidate texts against a query (higher is more relevant), in input order."""
 

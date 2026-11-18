@@ -441,13 +441,14 @@ class _Ctx:
         if src[0] == dst[0]:
             self.error(i, "self_link", "cannot link a memory to itself")
             return
-        source_memory = await self.o.store.get(src[0])
-        target_memory = await self.o.store.get(dst[0])
-        if (
-            not isinstance(source_memory, Memory)
-            or not isinstance(target_memory, Memory)
-            or source_memory.owner != target_memory.owner
-        ):
+        owners: list[RecordId | None] = []
+        for memory, _, is_new in (src, dst):
+            if is_new:  # created in this very proposal: it will have the proposal's owner
+                owners.append(self.v.owner)
+                continue
+            row = await self.o.store.get(memory)
+            owners.append(row.owner if isinstance(row, Memory) else None)
+        if owners[0] is None or owners[0] != owners[1]:
             self.error(i, "owner_mismatch", "linked memories must have the same owner")
             return
         if op.relation == "promoted_to" and not (

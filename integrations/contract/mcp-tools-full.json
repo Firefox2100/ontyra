@@ -457,6 +457,45 @@
     "name": "concepts"
   },
   {
+    "description": "Read-only scan for memories that say the same thing (clusters, oldest first) and for restatements with a changed value (updates). Nothing is changed: resolve a cluster with a `supersede` or `retract` proposal via `remember`.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "kinds": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "fact",
+                  "directive",
+                  "decision",
+                  "event",
+                  "procedure",
+                  "task",
+                  "lesson"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "updates": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "find_duplicates"
+  },
+  {
     "description": "One memory by id (`memory:abc` or `abc`), optionally with `expand`: history, links, evidence, applies.",
     "input_schema": {
       "additionalProperties": false,

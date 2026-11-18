@@ -3,6 +3,7 @@
 from ontyra.services.actors import ActorService
 from ontyra.services.anchors import AnchorService
 from ontyra.services.auth import AuthService, Principal
+from ontyra.services.consolidation import ConsolidationService
 from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.explore import ExplorationService
 from ontyra.services.feedback import FeedbackService, RerankTrainingService
@@ -21,6 +22,7 @@ __all__ = [
     "AnchorService",
     "AuthService",
     "Caller",
+    "ConsolidationService",
     "ExplorationService",
     "FeedbackService",
     "FusionRecallService",

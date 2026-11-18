@@ -57,3 +57,4 @@ approval unless you chose `auto_commit`; see [Review and policy](../guides/revie
 | `ONTYRA_CAPTURE_EVERY` | `10` | prompts between capture prompts |
 | `ONTYRA_LOG_EPISODES` | `1` | log prompts and replies as episodes (what proposals cite as evidence) |
 | `ONTYRA_BUDGET_TOKENS` | daemon default | size limit for injected context |
+| `ONTYRA_PROFILE` | `compact` | `compact` renders each memory as one line with its id (a directive as its short rule; `get` gives the full text and rationale); `rich` adds the full text, anchors and scores |

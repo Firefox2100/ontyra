@@ -70,10 +70,15 @@ def build_decider(settings: DecisionSettings) -> Decider | None:
             api_key=settings.api_key,
             format=settings.format,
             memory_chars=settings.memory_chars,
+            compare_chars=settings.compare_chars,
             timeout=settings.timeout,
         )
     model = _instantiate(settings.class_path, settings.kwargs)
     name = settings.name or str(settings.kwargs.get("model") or settings.class_path)
     return LangChainDecider(
-        model, name=name, format=settings.format, memory_chars=settings.memory_chars
+        model,
+        name=name,
+        format=settings.format,
+        memory_chars=settings.memory_chars,
+        compare_chars=settings.compare_chars,
     )

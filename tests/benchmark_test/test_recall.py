@@ -42,10 +42,13 @@ async def test_recall_suite(
         app, caller, keys = await world_app(world)
         domains = {m.key: m.domain for m in world.memories}
         universal = frozenset(m.key for m in world.memories if m.scope == "universal")
+        twins = {m.key: m.duplicate_of for m in world.memories if m.duplicate_of}
         probe = Probe(app, caller, keys)
         await probe.prepare()
         for case in mine:
-            outcomes.append((case, await play(app, caller, case, keys, domains, probe, universal)))
+            outcomes.append(
+                (case, await play(app, caller, case, keys, domains, probe, universal, twins))
+            )
 
     path = recorder("recall", outcomes, domains)
     summary = summarise(outcomes)

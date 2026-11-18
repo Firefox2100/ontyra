@@ -121,7 +121,7 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
         assert hints.read_only_hint is not None and hints.destructive_hint is not None
     reads = {
         "recall", "check", "briefing", "ask", "get", "concepts", "search", "overview",
-        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes",
+        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes", "find_duplicates",
     }  # fmt: skip
     for name in reads:
         assert tools[name].annotations.read_only_hint is True, name  # type: ignore[union-attr]

@@ -79,6 +79,10 @@ class MemorySpec(Strict):
     retracted: bool = False  # added, then retracted (must never come back)
     links: list[LinkSpec] = []
     trap: list[str] = []  # which planted trap this memory is (see TRAPS), for the matrix
+    # key of an earlier memory of the same kind that this one restates (a planted duplicate):
+    # recall tolerates it wherever the original is allowed, and the consolidation scan must
+    # put the two in one cluster
+    duplicate_of: str | None = None
     note: str | None = None  # why it exists in the world
     domain: str = ""  # set by the loader: the part file's stem
 
@@ -214,6 +218,10 @@ def load_world(world_id: str) -> World:
         merged["relations"] += [r.model_dump() for r in part.relations]
         merged["resources"] += [r.model_dump() for r in part.resources]
         merged["memories"] += [{**m.model_dump(), "domain": path.stem} for m in part.memories]
+    domains = {m["key"]: m["domain"] for m in merged["memories"]}
+    for m in merged["memories"]:  # a duplicate belongs to the domain of what it restates
+        if m["duplicate_of"] in domains:
+            m["domain"] = domains[m["duplicate_of"]]
     return World.model_validate(merged)
 
 

@@ -76,6 +76,7 @@ async def world_app(profile: Profile) -> AsyncIterator[Callable[[World], Any]]:
             rerank=profile.rerank(),
             decision=profile.decision_settings(),
             recall=profile.recall_settings(),
+            consolidation=profile.consolidation_settings(),
         )
         app = Application.from_database(db, settings, now=Clock())
         await app.actors.ensure_owner()

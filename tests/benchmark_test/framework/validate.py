@@ -36,7 +36,16 @@ def world_problems(world: World) -> list[str]:
                     f"relation {rel.source} {rel.relation} {rel.target}: unknown {end!r}"
                 )
     seen: set[str] = set()
+    kinds = {m.key: m.kind for m in world.memories}
     for mem in world.memories:
+        if mem.duplicate_of and mem.duplicate_of not in seen:
+            problems.append(
+                f"{mem.key}: duplicate_of {mem.duplicate_of!r} is not an earlier memory"
+            )
+        elif mem.duplicate_of and kinds[mem.duplicate_of] != mem.kind:
+            problems.append(
+                f"{mem.key}: a duplicate must be of the same kind as {mem.duplicate_of!r}"
+            )
         if mem.key in seen:
             problems.append(f"duplicate memory key {mem.key}")
         for ref in [mem.supersedes, *[link.target for link in mem.links]]:
@@ -174,6 +183,7 @@ def coverage_report(cases: list[Case], world: World) -> dict[str, list[str]]:
             used |= {m.key for m in world.memories if m.key.startswith(tuple(step.allow_prefix))}
         for tag in case.tags:
             tags[tag] += 1
+    used |= {m.key for m in world.memories if m.duplicate_of in used}  # a restatement rides along
     return {
         "unused": [m.key for m in world.memories if m.key not in used],
         "thin_tags": [t for t, n in sorted(tags.items()) if n < 2],

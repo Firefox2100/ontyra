@@ -74,3 +74,26 @@ def test_caveats_render_in_both_profiles() -> None:
     assert (
         "only if linux" in build_pack("recall", [it], budget_tokens=99, profile="compact").rendered
     )
+
+
+def test_compact_renders_the_rule_of_a_directive_and_rich_the_full_text() -> None:
+    it = item(
+        "directive",
+        "Never run git commit in this repo. The owner commits by hand.",
+        strength="must",
+        polarity="avoid",
+        detail={"rule": "Do not run git commit in this repo"},
+    )
+    compact = build_pack("recall", [it], budget_tokens=99, profile="compact").rendered
+    rich = build_pack("recall", [it], budget_tokens=99, profile="rich").rendered
+    assert "- Do not run git commit in this repo [memory:m1]" in compact
+    assert "owner commits by hand" not in compact
+    assert "owner commits by hand" in rich
+
+
+def test_compact_keeps_the_text_when_a_directive_has_no_rule() -> None:
+    it = item("directive", "Prefer small commits", strength="prefer", detail={"rule": "  "})
+    assert (
+        "Prefer small commits"
+        in build_pack("recall", [it], budget_tokens=99, profile="compact").rendered
+    )

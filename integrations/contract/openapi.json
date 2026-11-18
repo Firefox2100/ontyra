@@ -835,6 +835,41 @@
         "title": "DeprecateChange",
         "type": "object"
       },
+      "DuplicateCluster": {
+        "additionalProperties": false,
+        "description": "Memories that say the same thing. `keep` is the oldest; the rest can be superseded by it\n(or the other way round) with an ordinary proposal; a human or agent decides.",
+        "properties": {
+          "keep": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/Member"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/PairScore"
+            },
+            "title": "Pairs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "members",
+          "pairs",
+          "keep"
+        ],
+        "title": "DuplicateCluster",
+        "type": "object"
+      },
       "EpisodeIn": {
         "properties": {
           "content": {
@@ -1379,6 +1414,58 @@
         "title": "LinkMemories",
         "type": "object"
       },
+      "Member": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "fact",
+              "directive",
+              "decision",
+              "event",
+              "procedure",
+              "task",
+              "lesson"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "revision": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memory",
+          "revision",
+          "kind",
+          "text",
+          "created_at"
+        ],
+        "title": "Member",
+        "type": "object"
+      },
       "MemoryDetail": {
         "additionalProperties": false,
         "description": "`get` with optional expansions (history, links, evidence, applicability).",
@@ -1875,6 +1962,60 @@
           "verbs"
         ],
         "title": "Overview",
+        "type": "object"
+      },
+      "PairScore": {
+        "additionalProperties": false,
+        "properties": {
+          "a": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "b": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "cosine": {
+            "title": "Cosine",
+            "type": "number"
+          },
+          "judged_by": {
+            "enum": [
+              "model",
+              "cosine"
+            ],
+            "title": "Judged By",
+            "type": "string"
+          },
+          "same": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Same"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "cosine",
+          "judged_by"
+        ],
+        "title": "PairScore",
         "type": "object"
       },
       "Proposal": {
@@ -3204,6 +3345,102 @@
         "title": "RevisionView",
         "type": "object"
       },
+      "ScanReport": {
+        "additionalProperties": false,
+        "properties": {
+          "decision_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Model"
+          },
+          "duplicates": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DuplicateCluster"
+            },
+            "title": "Duplicates",
+            "type": "array"
+          },
+          "model_errors": {
+            "default": 0,
+            "title": "Model Errors",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rejected": {
+            "default": 0,
+            "title": "Rejected",
+            "type": "integer"
+          },
+          "scanned": {
+            "title": "Scanned",
+            "type": "integer"
+          },
+          "unembedded": {
+            "title": "Unembedded",
+            "type": "integer"
+          },
+          "updates": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/UpdateCandidate"
+            },
+            "title": "Updates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scanned",
+          "unembedded"
+        ],
+        "title": "ScanReport",
+        "type": "object"
+      },
+      "ScanRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kinds": {
+            "default": [],
+            "items": {
+              "enum": [
+                "fact",
+                "directive",
+                "decision",
+                "event",
+                "procedure",
+                "task",
+                "lesson"
+              ],
+              "type": "string"
+            },
+            "title": "Kinds",
+            "type": "array"
+          },
+          "updates": {
+            "default": true,
+            "title": "Updates",
+            "type": "boolean"
+          }
+        },
+        "title": "ScanRequest",
+        "type": "object"
+      },
       "SearchHit": {
         "additionalProperties": false,
         "properties": {
@@ -3577,6 +3814,29 @@
           }
         },
         "title": "TrainOptions",
+        "type": "object"
+      },
+      "UpdateCandidate": {
+        "additionalProperties": false,
+        "description": "The same statement with a changed value (a version, an amount, a date): `newer` probably\nsupersedes `older`. Not a duplicate: merging would lose the update.",
+        "properties": {
+          "cosine": {
+            "title": "Cosine",
+            "type": "number"
+          },
+          "newer": {
+            "$ref": "#/components/schemas/Member"
+          },
+          "older": {
+            "$ref": "#/components/schemas/Member"
+          }
+        },
+        "required": [
+          "older",
+          "newer",
+          "cosine"
+        ],
+        "title": "UpdateCandidate",
         "type": "object"
       },
       "UserCreate": {
@@ -5009,6 +5269,99 @@
         "summary": "One concept with its relations",
         "tags": [
           "ontology"
+        ]
+      }
+    },
+    "/v1/consolidation/scan": {
+      "post": {
+        "description": "Read-only. Reports clusters of memories of one kind that say the same thing (by embedding similarity, confirmed by the decision model when one is configured), and restatements with a changed value, which are updates, not duplicates. Nothing is merged: resolve a cluster with an ordinary proposal (`supersede` or `retract`).",
+        "operationId": "scan_v1_consolidation_scan_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Find duplicate memories",
+        "tags": [
+          "consolidation"
         ]
       }
     },

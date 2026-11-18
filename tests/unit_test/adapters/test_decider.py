@@ -174,3 +174,44 @@ def test_the_factory_builds_each_provider() -> None:
         build_decider(DecisionSettings(provider="systemone"))
     with pytest.raises(ValueError, match="class_path"):
         build_decider(DecisionSettings(provider="langchain"))
+
+
+def _same(score: float | None = 0.9) -> Server:
+    return Server(body={"answers": {"same": {"type": "noul", "noul": score}}})
+
+
+async def test_same_asks_one_yes_no_question_about_both_memories() -> None:
+    server = _same(0.93)
+    score = await decider(server).same(
+        "Use uv for dependencies.", "Dependencies are managed with uv."
+    )
+    assert score == 0.93
+    sent = server.sent()
+    assert sent["state"] == (
+        "Memory A: Use uv for dependencies.\nMemory B: Dependencies are managed with uv."
+    )
+    question = sent["questions"]["same"]
+    assert question["type"] == "noul"
+    assert "same thing" in question["instructions"]
+    assert str(server.seen[0].url).endswith("/v1/systemone")
+
+
+async def test_same_cuts_each_memory_to_compare_chars() -> None:
+    server = _same()
+    await decider(server, compare_chars=20).same("x " * 100, "y")
+    memory_a = server.sent()["state"].split("\n")[0]
+    assert len(memory_a.removeprefix("Memory A: ")) <= 20
+
+
+@pytest.mark.parametrize(
+    "server",
+    [
+        Server(status=503, body={"error": {"message": "busy"}}),
+        Server(body={"answers": {}}),
+        Server(body={"answers": {"same": {"type": "noul", "noul": 7}}}),
+        Server(body={"answers": {"same": {"type": "noul"}}}),
+    ],
+)
+async def test_same_fails_with_a_decision_error(server: Server) -> None:
+    with pytest.raises(DecisionError):
+        await decider(server).same("a", "b")

@@ -83,7 +83,18 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_DECISION__NAME` | str \| None | unset |
 | `ONTYRA_DECISION__FORMAT` | `choice` \| `noul` | `choice` |
 | `ONTYRA_DECISION__MEMORY_CHARS` | int | `100` |
+| `ONTYRA_DECISION__COMPARE_CHARS` | int | `300` |
 | `ONTYRA_DECISION__TIMEOUT` | float | `30.0` |
+
+## consolidation
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_CONSOLIDATION__CANDIDATE_COSINE` | float | `0.7` |
+| `ONTYRA_CONSOLIDATION__DUPLICATE_COSINE` | float | `0.85` |
+| `ONTYRA_CONSOLIDATION__CONFIRM` | float | `0.85` |
+| `ONTYRA_CONSOLIDATION__NEIGHBOURS` | int | `8` |
+| `ONTYRA_CONSOLIDATION__MAX_MEMORIES` | int | `2000` |
 
 ## recall
 

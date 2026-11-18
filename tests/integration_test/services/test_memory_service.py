@@ -478,3 +478,25 @@ async def test_concurrent_revisions_never_corrupt_the_history(
     assert [r.lifecycle for r in revs[:-1]] == ["superseded"] * (len(revs) - 1)
     assert revs[-1].lifecycle == "active"
     assert (await app.memory.get_memory(agent, mem)).revision == revs[-1].revision
+
+
+async def test_a_memory_can_be_linked_in_the_proposal_that_adds_it(
+    app: Application, agent: Caller, remember
+) -> None:
+    from ontyra.models.proposals import AddMemory, LinkMemories, ProposalRequest
+
+    old = await remember("directive", "pay suppliers within 30 days", strength="must")
+    result = await app.memory.submit(
+        agent,
+        ProposalRequest(
+            ops=[
+                AddMemory(
+                    kind="directive",
+                    ref="new",
+                    fields={"text": "pay suppliers on day 45", "strength": "must", "rule": "x"},
+                ),
+                LinkMemories(relation="contradicts", source="new", target=old),
+            ]
+        ),
+    )
+    assert result.status == "committed", result.findings

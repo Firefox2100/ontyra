@@ -12,6 +12,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from ontyra.models import RecordId
+from ontyra.models.consolidation import ScanReport, ScanRequest
 from ontyra.models.core import Proposal
 from ontyra.models.ontology import ConceptView
 from ontyra.models.ontology_change import ChangeRequest, ChangeResult, OntologyChange
@@ -233,6 +234,16 @@ def create_mcp(
         async def reject_ontology_change(change: str, reason: str) -> ChangeResult:
             rid = RecordId("ontology_change", change.removeprefix("ontology_change:"))
             return await run(lambda s, c: s.ontology_changes.reject(c, rid, reason))
+
+        @mcp.tool(
+            title="Find duplicate memories",
+            annotations=READ,
+            description="Read-only scan for memories that say the same thing (clusters, oldest "
+            "first) and for restatements with a changed value (updates). Nothing is changed: "
+            "resolve a cluster with a `supersede` or `retract` proposal via `remember`.",
+        )
+        async def find_duplicates(request: ScanRequest) -> ScanReport:
+            return await run(lambda s, c: s.consolidation.scan(c, request))
 
         @mcp.tool(
             title="Search memories",
