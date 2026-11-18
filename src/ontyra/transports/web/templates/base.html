@@ -41,7 +41,7 @@ form.inline { display:inline-flex; gap:6px; align-items:center; }
 <body>
 <header><b>ONTYRA</b>
 <nav>
-{% for key, label, href in [("home","Overview","/ui/"),("review","Review","/ui/review"),("memories","Memories","/ui/memories"),("concepts","Concepts","/ui/concepts"),("recall","Recall","/ui/recall")] %}
+{% for key, label, href in [("home","Overview","/ui/"),("review","Review","/ui/review"),("tasks","Tasks","/ui/tasks"),("memories","Memories","/ui/memories"),("concepts","Concepts","/ui/concepts"),("recall","Recall","/ui/recall")] %}
 <a href="{{ href }}" class="{{ 'on' if nav == key }}">{{ label }}</a>
 {% endfor %}
 </nav>

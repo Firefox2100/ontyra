@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from typing import Any
 
 from ontyra.models import Record, RecordId, registry
@@ -197,6 +198,7 @@ class SurrealStore:
         anchors: Sequence[str] | None = None,
         unanchored: bool = False,
         about: Sequence[RecordId] | None = None,
+        expires_before: datetime | None = None,
         limit: int = 500,
     ) -> list[SearchDoc]:
         params: dict[str, Any] = {"owners": list(owners), "limit": limit}
@@ -213,6 +215,9 @@ class SurrealStore:
         if kinds:
             sql += " AND kind IN $kinds"
             params["kinds"] = list(kinds)
+        if expires_before is not None:
+            sql += " AND expires_at != NONE AND expires_at < $expires_before"
+            params["expires_before"] = expires_before
         if selectors:
             sql += " AND (" + " OR ".join(selectors) + ")"
         elif anchors is not None or about is not None:

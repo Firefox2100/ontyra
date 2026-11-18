@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query
 
 from ontyra.models import RecordId
 from ontyra.models.core import TaskKind
-from ontyra.models.tasks import DetectReport, TaskResult, TaskView
+from ontyra.models.tasks import DetectReport, ResolveRequest, TaskResult, TaskView
 from ontyra.transports.rest.deps import CallerDep, TaskServiceDep
 
 router = APIRouter(tags=["tasks"])
@@ -70,3 +70,17 @@ async def complete(
     task_id: str, result: TaskResult, caller: CallerDep, service: TaskServiceDep
 ) -> TaskView:
     return await service.complete(caller, _task(task_id), result)
+
+
+@router.post(
+    "/tasks/{task_id}/resolve",
+    summary="Do what the task proposes",
+    description="Submits the proposal the card describes (`merge`: the oldest memory replaces the "
+    "other members of a duplicate cluster; `supersede`: the newer memory of an update replaces "
+    "the older) as you, so the review policy applies to it, then completes the task. A merge "
+    "held for review leaves the task claimed until it is decided.",
+)
+async def resolve(
+    task_id: str, request: ResolveRequest, caller: CallerDep, service: TaskServiceDep
+) -> TaskView:
+    return await service.resolve(caller, _task(task_id), request.decision)

@@ -10,11 +10,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from ontyra.transports.web.routers import home, memories, ontology, recall, review, session
+from ontyra.transports.web.routers import home, memories, ontology, recall, review, session, tasks
 
 ROUTERS: list[APIRouter] = [
     home.router,
     review.router,
+    tasks.router,
     memories.router,
     ontology.router,
     recall.router,

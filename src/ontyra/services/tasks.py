@@ -12,12 +12,14 @@ Single-daemon assumption: a claim reads the status, then writes it (as the ontol
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.consolidation import DuplicateCluster, ScanRequest, UpdateCandidate
 from ontyra.models.core import Proposal, Task, TaskKind
+from ontyra.models.kinds import RevisionBase
+from ontyra.models.proposals import ProposalRequest, RetractMemory, SupersedeMemory
 from ontyra.models.search import SearchDoc
 from ontyra.models.tasks import (
     MAINTENANCE_KINDS,
@@ -28,15 +30,18 @@ from ontyra.models.tasks import (
 from ontyra.ports import Create, Store, Update
 from ontyra.services import errors
 from ontyra.services.consolidation import ConsolidationService
-from ontyra.services.context import Caller
+from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.indexing import doc_id
+from ontyra.services.memory import MemoryService
 
 CHOICES: dict[TaskKind, list[str]] = {
     "consolidate": ["merge", "distinct", "defer"],
     "review_contradiction": ["supersede", "distinct", "defer"],
-    "review_stale_dependent": ["distinct", "defer"],
+    "review_stale_dependent": ["keep", "retract", "revise", "defer"],
+    "review_feedback": ["retract", "revise", "keep", "defer"],
+    "expire_check": ["retract", "revise", "keep", "defer"],
 }
-NEEDS_PROPOSAL = {"merge", "supersede"}
+NEEDS_PROPOSAL = {"merge", "supersede", "retract", "revise"}
 
 
 def view(task: Task) -> TaskView:
@@ -93,11 +98,18 @@ def _update_card(update: UpdateCandidate) -> dict[str, Any]:
 
 class TaskService:
     def __init__(
-        self, store: Store, now: Callable[[], datetime], consolidation: ConsolidationService
+        self,
+        store: Store,
+        now: Callable[[], datetime],
+        consolidation: ConsolidationService,
+        memory: MemoryService,
+        expiry_warn_days: int = 14,
     ) -> None:
         self.store = store
         self.now = now
         self.consolidation = consolidation
+        self.memory = memory
+        self.expiry_warn_days = expiry_warn_days
 
     # -- reading ---------------------------------------------------------------------------
 
@@ -143,6 +155,7 @@ class TaskService:
             findings.append(
                 ("review_contradiction", key, update.newer.memory, card, update.newer.owner)
             )
+        findings += await self._expiry_findings(caller, now)
         for kind, key, target, card, owner in findings:
             if key in seen:
                 continue
@@ -168,7 +181,44 @@ class TaskService:
         if writes:
             await self.store.apply(writes)
         report.closed = await self._close_obsolete(caller, now)
+        report.reopened = await self._reopen_rejected(caller, now)
         return report
+
+    async def _expiry_findings(
+        self, caller: Caller, now: datetime
+    ) -> list[tuple[TaskKind, str, RecordId | None, dict[str, Any], Any]]:
+        """Live memories that have expired or will within the warning window."""
+        horizon = now + timedelta(days=self.expiry_warn_days)
+        docs = await self.store.docs(caller.visible_owners(), expires_before=horizon, limit=500)
+        texts = {
+            r: rec.text
+            for r, rec in (await self.store.get_many([d.rev for d in docs])).items()
+            if isinstance(rec, RevisionBase)
+        }
+        out: list[tuple[TaskKind, str, RecordId | None, dict[str, Any], Any]] = []
+        for doc in docs:
+            assert doc.expires_at is not None
+            expired = doc.expires_at <= now
+            card = {
+                "finding": "expiry",
+                "state": "expired" if expired else "expiring",
+                "expires_at": doc.expires_at.isoformat(),
+                "memory": str(doc.memory),
+                "kind": doc.kind,
+                "text": texts.get(doc.rev, doc.text),
+                "instructions": (
+                    "This memory "
+                    + ("has expired and is no longer recalled" if expired else "expires soon")
+                    + ". If it still holds, extend it (a `revise` proposal with a new "
+                    "`expires_at`, or without one for no expiry) and complete with `revise`. If it "
+                    "is no longer true, retract it (`retract`). If it should simply lapse, "
+                    "complete with `keep` (not raised again). `defer` parks it."
+                ),
+                "revisions": [str(doc.rev)],
+                "choices": CHOICES["expire_check"],
+            }
+            out.append(("expire_check", f"expire:{doc.rev}", doc.memory, card, doc.owner))
+        return out
 
     async def _close_obsolete(self, caller: Caller, now: datetime) -> int:
         """Close open tasks of the caller's visible memory when a revision they name is gone."""
@@ -191,15 +241,52 @@ class TaskService:
             live = await self.store.get_many([doc_id(r) for r in revisions])
             if all(isinstance(d, SearchDoc) for d in live.values()) and len(live) == len(revisions):
                 continue
+            outcome: dict[str, Any] = {"outcome": "obsolete"}
+            if task.result.get("awaiting_review"):  # an update merges into the old result
+                outcome["awaiting_review"] = False
             closing.append(
-                Update(
-                    task.id,
-                    {"status": "done", "updated_at": now, "result": {"outcome": "obsolete"}},
-                )
+                Update(task.id, {"status": "done", "updated_at": now, "result": outcome})
             )
         if closing:
             await self.store.apply(closing)
         return len(closing)
+
+    async def _reopen_rejected(self, caller: Caller, now: datetime) -> int:
+        """A task waiting on a held proposal returns to the queue when that proposal is rejected."""
+        waiting = await self.store.select(
+            "task",
+            where_in={
+                "owner": caller.visible_owners(),
+                "kind": list(MAINTENANCE_KINDS),
+                "status": ["claimed"],
+            },
+            limit=1000,
+        )
+        reopen: list[Update] = []
+        for task in waiting:
+            cited = task.result.get("proposal") if isinstance(task, Task) else None
+            if not isinstance(task, Task) or task.id is None or not cited:
+                continue
+            proposal = await self.store.get(RecordId.parse(cited))
+            if isinstance(proposal, Proposal) and proposal.status == "rejected":
+                reopen.append(
+                    Update(
+                        task.id,
+                        {
+                            "status": "pending",
+                            "claimed_by": None,
+                            "updated_at": now,
+                            "result": {
+                                "outcome": "proposal_rejected",
+                                "proposal": cited,
+                                "awaiting_review": False,
+                            },
+                        },
+                    )
+                )
+        if reopen:
+            await self.store.apply(reopen)
+        return len(reopen)
 
     # -- working ---------------------------------------------------------------------------
 
@@ -239,14 +326,23 @@ class TaskService:
             await self._check_proposal(caller, result)
         elif result.proposal is not None:
             raise errors.InvalidRequestError(f"decision {result.decision!r} takes no proposal")
-        status = "parked" if result.decision == "defer" else "done"
+        awaiting = (
+            result.proposal is not None
+            and (await self._proposal(caller, result.proposal)).status == "pending"
+        )
+        status = "parked" if result.decision == "defer" else "claimed" if awaiting else "done"
+        body = result.model_dump(mode="json", exclude_none=True)
+        if (
+            awaiting
+        ):  # a held proposal may still be rejected: the finding stays open until it is not
+            body["awaiting_review"] = True
         await self.store.apply(
             [
                 Update(
                     task_id,
                     {
                         "status": status,
-                        "result": result.model_dump(mode="json", exclude_none=True),
+                        "result": body,
                         "claimed_by": caller.actor_id,
                         "updated_at": self.now(),
                     },
@@ -255,14 +351,69 @@ class TaskService:
         )
         return await self.get(caller, task_id)
 
+    async def resolve(self, caller: Caller, task_id: RecordId, decision: str) -> TaskView:
+        """Do what a `merge` or `supersede` decision means, as an ordinary proposal from the
+        caller (so the review policy applies to it), then complete the task citing it."""
+        task = await self._workable(caller, task_id)
+        card = task.payload
+        if task.kind == "consolidate" and decision == "merge":
+            keep = RecordId.parse(card["keep"])
+            ops = [
+                SupersedeMemory(new=keep, target=RecordId.parse(m["memory"]), reason_code="merged")
+                for m in card["members"]
+                if RecordId.parse(m["memory"]) != keep
+            ]
+        elif task.kind == "review_contradiction" and decision == "supersede":
+            ops = [
+                SupersedeMemory(
+                    new=RecordId.parse(card["newer"]["memory"]),
+                    target=RecordId.parse(card["older"]["memory"]),
+                    reason_code="outdated",
+                )
+            ]
+        elif decision == "retract" and task.kind in (
+            "expire_check",
+            "review_feedback",
+            "review_stale_dependent",
+        ):
+            ops = [
+                RetractMemory(
+                    memory=task.target if task.target else RecordId.parse(card["memory"]),
+                    reason=f"retracted from task {task_id}",
+                )
+            ]
+        else:
+            raise errors.InvalidRequestError(
+                f"a {task.kind} task cannot be resolved with {decision!r}; complete it instead"
+            )
+        space = "global" if task.owner == GLOBAL_OWNER and caller.owner != GLOBAL_OWNER else "own"
+        done = await self.memory.submit(
+            caller,
+            ProposalRequest(ops=ops, space=space, note=f"resolves {task_id}"),  # type: ignore[arg-type]
+        )
+        if done.status == "rejected":
+            why = "; ".join(
+                f"{f.code}: {f.message}" for f in done.findings if f.severity == "error"
+            )
+            raise errors.InvalidRequestError(f"the proposal was refused: {why}")
+        return await self.complete(
+            caller,
+            task_id,
+            TaskResult(decision=decision, proposal=done.proposal),  # type: ignore[arg-type]
+        )
+
+    async def _proposal(self, caller: Caller, proposal_id: RecordId) -> Proposal:
+        proposal = await self.store.get(proposal_id)
+        if not isinstance(proposal, Proposal) or proposal.owner not in caller.visible_owners():
+            raise errors.NotFoundError(f"proposal {proposal_id} does not exist")
+        return proposal
+
     async def _check_proposal(self, caller: Caller, result: TaskResult) -> None:
         if result.proposal is None:
             raise errors.InvalidRequestError(
                 f"decision {result.decision!r} must cite the proposal that did it"
             )
-        proposal = await self.store.get(result.proposal)
-        if not isinstance(proposal, Proposal) or proposal.owner not in caller.visible_owners():
-            raise errors.NotFoundError(f"proposal {result.proposal} does not exist")
+        proposal = await self._proposal(caller, result.proposal)
         if proposal.status not in ("committed", "pending"):
             raise errors.InvalidRequestError(
                 f"proposal {result.proposal} is {proposal.status}; cite one that is committed "

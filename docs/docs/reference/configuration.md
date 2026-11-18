@@ -96,6 +96,12 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_CONSOLIDATION__NEIGHBOURS` | int | `8` |
 | `ONTYRA_CONSOLIDATION__MAX_MEMORIES` | int | `2000` |
 
+## tasks
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_TASKS__EXPIRY_WARN_DAYS` | int | `14` |
+
 ## recall
 
 | Variable | Type | Default |

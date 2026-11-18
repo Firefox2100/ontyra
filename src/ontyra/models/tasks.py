@@ -15,9 +15,11 @@ MAINTENANCE_KINDS: tuple[TaskKind, ...] = (
     "consolidate",
     "review_contradiction",
     "review_stale_dependent",
+    "review_feedback",
+    "expire_check",
 )
 Status = Literal["pending", "claimed", "done", "failed", "parked"]
-Decision = Literal["merge", "supersede", "distinct", "defer"]
+Decision = Literal["merge", "supersede", "retract", "revise", "keep", "distinct", "defer"]
 
 
 class TaskView(Model):
@@ -33,10 +35,20 @@ class TaskView(Model):
     updated_at: datetime | None = None
 
 
+class ResolveRequest(Model):
+    """Ask the daemon to do what the card proposes (as a proposal from you): `merge` keeps the
+    oldest memory of a duplicate cluster and supersedes the others; `supersede` lets the newer
+    memory of an update replace the older; `retract` retracts the memory of a feedback or expiry
+    task."""
+
+    decision: Literal["merge", "supersede", "retract"]
+
+
 class TaskResult(Model):
-    """How a maintenance task was resolved. `merge` (a duplicate cluster) and `supersede` (an
-    update) must cite the proposal that did it; `distinct` says the memories are different
-    things and the finding is not raised again; `defer` parks the task for later."""
+    """How a maintenance task was resolved. `merge` (a duplicate cluster), `supersede` (an
+    update), `retract` and `revise` (a memory reported wrong or expiring) must cite the proposal
+    that did it; `distinct` (two memories differ) and `keep` (the memory stands) are remembered and
+    not raised again; `defer` parks the task for later."""
 
     decision: Decision
     proposal: RecordId | None = None
@@ -47,5 +59,12 @@ class DetectReport(Model):
     created: list[TaskView] = []
     existing: int = 0  # findings that already have a task
     closed: int = 0  # tasks whose memories changed in the meantime
+    reopened: int = 0  # tasks whose held proposal was rejected, back in the queue
     skipped: int = 0  # findings in memory the caller may not change
     model_errors: int = 0
+
+
+class TaskSettings(Model):
+    """Maintenance detection (`ONTYRA_TASKS__*`)."""
+
+    expiry_warn_days: int = 14  # a memory that expires within this many days is checked

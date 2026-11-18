@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Protocol
 
 from ontyra.models import Record, RecordId
@@ -82,11 +83,14 @@ class Store(Protocol):
         anchors: Sequence[str] | None = None,
         unanchored: bool = False,
         about: Sequence[RecordId] | None = None,
+        expires_before: datetime | None = None,
         limit: int = 500,
     ) -> list[SearchDoc]:
         """Live-revision index rows for the owners. A row is returned if it matches any given
         selector: anchored on one of `anchors`, unanchored (when `unanchored`), or about one of
-        `about`. With no selector given, every row of the owners/kinds (paged by `limit`)."""
+        `about`. With no selector given, every row of the owners/kinds (paged by `limit`).
+        `expires_before` keeps only rows whose revision expires before that time (a filter, not
+        a selector)."""
         ...
 
     async def memory_edges(self, edge: str, memories: Sequence[RecordId]) -> list[dict[str, Any]]:

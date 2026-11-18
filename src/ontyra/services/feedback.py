@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from ontyra.models import RecordId, new_id
-from ontyra.models.core import Memory
+from ontyra.models.core import Memory, Task
 from ontyra.models.feedback import (
     LABEL_RELEVANCE,
     Feedback,
@@ -33,6 +33,8 @@ from ontyra.ports.adapters import PromotionGate, Reranker, TrainableReranker
 from ontyra.services.context import Caller
 from ontyra.services.errors import InvalidRequestError, NotFoundError
 from ontyra.services.indexing import search_text_of
+
+REPORTS = {"outdated", "wrong"}  # labels that ask someone to look at the memory itself
 
 
 def normalise_query(query: str) -> str:
@@ -129,9 +131,76 @@ class FeedbackService:
             for f in losers
             if f.id is not None
         ]
+        if wins and request.label in REPORTS:
+            writes += await self._report(caller, memory, revision, found_revision, event, now)
         await self.store.apply(writes)
         event.id = event_id
         return view(event)
+
+    async def _report(
+        self,
+        caller: Caller,
+        memory: Memory,
+        revision: RecordId | None,
+        found: RevisionBase,
+        event: Feedback,
+        now: datetime,
+    ) -> list[Any]:
+        """A memory reported `outdated` or `wrong` becomes (or adds to) one maintenance task per
+        revision, for someone to retract, revise or confirm it. Judgement stays with them: the
+        report alone never changes the memory."""
+        assert revision is not None and memory.id is not None
+        key = f"feedback:{revision}"
+        report = {
+            "label": event.label,
+            "query": event.query,
+            "by": caller.actor.name,
+            "note": event.note,
+        }
+        existing = await self.store.select("task", {"dedupe_key": key}, limit=1)
+        if existing:
+            task = existing[0]
+            if not isinstance(task, Task) or task.id is None or task.status in ("done", "failed"):
+                return []  # decided already (a `keep` is not reopened by more reports)
+            reports = [*task.payload.get("reports", []), report][-20:]
+            return [
+                Update(
+                    task.id,
+                    {"updated_at": now, "payload": {"reports": reports, "count": len(reports)}},
+                )
+            ]
+        card = {
+            "finding": "feedback",
+            "instructions": (
+                "This memory was reported "
+                f"{event.label}. Check it against what you know. If it is wrong or no longer "
+                "true, retract it (`retract`); if it needs correcting, supersede or revise it "
+                "and complete with `revise` and that proposal; if it is fine, complete with "
+                "`keep` (not raised again for this revision). `defer` parks it."
+            ),
+            "memory": str(memory.id),
+            "revision": str(revision),
+            "kind": memory.kind,
+            "text": found.text,
+            "reports": [report],
+            "count": 1,
+            "revisions": [str(revision)],
+            "choices": ["retract", "revise", "keep", "defer"],
+        }
+        return [
+            Create.of(
+                RecordId("task", new_id()),
+                Task(
+                    kind="review_feedback",
+                    owner=memory.owner,
+                    target=memory.id,
+                    dedupe_key=key,
+                    payload=card,
+                    created_by=caller.actor_id,
+                    created_at=now,
+                ),
+            )
+        ]
 
     async def retract(self, caller: Caller, feedback: RecordId) -> FeedbackView:
         found = await self.store.get(feedback)

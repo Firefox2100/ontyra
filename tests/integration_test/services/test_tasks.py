@@ -180,3 +180,183 @@ async def test_tasks_stay_inside_their_owner(make_app) -> None:
     with pytest.raises(errors.NotFoundError):
         await app.tasks.claim(bob, task.id)
     assert (await app.tasks.detect(bob)).created == []  # bob's scan does not see ann's memories
+
+
+async def memory_status(app: Application, memory: RecordId) -> str:
+    row = await app.memory.store.get(memory)  # type: ignore[attr-defined]
+    return str(row.status)  # type: ignore[union-attr]
+
+
+async def test_resolve_merges_a_cluster_and_replaces_an_update(world, agent: Caller) -> None:
+    app, ids = world
+    await app.tasks.detect(agent)
+    tasks = await app.tasks.list(agent)
+    dup, upd = by_kind(tasks, "consolidate"), by_kind(tasks, "review_contradiction")
+    merged = await app.tasks.resolve(agent, dup.id, "merge")
+    assert merged.status == "done" and merged.result["decision"] == "merge"
+    assert merged.result["proposal"].startswith("proposal:")
+    assert {await memory_status(app, ids["a"]), await memory_status(app, ids["b"])} == {
+        "active",
+        "superseded",
+    }  # the oldest is kept
+    assert await memory_status(app, ids["a"]) == "active"
+    replaced = await app.tasks.resolve(agent, upd.id, "supersede")
+    assert replaced.status == "done"
+    assert await memory_status(app, ids["old"]) == "superseded"
+    assert await memory_status(app, ids["new"]) == "active"
+    assert (await app.tasks.detect(agent)).created == []
+
+
+async def test_resolve_refuses_a_decision_the_task_does_not_have(world, agent: Caller) -> None:
+    app, _ = world
+    await app.tasks.detect(agent)
+    upd = by_kind(await app.tasks.list(agent), "review_contradiction")
+    with pytest.raises(errors.InvalidRequestError, match="cannot be resolved"):
+        await app.tasks.resolve(agent, upd.id, "merge")
+
+
+async def test_a_merge_held_for_review_keeps_the_task_open_until_decided(make_app) -> None:
+    app: Application = await make_app(
+        PolicyConfig.model_validate(
+            {"default": "review", "rules": [{"actor_kinds": ["human"], "decision": "auto_commit"}]}
+        ),
+        consolidation=SETTINGS,
+    )
+    human = await app.actors.caller(kind="human", name="owner")
+    agent = await app.actors.caller(kind="agent", name="claude", harness="test")
+    ids = [await add(app, human, A), await add(app, human, B)]
+    await app.indexer.backfill()
+    await app.tasks.detect(agent)
+    (task,) = await app.tasks.list(agent)
+    held = await app.tasks.resolve(agent, task.id, "merge")
+    # the agent's proposal waits for a human, so the task is not finished
+    assert held.status == "claimed" and held.result["awaiting_review"] is True
+    assert {await memory_status(app, i) for i in ids} == {"active"}
+    proposal = RecordId.parse(held.result["proposal"])
+    await app.memory.reject(human, proposal, "not the same")
+    again = await app.tasks.detect(human)
+    assert again.reopened == 1
+    reopened = await app.tasks.get(human, task.id)
+    assert reopened.status == "pending" and reopened.result["outcome"] == "proposal_rejected"
+    # a second try, approved this time
+    held = await app.tasks.resolve(agent, task.id, "merge")
+    await app.memory.approve(human, RecordId.parse(held.result["proposal"]))
+    closed = await app.tasks.detect(human)
+    assert closed.closed == 1
+    final = (await app.tasks.get(human, task.id)).result
+    assert final["outcome"] == "obsolete" and final["awaiting_review"] is False
+
+
+# ---- feedback and expiry ---------------------------------------------------------------------
+
+
+async def add_with(app: Application, who: Caller, text: str, **fields: object) -> RecordId:
+    body = {"text": text, "strength": "should", "rule": text, **fields}
+    result = await app.memory.submit(
+        who, ProposalRequest(ops=[AddMemory(kind="directive", ref="m", fields=body)])
+    )
+    assert result.status == "committed", result.findings
+    return result.created["m"]
+
+
+async def test_outdated_feedback_queues_one_task_per_revision(make_app, agent: Caller) -> None:
+    from ontyra.models.feedback import FeedbackRequest
+
+    app: Application = await make_app()
+    memory = await add(app, agent, "Deploy on Fridays only with approval.")
+    await app.feedback.record(
+        agent, FeedbackRequest(memory=memory, query="can I deploy today", label="outdated")
+    )
+    await app.feedback.record(
+        agent, FeedbackRequest(memory=memory, query="friday deploy", label="wrong")
+    )
+    await app.feedback.record(
+        agent, FeedbackRequest(memory=memory, query="deploy", label="helpful")
+    )  # praise queues nothing
+    (task,) = await app.tasks.list(agent)
+    assert task.kind == "review_feedback" and task.target == memory
+    assert task.card["count"] == 2 and task.card["text"].startswith("Deploy on Fridays")
+    assert {r["label"] for r in task.card["reports"]} == {"outdated", "wrong"}
+    assert task.card["choices"] == ["retract", "revise", "keep", "defer"]
+
+
+async def test_resolving_a_report_with_retract_retracts_the_memory(make_app, agent: Caller) -> None:
+    from ontyra.models.feedback import FeedbackRequest
+
+    app: Application = await make_app()
+    memory = await add(app, agent, "Deploy on Fridays only with approval.")
+    await app.feedback.record(agent, FeedbackRequest(memory=memory, query="deploy", label="wrong"))
+    (task,) = await app.tasks.list(agent)
+    done = await app.tasks.resolve(agent, task.id, "retract")
+    assert done.status == "done" and done.result["decision"] == "retract"
+    assert await memory_status(app, memory) == "retracted"
+
+
+async def test_keep_is_remembered_and_later_reports_do_not_reopen_it(
+    make_app, agent: Caller
+) -> None:
+    from ontyra.models.feedback import FeedbackRequest
+
+    app: Application = await make_app()
+    memory = await add(app, agent, "Deploy on Fridays only with approval.")
+    report = FeedbackRequest(memory=memory, query="deploy", label="outdated")
+    await app.feedback.record(agent, report)
+    (task,) = await app.tasks.list(agent)
+    await app.tasks.complete(agent, task.id, TaskResult(decision="keep", note="still true"))
+    await app.feedback.record(agent, report.model_copy(update={"query": "deploy again"}))
+    assert await app.tasks.list(agent) == []
+    assert (await app.tasks.get(agent, task.id)).status == "done"
+
+
+async def test_expiring_and_expired_memories_are_queued(make_app, agent: Caller, clock) -> None:
+    from datetime import timedelta
+
+    app: Application = await make_app()
+    now = clock()
+    soon = await add_with(
+        app, agent, "Use the temporary VPN.", expires_at=(now + timedelta(days=5)).isoformat()
+    )
+    gone = await add_with(
+        app, agent, "Use the old VPN.", expires_at=(now + timedelta(seconds=30)).isoformat()
+    )
+    await add_with(
+        app, agent, "Use the VPN later.", expires_at=(now + timedelta(days=90)).isoformat()
+    )
+    await add_with(app, agent, "No expiry at all.")
+    clock._t += timedelta(minutes=5)  # type: ignore[attr-defined]  # the old VPN has now expired
+    report = await app.tasks.detect(agent)
+    assert {t.target for t in report.created} == {soon, gone}
+    states = {t.target: t.card["state"] for t in report.created}
+    assert states == {soon: "expiring", gone: "expired"}
+    assert all(t.kind == "expire_check" for t in report.created)
+    assert (await app.tasks.detect(agent)).created == []  # once
+    task = next(t for t in report.created if t.target == gone)
+    assert (await app.tasks.resolve(agent, task.id, "retract")).status == "done"
+    assert await memory_status(app, gone) == "retracted"
+
+
+async def test_extending_a_memory_closes_its_expiry_task(make_app, agent: Caller, clock) -> None:
+    from datetime import timedelta
+
+    from ontyra.models.proposals import ReviseMemory
+
+    app: Application = await make_app()
+    soon = await add_with(
+        app, agent, "Use the temporary VPN.", expires_at=(clock() + timedelta(days=5)).isoformat()
+    )
+    (task,) = (await app.tasks.detect(agent)).created
+    revised = await app.memory.submit(
+        agent,
+        ProposalRequest(
+            ops=[
+                ReviseMemory(
+                    memory=soon,
+                    fields={"expires_at": None},
+                    reason_code="refined",
+                )
+            ]
+        ),
+    )
+    assert revised.status == "committed", revised.findings
+    assert (await app.tasks.detect(agent)).closed == 1
+    assert (await app.tasks.get(agent, task.id)).result["outcome"] == "obsolete"

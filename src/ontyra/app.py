@@ -105,7 +105,7 @@ class Application:
             )
         comparer = decider if isinstance(decider, StatementComparer) else None
         consolidation = ConsolidationService(store, embedder, settings.consolidation, comparer)
-        tasks = TaskService(store, now, consolidation)
+        tasks = TaskService(store, now, consolidation, memory, settings.tasks.expiry_warn_days)
         feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
         actors = ActorService(store, now, settings.actor_trust)
         token = settings.auth.token

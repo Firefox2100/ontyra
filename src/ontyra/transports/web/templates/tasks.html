@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+{% macro memory(m) %}
+<div class="small"><span class="tag">{{ m.kind }}</span> <a href="/ui/memories/{{ m.memory.split(':')[-1] }}">{{ m.memory.split(':')[-1] }}</a>
+  {% if m.created_at %}<span class="muted">{{ m.created_at[:10] }}</span>{% endif %}</div>
+<div>{{ m.text }}</div>
+{% endmacro %}
+{% block body %}
+<h1>Maintenance tasks</h1>
+<div class="row" style="margin-bottom:14px">
+  <form class="inline" method="post" action="/ui/tasks/detect"><button class="go">Look for new work</button></form>
+  <span class="muted small">Scans for duplicates and changed values; nothing is merged until you choose.</span>
+</div>
+{% if note %}<div class="card small">{{ note }}</div>{% endif %}
+
+{% for t in tasks %}
+<div class="card">
+  <div class="row"><span class="tag {{ 'warn' if t.status != 'pending' }}">{{ t.status }}</span>
+    {% if t.card.finding == 'duplicates' %}<b>These {{ t.card.members|length }} memories say the same thing</b>
+    {% elif t.card.finding == 'update' %}<b>The same statement with a different value</b>
+    {% elif t.card.finding == 'feedback' %}<b>A memory was reported {{ t.card.reports[-1].label }}</b>
+    {% elif t.card.finding == 'expiry' %}<b>A memory {{ 'has expired' if t.card.state == 'expired' else 'expires soon' }}</b>
+    {% else %}<b>{{ t.kind }}</b>{% endif %}
+    {% if t.result.awaiting_review %}<span class="tag warn">merge held for review</span>{% endif %}</div>
+  {% if t.card.finding == 'duplicates' %}
+    {% for m in t.card.members %}<div style="margin-top:8px">{{ memory(m) }}</div>{% endfor %}
+    <div class="muted small" style="margin-top:8px">The oldest ({{ t.card['keep'].split(':')[-1] }}) is kept.
+      {% for p in t.card.pairs[:1] %}Cosine {{ '%.2f'|format(p.cosine) }}{% if p.same is defined and p.same is not none %}, the model says {{ '%.2f'|format(p.same) }}{% endif %}.{% endfor %}</div>
+  {% elif t.card.finding == 'update' %}
+    <div style="margin-top:8px"><span class="muted small">older</span>{{ memory(t.card.older) }}</div>
+    <div style="margin-top:8px"><span class="muted small">newer</span>{{ memory(t.card.newer) }}</div>
+  {% elif t.card.finding == 'feedback' %}
+    <div style="margin-top:8px">{{ memory(t.card) }}</div>
+    {% for r in t.card.reports[-3:] %}<div class="small muted">{{ r.label }} by {{ r.by }} for “{{ r.query }}”{% if r.note %}: {{ r.note }}{% endif %}</div>{% endfor %}
+    {% if t.card.count > 1 %}<div class="small muted">{{ t.card.count }} reports in all</div>{% endif %}
+  {% elif t.card.finding == 'expiry' %}
+    <div style="margin-top:8px">{{ memory(t.card) }}</div>
+    <div class="small muted">expires {{ t.card.expires_at[:10] }}</div>
+  {% else %}<pre>{{ t.card | tojson(indent=2) }}</pre>{% endif %}
+  <div class="row" style="margin-top:12px">
+    {% if t.kind == 'consolidate' %}
+    <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="merge"><button class="go">Merge into the oldest</button></form>
+    {% elif t.kind == 'review_contradiction' %}
+    <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="supersede"><button class="go">The newer replaces the older</button></form>
+    {% elif t.kind in ('review_feedback', 'expire_check', 'review_stale_dependent') %}
+    <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="retract"><button class="no">Retract it</button></form>
+    <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="keep">
+      <input type="text" name="note" placeholder="why it stands (optional)"><button>It stands</button></form>
+    <a class="small" href="/ui/memories/{{ t.target.id }}">open it to revise</a>
+    {% endif %}
+    {% if t.kind in ('consolidate', 'review_contradiction') %}<form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="distinct">
+      <input type="text" name="note" placeholder="why they differ (optional)"><button>They differ</button></form>{% endif %}
+    {% if t.status != 'parked' %}<form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="defer"><button>Later</button></form>{% endif %}
+  </div>
+</div>
+{% else %}<div class="empty">No open maintenance work. Use “Look for new work” to scan.</div>{% endfor %}
+
+{% if recent %}<h2>Recently closed</h2>
+<div class="card"><table>{% for t in recent %}
+<tr><td><span class="tag ok">{{ t.result.decision or t.result.outcome or t.status }}</span></td><td>{{ t.kind }}</td>
+<td class="small">{{ t.result.note or '' }}</td></tr>{% endfor %}</table></div>{% endif %}
+{% endblock %}

@@ -14,6 +14,7 @@ from pydantic import Field
 from ontyra.models import RecordId
 from ontyra.models.consolidation import ScanReport, ScanRequest
 from ontyra.models.core import Proposal, TaskKind
+from ontyra.models.feedback import FeedbackRequest, FeedbackView
 from ontyra.models.ontology import ConceptView
 from ontyra.models.ontology_change import ChangeRequest, ChangeResult, OntologyChange
 from ontyra.models.proposals import ProposalRequest, ProposalResult
@@ -28,7 +29,7 @@ from ontyra.models.recall import (
     SearchRequest,
     SearchResult,
 )
-from ontyra.models.tasks import DetectReport, TaskResult, TaskView
+from ontyra.models.tasks import DetectReport, ResolveRequest, TaskResult, TaskView
 from ontyra.services import Caller, errors
 from ontyra.services.views import MemoryDetail, MemoryView, Neighbors
 from ontyra.transports.auth import resolve_caller
@@ -247,6 +248,17 @@ def create_mcp(
             return await run(lambda s, c: s.consolidation.scan(c, request))
 
         @mcp.tool(
+            title="Give feedback on a memory",
+            annotations=PROPOSE,
+            description="Say that a recalled memory was `helpful`, `applied`, `irrelevant`, "
+            "`missed` (it should have come back), `outdated` or `wrong`. Side effect: the verdict "
+            "is stored. `outdated` and `wrong` also queue a maintenance task for a human or agent "
+            "to retract, revise or confirm the memory; the memory itself is not changed.",
+        )
+        async def feedback(request: FeedbackRequest) -> FeedbackView:
+            return await run(lambda s, c: s.feedback.record(c, request))
+
+        @mcp.tool(
             title="Open maintenance tasks",
             annotations=READ,
             description="Maintenance work waiting for judgment: duplicate clusters and updates "
@@ -292,6 +304,22 @@ def create_mcp(
             return await run(
                 lambda s, c: s.tasks.complete(
                     c, RecordId("task", task.removeprefix("task:")), result
+                )
+            )
+
+        @mcp.tool(
+            title="Resolve a maintenance task",
+            annotations=PROPOSE,
+            description="Do what the task's card proposes: `merge` (the oldest memory replaces "
+            "the other members of a duplicate cluster) or `supersede` (the newer memory of an "
+            "update replaces the older). Side effect: a `supersede` proposal is submitted as "
+            "you, so it commits or waits for review under the usual policy (memories are "
+            "replaced, history is kept), then the task is completed citing it.",
+        )
+        async def resolve_task(task: str, request: ResolveRequest) -> TaskView:
+            return await run(
+                lambda s, c: s.tasks.resolve(
+                    c, RecordId("task", task.removeprefix("task:")), request.decision
                 )
             )
 

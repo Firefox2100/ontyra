@@ -133,6 +133,6 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
     assert tools["approve_ontology_change"].annotations.destructive_hint is True  # type: ignore[union-attr]
     for name in (
         "remember", "propose_ontology_change", "reject", "reject_ontology_change",
-        "detect_tasks", "claim_task", "complete_task",
+        "detect_tasks", "claim_task", "complete_task", "resolve_task", "feedback",
     ):  # fmt: skip
         assert tools[name].annotations.destructive_hint is False, name  # type: ignore[union-attr]

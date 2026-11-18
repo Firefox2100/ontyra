@@ -52,6 +52,33 @@ concepts, and prefer an alias or a merge over a new concept. Changes wait for th
 Call `check` with your intent before destructive or hard-to-undo actions (deleting, pushing,
 deploying, migrating). It returns every applicable `must` directive plus prerequisites.
 
+## Maintenance tasks (full MCP profile, or `/v1/tasks` over REST)
+
+The daemon notices work it cannot judge itself: memories that say the same thing, the same
+statement with a changed value, memories reported `outdated` or `wrong`, and memories that have
+expired or are about to. It queues each as a **task** with a card. Do this only when the
+user asks you to tidy the memory, or when you are told tasks are waiting; it is never urgent.
+
+1. `detect_tasks` finds and queues new work; `pending_tasks` lists it (each task has a card with
+   the memories, the oldest to keep, and the `choices`).
+2. `claim_task` the one you take (two agents must not do the same task).
+3. Read the memories on the card (`get`). Decide, as a careful reviewer would:
+   - They really say the same thing: `resolve_task` with `merge` (the oldest replaces the others),
+     or for a changed value where the newer is current, `supersede`. This submits an ordinary
+     proposal as you; read the result: an agent's merge usually waits for the human, and the task
+     stays claimed until it is decided. Do not call a merge done before the proposal says
+     `committed`.
+   - They differ in a way that matters (different place, version, person, condition):
+     `complete_task` with `distinct` and a `note` saying why. It is not raised again.
+   - A memory reported wrong or expired: `resolve_task` with `retract` if it is no longer true;
+     if it needs correcting or extending, submit a `revise` or `supersede` proposal with
+     `remember` and `complete_task` with `revise` and that proposal; if it still stands,
+     `complete_task` with `keep` and a `note` (not raised again for that revision).
+   - You cannot tell: `complete_task` with `defer`, or leave it and tell the user.
+4. Never merge memories that merely share a topic, such as two facts about the same server.
+   When unsure, choose `distinct` or `defer`: a wrong merge loses information, a left duplicate
+   costs a few tokens.
+
 ## Review
 
 A human approves held proposals and ontology changes (`/v1/proposals`, `/v1/ontology/changes`).
@@ -59,5 +86,8 @@ Never try to approve your own: the tools refuse, and it defeats the point of rev
 
 ## Feedback
 
-If a recalled memory was wrong or outdated, say so and propose a `revise`/`supersede`/`retract`
-rather than silently ignoring it.
+If a recalled memory was wrong or outdated, say so: call `feedback` with the memory, the query it
+came back for, and the label (`outdated` or `wrong`; `helpful`, `applied`, `irrelevant` or
+`missed` also help). It queues a maintenance task for someone to retract, revise or confirm it, and
+never changes the memory itself. If you are sure and the user agrees, also propose the
+`revise`/`supersede`/`retract` rather than silently ignoring it.

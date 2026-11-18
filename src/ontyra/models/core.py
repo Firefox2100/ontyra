@@ -207,6 +207,7 @@ class Usage(Record):
 TaskKind = Literal[
     "review_proposal",
     "review_stale_dependent",
+    "review_feedback",
     "review_contradiction",
     "review_ontology_change",
     "review_concept_drift",

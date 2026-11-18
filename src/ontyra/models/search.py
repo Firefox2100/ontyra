@@ -37,6 +37,7 @@ class SearchDoc(Record):
     text: str  # full-text indexed (see storage.schema EXTRA_DDL)
     anchors: list[str] = []  # canonical anchor URIs; empty = unanchored
     about: list[ConceptRef] = []
+    expires_at: datetime | None = None  # the revision's expiry (expiry checks use it)
     created_at: datetime
 
 

@@ -109,3 +109,50 @@ async def test_the_console_is_off_unless_enabled(review_app: Application) -> Non
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
         assert (await client.get("/ui/")).status_code == 404
+
+
+async def test_the_tasks_page_finds_and_resolves_duplicates(make_app) -> None:
+    from ontyra.models import PolicyConfig
+    from ontyra.models.consolidation import ConsolidationSettings
+
+    app = await make_app(
+        PolicyConfig(default="auto_commit"),
+        consolidation=ConsolidationSettings(candidate_cosine=0.4, duplicate_cosine=0.75),
+    )
+    web = create_app(app, extra_routers=ROUTERS, ui_actor="owner")
+    text = "Use uv for Python dependency management in tidewatch and never run pip install."
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=web),
+        base_url="http://test",
+        headers={"Origin": "http://test"},
+    ) as ui:
+        for ref in ("a", "b"):
+            op = {
+                "op": "add",
+                "ref": ref,
+                "kind": "directive",
+                "fields": {
+                    "text": text + ("" if ref == "a" else " "),
+                    "rule": "uv",
+                    "strength": "should",
+                },
+            }
+            assert (await ui.post("/v1/proposals", json={"ops": [op]})).status_code == 201
+        await app.indexer.backfill()
+        empty = await ui.get("/ui/tasks")
+        assert empty.status_code == 200 and "No open maintenance work" in empty.text
+        found = await ui.post("/ui/tasks/detect", follow_redirects=True)
+        assert found.status_code == 200 and "These 2 memories say the same thing" in found.text
+        assert "Merge into the oldest" in found.text
+        listed = (await ui.get("/v1/tasks")).json()
+        tid = listed[0]["id"].split(":", 1)[1]
+        assert (
+            await ui.post(f"/ui/tasks/{tid}/resolve", data={"decision": "nope"})
+        ).status_code == 422
+        done = await ui.post(
+            f"/ui/tasks/{tid}/resolve", data={"decision": "merge"}, follow_redirects=True
+        )
+        assert done.status_code == 200 and "No open maintenance work" in done.text
+        assert "merge" in done.text  # listed under recently closed
+        cross_site = await ui.post("/ui/tasks/detect", headers={"Origin": "http://evil.example"})
+        assert cross_site.status_code == 403

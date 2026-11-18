@@ -463,12 +463,15 @@
       "properties": {
         "result": {
           "additionalProperties": false,
-          "description": "How a maintenance task was resolved. `merge` (a duplicate cluster) and `supersede` (an\nupdate) must cite the proposal that did it; `distinct` says the memories are different\nthings and the finding is not raised again; `defer` parks the task for later.",
+          "description": "How a maintenance task was resolved. `merge` (a duplicate cluster), `supersede` (an\nupdate), `retract` and `revise` (a memory reported wrong or expiring) must cite the proposal\nthat did it; `distinct` (two memories differ) and `keep` (the memory stands) are remembered and\nnot raised again; `defer` parks the task for later.",
           "properties": {
             "decision": {
               "enum": [
                 "merge",
                 "supersede",
+                "retract",
+                "revise",
+                "keep",
                 "distinct",
                 "defer"
               ],
@@ -542,6 +545,114 @@
       "type": "object"
     },
     "name": "detect_tasks"
+  },
+  {
+    "description": "Say that a recalled memory was `helpful`, `applied`, `irrelevant`, `missed` (it should have come back), `outdated` or `wrong`. Side effect: the verdict is stored. `outdated` and `wrong` also queue a maintenance task for a human or agent to retract, revise or confirm the memory; the memory itself is not changed.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "expires_in_days": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "label": {
+              "enum": [
+                "applied",
+                "helpful",
+                "missed",
+                "irrelevant",
+                "outdated",
+                "wrong"
+              ],
+              "type": "string"
+            },
+            "memory": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "type": "string"
+            },
+            "note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            },
+            "revision": {
+              "anyOf": [
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "session": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "trace": {
+              "anyOf": [
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "memory",
+            "query",
+            "label"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "feedback"
   },
   {
     "description": "Read-only scan for memories that say the same thing (clusters, oldest first) and for restatements with a changed value (updates). Nothing is changed: resolve a cluster with a `supersede` or `retract` proposal via `remember`.",
@@ -880,6 +991,7 @@
                 "enum": [
                   "review_proposal",
                   "review_stale_dependent",
+                  "review_feedback",
                   "review_contradiction",
                   "review_ontology_change",
                   "review_concept_drift",
@@ -1801,6 +1913,41 @@
       "type": "object"
     },
     "name": "remember"
+  },
+  {
+    "description": "Do what the task's card proposes: `merge` (the oldest memory replaces the other members of a duplicate cluster) or `supersede` (the newer memory of an update replaces the older). Side effect: a `supersede` proposal is submitted as you, so it commits or waits for review under the usual policy (memories are replaced, history is kept), then the task is completed citing it.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "description": "Ask the daemon to do what the card proposes (as a proposal from you): `merge` keeps the\noldest memory of a duplicate cluster and supersedes the others; `supersede` lets the newer\nmemory of an update replace the older; `retract` retracts the memory of a feedback or expiry\ntask.",
+          "properties": {
+            "decision": {
+              "enum": [
+                "merge",
+                "supersede",
+                "retract"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "decision"
+          ],
+          "type": "object"
+        },
+        "task": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "task",
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "resolve_task"
   },
   {
     "description": "Hybrid search with facet counts to narrow the next query.",
