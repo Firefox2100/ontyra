@@ -15,28 +15,54 @@ headers `X-Ontyra-Actor: <your name>` and `X-Ontyra-Harness: <harness>`; the sch
 project. **`Must follow` items are directives: obey them**, and tell the user if one conflicts
 with what they just asked.
 
+## When to recall
+
+Injected context is matched on the user's literal words only. When the message is short or
+refers back ("yes, do it", "the second one", "and the other server", "send it to them"), assume it
+missed the point: call
+`recall` yourself with a **standalone** `query` that names the subject ("deploy the staging
+server", not "do it"). Call it also when you start a task and nothing was injected, or need
+something the injected context lacks. Do not recall for the same thing twice, for pleasantries, or
+for a mechanical edit.
+
 ## When to write (`remember`)
 
-Write only what is durable and non-obvious: a preference or rule ("never force-push main"), a
+Write only what is settled, durable and non-obvious (not speculation such as "maybe we will
+switch someday", not a passing remark, not a mechanical edit): a preference or rule ("never force-push main"), a
 decision with its reason, a fact about the environment, a lesson from a failure. Do not write
 anything transient, anything already in the code or git history, or anything you already got
-from recall. One memory per statement.
+from recall. One memory per statement. When the user states something durable, write it: one
+`add` op, no `recall` or `check` first (`check` is for side effects such as deleting or pushing).
+If you suspect it is already stored, one `recall` is enough; if it is, `revise` or `supersede`
+instead of adding it again. `add` is the only op that stores something new: `annotate`, `link`,
+`revise`, `supersede` and `retract` act on memories that already exist, by id from recall or from
+an earlier result, never an invented one.
 
 Call `remember` with a proposal: `{"proposal": {"ops": [{"op": "add", "kind": ..., "fields": {...}}]}}`.
 
+**Every `fields` object needs `text`**: one sentence that stands on its own, since that is what
+recall matches. Then the kind's own fields (`kind` itself goes on the op, not inside `fields`):
+
+Pick the kind by what the statement is: `fact` a standing statement about the world or the setup; `directive` a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about; `decision` a choice that was made, with what it was chosen over; `event` something that happened at a particular time; `procedure` ordered steps to follow: ONE memory for the whole procedure; `task` something to do later (a reminder); `lesson` what a failure taught, to apply next time.
+
 | kind | fields |
 |---|---|
-| `directive` | `text`, `rule`, `strength` (`must`/`should`/`prefer`), `polarity` (`do`/`avoid`) |
-| `fact` | `text`, `subject`, `predicate`, `object` |
-| `decision` | `text`, `chosen`, `rationale`, `decided_at`, `alternatives` |
-| `lesson`, `procedure`, `event`, `task` | `text` plus the kind's own fields |
+| `directive` | `text`, `rule`, `strength` (`must`/`should`/`prefer`), optional `polarity` (`do`/`avoid`), `rationale` |
+| `fact` | `text`, `subject` (a concept id such as `concept:python`), `predicate`, `object` (text or a concept id) |
+| `decision` | `text`, `chosen`, `rationale`, `decided_at` (ISO), optional `alternatives` |
+| `lesson` | `text`, `situation`, `insight`, optional `do_instead` |
+| `procedure` | `text`, `trigger`, `steps` (`[{"text": "...", "optional": false}]`), optional `preconditions` |
+| `event` | `text`, `occurred_at` (ISO), optional `participants`, `outcome` |
+| `task` | `text`, optional `due` (ISO), `state` (`open`/`done`/`cancelled`) |
 
 Say **where it applies** or it will not be found by context: `scope: "universal"` for a standing
 preference that holds everywhere; otherwise `anchors` (`{"uri": "file://host/path", "match":
 "subtree"}`), `about` (concept ids) and `qualifiers`. A directive with none of these gets an
-`unscoped_directive` warning: fix it. To change an existing memory use `revise` or `supersede`
-(read the findings: a duplicate warning usually means supersede). Quote user words as `evidence`
-when you can. The result says `committed` or `pending`; pending means a human must approve it.
+`unscoped_directive` warning: it is already saved, so `revise` it rather than adding it again. To change an existing memory use `revise` or `supersede`
+(read the findings: a duplicate warning usually means supersede). Cite what the user said as
+`evidence: [{"quote": "their words, copied literally"}]`: the daemon finds the message in the
+session log, so you need no id; a quote it cannot find rejects the proposal (`grounding_failed`),
+so copy exactly or leave the evidence out. The result says `committed` or `pending`; pending means a human must approve it.
 Never claim a memory is saved until the status says `committed`.
 
 ## Concepts and the ontology

@@ -16,6 +16,9 @@ spikes/
 # benchmark run results (immutable files named by run label)
 tests/benchmark_test/results/*
 !tests/benchmark_test/results/.gitkeep
+# model-driven evaluation results
+tests/evaluation_test/results/*
+!tests/evaluation_test/results/.gitkeep
 .coverage
 
 # local daemon data and sandbox artefacts

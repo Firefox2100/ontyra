@@ -96,3 +96,28 @@ A profile can enable the decision model like any other setting: `"decision": {"p
 "systemone", "url": "http://localhost:8083/v1", "model": "kev-9b"}` (any `ONTYRA_DECISION__*`
 field) with `recall` overrides `decision_candidates`, `decision_weight`, `decision_margin` and
 `"engine": "fusion"`. The same profile without `decision` is the deterministic baseline.
+
+
+## Dialogues (`test_dialogue.py`)
+
+Recall cases are single requests. Real prompts are often not ("yes, do it", "and what went wrong
+the last time we bumped it?"), so the dialogue suite plays scripted conversations
+(`data/cases/dialogue/*.json`, 31 dialogues, 80 turns across dev, office, research, daily life and
+hobbies, every memory kind, and the shapes anaphora, ellipsis, confirm, correction, topic switch,
+pasted logs, multi-topic, session ledger and redelivery) and scores one recall per user turn.
+
+A turn is marked `needs_history` when its message cannot be understood alone; it then carries a
+hand-written `standalone` query, and the validator rejects a history-dependent message that names
+its own answer. The suite is a **measurement, not a regression gate**: it asserts nothing. It plays
+every dialogue once per *strategy* for building the request from the history
+(`framework/dialogue.py`): `last` (today's behaviour), `users2`/`users3` (the last 2 or 3 user
+messages joined), `window` (the last two exchanges including the assistant's replies), `hints`
+(keywords of the previous exchange as hints), `adaptive` (history only when the message is thin or
+points back), `union` (results of `last` and `users2` merged) and `oracle` (the standalone query:
+the upper bound). `BENCH_HISTORY` picks the strategies. Reports split the turns into `standalone`
+and `needs_history` so a strategy that helps one and hurts the other shows. The evaluation suite
+adds the `llm` strategy (the model writes the query).
+
+```
+BENCH_PROFILES=prod.json BENCH_LABEL=dlg uv run pytest tests/benchmark_test/test_dialogue.py -s
+```

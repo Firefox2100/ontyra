@@ -74,7 +74,13 @@ class Application:
         anchors = AnchorService(store, now, ontology, settings.recall.machine)
         indexer = IndexService(store, embedder, now)
         memory = MemoryService(
-            store, PolicyEngine(settings.policy), now, ontology, anchors, on_commit=indexer.embed
+            store,
+            PolicyEngine(settings.policy),
+            now,
+            ontology,
+            anchors,
+            on_commit=indexer.embed,
+            episodes=settings.episodes,
         )
         decider = build_decider(settings.decision)
         recall: RecallService

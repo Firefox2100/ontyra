@@ -188,3 +188,51 @@ def coverage_report(cases: list[Case], world: World) -> dict[str, list[str]]:
         "unused": [m.key for m in world.memories if m.key not in used],
         "thin_tags": [t for t, n in sorted(tags.items()) if n < 2],
     }
+
+
+def dialogue_problems(dialogues: list[Any], worlds: dict[str, World]) -> list[str]:
+    """Consistency of dialogue data: real keys, usable turns, history-dependent turns marked."""
+    problems: list[str] = []
+    ids = [d.id for d in dialogues]
+    problems += [f"duplicate dialogue id {i}" for i in sorted({i for i in ids if ids.count(i) > 1})]
+    for dialogue in dialogues:
+        world = worlds.get(dialogue.world)
+        if world is None:
+            problems.append(f"{dialogue.id}: unknown world {dialogue.world!r}")
+            continue
+        keys = {m.key for m in world.memories}
+        texts = {m.key: memory_text(m) for m in world.memories}
+        known = world.concept_ids | {concept_slug(a) for c in world.concepts for a in c.aliases}
+        contexts = [dialogue.context, *[t.context for t in dialogue.turns if t.context]]
+        for ctx in contexts:
+            for signal in ctx.signals:
+                if concept_slug(signal.concept) not in known:
+                    problems.append(f"{dialogue.id}: unknown signal concept {signal.concept!r}")
+        for n, turn in enumerate(dialogue.turns, 1):
+            where = f"{dialogue.id}#{n}"
+            named = [*turn.include, *turn.exclude, *turn.allow]
+            problems += [f"{where}: unknown memory key {k!r}" for k in named if k not in keys]
+            for prefix in turn.allow_prefix:
+                if not any(k.startswith(prefix) for k in keys):
+                    problems.append(f"{where}: allow_prefix {prefix!r} matches no memory")
+            if set(turn.include) & set(turn.exclude):
+                problems.append(f"{where}: a key is both included and excluded")
+            if turn.silent and turn.include:
+                problems.append(f"{where}: silent but includes keys")
+            if turn.mode != "briefing" and not turn.say.strip():
+                problems.append(f"{where}: a {turn.mode} turn needs a message")
+            if turn.needs_history and not turn.standalone:
+                problems.append(f"{where}: a history-dependent turn needs a standalone query")
+            if turn.standalone and not turn.needs_history:
+                problems.append(f"{where}: standalone is only for history-dependent turns")
+            if turn.needs_history:
+                for key in turn.include:
+                    shared = coverage(turn.say, texts.get(key, ""))
+                    if shared > PARAPHRASE_MAX_OVERLAP:
+                        problems.append(
+                            f"{where}: a history-dependent message must not name its answer "
+                            f"({shared:.2f} of its words appear in {key})"
+                        )
+            if turn.redeliver and not dialogue.session:
+                problems.append(f"{where}: redeliver needs a session dialogue")
+    return problems

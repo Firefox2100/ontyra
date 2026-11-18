@@ -41,7 +41,7 @@ const Config = z.object({
   timeoutMs: z.natural().default(1500).volatile(),
   tools: z.boolean().default(true).volatile(),
   toolsProfile: z.string().default('lite').volatile(),
-  episodes: z.boolean().default(false).volatile(),
+  episodes: z.boolean().default(true).volatile(),
   capture: z.boolean().default(false).volatile(),
   captureEvery: z.natural().default(10).volatile(),
   subagents: z.boolean().default(false).volatile(),

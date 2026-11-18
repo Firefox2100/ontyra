@@ -102,6 +102,15 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 |---|---|---|
 | `ONTYRA_TASKS__EXPIRY_WARN_DAYS` | int | `14` |
 
+## episodes
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_EPISODES__MATCH_WINDOW_HOURS` | int | `72` |
+| `ONTYRA_EPISODES__MATCH_LIMIT` | int | `500` |
+| `ONTYRA_EPISODES__RETENTION_DAYS` | int | `14` |
+| `ONTYRA_EPISODES__PRUNE_INTERVAL_MINUTES` | int | `60` |
+
 ## recall
 
 | Variable | Type | Default |

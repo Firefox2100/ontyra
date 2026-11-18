@@ -3,7 +3,7 @@
     "schemas": {
       "AddMemory": {
         "additionalProperties": false,
-        "description": "Create a new memory (item + first revision).",
+        "description": "Create a NEW memory (item + first revision). This is how anything gets stored: pick the\n`kind` and give its `fields`. Say where it applies (`scope: universal`, or `anchors` /\n`about`), or a directive is flagged as unscoped.",
         "properties": {
           "derived_from": {
             "default": [],
@@ -35,6 +35,7 @@
           },
           "fields": {
             "additionalProperties": true,
+            "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
             "title": "Fields",
             "type": "object"
           },
@@ -115,6 +116,7 @@
       },
       "Annotate": {
         "additionalProperties": false,
+        "description": "Attach a note to an EXISTING memory (`target` is its id). It stores nothing new: use\n`add` for that.",
         "properties": {
           "kind": {
             "default": "comment",
@@ -960,15 +962,24 @@
       },
       "Evidence": {
         "additionalProperties": false,
-        "description": "A source episode; if `quote` is given it must literally occur in that episode.",
+        "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
         "properties": {
           "episode": {
-            "description": "A record id as `table:id`.",
-            "examples": [
-              "memory:0194f3a1b2c3d4e5f6a7"
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "RecordId",
-            "type": "string"
+            "description": "Optional: the episode id, when you know it.",
+            "title": "Episode"
           },
           "quote": {
             "anyOf": [
@@ -979,12 +990,10 @@
                 "type": "null"
               }
             ],
+            "description": "Words from the conversation, copied literally (a sentence).",
             "title": "Quote"
           }
         },
-        "required": [
-          "episode"
-        ],
         "title": "Evidence",
         "type": "object"
       },
@@ -1385,6 +1394,7 @@
       },
       "LinkMemories": {
         "additionalProperties": false,
+        "description": "Relate two EXISTING memories (ids from recall, or `ref`s of this proposal). It stores\nnothing new: use `add` for that.",
         "properties": {
           "op": {
             "const": "link",

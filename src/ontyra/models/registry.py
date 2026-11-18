@@ -27,6 +27,7 @@ class TableSpec:
     name: str
     model: type[Record]
     immutable: bool = False  # all fields READONLY and DELETE blocked
+    prunable: bool = False  # immutable, but DELETE stays allowed (retention sweeps)
     edge: tuple[tuple[str, ...], tuple[str, ...]] | None = None  # (IN tables, OUT tables)
 
 
@@ -51,12 +52,13 @@ class Registry:
         name: str,
         *,
         immutable: bool = False,
+        prunable: bool = False,
         edge: tuple[tuple[str, ...], tuple[str, ...]] | None = None,
     ) -> Callable[[type[R]], type[R]]:
         def deco(cls: type[R]) -> type[R]:
             if name in self.tables:
                 raise ValueError(f"table already registered: {name}")
-            self.tables[name] = TableSpec(name, cls, immutable, edge)
+            self.tables[name] = TableSpec(name, cls, immutable, prunable, edge)
             return cls
 
         return deco

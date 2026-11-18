@@ -60,7 +60,7 @@ def view(task: Task) -> TaskView:
     )
 
 
-def _duplicate_card(cluster: DuplicateCluster) -> dict[str, Any]:
+def duplicate_card(cluster: DuplicateCluster) -> dict[str, Any]:
     return {
         "finding": "duplicates",
         "instructions": (
@@ -78,7 +78,7 @@ def _duplicate_card(cluster: DuplicateCluster) -> dict[str, Any]:
     }
 
 
-def _update_card(update: UpdateCandidate) -> dict[str, Any]:
+def update_card(update: UpdateCandidate) -> dict[str, Any]:
     return {
         "finding": "update",
         "instructions": (
@@ -93,6 +93,35 @@ def _update_card(update: UpdateCandidate) -> dict[str, Any]:
         "cosine": update.cosine,
         "revisions": [str(update.older.revision), str(update.newer.revision)],
         "choices": CHOICES["review_contradiction"],
+    }
+
+
+def expiry_card(
+    *,
+    memory: RecordId,
+    kind: str,
+    text: str,
+    revision: RecordId,
+    expires_at: datetime,
+    expired: bool,
+) -> dict[str, Any]:
+    return {
+        "finding": "expiry",
+        "state": "expired" if expired else "expiring",
+        "expires_at": expires_at.isoformat(),
+        "memory": str(memory),
+        "kind": kind,
+        "text": text,
+        "instructions": (
+            "This memory "
+            + ("has expired and is no longer recalled" if expired else "expires soon")
+            + ". If it still holds, extend it (a `revise` proposal with a new "
+            "`expires_at`, or without one for no expiry) and complete with `revise`. If it "
+            "is no longer true, retract it (`retract`). If it should simply lapse, "
+            "complete with `keep` (not raised again). `defer` parks it."
+        ),
+        "revisions": [str(revision)],
+        "choices": CHOICES["expire_check"],
     }
 
 
@@ -146,11 +175,11 @@ class TaskService:
         seen: set[str] = set()
         findings: list[tuple[TaskKind, str, RecordId | None, dict[str, Any], Any]] = []
         for cluster in scan.duplicates:
-            card = _duplicate_card(cluster)
+            card = duplicate_card(cluster)
             key = "consolidate:" + "|".join(sorted(card["revisions"]))
             findings.append(("consolidate", key, cluster.keep, card, cluster.members[0].owner))
         for update in scan.updates:
-            card = _update_card(update)
+            card = update_card(update)
             key = "update:" + "|".join(sorted(card["revisions"]))
             findings.append(
                 ("review_contradiction", key, update.newer.memory, card, update.newer.owner)
@@ -199,24 +228,14 @@ class TaskService:
         for doc in docs:
             assert doc.expires_at is not None
             expired = doc.expires_at <= now
-            card = {
-                "finding": "expiry",
-                "state": "expired" if expired else "expiring",
-                "expires_at": doc.expires_at.isoformat(),
-                "memory": str(doc.memory),
-                "kind": doc.kind,
-                "text": texts.get(doc.rev, doc.text),
-                "instructions": (
-                    "This memory "
-                    + ("has expired and is no longer recalled" if expired else "expires soon")
-                    + ". If it still holds, extend it (a `revise` proposal with a new "
-                    "`expires_at`, or without one for no expiry) and complete with `revise`. If it "
-                    "is no longer true, retract it (`retract`). If it should simply lapse, "
-                    "complete with `keep` (not raised again). `defer` parks it."
-                ),
-                "revisions": [str(doc.rev)],
-                "choices": CHOICES["expire_check"],
-            }
+            card = expiry_card(
+                memory=doc.memory,
+                kind=doc.kind,
+                text=texts.get(doc.rev, doc.text),
+                revision=doc.rev,
+                expires_at=doc.expires_at,
+                expired=expired,
+            )
             out.append(("expire_check", f"expire:{doc.rev}", doc.memory, card, doc.owner))
         return out
 

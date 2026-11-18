@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from pydantic import ValidationError
@@ -17,7 +17,8 @@ from pydantic import ValidationError
 from ontyra.models import Record, RecordId, new_id, registry
 from ontyra.models.anchors import Anchor
 from ontyra.models.core import Episode, Memory, RevState
-from ontyra.models.kinds import DirectiveRev, RevisionBase
+from ontyra.models.episodes import EpisodeSettings
+from ontyra.models.kinds import DirectiveRev, RevisionBase, fields_guide
 from ontyra.models.proposals import (
     AddMemory,
     Annotate,
@@ -89,7 +90,9 @@ class ProposalValidator:
         now: Callable[[], datetime],
         ontology: OntologyService,
         anchors: AnchorService,
+        episodes: EpisodeSettings | None = None,
     ) -> None:
+        self.episodes = episodes or EpisodeSettings()
         self.store = store
         self.now = now
         self.ontology = ontology
@@ -152,20 +155,34 @@ class _Ctx:
             Finding(severity="info", code=code, message=message, op=i, data=data)
         )
 
-    def _schema_errors(self, i: int, exc: ValidationError) -> None:
+    def _schema_errors(self, i: int, exc: ValidationError, kind: str | None = None) -> None:
         for e in exc.errors():
             where = ".".join(str(p) for p in e["loc"]) or "(root)"
             self.error(i, "invalid_field", f"{where}: {e['msg']}", field=where)
+        if kind is not None:  # what the kind takes, so a retry can be right
+            self.v.findings.append(
+                Finding(
+                    severity="info",
+                    code="fields_hint",
+                    message=f"`fields` for kind `{kind}` (optional in brackets): "
+                    + fields_guide(kind),
+                    op=i,
+                )
+            )
 
     # ---- shared lookups ----------------------------------------------------
 
     async def _memory(self, i: int, rid: RecordId, *, mutate: bool) -> tuple[Memory, Record] | None:
         mem = await self.o.store.get(rid)
         if not isinstance(mem, Memory):
-            self.error(i, "unknown_memory", f"{rid} does not exist")
+            self.error(
+                i, "unknown_memory", f"{rid} does not exist (to store something new use op `add`)"
+            )
             return None
         if mem.owner not in self.caller.visible_owners():
-            self.error(i, "unknown_memory", f"{rid} does not exist")  # do not leak other owners
+            self.error(
+                i, "unknown_memory", f"{rid} does not exist (to store something new use op `add`)"
+            )  # do not leak other owners
             return None
         if mutate and not self.caller.can_write(mem.owner):
             self.error(i, "permission_denied", f"{rid} belongs to {mem.owner}", memory=str(rid))
@@ -208,15 +225,58 @@ class _Ctx:
         assert mem.id is not None and rev.id is not None
         return mem.id, rev.id, False
 
-    async def _check_evidence(self, i: int, evidence: Sequence[Evidence]) -> None:
+    async def _check_evidence(self, i: int, evidence: Sequence[Evidence]) -> list[Evidence]:
+        """The evidence with every episode resolved (a quote alone is looked up in the log).
+        Problems are recorded as errors; the proposal is then rejected anyway."""
+        resolved: list[Evidence] = []
         for ev in evidence:
-            ep = await self.o.store.get(ev.episode)
-            if not isinstance(ep, Episode) or ep.owner != self.v.owner:
-                self.error(i, "unknown_episode", f"evidence episode {ev.episode} does not exist")
-            elif ev.quote is not None and _norm(ev.quote) not in _norm(ep.content):
-                self.error(
-                    i, "grounding_failed", f"quote not found in {ev.episode}", quote=ev.quote[:120]
-                )
+            if ev.episode is not None:
+                ep = await self.o.store.get(ev.episode)
+                if not isinstance(ep, Episode) or ep.owner not in (self.v.owner, self.caller.owner):
+                    self.error(
+                        i, "unknown_episode", f"evidence episode {ev.episode} does not exist"
+                    )
+                    continue
+                if ev.quote is not None and _norm(ev.quote) not in _norm(ep.content):
+                    self.error(
+                        i,
+                        "grounding_failed",
+                        f"quote not found in {ev.episode}",
+                        quote=ev.quote[:120],
+                    )
+                    continue
+                resolved.append(ev)
+            else:
+                assert ev.quote is not None
+                found = await self._episode_for(ev.quote)
+                if found is None:
+                    self.error(
+                        i,
+                        "grounding_failed",
+                        "the quote does not occur in your recent episodes; copy the words as "
+                        "they were said, or leave the evidence out",
+                        quote=ev.quote[:120],
+                    )
+                    continue
+                ev.episode = found  # the stored proposal names the episode; review may come late
+                resolved.append(ev)
+        return resolved
+
+    async def _episode_for(self, quote: str) -> RecordId | None:
+        """The newest recent episode containing the quote; what a person said beats what was
+        said back to them."""
+        cfg = self.o.episodes
+        owners = list(dict.fromkeys([self.v.owner, self.caller.owner]))
+        since = self.o.now() - timedelta(hours=cfg.match_window_hours)
+        wanted = _norm(quote)
+        found: Episode | None = None
+        for ep in await self.o.store.recent_episodes(owners, since, cfg.match_limit):
+            if wanted not in _norm(ep.content):
+                continue
+            if ep.role == "user":
+                return ep.id
+            found = found or ep
+        return found.id if found is not None else None
 
     def _bookkeeping(self, memory: RecordId, seq: int) -> dict[str, Any]:
         return {
@@ -228,7 +288,7 @@ class _Ctx:
 
     # ---- ops -----------------------------------------------------------------
 
-    def _unscoped(self, i: int, model: Any) -> None:
+    def _unscoped(self, i: int, model: Any, memory: RecordId | None = None) -> None:
         """A directive tied to nothing is neither universal nor contextual: say so when written."""
         if (
             getattr(model, "scope", "contextual") == "contextual"
@@ -240,7 +300,13 @@ class _Ctx:
                 "unscoped_directive",
                 "this directive has no anchors, qualifiers or `about` and is not "
                 "`scope: universal`: it will not appear in briefings or checks. Say where or "
-                "when it applies, or set `scope: universal` if it holds everywhere",
+                "when it applies, or set `scope: universal` if it holds everywhere"
+                + (
+                    f". It is saved as {memory} if the proposal commits: fix it with `revise` on "
+                    "that id, do not add it a second time"
+                    if memory
+                    else ""
+                ),
             )
 
     async def add(self, i: int, op: AddMemory, mem: RecordId, rev: RecordId) -> None:
@@ -252,13 +318,13 @@ class _Ctx:
         try:
             model = spec.model.model_validate({**op.fields, **self._bookkeeping(mem, 1)})
         except ValidationError as exc:
-            self._schema_errors(i, exc)
+            self._schema_errors(i, exc, op.kind)
             return
         links = await self._links(i, model)
         if links is None:
             return
         model = links
-        await self._check_evidence(i, op.evidence)
+        evidence = await self._check_evidence(i, op.evidence)
         sources: list[RecordId] = []
         for token in op.derived_from:
             src = await self._resolve(i, token)
@@ -268,7 +334,7 @@ class _Ctx:
                     self.error(i, "owner_mismatch", "derived memories must have the same owner")
                     continue
                 sources.append(src[1])
-        self._unscoped(i, model)
+        self._unscoped(i, model, mem)
         await self._similar(i, op.kind, model)
         self.v.prepared.append(
             PreparedAdd(
@@ -279,7 +345,7 @@ class _Ctx:
                 op.kind,
                 model,
                 op.valid_from or self.o.now(),
-                list(op.evidence),
+                evidence,
                 sources,
             )
         )
@@ -374,18 +440,16 @@ class _Ctx:
         try:
             model = spec.model.model_validate(merged)
         except ValidationError as exc:
-            self._schema_errors(i, exc)
+            self._schema_errors(i, exc, mem.kind)
             return
         links = await self._links(i, model)
         if links is None:
             return
         model = links
-        await self._check_evidence(i, op.evidence)
+        evidence = await self._check_evidence(i, op.evidence)
         new_rev = RecordId(spec.table, new_id())
         self.v.prepared.append(
-            PreparedRevise(
-                i, mem, old.id, new_rev, model, op.reason_code, op.reason, list(op.evidence)
-            )
+            PreparedRevise(i, mem, old.id, new_rev, model, op.reason_code, op.reason, evidence)
         )
 
     async def supersede(self, i: int, op: SupersedeMemory) -> None:
@@ -468,7 +532,12 @@ class _Ctx:
         if owner is None and target is not None:
             owner = GLOBAL_OWNER
         if target is None or not isinstance(owner, RecordId) or not self.caller.can_write(owner):
-            self.error(i, "unknown_target", f"{op.target} does not exist")
+            self.error(
+                i,
+                "unknown_target",
+                f"{op.target} does not exist: annotate needs the id of an existing memory; "
+                "to store something new use op `add`",
+            )
             return
         self.v.prepared.append(PreparedAnnotate(i, op.target, op.kind, op.text))
 

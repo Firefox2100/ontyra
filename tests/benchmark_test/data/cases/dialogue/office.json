@@ -1,0 +1,230 @@
+[
+ {
+  "id": "dlg-fin-expense",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "office",
+   "ellipsis",
+   "stale-trap"
+  ],
+  "why": "an expense claim: a limit question must get the current limit, a later 'there' needs the trip",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "I need to file an expense report for the Berlin trip",
+    "reply": "Collect itemised receipts and upload them in the portal.",
+    "include": [
+     "fi-exp-proc"
+    ],
+    "allow_prefix": [
+     "fi-"
+    ]
+   },
+   {
+    "say": "the taxi ride was 620 euros, does that need a sign-off?",
+    "reply": "Above 500 EUR the director must approve.",
+    "include": [
+     "fi-limit"
+    ],
+    "exclude": [
+     "fi-limit-old"
+    ],
+    "allow_prefix": [
+     "fi-"
+    ]
+   },
+   {
+    "say": "and how much can I spend on lunch there?",
+    "include": [
+     "fi-meal-abroad"
+    ],
+    "allow_prefix": [
+     "fi-"
+    ],
+    "needs_history": true,
+    "standalone": "what is the meal allowance on a business trip abroad"
+   }
+  ],
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  }
+ },
+ {
+  "id": "dlg-hr-leave",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "office",
+   "topic-continues",
+   "stale-trap"
+  ],
+  "why": "leave: allowance, process, then a carry-over question",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "How many vacation days do I get?",
+    "reply": "28 days.",
+    "include": [
+     "ad-leave-days"
+    ],
+    "exclude": [
+     "ad-leave-days-old"
+    ]
+   },
+   {
+    "say": "Fine, I want to take a week in December. What do I do?",
+    "reply": "Submit it in the HR portal.",
+    "include": [
+     "ad-leave"
+    ],
+    "allow": [
+     "ad-leave-days",
+     "ad-closed"
+    ]
+   },
+   {
+    "say": "what happens to the ones I don't take?",
+    "include": [
+     "ad-leave-days"
+    ],
+    "exclude": [
+     "ad-leave-days-old"
+    ],
+    "needs_history": true,
+    "standalone": "can unused annual leave days carry over to next year"
+   }
+  ],
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  }
+ },
+ {
+  "id": "dlg-fin-vat",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "office",
+   "anaphora",
+   "topic-switch",
+   "stale-trap"
+  ],
+  "why": "a rate, a calculation that refers to it, then a different department",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "what's the VAT rate we use?",
+    "reply": "21% since July.",
+    "include": [
+     "fi-vat"
+    ],
+    "exclude": [
+     "fi-vat-old"
+    ]
+   },
+   {
+    "say": "do the sum for 2,400",
+    "include": [
+     "fi-vat-calc"
+    ],
+    "allow": [
+     "fi-vat"
+    ],
+    "needs_history": true,
+    "standalone": "calculate VAT on 2,400 net"
+   },
+   {
+    "say": "Different thing: how many days of leave carry over?",
+    "include": [
+     "ad-leave-days"
+    ],
+    "exclude": [
+     "fi-vat",
+     "fi-vat-calc"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  }
+ },
+ {
+  "id": "dlg-hr-correction",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "office",
+   "correction"
+  ],
+  "why": "the user corrects what they meant; only the correction names the topic",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "what's the leave allowance?",
+    "reply": "28 days a year.",
+    "include": [
+     "ad-leave-days"
+    ]
+   },
+   {
+    "say": "no, I meant when I'm ill",
+    "include": [
+     "ad-sick"
+    ],
+    "allow": [
+     "ad-leave-days"
+    ],
+    "needs_history": true,
+    "standalone": "what do I do when I am sick and cannot come to work"
+   }
+  ],
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  }
+ },
+ {
+  "id": "dlg-office-tone",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "office",
+   "ellipsis"
+  ],
+  "why": "tone rules depend on who the message is for",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "write a note to the client about the delayed delivery",
+    "reply": "Here is a draft.",
+    "include": [
+     "ad-ext-email"
+    ],
+    "allow": [
+     "dl-ask-send",
+     "dl-brit",
+     "dp-style"
+    ]
+   },
+   {
+    "say": "now the same message for my colleagues",
+    "include": [
+     "ad-int-chat"
+    ],
+    "allow": [
+     "dp-style",
+     "dl-concise"
+    ],
+    "needs_history": true,
+    "standalone": "write an internal chat message about the delayed delivery"
+   }
+  ]
+ }
+]

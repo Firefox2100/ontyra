@@ -7,7 +7,8 @@ A Claude Code plugin: memory without the agent having to ask.
   Fails open when the daemon is unreachable. Location is the working directory and the git
   root (`file://host/path`); the daemon derives containment.
 - **Episodes**: every prompt and the assistant's last message (Stop hook) are logged to
-  `/v1/episodes`, the lossless log proposals cite as evidence (`ONTYRA_LOG_EPISODES=0` to stop).
+  `/v1/episodes`, the log that a memory's `quote` evidence is matched against; episodes no memory cites expire after
+  14 days (`ONTYRA_LOG_EPISODES=0` to stop).
 - **Capture prompt** (opt-in, `ONTYRA_CAPTURE=1`): at most once per `ONTYRA_CAPTURE_EVERY`
   prompts (default 10) the Stop hook keeps the agent going once, asking it to `remember` anything
   durable it learned. Never loops (`stop_hook_active`). Proposals follow the daemon's policy

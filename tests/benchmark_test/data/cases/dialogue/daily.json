@@ -1,0 +1,351 @@
+[
+ {
+  "id": "dlg-kitchen-oven",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "home",
+   "anaphora"
+  ],
+  "why": "baking: a recipe temperature, then 'what do I actually set'",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "I'm making sourdough tonight and the recipe says 220 degrees.",
+    "reply": "Noted.",
+    "include": [
+     "dh-sour",
+     "dh-oven"
+    ]
+   },
+   {
+    "say": "so what number do I actually turn it to?",
+    "include": [
+     "dh-oven"
+    ],
+    "allow": [
+     "dh-sour"
+    ],
+    "needs_history": true,
+    "standalone": "what temperature to set on the oven when the recipe says 220 degrees"
+   },
+   {
+    "say": "can the knives go in with the dishes afterwards?",
+    "include": [
+     "dh-knife"
+    ],
+    "allow": [
+     "dh-sour",
+     "dh-oven"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "place:home/kitchen"
+   ]
+  }
+ },
+ {
+  "id": "dlg-mail-confirm",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "confirm",
+   "universal"
+  ],
+  "why": "'send it' is the exact moment the confirmation rule matters",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "write a short email to my accountant with my tax documents",
+    "reply": "Here is the draft.",
+    "include": [
+     "dl-ask-send"
+    ],
+    "allow": [
+     "dl-remind-tax",
+     "dl-brit",
+     "dp-style",
+     "dl-concise"
+    ]
+   },
+   {
+    "say": "looks good, go ahead",
+    "include": [
+     "dl-ask-send"
+    ],
+    "allow": [
+     "dl-remind-tax"
+    ],
+    "needs_history": true,
+    "standalone": "send an email on the user's behalf"
+   }
+  ]
+ },
+ {
+  "id": "dlg-car",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "home",
+   "stale-trap"
+  ],
+  "why": "car questions at the car",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "the tyre warning light is on",
+    "include": [
+     "dh-tyre"
+    ],
+    "exclude": [
+     "dh-tyre-old"
+    ]
+   },
+   {
+    "say": "how full should I charge it for a normal week?",
+    "include": [
+     "dh-ev"
+    ],
+    "allow": [
+     "dh-tyre"
+    ]
+   },
+   {
+    "say": "when do I need to book the next service?",
+    "include": [
+     "dh-service"
+    ],
+    "allow": [
+     "dh-ev"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "place:car"
+   ]
+  }
+ },
+ {
+  "id": "dlg-home-boiler",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "home",
+   "anaphora"
+  ],
+  "why": "a boiler fault, then who last looked at it",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "the boiler shows 0.5 bar",
+    "reply": "That is too low.",
+    "include": [
+     "dh-boiler"
+    ],
+    "allow": [
+     "dh-boiler-service"
+    ]
+   },
+   {
+    "say": "when did someone qualified inspect it?",
+    "include": [
+     "dh-boiler-service"
+    ],
+    "allow": [
+     "dh-boiler"
+    ],
+    "needs_history": true,
+    "standalone": "when was the boiler last serviced"
+   }
+  ],
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  }
+ },
+ {
+  "id": "dlg-weekend-plan",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "home",
+   "multi-topic"
+  ],
+  "why": "one message with three separate things to do",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "Plan Saturday: bake bread in the morning, then fix the boiler pressure, and book the car service.",
+    "include": [
+     "dh-sour",
+     "dh-boiler",
+     "dh-service"
+    ],
+    "allow": [
+     "dh-oven",
+     "dh-boiler-service",
+     "dh-ev"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "place:home"
+   ]
+  }
+ },
+ {
+  "id": "dlg-pets",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "home",
+   "lesson"
+  ],
+  "why": "leaving for a weekend: the pets, then a past incident",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "I'm away for the weekend, who needs feeding and when?",
+    "include": [
+     "dl-pixel",
+     "dl-luna"
+    ]
+   },
+   {
+    "say": "the dog got ill after getting into the fruit",
+    "include": [
+     "dl-pixel-vet"
+    ],
+    "allow": [
+     "dl-pixel"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "dlg-schedule",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "ellipsis"
+  ],
+  "why": "scheduling rules; the second message only changes the day",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "schedule a meeting with the team on Saturday morning at 8",
+    "include": [
+     "dl-weekend",
+     "dl-no-early"
+    ],
+    "allow": [
+     "dl-tz",
+     "dl-24h",
+     "dl-holiday"
+    ]
+   },
+   {
+    "say": "ok, then Friday at 8 instead",
+    "include": [
+     "dl-no-early"
+    ],
+    "allow": [
+     "dl-tz",
+     "dl-24h",
+     "dl-holiday",
+     "dl-weekday-focus"
+    ],
+    "needs_history": true,
+    "standalone": "schedule a meeting on Friday at 8 in the morning"
+   }
+  ]
+ },
+ {
+  "id": "dlg-briefing-teach",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "daily",
+   "briefing"
+  ],
+  "why": "a briefing at the start, then a learning request",
+  "split": "tune",
+  "turns": [
+   {
+    "mode": "briefing",
+    "include": [
+     "dl-ask-send"
+    ],
+    "allow": [
+     "dl-brit",
+     "dp-style",
+     "dl-concise",
+     "dl-metric",
+     "dl-24h"
+    ]
+   },
+   {
+    "say": "explain how bloom filters work",
+    "include": [
+     "dl-teach"
+    ],
+    "allow": [
+     "dp-style",
+     "dl-concise",
+     "dl-brit",
+     "dp-challenge"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "dlg-hobbies",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "hobby",
+   "topic-switch"
+  ],
+  "why": "separate hobby requests, the last one points back at the previous answer",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "recommend me something to read this weekend",
+    "reply": "Try a translated novel.",
+    "include": [
+     "mh-books"
+    ]
+   },
+   {
+    "say": "and a film for Friday?",
+    "include": [
+     "mh-film"
+    ],
+    "allow": [
+     "mh-books"
+    ]
+   },
+   {
+    "say": "explain that again in Dutch so I can practise",
+    "include": [
+     "mh-dutch"
+    ],
+    "allow": [
+     "mh-dutch-plan"
+    ]
+   }
+  ]
+ }
+]

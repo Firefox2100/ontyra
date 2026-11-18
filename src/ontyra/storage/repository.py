@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from ontyra.models import Record, RecordId, registry
-from ontyra.models.core import Memory
+from ontyra.models.core import Episode, Memory
 from ontyra.models.search import SearchDoc
 from ontyra.ports.storage import Hit
 from ontyra.ports.writes import Create, Delete, ExpectCurrent, Relate, Update, Upsert, Write
@@ -240,6 +240,28 @@ class SurrealStore:
             )
         )[0]
         return [decode(r) for r in rows]
+
+    async def recent_episodes(
+        self, owners: Sequence[RecordId], since: datetime, limit: int
+    ) -> list[Episode]:
+        rows = (
+            await self.db.query(
+                "SELECT * FROM episode WHERE owner IN $owners AND occurred_at >= $since "
+                "ORDER BY occurred_at DESC LIMIT $limit",
+                {"owners": list(owners), "since": since, "limit": limit},
+            )
+        )[0]
+        return [Episode.model_validate(decode(r)) for r in rows]
+
+    async def uncited_episodes(self, before: datetime, limit: int) -> list[RecordId]:
+        rows = (
+            await self.db.query(
+                "SELECT id FROM episode WHERE occurred_at < $before "
+                "AND count(<-derived_from) = 0 LIMIT $limit",
+                {"before": before, "limit": limit},
+            )
+        )[0]
+        return [decode(r)["id"] for r in rows]
 
     async def unembedded(self, model: str, limit: int = 64) -> list[SearchDoc]:
         rows = (

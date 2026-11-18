@@ -115,7 +115,7 @@ def test_full_ddl_covers_every_registered_table_and_is_well_formed(gen: SchemaGe
     stmts = gen.ddl()
     for name in registry.tables:
         assert f"DEFINE TABLE OVERWRITE {name} " in " ".join(stmts)
-    assert all(s.startswith("DEFINE ") for s in stmts)
+    assert all(s.startswith(("DEFINE ", "REMOVE ")) for s in stmts)
     assert all(";" not in s for s in stmts), "statements are joined by the caller"
 
 

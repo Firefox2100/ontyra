@@ -379,3 +379,85 @@ def test_a_universal_memory_is_never_a_false_positive() -> None:
     assert not score_step(
         step, pack(item("memory:c", 0.5)), KEYS, universal=frozenset({"c"})
     ).passed
+
+
+# ---- dialogues -------------------------------------------------------------------------------
+
+
+def _turn(say: str, **kw):  # type: ignore[no-untyped-def]
+    from benchmark_test.framework.dialogue import Turn
+
+    return Turn(say=say, **kw)
+
+
+HISTORY = [("Which database does tidewatch use?", "PostgreSQL 16."), ("and the port?", "8420.")]
+
+
+def test_strategies_build_the_query_from_the_history() -> None:
+    from benchmark_test.framework.dialogue import build_request
+
+    turn = _turn("why did that fail?", needs_history=True, standalone="why did the upgrade fail")
+    assert build_request("last", HISTORY, turn).query == "why did that fail?"
+    assert build_request("users2", HISTORY, turn).query == "and the port? why did that fail?"
+    assert build_request("users3", HISTORY, turn).query == (
+        "Which database does tidewatch use? and the port? why did that fail?"
+    )
+    window = build_request("window", HISTORY, turn).query or ""
+    assert window.endswith("why did that fail?") and "PostgreSQL 16." in window
+    assert build_request("oracle", HISTORY, turn).query == "why did the upgrade fail"
+    hinted = build_request("hints", HISTORY, turn)
+    assert hinted.query == "why did that fail?" and "port" in hinted.hints
+    assert "fail" not in hinted.hints  # words of the message itself are not repeated as hints
+    assert build_request("union", HISTORY, turn).query == "why did that fail?"
+    assert build_request("last", [], turn).hints == []
+    assert build_request("users2", [], turn).query == "why did that fail?"
+
+
+def test_the_window_keeps_the_newest_text() -> None:
+    from benchmark_test.framework.dialogue import WINDOW_CHARS, build_request
+
+    long = [("x " * 400, "y " * 400)]
+    built = build_request("window", long, _turn("the last words"))
+    assert built.query is not None
+    assert len(built.query) == WINDOW_CHARS and built.query.endswith("the last words")
+
+
+def test_a_briefing_turn_has_no_query() -> None:
+    from benchmark_test.framework.dialogue import build_request
+
+    assert build_request("users3", HISTORY, _turn("", mode="briefing")).query is None
+
+
+def test_adaptive_uses_history_only_for_thin_messages() -> None:
+    from benchmark_test.framework.dialogue import build_request, is_thin
+
+    assert is_thin("yes, do it") and is_thin("and the title?") and is_thin("what about it?")
+    assert not is_thin("which zebrafish genome version are we currently running for the assays")
+    thin = build_request("adaptive", HISTORY, _turn("yes, do it"))
+    assert thin.query == "and the port? yes, do it"
+    full = _turn("which zebrafish genome version are we currently running for the assays")
+    assert build_request("adaptive", HISTORY, full).query == full.say
+
+
+def test_merge_packs_adds_only_new_items() -> None:
+    from benchmark_test.framework.dialogue import merge_packs
+    from ontyra.models import RecordId
+    from ontyra.models.recall import RecallItem, RecallPack
+
+    def item(n: str) -> RecallItem:
+        return RecallItem(
+            memory=RecordId("memory", n),
+            revision=RecordId("fact_rev", n),
+            kind="fact",
+            text=n,
+            score=1.0,
+            relevance=1.0,
+        )
+
+    a = RecallPack(path="recall", applicable=[item("a")], silent=False)
+    b = RecallPack(
+        path="recall", applicable=[item("a"), item("b")], context=[item("c")], silent=False
+    )
+    merged = merge_packs([a, b])
+    assert [str(i.memory) for i in merged.applicable] == ["memory:a", "memory:b"]
+    assert [str(i.memory) for i in merged.context] == ["memory:c"]

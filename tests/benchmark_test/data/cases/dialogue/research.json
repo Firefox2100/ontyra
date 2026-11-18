@@ -1,0 +1,404 @@
+[
+ {
+  "id": "dlg-sleep-design",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "topic-continues",
+   "task",
+   "event"
+  ],
+  "why": "study design questions then the open task and a past failure",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "Design the sample size for the new sleep study",
+    "reply": "Run an a-priori power analysis.",
+    "include": [
+     "ps-power"
+    ],
+    "allow": [
+     "ps-prereg",
+     "ps-effect",
+     "ps-exclude"
+    ]
+   },
+   {
+    "say": "and which questionnaire for sleep quality?",
+    "include": [
+     "ps-scales"
+    ],
+    "allow": [
+     "ps-power"
+    ]
+   },
+   {
+    "say": "how do we stop the sequence of sessions skewing the result?",
+    "include": [
+     "ps-order"
+    ],
+    "allow": [
+     "ps-within"
+    ]
+   },
+   {
+    "say": "what's still open for the preregistration?",
+    "include": [
+     "ps-upload"
+    ],
+    "allow": [
+     "ps-prereg"
+    ]
+   },
+   {
+    "say": "did a replication of this kind of effect ever fail for us?",
+    "include": [
+     "ps-replic"
+    ],
+    "allow": [
+     "ps-power"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/research/sleep-study/analysis"
+   ]
+  }
+ },
+ {
+  "id": "dlg-stats-genes",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "new-subject",
+   "event"
+  ],
+  "why": "statistics advice with a pronoun and an earlier mistake",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "which test do I use for two independent groups?",
+    "reply": "A t-test if the data are normal.",
+    "include": [
+     "st-choice"
+    ],
+    "allow": [
+     "st-assume"
+    ]
+   },
+   {
+    "say": "I ran it on twenty genes and one gave p = 0.031, is that a finding?",
+    "include": [
+     "st-multi"
+    ],
+    "allow": [
+     "st-bh",
+     "st-digits",
+     "st-choice"
+    ],
+    "needs_history": true,
+    "standalone": "twenty genes tested, one p-value 0.031, correct for multiple comparisons"
+   },
+   {
+    "say": "what about the outliers, can I drop them?",
+    "include": [
+     "st-outlier"
+    ]
+   },
+   {
+    "say": "has a non-significant result been misread in the lab before?",
+    "include": [
+     "st-null"
+    ],
+    "allow": [
+     "st-ci",
+     "st-pvalue"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  }
+ },
+ {
+  "id": "dlg-fish-genome",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "stale-trap",
+   "fact"
+  ],
+  "why": "a genome version and an approval number, each with a superseded value",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "which zebrafish genome version are we on?",
+    "include": [
+     "bi-genome"
+    ],
+    "exclude": [
+     "bi-genome-old"
+    ]
+   },
+   {
+    "say": "who do we answer to for the animal work, which protocol number?",
+    "include": [
+     "bi-protocol"
+    ],
+    "exclude": [
+     "bi-protocol-old"
+    ]
+   },
+   {
+    "say": "the embryos from tank 3 look odd after the weekend",
+    "include": [
+     "bi-temp"
+    ],
+    "allow": [
+     "bi-protocol"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/research/zebrafish/assays"
+   ]
+  }
+ },
+ {
+  "id": "dlg-chem-polymer",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "decision",
+   "procedure"
+  ],
+  "why": "a polymerisation day: a past failure, a decision and a disposal question",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "I'm about to start a polymerisation",
+    "reply": "Remember to check the monomer.",
+    "include": [
+     "ch-inhibitor"
+    ],
+    "allow": [
+     "ch-ppe",
+     "ch-eln",
+     "ch-ether"
+    ]
+   },
+   {
+    "say": "which solvent for the extraction after?",
+    "include": [
+     "ch-ethyl"
+    ],
+    "allow": [
+     "ch-ppe",
+     "ch-waste"
+    ]
+   },
+   {
+    "say": "and where does the waste go?",
+    "include": [
+     "ch-waste"
+    ],
+    "allow": [
+     "ch-ethyl",
+     "ch-spill"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/research/polymer-lab/notebook"
+   ]
+  }
+ },
+ {
+  "id": "dlg-gnn-report",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "topic-continues"
+  ],
+  "why": "reporting a result, answering a reviewer, avoiding leakage",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "we got 71.3 on ogbn-arxiv, how do I report it?",
+    "include": [
+     "cr-seeds"
+    ],
+    "allow": [
+     "cr-ogb",
+     "cr-f1",
+     "cr-baseline",
+     "cr-release"
+    ]
+   },
+   {
+    "say": "a reviewer says our baseline is weak",
+    "include": [
+     "cr-baseline"
+    ],
+    "allow": [
+     "cr-rebuttal",
+     "cr-seeds"
+    ]
+   },
+   {
+    "say": "can I pick the learning rate by looking at the test accuracy?",
+    "include": [
+     "cr-testset"
+    ],
+    "allow": [
+     "cr-seeds"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  }
+ },
+ {
+  "id": "dlg-paper-hunt",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "confirm",
+   "anaphora"
+  ],
+  "why": "finding a paper behind a paywall and saving it: each step refers to the one before",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "find me the Zhang 2024 paper on graph transformers",
+    "reply": "It's not in your Zotero. Searching online.",
+    "include": [
+     "rs-paper-proc"
+    ],
+    "allow": [
+     "rs-zotero-first",
+     "rs-zotero-save",
+     "rs-zotero-fact",
+     "rs-uni-fact"
+    ]
+   },
+   {
+    "say": "I can't get in, it wants a subscription",
+    "reply": "I could try the archive route.",
+    "include": [
+     "rs-access"
+    ],
+    "allow": [
+     "rs-uni-fact",
+     "rs-blocked",
+     "rs-paper-proc"
+    ],
+    "needs_history": true,
+    "standalone": "a paper is behind a paywall, how do I get it"
+   },
+   {
+    "say": "got it, put it somewhere I can find it later",
+    "include": [
+     "rs-zotero-save"
+    ],
+    "allow": [
+     "rs-zotero-fact",
+     "rs-paper-proc"
+    ],
+    "needs_history": true,
+    "standalone": "save a paper I found to the user's Zotero library"
+   }
+  ]
+ },
+ {
+  "id": "dlg-survey-interviews",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "anaphora"
+  ],
+  "why": "coding interviews, then sharing them",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "start coding the interview transcripts",
+    "include": [
+     "so-coding"
+    ],
+    "allow": [
+     "so-anon",
+     "so-kappa",
+     "so-consent"
+    ]
+   },
+   {
+    "say": "send them to my colleague for a second opinion",
+    "include": [
+     "so-anon"
+    ],
+    "allow": [
+     "so-consent",
+     "so-retention",
+     "so-kappa",
+     "dl-ask-send"
+    ],
+    "needs_history": true,
+    "standalone": "share interview transcripts with someone else: anonymise first"
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/research/survey-2026/analysis"
+   ]
+  }
+ },
+ {
+  "id": "dlg-writing",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "research",
+   "ellipsis"
+  ],
+  "why": "writing a paper piece by piece",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "help me write the abstract",
+    "include": [
+     "wr-abstract"
+    ],
+    "allow": [
+     "wr-imrad"
+    ]
+   },
+   {
+    "say": "and the title?",
+    "include": [
+     "wr-title"
+    ]
+   },
+   {
+    "say": "who goes first in the author list?",
+    "include": [
+     "wr-authors"
+    ]
+   }
+  ]
+ }
+]

@@ -1,5 +1,6 @@
 """The MCP tools over the real services (in-memory MCP client, no sockets)."""
 
+import json
 from pathlib import Path
 
 import httpx
@@ -65,6 +66,20 @@ async def test_remember_then_recall_round_trip(app: Application) -> None:
             "recall", {"request": {"query": "when is the staging database reset"}}
         )
     assert "reset every night" in pack.data.rendered
+
+
+async def test_the_lite_remember_offers_only_the_ops_an_agent_needs(app: Application) -> None:
+    async with server(app) as lite, server(app, "full") as full:
+        lite_ops = next(t for t in await lite.list_tools() if t.name == "remember")
+        full_ops = next(t for t in await full.list_tools() if t.name == "remember")
+    assert '"annotate"' not in json.dumps(lite_ops.input_schema)
+    assert '"annotate"' in json.dumps(full_ops.input_schema)
+    async with server(app) as client:
+        with pytest.raises(ToolError):  # not in the lite schema, so the server refuses it
+            await client.call_tool(
+                "remember",
+                {"proposal": {"ops": [{"op": "annotate", "target": "memory:x", "text": "t"}]}},
+            )
 
 
 async def test_a_service_error_becomes_a_tool_error(app: Application) -> None:

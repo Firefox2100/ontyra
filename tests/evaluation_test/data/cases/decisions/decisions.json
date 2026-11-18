@@ -1,0 +1,440 @@
+[
+ {
+  "id": "c-dup-pytest",
+  "tags": [
+   "duplicates",
+   "same"
+  ],
+  "why": "the same rule in other words",
+  "finding": "duplicates",
+  "members": [
+   {
+    "text": "Use pytest for tests in tidewatch; do not write unittest.TestCase classes.",
+    "kind": "directive"
+   },
+   {
+    "text": "In tidewatch write the tests with pytest and avoid unittest-style TestCase classes.",
+    "kind": "directive"
+   }
+  ],
+  "accept": [
+   "merge"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "c-dup-oven",
+  "tags": [
+   "duplicates",
+   "same"
+  ],
+  "why": "the same fact restated",
+  "finding": "duplicates",
+  "members": [
+   {
+    "key": "dh-oven",
+    "kind": "fact"
+   },
+   {
+    "text": "The real oven temperature is 15 degrees above the dial, so dial it down by 15 degrees.",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "merge"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "c-dup-three",
+  "tags": [
+   "duplicates",
+   "same"
+  ],
+  "why": "a cluster of three restatements",
+  "finding": "duplicates",
+  "members": [
+   {
+    "key": "ad-minutes-fmt",
+    "kind": "directive"
+   },
+   {
+    "text": "Put each action item in the minutes on its own line as owner, action, due date.",
+    "kind": "directive"
+   },
+   {
+    "text": "Minutes: one action item per line, written as Owner, action, due date.",
+    "kind": "directive"
+   }
+  ],
+  "accept": [
+   "merge"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "c-dup-projects",
+  "tags": [
+   "duplicates",
+   "different"
+  ],
+  "why": "opposite rules of two projects must stay apart",
+  "finding": "duplicates",
+  "members": [
+   {
+    "key": "d-uv",
+    "kind": "fact"
+   },
+   {
+    "key": "dm-poetry",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "distinct"
+  ],
+  "split": "tune",
+  "note_needed": true
+ },
+ {
+  "id": "c-dup-pets",
+  "tags": [
+   "duplicates",
+   "different"
+  ],
+  "why": "two animals with similar facts",
+  "finding": "duplicates",
+  "members": [
+   {
+    "key": "dl-pixel",
+    "kind": "fact"
+   },
+   {
+    "key": "dl-luna",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "distinct"
+  ],
+  "split": "tune",
+  "note_needed": true
+ },
+ {
+  "id": "c-dup-load-balancer",
+  "tags": [
+   "duplicates",
+   "different"
+  ],
+  "why": "two facts about the same server part",
+  "finding": "duplicates",
+  "members": [
+   {
+    "key": "ws-lb-fact",
+    "kind": "fact"
+   },
+   {
+    "key": "ws-no-ws-fact",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "distinct",
+   "defer"
+  ],
+  "split": "tune",
+  "note_needed": true
+ },
+ {
+  "id": "c-dup-meals",
+  "tags": [
+   "duplicates",
+   "different"
+  ],
+  "why": "same sentence shape, other conditions and values",
+  "finding": "duplicates",
+  "members": [
+   {
+    "key": "fi-meal-dom",
+    "kind": "fact"
+   },
+   {
+    "key": "fi-meal-abroad",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "distinct"
+  ],
+  "split": "holdout",
+  "note_needed": true
+ },
+ {
+  "id": "c-upd-postgres",
+  "tags": [
+   "update",
+   "newer-current"
+  ],
+  "why": "an older version superseded by the newer",
+  "finding": "update",
+  "members": [
+   {
+    "key": "f-db-old",
+    "kind": "fact"
+   },
+   {
+    "key": "f-db",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "supersede"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "c-upd-leave",
+  "tags": [
+   "update",
+   "newer-current"
+  ],
+  "why": "an allowance changed",
+  "finding": "update",
+  "members": [
+   {
+    "key": "ad-leave-days-old",
+    "kind": "fact"
+   },
+   {
+    "key": "ad-leave-days",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "supersede"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "c-upd-refund",
+  "tags": [
+   "update",
+   "newer-current"
+  ],
+  "why": "a window changed",
+  "finding": "update",
+  "members": [
+   {
+    "key": "ad-refund-old",
+    "kind": "procedure"
+   },
+   {
+    "key": "ad-refund",
+    "kind": "procedure"
+   }
+  ],
+  "accept": [
+   "supersede"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "c-upd-r",
+  "tags": [
+   "update",
+   "newer-current"
+  ],
+  "why": "a tool version moved",
+  "finding": "update",
+  "members": [
+   {
+    "key": "st-r-old",
+    "kind": "fact"
+   },
+   {
+    "key": "st-r",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "supersede"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "c-upd-python",
+  "tags": [
+   "update",
+   "both-hold"
+  ],
+  "why": "versions of two different projects",
+  "finding": "update",
+  "members": [
+   {
+    "key": "dm-py-new",
+    "kind": "fact"
+   },
+   {
+    "key": "f-python",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "distinct"
+  ],
+  "split": "tune",
+  "note_needed": true
+ },
+ {
+  "id": "c-upd-meal",
+  "tags": [
+   "update",
+   "both-hold"
+  ],
+  "why": "two allowances for two situations",
+  "finding": "update",
+  "members": [
+   {
+    "key": "fi-meal-dom",
+    "kind": "fact"
+   },
+   {
+    "key": "fi-meal-abroad",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "distinct"
+  ],
+  "split": "tune",
+  "note_needed": true
+ },
+ {
+  "id": "c-fb-postgres",
+  "tags": [
+   "feedback",
+   "retract-or-revise"
+  ],
+  "why": "reported outdated with the new value given",
+  "finding": "feedback",
+  "members": [
+   {
+    "key": "f-db-old",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "retract",
+   "revise"
+  ],
+  "split": "tune",
+  "report": "outdated: we moved production to PostgreSQL 16 on 2026-09-12"
+ },
+ {
+  "id": "c-fb-event",
+  "tags": [
+   "feedback",
+   "keep"
+  ],
+  "why": "an event cannot become outdated",
+  "finding": "feedback",
+  "members": [
+   {
+    "key": "e-disk",
+    "kind": "event"
+   }
+  ],
+  "accept": [
+   "keep"
+  ],
+  "split": "tune",
+  "report": "outdated: that was a while ago",
+  "note_needed": true
+ },
+ {
+  "id": "c-fb-vague",
+  "tags": [
+   "feedback",
+   "keep"
+  ],
+  "why": "a report that does not say the memory is false",
+  "finding": "feedback",
+  "members": [
+   {
+    "key": "d-no-force-push",
+    "kind": "directive"
+   }
+  ],
+  "accept": [
+   "keep",
+   "defer"
+  ],
+  "split": "tune",
+  "report": "wrong: not what I was asking about",
+  "note_needed": true
+ },
+ {
+  "id": "c-fb-oven",
+  "tags": [
+   "feedback",
+   "retract-or-revise"
+  ],
+  "why": "the user measured the oven again",
+  "finding": "feedback",
+  "members": [
+   {
+    "key": "dh-oven",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "retract",
+   "revise"
+  ],
+  "split": "tune",
+  "report": "wrong: I measured it after the repair and it is accurate now"
+ },
+ {
+  "id": "c-ex-holiday",
+  "tags": [
+   "expiry",
+   "lapse"
+  ],
+  "why": "a dated instruction that has passed",
+  "finding": "expiry",
+  "members": [
+   {
+    "key": "dl-holiday",
+    "kind": "directive"
+   }
+  ],
+  "accept": [
+   "keep",
+   "retract"
+  ],
+  "split": "tune",
+  "expired": true,
+  "note_needed": true
+ },
+ {
+  "id": "c-ex-protocol",
+  "tags": [
+   "expiry",
+   "cannot-know"
+  ],
+  "why": "nothing on the card says whether it still holds",
+  "finding": "expiry",
+  "members": [
+   {
+    "key": "bi-protocol",
+    "kind": "fact"
+   }
+  ],
+  "accept": [
+   "defer",
+   "keep"
+  ],
+  "split": "holdout",
+  "note_needed": true
+ }
+]

@@ -1,0 +1,331 @@
+[
+ {
+  "id": "dlg-tide-db",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "anaphora",
+   "topic-switch"
+  ],
+  "why": "a pronoun follow-up, then an unrelated question that must not drag the old topic along",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "Which database does tidewatch use in production?",
+    "reply": "Production runs PostgreSQL 16.",
+    "include": [
+     "f-db"
+    ],
+    "exclude": [
+     "f-db-old"
+    ],
+    "allow": [
+     "e-pg16",
+     "l-pgdata"
+    ]
+   },
+   {
+    "say": "and what went wrong the last time we bumped it?",
+    "reply": "The compose volume kept the old data directory.",
+    "include": [
+     "l-pgdata"
+    ],
+    "exclude": [
+     "f-db-old"
+    ],
+    "allow": [
+     "e-pg16",
+     "f-db"
+    ],
+    "needs_history": true,
+    "standalone": "what went wrong when the tidewatch PostgreSQL major version was upgraded"
+   },
+   {
+    "say": "Unrelated: how do I release lanternkit?",
+    "include": [
+     "p-lk-release"
+    ],
+    "exclude": [
+     "l-pgdata",
+     "e-pg16"
+    ],
+    "allow": [
+     "p-release",
+     "d-vitest",
+     "f-node"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  }
+ },
+ {
+  "id": "dlg-ws-install",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "ellipsis",
+   "qualifier"
+  ],
+  "why": "on a work server the follow-ups only make sense through the earlier install request",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "I need to install redis on this box",
+    "reply": "I can't use apt here; I'll build it from source under /local/software.",
+    "include": [
+     "ws-no-root"
+    ],
+    "allow": [
+     "d-apt"
+    ],
+    "allow_prefix": [
+     "ws-"
+    ]
+   },
+   {
+    "say": "ok, and how do I get to it from my laptop?",
+    "reply": "Only port 8888 is open.",
+    "include": [
+     "ws-expose-dir"
+    ],
+    "allow_prefix": [
+     "ws-"
+    ],
+    "needs_history": true,
+    "standalone": "how do I expose a service on this work server"
+   },
+   {
+    "say": "can I just use a websocket for the client connection?",
+    "include": [
+     "ws-no-ws"
+    ],
+    "allow_prefix": [
+     "ws-"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  }
+ },
+ {
+  "id": "dlg-pml-confirm",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "confirm",
+   "qualifier"
+  ],
+  "why": "a bare yes carries no content; the rule that matters was in the turn before",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "kick off a full training run",
+    "reply": "There is no GPU here, so I would only run the smoke-test config. Want me to start it?",
+    "include": [
+     "dm-smoke-only"
+    ],
+    "allow": [
+     "dm-seed",
+     "dm-bf16",
+     "dm-poetry",
+     "dm-ckpt",
+     "dm-batch"
+    ]
+   },
+   {
+    "say": "yes, do it",
+    "reply": "Starting the smoke test.",
+    "include": [
+     "dm-smoke-only"
+    ],
+    "allow": [
+     "dm-seed",
+     "dm-bf16",
+     "dm-poetry",
+     "dm-ckpt",
+     "dm-batch"
+    ],
+    "needs_history": true,
+    "standalone": "run only the smoke-test config on a machine without a GPU"
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/train.py"
+   ],
+   "signals": [
+    {
+     "concept": "nvidia_gpu",
+     "value": false
+    }
+   ]
+  }
+ },
+ {
+  "id": "dlg-store-pr",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "topic-continues"
+  ],
+  "why": "a frontend session: a rule check, a PR checklist and a detail question",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "add a new class component for the cart summary",
+    "reply": "Understood.",
+    "include": [
+     "dm-hooks-fn"
+    ],
+    "allow": [
+     "dm-a11y",
+     "dm-eslint"
+    ]
+   },
+   {
+    "say": "fine. anything I must run before opening the PR?",
+    "include": [
+     "dm-eslint"
+    ],
+    "allow": [
+     "dm-a11y",
+     "dm-hooks-fn",
+     "dm-node22"
+    ]
+   },
+   {
+    "say": "the new button is only an icon, is that ok?",
+    "include": [
+     "dm-a11y"
+    ],
+    "allow": [
+     "dm-eslint",
+     "dm-hooks-fn"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/components/Button.tsx"
+   ]
+  }
+ },
+ {
+  "id": "dlg-infra-apply",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "new-subject"
+  ],
+  "why": "a sequence of separate infra questions; each stands alone but follows the last",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "apply the change to prod now",
+    "include": [
+     "dm-tf-plan",
+     "dm-staging-first"
+    ],
+    "allow": [
+     "dm-secrets"
+    ]
+   },
+   {
+    "say": "where's the state file kept?",
+    "include": [
+     "dm-tf-state"
+    ],
+    "allow": [
+     "dm-tf-plan"
+    ]
+   },
+   {
+    "say": "last time a rollout hung, what was the cause?",
+    "include": [
+     "dm-probe"
+    ],
+    "allow": [
+     "dm-staging-first",
+     "dm-rollback"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra"
+   ]
+  }
+ },
+ {
+  "id": "dlg-tide-pasted",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "pasted"
+  ],
+  "why": "a long pasted test log with one relevant clue buried in it",
+  "split": "holdout",
+  "turns": [
+   {
+    "say": "This fails only on CI, why?\n\n$ pytest tests/test_tides.py -x\n============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-8.2.0, pluggy-1.5.0\nrootdir: /srv/ci/tidewatch\nplugins: xdist-3.6.1, cov-5.0.0\ncollected 212 items\n\ntests/test_tides.py::test_high_tide_window FAILED                        [ 31%]\n\n=================================== FAILURES ===================================\n______________________________ test_high_tide_window ___________________________\n\n    def test_high_tide_window():\n        window = high_tide_window(station=\"rotterdam\")\n>       assert window.start == datetime(2026, 11, 4, 0, 30)\nE       AssertionError: assert datetime.datetime(2026, 11, 3, 23, 30) == datetime.datetime(2026, 11, 4, 0, 30)\n\ntests/test_tides.py:88: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_tides.py::test_high_tide_window - AssertionError\n!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n========================= 1 failed, 77 passed in 41.20s ========================",
+    "include": [
+     "l-utc-flaky"
+    ],
+    "allow": [
+     "d-pytest",
+     "d-low-ram",
+     "e-disk",
+     "f-ci",
+     "d-types"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  }
+ },
+ {
+  "id": "dlg-infra-pasted",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "dev",
+   "pasted"
+  ],
+  "why": "pasted cluster events; the cause is in one line",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "Why is this rollout stuck?\n\nkubectl rollout status deploy/api -n prod\nWaiting for deployment \"api\" rollout to finish: 1 out of 3 new replicas have been updated...\nkubectl describe pod api-7d9f8b6c5-x2k4l\n  Warning  Unhealthy  4m (x58 over 9m)  kubelet  Readiness probe failed: HTTP probe failed with statuscode: 404\n  Normal   Pulled     9m                kubelet  Container image \"registry.northwind.example/api:2.14.0\" already present on machine\n  Normal   Created    9m                kubelet  Created container api\n  Normal   Started    9m                kubelet  Started container api",
+    "include": [
+     "dm-probe"
+    ],
+    "allow": [
+     "dm-staging-first",
+     "dm-rollback",
+     "dm-tf-plan"
+    ]
+   }
+  ],
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra"
+   ]
+  }
+ }
+]

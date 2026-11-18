@@ -395,6 +395,92 @@ async def test_quoted_evidence_must_occur_in_the_episode(app: Application, agent
     assert any(f.code == "unknown_episode" for f in missing.findings)
 
 
+async def test_a_quote_alone_is_resolved_against_recent_episodes(
+    app: Application, agent: Caller
+) -> None:
+    said = await app.memory.record_episode(
+        agent, session="s1", role="user", content="From now on always use pytest for tests."
+    )
+    await app.memory.record_episode(
+        agent, session="s1", role="assistant", content="Understood: always use pytest for tests."
+    )
+    ok = await app.memory.submit(
+        agent,
+        req({**add_directive("use pytest", ref="d"), "evidence": [{"quote": "always use pytest"}]}),
+    )
+    assert ok.status == "committed"
+    rev = (await app.memory.get_memory(agent, ok.created["d"])).revision
+    edges = await app.memory.store.edges("derived_from", source=rev)
+    assert [e["out"] for e in edges] == [said]  # what the person said, not the reply
+    bad = await app.memory.submit(
+        agent, req({**add_directive("z"), "evidence": [{"quote": "never said this"}]})
+    )
+    assert bad.status == "rejected" and any(f.code == "grounding_failed" for f in bad.findings)
+
+
+async def test_a_quote_outside_the_match_window_is_not_found(
+    app: Application, agent: Caller
+) -> None:
+    await app.memory.record_episode(agent, session="s1", role="user", content="use ruff please")
+    app.memory.validator.episodes.match_window_hours = 0
+    result = await app.memory.submit(
+        agent, req({**add_directive("use ruff"), "evidence": [{"quote": "use ruff"}]})
+    )
+    assert any(f.code == "grounding_failed" for f in result.findings)
+
+
+async def test_a_held_proposal_keeps_the_episode_it_resolved(
+    app: Application, agent: Caller
+) -> None:
+    ep = await app.memory.record_episode(
+        agent, session="s1", role="user", content="deploys happen on thursdays"
+    )
+    app.memory.policy.config.default = "review"  # type: ignore[attr-defined]
+    held = await app.memory.submit(
+        agent,
+        req({**add_fact("deploys happen on thursdays"), "evidence": [{"quote": "on thursdays"}]}),
+    )
+    assert held.status == "pending"
+    stored = await app.memory.store.get(held.proposal)  # type: ignore[arg-type]
+    assert str(ep) in str(stored.model_dump())  # type: ignore[union-attr]
+
+
+async def test_unused_episodes_expire_but_cited_ones_stay(app: Application, agent: Caller) -> None:
+    from datetime import timedelta
+
+    cited = await app.memory.record_episode(
+        agent, session="s1", role="user", content="remember: backups run nightly"
+    )
+    unused = await app.memory.record_episode(
+        agent, session="s1", role="user", content="small talk about the weather"
+    )
+    await commit(
+        app, agent, {**add_fact("backups run nightly"), "evidence": [{"quote": "backups run"}]}
+    )
+    real_now = app.memory.now
+    app.memory.now = lambda: real_now() + timedelta(days=30)  # type: ignore[method-assign]
+    app.memory._last_prune = None  # type: ignore[attr-defined]
+    await app.memory.record_episode(agent, session="s2", role="user", content="a new message")
+    assert await app.memory.store.get(unused) is None
+    assert await app.memory.store.get(cited) is not None
+
+
+async def test_rejections_tell_the_agent_how_to_retry(app: Application, agent: Caller) -> None:
+    bad = await app.memory.submit(
+        agent,
+        req({"op": "add", "kind": "procedure", "fields": {"text": "release", "steps": ["tag it"]}}),
+    )
+    hint = next(f for f in bad.findings if f.code == "fields_hint")
+    assert "trigger" in hint.message and "steps" in hint.message  # the kind's own fields
+    ghost = await app.memory.submit(
+        agent, req({"op": "annotate", "target": "memory:made_up", "text": "x"})
+    )
+    assert any("op `add`" in f.message for f in ghost.findings)  # annotate is not how you store
+    unscoped = await app.memory.submit(agent, req(add_directive("be brief", ref="d")))
+    warning = next(f for f in unscoped.findings if f.code == "unscoped_directive")
+    assert str(unscoped.created["d"]) in warning.message and "revise" in warning.message
+
+
 async def test_similar_and_duplicate_memories_are_reported_as_advice(
     app: Application, agent: Caller
 ) -> None:

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from benchmark_test.framework.dialogue import Dialogue, load_dialogues
 from benchmark_test.framework.models import Case, World, load_cases, load_world, world_ids
 from benchmark_test.framework.validate import (
     case_problems,
     coverage_report,
+    dialogue_problems,
     matrix,
     trap_counts,
     world_problems,
@@ -75,3 +77,31 @@ def test_paraphrase_cases_exist_in_every_domain_group(recall_cases: list[Case]) 
 def test_tuning_and_holdout_splits_both_exist(recall_cases: list[Case]) -> None:
     splits = {c.split for c in recall_cases}
     assert splits == {"tune", "holdout"}
+
+
+@pytest.fixture(scope="module")
+def dialogues() -> list[Dialogue]:
+    return load_dialogues()
+
+
+def test_dialogues_are_consistent(dialogues: list[Dialogue], all_worlds: dict[str, World]) -> None:
+    assert dialogues
+    problems = dialogue_problems(dialogues, all_worlds)
+    assert not problems, "\n".join(problems)
+
+
+def test_dialogues_are_spread_over_realms_kinds_and_shapes(
+    dialogues: list[Dialogue], all_worlds: dict[str, World]
+) -> None:
+    world = all_worlds["commons"]
+    kind = {m.key: m.kind for m in world.memories}
+    expected = {kind[k] for d in dialogues for t in d.turns for k in t.include}
+    assert expected == {"fact", "directive", "decision", "event", "procedure", "task", "lesson"}
+    tags = {t for d in dialogues for t in d.tags}
+    assert {"dev", "office", "research", "daily", "hobby"} <= tags
+    shapes = {"anaphora", "ellipsis", "confirm", "topic-switch", "pasted", "correction", "session"}
+    assert shapes <= tags, shapes - tags
+    turns = [t for d in dialogues for t in d.turns if t.scored]
+    assert len(turns) >= 60
+    assert sum(t.needs_history for t in turns) >= 15
+    assert {d.split for d in dialogues} == {"tune", "holdout"}

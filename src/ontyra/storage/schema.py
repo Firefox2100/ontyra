@@ -170,7 +170,9 @@ class SchemaGenerator:
                 f"DEFINE INDEX OVERWRITE {idx} ON {spec.name} FIELDS {path}"
                 f"{' UNIQUE' if unique else ''}"
             )
-        if spec.immutable:
+        if spec.prunable:  # was blocked before the table became prunable
+            stmts.append(f"REMOVE EVENT IF EXISTS {spec.name}_no_delete ON TABLE {spec.name}")
+        elif spec.immutable:
             stmts.append(
                 f"DEFINE EVENT OVERWRITE {spec.name}_no_delete ON TABLE {spec.name} "
                 f'WHEN $event = "DELETE" THEN {{ THROW "{spec.name} is immutable" }}'

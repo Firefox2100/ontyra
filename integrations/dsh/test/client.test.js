@@ -249,7 +249,7 @@ test('the card renders one control per setting plus the token field', () => {
     timeoutMs: 1500,
     tools: true,
     toolsProfile: 'lite',
-    episodes: false,
+    episodes: true,
     capture: false,
     captureEvery: 10,
     subagents: false,

@@ -140,3 +140,17 @@ test('ask sends record ids in the bodies and bare ids in the paths', () => {
   const call = get.request({ memory: 'memory:abc' }, {})
   assert.equal(call.path, '/v1/memories/abc/detail')
 })
+
+test('the remember ops list the daemon’s per-kind fields', () => {
+  const remote = contract.find((entry) => entry.name === 'remember')
+  let guide = ''
+  const walk = (node) => {
+    if (typeof node === 'string' && node.includes('directive (') && node.includes('fact (')) guide = node
+    else if (node && typeof node === 'object') Object.values(node).forEach(walk)
+  }
+  walk(remote.inputSchema ?? remote.input_schema)
+  const lines = guide.split('\n').filter((line) => /^(fact|directive|decision|event|procedure|task|lesson) \(/.test(line))
+  assert.equal(lines.length, 7)
+  const ops = TOOLS.find((tool) => tool.name === 'ontyra_remember').parameters.ops.description
+  for (const line of lines) assert.ok(ops.includes(line), `ops description lacks: ${line}`)
+})

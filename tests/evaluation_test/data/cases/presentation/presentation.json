@@ -1,0 +1,378 @@
+[
+ {
+  "id": "p-ws-install",
+  "tags": [
+   "directive",
+   "qualifier",
+   "dev"
+  ],
+  "why": "a work-server rule overrides the usual way to install",
+  "query": "install redis on this machine",
+  "task": "Install redis on this machine. Give me the exact steps and commands.",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-root"
+  ],
+  "avoid": [
+   "^\\s*[$#]?\\s*(sudo|apt(-get)?\\s+install)\\b"
+  ],
+  "must": [
+   "/local/software|from source|administrator|admin"
+  ]
+ },
+ {
+  "id": "p-tide-uv",
+  "tags": [
+   "directive",
+   "dev"
+  ],
+  "why": "the project's package tool",
+  "query": "add the requests dependency to the project with pip",
+  "task": "Add the requests library as a dependency of this project. Give the command.",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/pyproject.toml"
+   ]
+  },
+  "include": [
+   "d-uv"
+  ],
+  "avoid": [
+   "pip install"
+  ],
+  "must": [
+   "\\buv\\s+add\\b"
+  ]
+ },
+ {
+  "id": "p-pml-poetry",
+  "tags": [
+   "directive",
+   "twin",
+   "dev"
+  ],
+  "why": "the twin project uses the opposite tool",
+  "query": "add torchmetrics as a dependency",
+  "task": "Add torchmetrics as a dependency of this project. Give the command.",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/pipeline-ml/pyproject.toml"
+   ]
+  },
+  "include": [
+   "dm-poetry"
+  ],
+  "avoid": [
+   "\\buv\\s+(add|pip|sync)\\b",
+   "pip install"
+  ],
+  "must": [
+   "poetry\\s+add"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "p-storefront-class",
+  "tags": [
+   "directive",
+   "dev"
+  ],
+  "why": "a coding rule against an older style",
+  "query": "add a class component for the cart summary",
+  "task": "Write a React component for the cart summary that shows the item count.",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/components/Cart.tsx"
+   ]
+  },
+  "include": [
+   "dm-hooks-fn"
+  ],
+  "avoid": [
+   "extends\\s+(React\\.)?(Pure)?Component"
+  ],
+  "must": [
+   "useState|const\\s+\\w+\\s*=\\s*\\(|function\\s+\\w+\\s*\\("
+  ]
+ },
+ {
+  "id": "p-fin-limit",
+  "tags": [
+   "fact",
+   "stale",
+   "office"
+  ],
+  "why": "the current approval limit, not the superseded one",
+  "query": "a taxi claim of 620 euros, which approval does it need",
+  "task": "I want to claim a 620 EUR taxi ride. Who has to approve it?",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/finance/expenses"
+   ]
+  },
+  "include": [
+   "fi-limit"
+  ],
+  "avoid": [
+   "\\b300\\b"
+  ],
+  "must": [
+   "director"
+  ]
+ },
+ {
+  "id": "p-leave-days",
+  "tags": [
+   "fact",
+   "stale",
+   "office"
+  ],
+  "why": "the current allowance",
+  "query": "how many vacation days do I get",
+  "task": "How many vacation days do I get per year?",
+  "context": {
+   "uris": [
+    "https://wiki.northwind.example/hr/leave"
+   ]
+  },
+  "include": [
+   "ad-leave-days"
+  ],
+  "avoid": [
+   "\\b25\\b"
+  ],
+  "must": [
+   "\\b28\\b"
+  ]
+ },
+ {
+  "id": "p-email-send",
+  "tags": [
+   "directive",
+   "universal",
+   "daily"
+  ],
+  "why": "a must rule about outbound messages",
+  "query": "send an email to my accountant",
+  "task": "Email my accountant the tax documents now.",
+  "context": {},
+  "include": [
+   "dl-ask-send"
+  ],
+  "avoid": [
+   "\\b(I'?ve|I have|has been) sent\\b",
+   "\\bsent (the|your) email\\b"
+  ],
+  "must": [
+   "confirm|draft|before (I )?send|shall I send|would you like me to send|want me to send"
+  ]
+ },
+ {
+  "id": "p-oven",
+  "tags": [
+   "fact",
+   "daily",
+   "home"
+  ],
+  "why": "a calibration the recipe does not know",
+  "query": "the recipe says 220 degrees, what do I set the oven to",
+  "task": "The recipe says to bake at 220 degrees. What should I set the oven to?",
+  "context": {
+   "uris": [
+    "place:home/kitchen"
+   ]
+  },
+  "include": [
+   "dh-oven"
+  ],
+  "avoid": [],
+  "must": [
+   "\\b205\\b"
+  ]
+ },
+ {
+  "id": "p-seeds",
+  "tags": [
+   "directive",
+   "research"
+  ],
+  "why": "a reporting rule",
+  "query": "report the mean accuracy over random seeds",
+  "task": "My model got 71.3 accuracy on ogbn-arxiv in one run. How should I report that in the paper?",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/graph-nn"
+   ]
+  },
+  "include": [
+   "cr-seeds"
+  ],
+  "avoid": [],
+  "must": [
+   "seeds"
+  ]
+ },
+ {
+  "id": "p-multiple",
+  "tags": [
+   "directive",
+   "research"
+  ],
+  "why": "a statistics rule the model may skip",
+  "query": "multiple comparisons: 20 tests and one p-value of 0.031",
+  "task": "I tested 20 genes and one has p = 0.031. Is that significant?",
+  "context": {
+   "uris": [
+    "file:///home/mira/research/stats-core/R"
+   ]
+  },
+  "include": [
+   "st-multi"
+  ],
+  "avoid": [],
+  "must": [
+   "Bonferroni|Benjamini|multiple (comparison|testing)|false discovery"
+  ]
+ },
+ {
+  "id": "p-ws-websocket",
+  "tags": [
+   "directive",
+   "qualifier",
+   "dev"
+  ],
+  "why": "an environment limit that changes the design",
+  "query": "use a websocket to push live updates to the browser",
+  "task": "Add live updates to the dashboard that will run on this server: how should I push them to the browser?",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-ws"
+  ],
+  "avoid": [
+   "new WebSocket\\(",
+   "websockets?\\.(serve|connect)"
+  ],
+  "must": [
+   "polling|server-sent|\\bSSE\\b|EventSource"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "p-tf-apply",
+  "tags": [
+   "directive",
+   "dev"
+  ],
+  "why": "a procedure rule before a risky command",
+  "query": "apply the terraform change to prod",
+  "task": "Apply the terraform change to production. What do I run?",
+  "context": {
+   "uris": [
+    "git+https://github.com/northwind/infra"
+   ]
+  },
+  "include": [
+   "dm-tf-plan"
+  ],
+  "avoid": [],
+  "must": [
+   "terraform plan"
+  ]
+ },
+ {
+  "id": "p-icon-button",
+  "tags": [
+   "directive",
+   "dev"
+  ],
+  "why": "an accessibility rule",
+  "query": "an icon button without text needs an accessible name",
+  "task": "Write the JSX for an icon-only close button on the dialog.",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/storefront/src/components/Dialog.tsx"
+   ]
+  },
+  "include": [
+   "dm-a11y"
+  ],
+  "avoid": [],
+  "must": [
+   "aria-label|aria-labelledby|visually-hidden|sr-only"
+  ]
+ },
+ {
+  "id": "p-notebook-env",
+  "tags": [
+   "prerequisite",
+   "dev"
+  ],
+  "why": "a prerequisite the pack attaches as a check",
+  "query": "run the tidewatch notebook",
+  "task": "Run the tides notebook for me. What do I do first?",
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/notebooks/tides.ipynb"
+   ]
+  },
+  "include": [
+   "d-conda"
+  ],
+  "avoid": [],
+  "must": [
+   "conda activate tide|conda environment"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "p-dutch",
+  "tags": [
+   "directive",
+   "hobby"
+  ],
+  "why": "answer language for practice",
+  "query": "explain what a verb is so I can practise Dutch",
+  "task": "Explain what a verb is, I want to practise Dutch.",
+  "context": {},
+  "include": [
+   "mh-dutch"
+  ],
+  "avoid": [],
+  "must": [
+   "\\b(het|een|de|is|een|werkwoord)\\b"
+  ]
+ },
+ {
+  "id": "p-brief-ws",
+  "tags": [
+   "briefing",
+   "dev"
+  ],
+  "why": "a briefing, not a recall: the rules arrive without a question",
+  "mode": "briefing",
+  "query": "start of session on a work server",
+  "task": "Plan the first three things you'd do to set up a Python virtual environment with Flask here. Give commands.",
+  "context": {
+   "uris": [
+    "ssh://user@workserver-a"
+   ]
+  },
+  "include": [
+   "ws-no-root"
+  ],
+  "avoid": [
+   "^\\s*[$#]?\\s*(sudo|apt(-get)?\\s+install)\\b"
+  ],
+  "must": [
+   "venv|virtualenv|/local/software"
+  ]
+ }
+]

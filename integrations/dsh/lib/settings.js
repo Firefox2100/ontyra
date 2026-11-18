@@ -18,7 +18,7 @@ export const DEFAULTS = Object.freeze({
   timeoutMs: 1500,
   tools: true,
   toolsProfile: 'lite',
-  episodes: false,
+  episodes: true,
   capture: false,
   captureEvery: 10,
   subagents: false,

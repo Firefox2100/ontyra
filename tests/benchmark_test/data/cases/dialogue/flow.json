@@ -1,0 +1,73 @@
+[
+ {
+  "id": "dlg-session-repeat",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "session",
+   "dev"
+  ],
+  "why": "within one session a memory is delivered once; after a compaction it is delivered again",
+  "split": "tune",
+  "turns": [
+   {
+    "say": "what port is the dev API on?",
+    "reply": "8420.",
+    "include": [
+     "f-port"
+    ]
+   },
+   {
+    "say": "remind me, what port was the dev API on?",
+    "reply": "8420.",
+    "exclude": [
+     "f-port"
+    ]
+   },
+   {
+    "say": "what port is the dev API on?",
+    "include": [
+     "f-port"
+    ],
+    "redeliver": true
+   }
+  ],
+  "context": {
+   "uris": [
+    "file:///home/mira/src/tidewatch/src/api/routes.py"
+   ]
+  },
+  "session": true
+ },
+ {
+  "id": "dlg-session-brief",
+  "world": "commons",
+  "tags": [
+   "dialogue",
+   "session",
+   "office"
+  ],
+  "why": "a rule delivered by the briefing is not repeated by the next recall in the session",
+  "split": "tune",
+  "turns": [
+   {
+    "mode": "briefing",
+    "include": [
+     "dl-ask-send"
+    ]
+   },
+   {
+    "say": "email the minutes to the team",
+    "exclude": [
+     "dl-ask-send"
+    ],
+    "allow": [
+     "ad-minutes",
+     "ad-minutes-fmt",
+     "ad-minutes-shared"
+    ]
+   }
+  ],
+  "session": true
+ }
+]

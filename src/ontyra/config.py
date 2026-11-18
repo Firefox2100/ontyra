@@ -14,6 +14,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ontyra.models import PolicyConfig
 from ontyra.models.consolidation import ConsolidationSettings
+from ontyra.models.episodes import EpisodeSettings
 from ontyra.models.recall import RecallSettings
 from ontyra.models.tasks import TaskSettings
 
@@ -215,6 +216,7 @@ class Settings(BaseSettings):
     decision: DecisionSettings = DecisionSettings()
     consolidation: ConsolidationSettings = ConsolidationSettings()
     tasks: TaskSettings = TaskSettings()
+    episodes: EpisodeSettings = EpisodeSettings()
     recall: RecallSettings = RecallSettings()
     ontology: OntologySettings = OntologySettings()
     mcp: McpSettings = McpSettings()

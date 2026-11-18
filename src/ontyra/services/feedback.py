@@ -74,6 +74,36 @@ def view(f: Feedback) -> FeedbackView:
     )
 
 
+def feedback_card(
+    *,
+    memory: RecordId,
+    revision: RecordId,
+    kind: str,
+    text: str,
+    label: str,
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    """The task card for a memory reported `outdated` or `wrong`."""
+    return {
+        "finding": "feedback",
+        "instructions": (
+            "This memory was reported "
+            f"{label}. Check it against what you know. If it is wrong or no longer "
+            "true, retract it (`retract`); if it needs correcting, supersede or revise it "
+            "and complete with `revise` and that proposal; if it is fine, complete with "
+            "`keep` (not raised again for this revision). `defer` parks it."
+        ),
+        "memory": str(memory),
+        "revision": str(revision),
+        "kind": kind,
+        "text": text,
+        "reports": [report],
+        "count": 1,
+        "revisions": [str(revision)],
+        "choices": ["retract", "revise", "keep", "defer"],
+    }
+
+
 class FeedbackService:
     def __init__(self, store: Store, now: Callable[[], datetime], ttl_days: int = 365) -> None:
         self.store = store
@@ -169,24 +199,14 @@ class FeedbackService:
                     {"updated_at": now, "payload": {"reports": reports, "count": len(reports)}},
                 )
             ]
-        card = {
-            "finding": "feedback",
-            "instructions": (
-                "This memory was reported "
-                f"{event.label}. Check it against what you know. If it is wrong or no longer "
-                "true, retract it (`retract`); if it needs correcting, supersede or revise it "
-                "and complete with `revise` and that proposal; if it is fine, complete with "
-                "`keep` (not raised again for this revision). `defer` parks it."
-            ),
-            "memory": str(memory.id),
-            "revision": str(revision),
-            "kind": memory.kind,
-            "text": found.text,
-            "reports": [report],
-            "count": 1,
-            "revisions": [str(revision)],
-            "choices": ["retract", "revise", "keep", "defer"],
-        }
+        card = feedback_card(
+            memory=memory.id,
+            revision=revision,
+            kind=memory.kind,
+            text=found.text,
+            label=event.label,
+            report=report,
+        )
         return [
             Create.of(
                 RecordId("task", new_id()),

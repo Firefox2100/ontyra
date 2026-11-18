@@ -96,7 +96,9 @@ export const TOOLS = [
     title: 'Recall memories',
     description:
       'Memories relevant to a message in a context. Empty (`silent`) when nothing clears the '
-      + 'relevance bar. `rendered` is ready to read. Call before starting a task.',
+      + 'relevance bar. `rendered` is ready to read. Call before starting a task unless relevant '
+      + 'memory is already in your context. When the message depends on earlier turns, make `query` '
+      + 'standalone: name the subject instead of "it" or "that".',
     parameters: {
       query: { type: 'string', description: 'The message, question or task to recall for' },
       context: { type: 'json', description: 'Where the agent is working; omit to use the observed environment' },
@@ -120,8 +122,9 @@ export const TOOLS = [
     name: 'ontyra_check',
     title: 'Check before acting',
     description:
-      'Before an action with side effects: the directives, prerequisites and lessons that apply '
-      + 'to this intent, plus every applicable `must` directive.',
+      'Before an action with side effects (delete, push, deploy, migrate): the directives, '
+      + 'prerequisites and lessons that apply to this intent, plus every applicable `must` directive. '
+      + 'Not needed before writing memory.',
     parameters: {
       intent: { type: 'string', required: true, description: 'What you are about to do' },
       context: { type: 'json', description: 'Where the agent is working; omit to use the observed environment' },
@@ -218,19 +221,34 @@ export const TOOLS = [
     name: 'ontyra_remember',
     title: 'Remember (propose a memory change)',
     description:
-      'Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, '
-      + '`annotate`); it is validated, then committed or held for review. Side effects: a proposal '
-      + 'is recorded; if the policy commits it, memories are added or superseded or retracted '
-      + '(history is kept). Read the findings: warnings may point at a duplicate you should '
-      + 'supersede. Memories go to your own space; `space: global` writes to the shared memory and '
-      + 'needs permission.',
+      'Store, change or retire a memory by sending a proposal of ops. To store something new use op '
+      + '`add` (a `kind` and its `fields`; the schema lists them). `revise`, `supersede` and '
+      + '`retract` (and `link`, `annotate` in the full profile) act on memories that already exist: '
+      + 'use ids from recall or an earlier result, never an invented one. Cite what the user said as '
+      + '`evidence: [{"quote": ...}]`. The proposal is validated, then committed or held for review: '
+      + 'say it is saved only when `status` is `committed` (`pending` means a human must approve). '
+      + 'Read the findings: a duplicate warning usually means supersede; an unscoped warning means '
+      + '`revise` that memory, not add it again. Side effects: a proposal is recorded; if the policy '
+      + 'commits it, memories are added or superseded or retracted (history is kept). Memories go to '
+      + 'your own space; `space: global` writes to the shared memory and needs permission.',
     parameters: {
       ops: {
         type: 'json',
         required: true,
         description:
-          'The operations: add, revise, supersede, retract, link, annotate. Every `fields` object '
-          + 'needs `text` (one-line summary) plus its kind\'s own fields',
+          'The operations. `add` stores something NEW (`kind` and `fields`); `revise`, `supersede` and '
+          + '`retract` act on memories that already exist, by id from recall or an earlier result. For `add`, `fields` takes `text` (the whole statement, in one sentence) '
+          + 'plus the kind\'s own fields, required first, optional in brackets:\n'
+          + 'fact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\n'
+          + 'directive (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\n'
+          + 'decision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\n'
+          + 'event (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\n'
+          + 'procedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\n'
+          + 'task (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\n'
+          + 'lesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\n'
+          + 'Every kind also takes: scope (contextual|universal), anchors, about (concept ids), '
+          + 'qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`. Cite what the '
+          + 'user said as `evidence: [{"quote": ...}]` on the op.',
       },
       note: { type: 'string', description: 'Why this proposal, in one line' },
       space: { type: 'string', description: '`own` (default) or `global`' },

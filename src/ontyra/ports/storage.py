@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Protocol
 
 from ontyra.models import Record, RecordId
-from ontyra.models.core import Memory
+from ontyra.models.core import Episode, Memory
 from ontyra.models.search import SearchDoc
 from ontyra.ports.writes import Write
 
@@ -96,6 +96,16 @@ class Store(Protocol):
     async def memory_edges(self, edge: str, memories: Sequence[RecordId]) -> list[dict[str, Any]]:
         """Edge rows touching any revision of the given memories, with `in_memory` and
         `out_memory` added. Links between revisions follow their memories across revisions."""
+        ...
+
+    async def recent_episodes(
+        self, owners: Sequence[RecordId], since: datetime, limit: int
+    ) -> list[Episode]:
+        """Episodes of the owners at or after `since`, newest first."""
+        ...
+
+    async def uncited_episodes(self, before: datetime, limit: int) -> list[RecordId]:
+        """Episodes older than `before` that no revision cites (`derived_from`)."""
         ...
 
     async def unembedded(self, model: str, limit: int = 64) -> list[SearchDoc]:

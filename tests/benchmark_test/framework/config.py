@@ -129,6 +129,9 @@ class BenchSettings(BaseSettings):
     live: bool = False  # model-driven suites run only when set
     label: str | None = None  # prefix of the result files; default: a timestamp
     repeat: int = 1
+    history: str = (
+        "last,users2,users3,window,hints,adaptive,union,oracle"  # dialogue query strategies
+    )
     only: str | None = None  # substring filter on case ids
     assert_results: bool | None = Field(  # default: assert only for the baseline profile
         default=None, validation_alias="BENCH_ASSERT"

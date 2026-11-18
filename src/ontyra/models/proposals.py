@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from ontyra.models.base import EpisodeRef, MemoryRef, Model, RecordId
-from ontyra.models.kinds import KindName
+from ontyra.models.kinds import KindName, fields_guide
 from ontyra.models.policy import Decision
 
 ReasonCode = Literal[
@@ -17,19 +17,42 @@ ReasonCode = Literal[
 
 
 class Evidence(Model):
-    """A source episode; if `quote` is given it must literally occur in that episode."""
+    """What a memory comes from: words that were said, found in the episode log.
 
-    episode: EpisodeRef
-    quote: str | None = None
+    Give a `quote` and the daemon looks it up among your recent episodes (it must occur there
+    literally, case and spacing aside); nothing is stored when it does not. Give an `episode`
+    id as well to name the exact message; the quote must then occur in that one.
+    """
+
+    quote: str | None = Field(
+        default=None, description="Words from the conversation, copied literally (a sentence)."
+    )
+    episode: EpisodeRef | None = Field(
+        default=None, description="Optional: the episode id, when you know it."
+    )
+
+    @model_validator(mode="after")
+    def _something_to_go_on(self) -> Evidence:
+        if self.episode is None and not (self.quote and self.quote.strip()):
+            raise ValueError("evidence needs a quote or an episode")
+        return self
 
 
 class AddMemory(Model):
-    """Create a new memory (item + first revision)."""
+    """Create a NEW memory (item + first revision). This is how anything gets stored: pick the
+    `kind` and give its `fields`. Say where it applies (`scope: universal`, or `anchors` /
+    `about`), or a directive is flagged as unscoped."""
 
     op: Literal["add"] = "add"
     ref: str | None = None  # alias other ops in this proposal can point at
     kind: KindName
-    fields: dict[str, Any]  # `text` plus the kind's own fields (see models.kinds)
+    fields: dict[str, Any] = Field(
+        description="`text` (the whole statement, in one sentence) plus the kind's own fields, "
+        "required first, optional in brackets:\n"
+        + fields_guide()
+        + "\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), "
+        "qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`."
+    )
     valid_from: datetime | None = None
     evidence: list[Evidence] = []
     derived_from: list[str | RecordId] = []  # memories (or refs) this was derived from
@@ -65,6 +88,9 @@ class RetractMemory(Model):
 
 
 class LinkMemories(Model):
+    """Relate two EXISTING memories (ids from recall, or `ref`s of this proposal). It stores
+    nothing new: use `add` for that."""
+
     op: Literal["link"] = "link"
     relation: Literal["contradicts", "overrides", "refines", "promoted_to"]
     source: str | RecordId  # `ref` or memory id
@@ -73,6 +99,9 @@ class LinkMemories(Model):
 
 
 class Annotate(Model):
+    """Attach a note to an EXISTING memory (`target` is its id). It stores nothing new: use
+    `add` for that."""
+
     op: Literal["annotate"] = "annotate"
     target: RecordId
     kind: Literal["comment", "tag", "flag"] = "comment"
@@ -93,6 +122,22 @@ class ProposalRequest(Model):
     space: Literal["own", "global"] = "own"
     idempotency_key: str | None = None
     note: str | None = None
+
+
+class LiteProposalRequest(ProposalRequest):
+    """The proposal of the `lite` MCP profile: only the ops an agent needs to write and correct
+    memory (`add`, `revise`, `supersede`, `retract`). `link` and `annotate` are left out: a weak
+    tool-caller reaches for `annotate` as the easy way to "note" something and stores nothing."""
+
+    ops: Annotated[  # type: ignore[assignment]
+        list[
+            Annotated[
+                AddMemory | ReviseMemory | SupersedeMemory | RetractMemory,
+                Field(discriminator="op"),
+            ]
+        ],
+        Field(min_length=1),
+    ]
 
 
 class Finding(Model):

@@ -1,0 +1,312 @@
+[
+ {
+  "id": "w-directive-global",
+  "tags": [
+   "directive",
+   "universal"
+  ],
+  "why": "a standing preference that holds everywhere",
+  "conversation": [
+   [
+    "user",
+    "Please always give me answers in British spelling, in every project."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "directive"
+  ],
+  "count": 1,
+  "contains": [
+   "british"
+  ]
+ },
+ {
+  "id": "w-directive-project",
+  "tags": [
+   "directive",
+   "anchored"
+  ],
+  "why": "a rule for one project",
+  "conversation": [
+   [
+    "user",
+    "In tidewatch we only use uv. Never run pip install directly."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "cwd": "/home/mira/src/tidewatch",
+  "kinds": [
+   "directive"
+  ],
+  "count": 1,
+  "contains": [
+   "uv"
+  ]
+ },
+ {
+  "id": "w-fact-env",
+  "tags": [
+   "fact"
+  ],
+  "why": "a fact about the environment",
+  "conversation": [
+   [
+    "user",
+    "Our CI runs on a self-hosted runner called buildbox, in the office basement."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "fact"
+  ],
+  "count": 1,
+  "contains": [
+   "buildbox"
+  ]
+ },
+ {
+  "id": "w-decision",
+  "tags": [
+   "decision"
+  ],
+  "why": "a decision with its reason",
+  "conversation": [
+   [
+    "user",
+    "We went with SQLite for the local cache instead of Redis, because we don't want another service to run on the laptop."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "decision"
+  ],
+  "count": 1,
+  "contains": [
+   "sqlite"
+  ]
+ },
+ {
+  "id": "w-lesson",
+  "tags": [
+   "lesson"
+  ],
+  "why": "a lesson from a failure",
+  "conversation": [
+   [
+    "user",
+    "The August outage got worse because the rollback script had never been tested. Next time we test it before we need it."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "lesson",
+   "directive"
+  ],
+  "count": 1,
+  "contains": [
+   "rollback"
+  ]
+ },
+ {
+  "id": "w-procedure",
+  "tags": [
+   "procedure"
+  ],
+  "why": "steps to do something",
+  "conversation": [
+   [
+    "user",
+    "How we release: bump the version, tag it, push the tag, then publish to npm."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "procedure"
+  ],
+  "count": 1,
+  "contains": [
+   "tag"
+  ]
+ },
+ {
+  "id": "w-event",
+  "tags": [
+   "event"
+  ],
+  "why": "something that happened",
+  "conversation": [
+   [
+    "user",
+    "Yesterday at 15:00 the build server ran out of disk space and CI stalled for six hours."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "event"
+  ],
+  "count": 1,
+  "contains": [
+   "disk"
+  ]
+ },
+ {
+  "id": "w-task",
+  "tags": [
+   "task"
+  ],
+  "why": "something to do later",
+  "conversation": [
+   [
+    "user",
+    "Remind me to renew the TLS certificate before the end of the month."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "task"
+  ],
+  "count": 1,
+  "contains": [
+   "certificate"
+  ]
+ },
+ {
+  "id": "w-two-statements",
+  "tags": [
+   "multi"
+  ],
+  "why": "two statements, two memories",
+  "conversation": [
+   [
+    "user",
+    "Two things about the VPN: it needs the 'corp-split' profile, and the password rotates every 90 days."
+   ]
+  ],
+  "should_write": true,
+  "split": "tune",
+  "kinds": [
+   "fact",
+   "directive"
+  ],
+  "count": 2,
+  "contains": [
+   "corp-split",
+   "90"
+  ]
+ },
+ {
+  "id": "w-from-context",
+  "tags": [
+   "directive",
+   "dialogue"
+  ],
+  "why": "the preference is stated after a few turns",
+  "conversation": [
+   [
+    "user",
+    "Can you write the release notes?"
+   ],
+   [
+    "assistant",
+    "Here is a draft with a long intro."
+   ],
+   [
+    "user",
+    "Too wordy. For all my notes, skip the intro and lead with the changes."
+   ]
+  ],
+  "should_write": true,
+  "split": "holdout",
+  "kinds": [
+   "directive"
+  ],
+  "count": 1,
+  "contains": [
+   "intro"
+  ]
+ },
+ {
+  "id": "w-no-typo",
+  "tags": [
+   "transient"
+  ],
+  "why": "a one-off request is not a memory",
+  "conversation": [
+   [
+    "user",
+    "Fix the typo on line 12 please."
+   ]
+  ],
+  "should_write": false,
+  "split": "tune"
+ },
+ {
+  "id": "w-no-weather",
+  "tags": [
+   "transient"
+  ],
+  "why": "chit-chat",
+  "conversation": [
+   [
+    "user",
+    "What's the weather like in Rotterdam today?"
+   ]
+  ],
+  "should_write": false,
+  "split": "tune"
+ },
+ {
+  "id": "w-no-code-fact",
+  "tags": [
+   "derivable"
+  ],
+  "why": "already in the code",
+  "conversation": [
+   [
+    "user",
+    "The function parse_config returns a dict, by the way."
+   ]
+  ],
+  "should_write": false,
+  "split": "tune"
+ },
+ {
+  "id": "w-no-mood",
+  "tags": [
+   "transient"
+  ],
+  "why": "the state of the moment",
+  "conversation": [
+   [
+    "user",
+    "I'm on a train right now so my replies will be slow."
+   ]
+  ],
+  "should_write": false,
+  "split": "tune"
+ },
+ {
+  "id": "w-no-hedge",
+  "tags": [
+   "hedged"
+  ],
+  "why": "an unsure musing is not a decision",
+  "conversation": [
+   [
+    "user",
+    "I think maybe we might switch to Postgres someday, not sure at all."
+   ]
+  ],
+  "should_write": false,
+  "split": "holdout"
+ }
+]

@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable, Callable, Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.core import Actor, Episode, Memory, Proposal, RevState, Task
+from ontyra.models.episodes import EpisodeSettings
 from ontyra.models.kinds import RevisionBase
 from ontyra.models.proposals import Finding, ProposalRequest, ProposalResult
-from ontyra.ports import Create, Store, StoreConflictError, Update, Write
+from ontyra.ports import Create, Delete, Store, StoreConflictError, Update, Write
 from ontyra.services import errors
 from ontyra.services.anchors import AnchorService
 from ontyra.services.context import GLOBAL_OWNER, Caller
@@ -58,13 +60,16 @@ class MemoryService:
         *,
         on_commit: Callable[[list[RecordId]], Awaitable[object]] | None = None,
         max_attempts: int = 5,
+        episodes: EpisodeSettings | None = None,
     ) -> None:
         self.store = store
         self.policy = policy
         self.now = now
         self.max_attempts = max_attempts
         self.on_commit = on_commit  # e.g. embed the new revisions (best effort)
-        self.validator = ProposalValidator(store, now, ontology, anchors)
+        self.episodes = episodes or EpisodeSettings()
+        self._last_prune: datetime | None = None
+        self.validator = ProposalValidator(store, now, ontology, anchors, self.episodes)
 
     # ---- episodes -----------------------------------------------------------
 
@@ -95,7 +100,31 @@ class MemoryService:
                 )
             ]
         )
+        await self._prune_episodes()
         return rid
+
+    async def _prune_episodes(self) -> int:
+        """Delete episodes older than the retention that no memory cites. Runs at most once per
+        `prune_interval_minutes`, after an episode is written; a failure costs nothing."""
+        cfg = self.episodes
+        now = self.now()
+        if cfg.retention_days <= 0:
+            return 0
+        if self._last_prune and now - self._last_prune < timedelta(
+            minutes=cfg.prune_interval_minutes
+        ):
+            return 0
+        self._last_prune = now
+        try:
+            stale = await self.store.uncited_episodes(
+                now - timedelta(days=cfg.retention_days), limit=1000
+            )
+            if stale:
+                await self.store.apply([Delete(rid) for rid in stale])
+        except Exception:
+            logging.getLogger(__name__).warning("episode retention sweep failed", exc_info=True)
+            return 0
+        return len(stale)
 
     # ---- proposals ----------------------------------------------------------
 

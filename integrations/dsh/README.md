@@ -11,7 +11,7 @@ What the model gets:
 - the **memory tools** (`ontyra_recall`, `ontyra_check`, `ontyra_briefing`, `ontyra_ask`,
   `ontyra_get`, `ontyra_remember`, and with the `full` profile `ontyra_concepts`,
   `ontyra_propose_ontology_change`) as native harness tools, not MCP tools;
-- optional **episodes** (prompt and answer sent to the daemon as session history) and an optional
+- **episodes** (on by default; prompt and answer sent to the daemon as session history) and an optional
   capture nudge that asks the model to record what it learned.
 
 It never changes what the daemon stores: every write is still a proposal that the daemon's policy
@@ -53,7 +53,7 @@ on the next call.
 | `timeoutMs` | `1500` | Give up quietly after this long. |
 | `tools` | `true` | Register the memory tools. |
 | `toolsProfile` | `lite` | Dropdown: `lite`, or `full` to add the ontology tools. |
-| `episodes` | `false` | Record prompts and answers as session episodes. |
+| `episodes` | `true` | Record prompts and answers as session episodes (what a memory's `quote` evidence is matched against). |
 | `capture` | `false` | Ask the model to record lessons every so often. |
 | `captureEvery` | `10` | Prompts between capture reminders. |
 | `subagents` | `false` | Also inject and record inside subagent sessions. |

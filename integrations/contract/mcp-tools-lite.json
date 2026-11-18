@@ -317,7 +317,7 @@
     "name": "briefing"
   },
   {
-    "description": "Before an action with side effects: the directives, prerequisites and lessons that apply to this intent, plus every applicable `must` directive.",
+    "description": "Before an action with side effects (delete, push, deploy, migrate): the directives, prerequisites and lessons that apply to this intent, plus every applicable `must` directive. Not needed before writing memory.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -790,7 +790,7 @@
     "name": "propose_ontology_change"
   },
   {
-    "description": "Memories relevant to a message in a context. Empty (`silent`) when nothing clears the relevance bar. `rendered` is ready to read. Call before starting a task.",
+    "description": "Memories relevant to a message in a context. Empty (`silent`) when nothing clears the relevance bar. `rendered` is ready to read. Call before starting a task unless relevant memory is already in your context. When the message depends on earlier turns, make `query` standalone: name the subject instead of \"it\" or \"that\".",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -945,12 +945,13 @@
     "name": "recall"
   },
   {
-    "description": "Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, `retract`, `link`, `annotate`); it is validated, then committed or held for review. Side effects: a proposal is recorded; if the policy commits it, memories are added or superseded or retracted (history is kept). Read the findings: warnings may point at a duplicate you should supersede. Memories go to your own space; `space: global` writes to the shared memory and needs permission.",
+    "description": "Store, change or retire a memory by sending a proposal of ops. To store something new use op `add` (a `kind` and its `fields`; the schema lists them). `revise`, `supersede` and `retract` (and `link`, `annotate` in the full profile) act on memories that already exist: use ids from recall or an earlier result, never an invented one. Cite what the user said as `evidence: [{\"quote\": ...}]`. The proposal is validated, then committed or held for review: say it is saved only when `status` is `committed` (`pending` means a human must approve). Read the findings: a duplicate warning usually means supersede; an unscoped warning means `revise` that memory, not add it again. Side effects: a proposal is recorded; if the policy commits it, memories are added or superseded or retracted (history is kept). Memories go to your own space; `space: global` writes to the shared memory and needs permission.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "proposal": {
           "additionalProperties": false,
+          "description": "The proposal of the `lite` MCP profile: only the ops an agent needs to write and correct\nmemory (`add`, `revise`, `supersede`, `retract`). `link` and `annotate` are left out: a weak\ntool-caller reaches for `annotate` as the easy way to \"note\" something and stores nothing.",
           "properties": {
             "idempotency_key": {
               "anyOf": [
@@ -979,7 +980,7 @@
                 "oneOf": [
                   {
                     "additionalProperties": false,
-                    "description": "Create a new memory (item + first revision).",
+                    "description": "Create a NEW memory (item + first revision). This is how anything gets stored: pick the\n`kind` and give its `fields`. Say where it applies (`scope: universal`, or `anchors` /\n`about`), or a directive is flagged as unscoped.",
                     "properties": {
                       "derived_from": {
                         "default": [],
@@ -1003,14 +1004,23 @@
                         "default": [],
                         "items": {
                           "additionalProperties": false,
-                          "description": "A source episode; if `quote` is given it must literally occur in that episode.",
+                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
                           "properties": {
                             "episode": {
-                              "description": "A record id as `table:id`.",
-                              "examples": [
-                                "memory:0194f3a1b2c3d4e5f6a7"
+                              "anyOf": [
+                                {
+                                  "description": "A record id as `table:id`.",
+                                  "examples": [
+                                    "memory:0194f3a1b2c3d4e5f6a7"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
                               ],
-                              "type": "string"
+                              "default": null,
+                              "description": "Optional: the episode id, when you know it."
                             },
                             "quote": {
                               "anyOf": [
@@ -1021,18 +1031,17 @@
                                   "type": "null"
                                 }
                               ],
-                              "default": null
+                              "default": null,
+                              "description": "Words from the conversation, copied literally (a sentence)."
                             }
                           },
-                          "required": [
-                            "episode"
-                          ],
                           "type": "object"
                         },
                         "type": "array"
                       },
                       "fields": {
                         "additionalProperties": true,
+                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
                         "type": "object"
                       },
                       "kind": {
@@ -1091,14 +1100,23 @@
                         "default": [],
                         "items": {
                           "additionalProperties": false,
-                          "description": "A source episode; if `quote` is given it must literally occur in that episode.",
+                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
                           "properties": {
                             "episode": {
-                              "description": "A record id as `table:id`.",
-                              "examples": [
-                                "memory:0194f3a1b2c3d4e5f6a7"
+                              "anyOf": [
+                                {
+                                  "description": "A record id as `table:id`.",
+                                  "examples": [
+                                    "memory:0194f3a1b2c3d4e5f6a7"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
                               ],
-                              "type": "string"
+                              "default": null,
+                              "description": "Optional: the episode id, when you know it."
                             },
                             "quote": {
                               "anyOf": [
@@ -1109,12 +1127,10 @@
                                   "type": "null"
                                 }
                               ],
-                              "default": null
+                              "default": null,
+                              "description": "Words from the conversation, copied literally (a sentence)."
                             }
                           },
-                          "required": [
-                            "episode"
-                          ],
                           "type": "object"
                         },
                         "type": "array"
@@ -1250,106 +1266,6 @@
                     "required": [
                       "memory",
                       "reason",
-                      "op"
-                    ],
-                    "type": "object"
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "op": {
-                        "const": "link",
-                        "default": "link",
-                        "type": "string"
-                      },
-                      "reason": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ],
-                        "default": null
-                      },
-                      "relation": {
-                        "enum": [
-                          "contradicts",
-                          "overrides",
-                          "refines",
-                          "promoted_to"
-                        ],
-                        "type": "string"
-                      },
-                      "source": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "description": "A record id as `table:id`.",
-                            "examples": [
-                              "memory:0194f3a1b2c3d4e5f6a7"
-                            ],
-                            "type": "string"
-                          }
-                        ]
-                      },
-                      "target": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "description": "A record id as `table:id`.",
-                            "examples": [
-                              "memory:0194f3a1b2c3d4e5f6a7"
-                            ],
-                            "type": "string"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "relation",
-                      "source",
-                      "target",
-                      "op"
-                    ],
-                    "type": "object"
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "kind": {
-                        "default": "comment",
-                        "enum": [
-                          "comment",
-                          "tag",
-                          "flag"
-                        ],
-                        "type": "string"
-                      },
-                      "op": {
-                        "const": "annotate",
-                        "default": "annotate",
-                        "type": "string"
-                      },
-                      "target": {
-                        "description": "A record id as `table:id`.",
-                        "examples": [
-                          "memory:0194f3a1b2c3d4e5f6a7"
-                        ],
-                        "type": "string"
-                      },
-                      "text": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "target",
-                      "text",
                       "op"
                     ],
                     "type": "object"

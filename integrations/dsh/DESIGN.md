@@ -14,7 +14,7 @@ capture 提醒、可选的完整工具面、随插件发布的技能。
 - **不做任何 ontyra 服务端改动**：现有 REST 已覆盖全部能力。
 - 设置页面**必须存在**：基础配置（Ontyra 地址、凭据）与行为配置分开。
 - 凭据**不写进 Cordis patch**：只保存引用，值进 `$DSH_HOME/.credentials.yaml`。
-- `episodes`、`capture`、`subagents` 三项**默认关闭**，放进 DSH 配置供用户打开。
+- `capture`、`subagents` 两项**默认关闭**，放进 DSH 配置供用户打开；`episodes` **默认开启**（记忆证据 `quote` 要在 episode 账本里匹配，与 Claude/Codex 插件一致）。
 - 以后更强的整合（例如由插件托管 daemon、记忆面板）继续以原生方式加进这个插件。
 
 ## 2. 为什么是 bundle + 客户端卡
@@ -76,7 +76,7 @@ integrations/dsh/
 | `timeoutMs` | `1500` | 单次 HTTP 超时，失败静默 |
 | `tools` | `true` | 注册原生工具 |
 | `toolsProfile` | `lite` | `lite` 6 个；`full` 再加 2 个 |
-| `episodes` | `false` | 记录 episode |
+| `episodes` | `true` | 记录 episode |
 | `capture` | `false` | capture 提醒 |
 | `captureEvery` | `10` | 每 N 轮提醒一次 |
 | `subagents` | `false` | 子 agent 是否也注入 |

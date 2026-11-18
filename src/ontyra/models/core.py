@@ -66,11 +66,14 @@ class Credential(Record):
     last_used_at: datetime | None = None
 
 
-@registry.table("episode", immutable=True)
+@registry.table("episode", immutable=True, prunable=True)
 class Episode(Record):
-    occurred_at: datetime
+    """One raw message of a conversation. Fields never change; an episode that no memory cites
+    may be deleted after `ONTYRA_EPISODES__RETENTION_DAYS`."""
+
+    occurred_at: Annotated[datetime, Indexed()]
     actor: ActorRef
-    owner: OwnerRef
+    owner: Annotated[OwnerRef, Indexed()]
     session: str
     role: str
     content: str

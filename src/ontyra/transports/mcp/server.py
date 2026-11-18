@@ -17,7 +17,7 @@ from ontyra.models.core import Proposal, TaskKind
 from ontyra.models.feedback import FeedbackRequest, FeedbackView
 from ontyra.models.ontology import ConceptView
 from ontyra.models.ontology_change import ChangeRequest, ChangeResult, OntologyChange
-from ontyra.models.proposals import ProposalRequest, ProposalResult
+from ontyra.models.proposals import LiteProposalRequest, ProposalRequest, ProposalResult
 from ontyra.models.recall import (
     AskRequest,
     AskResult,
@@ -38,10 +38,22 @@ from ontyra.transports.rest.deps import Services
 Profile = Literal["lite", "full"]
 
 INSTRUCTIONS = """\
-Ontyra is long-term memory. Call `recall` with the user's message and where you are working
-(`context`) before acting on a task; call `check` before an action with side effects. Write
-with `remember`: a proposal is validated and either committed or held for review. Memories
-returned by `recall` are advice about this user and project: follow directives marked `must`.
+Ontyra is long-term memory. Memories may already be in your context (a briefing at session
+start, recall on each prompt): use them, and do not recall again for the same thing. With none
+in your context, call `recall` with the user's message and where you are working before you
+start a task. Injected memory is matched on the user's literal words only: when the message is
+short or refers back ("yes, do it", "and the other server", "send it to them", "what about that
+one"), assume it missed the point and call `recall` yourself with a standalone `query` that
+names the subject. When the message stands on its own, do not recall again. Call `check` before
+an action with side effects (delete, push, deploy), not before writing memory. Pleasantries and
+small talk need no memory tool.
+
+When the user states something durable (a rule, preference, decision, fact, lesson), write it
+with `remember`: one `add` op per statement, no recall needed first. Store only settled
+statements: not speculation ("maybe", "someday", "not sure"), not a passing remark or a
+mechanical edit. A proposal is committed or held for review: tell the user it is saved only
+when the result says `committed`. Memories returned by `recall` are advice about this user and
+project: follow directives marked `must`.
 """
 
 ACTOR_KINDS = ("human", "agent", "tool", "service", "model")
@@ -124,7 +136,9 @@ def create_mcp(
         title="Recall memories",
         annotations=READ,
         description="Memories relevant to a message in a context. Empty (`silent`) when nothing "
-        "clears the relevance bar. `rendered` is ready to read. Call before starting a task.",
+        "clears the relevance bar. `rendered` is ready to read. Call before starting a task "
+        "unless relevant memory is already in your context. When the message depends on earlier "
+        'turns, make `query` standalone: name the subject instead of "it" or "that".',
     )
     async def recall(request: RecallRequest) -> RecallPack:
         return await run(lambda s, c: s.recall.recall(c, request))
@@ -132,8 +146,9 @@ def create_mcp(
     @mcp.tool(
         title="Check before acting",
         annotations=READ,
-        description="Before an action with side effects: the directives, prerequisites and "
-        "lessons that apply to this intent, plus every applicable `must` directive.",
+        description="Before an action with side effects (delete, push, deploy, migrate): the "
+        "directives, prerequisites and lessons that apply to this intent, plus every applicable "
+        "`must` directive. Not needed before writing memory.",
     )
     async def check(
         intent: Annotated[str, Field(description="What you are about to do")],
@@ -172,18 +187,29 @@ def create_mcp(
         rid = RecordId("memory", memory.removeprefix("memory:"))
         return await run(lambda s, c: s.explore.get(c, rid, expand or [], context))
 
-    @mcp.tool(
+    async def remember(proposal: Any) -> ProposalResult:
+        return await run(lambda s, c: s.memory.submit(c, proposal))
+
+    # the profile decides which ops the schema offers (annotations are strings here)
+    remember.__annotations__["proposal"] = (
+        ProposalRequest if profile == "full" else LiteProposalRequest
+    )
+    mcp.tool(
         title="Remember (propose a memory change)",
         annotations=PROPOSE,
-        description="Write to memory. Send a proposal of ops (`add`, `revise`, `supersede`, "
-        "`retract`, `link`, `annotate`); it is validated, then committed or held for review. "
-        "Side effects: a proposal is recorded; if the policy commits it, memories are added "
-        "or superseded or retracted (history is kept). Read the findings: warnings may point "
-        "at a duplicate you should supersede. Memories go to your own space; "
-        "`space: global` writes to the shared memory and needs permission.",
-    )
-    async def remember(proposal: ProposalRequest) -> ProposalResult:
-        return await run(lambda s, c: s.memory.submit(c, proposal))
+        description="Store, change or retire a memory by sending a proposal of ops. To store "
+        "something new use op `add` (a `kind` and its `fields`; the schema lists them). "
+        "`revise`, `supersede` and `retract` (and `link`, `annotate` in the full profile) act on "
+        "memories that already exist: use ids from recall or an earlier result, never an "
+        "invented one. Cite what the "
+        'user said as `evidence: [{"quote": ...}]`. The proposal is validated, then committed or '
+        "held for review: say it is saved only when `status` is `committed` (`pending` means a "
+        "human must approve). Read the findings: a duplicate warning usually means supersede; "
+        "an unscoped warning means `revise` that memory, not add it again. Side effects: a "
+        "proposal is recorded; if the policy commits it, memories are added or superseded or "
+        "retracted (history is kept). Memories go to your own space; `space: global` writes to "
+        "the shared memory and needs permission.",
+    )(remember)
 
     @mcp.tool(
         title="Look up concepts",
@@ -376,7 +402,8 @@ def create_mcp(
             title="Approve a proposal",
             annotations=APPROVE,
             description="Approve a held proposal. Side effect: commits it, which can add, "
-            "supersede or retract memories. Only a human credential may review.",
+            "supersede or retract memories. Only a human credential may review: call it only "
+            "when the user explicitly asks you to approve that proposal, never for your own.",
         )
         async def approve(proposal: str) -> ProposalResult:
             rid = RecordId("proposal", proposal.removeprefix("proposal:"))

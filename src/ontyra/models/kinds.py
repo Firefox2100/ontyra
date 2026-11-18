@@ -94,3 +94,64 @@ class LessonRev(RevisionBase):
     insight: str
     do_instead: str | None = None
     evidence: list[EpisodeRef] = []
+
+
+_BOOKKEEPING = {"memory", "seq", "recorded_at", "proposed_by"}
+_HINTS = {"subject": "concept id, e.g. concept:python", "object": "text or a concept id"}
+_WHEN = {
+    "fact": "a standing statement about the world or the setup",
+    "directive": "a rule for how you should behave; say where it applies: `scope: universal`, or "
+    "anchors / about",
+    "decision": "a choice that was made, with what it was chosen over",
+    "event": "something that happened at a particular time",
+    "procedure": "ordered steps to follow: ONE memory for the whole procedure",
+    "task": "something to do later (a reminder)",
+    "lesson": "what a failure taught, to apply next time",
+}
+_SKIPPED = {"evidence"}  # a lesson's own list; evidence goes on the op, not in `fields`
+
+
+def _type_hint(annotation: object) -> str:
+    """A short, model-readable type: `must|should|prefer`, `list of {text}`, `ISO datetime`."""
+    from typing import get_args, get_origin
+
+    if get_origin(annotation) is Literal:
+        return "|".join(str(a) for a in get_args(annotation))
+    args = [a for a in get_args(annotation) if a is not type(None)]
+    if get_origin(annotation) is list and args:
+        inner = args[0]
+        fields = getattr(inner, "model_fields", None)
+        if fields:
+            return "list of {" + ", ".join(fields) + "}"
+        return f"list of {_type_hint(inner)}"
+    if len(args) == 1 and args[0] is not annotation:
+        return _type_hint(args[0])
+    if annotation is datetime:
+        return "ISO datetime"
+    return getattr(annotation, "__name__", str(annotation))
+
+
+def fields_guide(kind: str | None = None) -> str:
+    """What `fields` takes for each kind (or one), derived from the revision models so the
+    text shown to agents cannot drift. Required fields first; optional ones in brackets."""
+    lines: list[str] = []
+    for name, spec in registry.kinds.items():
+        if kind is not None and name != kind:
+            continue
+        required: list[str] = []
+        optional: list[str] = []
+        for field, info in spec.model.model_fields.items():
+            if field in _BOOKKEEPING | _SKIPPED:
+                continue
+            if field in RevisionBase.model_fields and field != "text":
+                continue
+            hint = _HINTS.get(field) or _type_hint(info.annotation)
+            label = field if hint in ("str", "float") else f"{field} ({hint})"
+            (required if info.is_required() else optional).append(label)
+        when = f" ({_WHEN[name]})" if name in _WHEN else ""
+        lines.append(
+            f"{name}{when}: "
+            + ", ".join(required)
+            + (f" [{', '.join(optional)}]" if optional else "")
+        )
+    return "\n".join(lines)
