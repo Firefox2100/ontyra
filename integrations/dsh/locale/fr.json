@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mémoire Ontyra",
+    "description": "Mémoire à long terme pour tous les harness : briefing au début de la session, rappel à chaque prompt et les outils ontyra_*. Nécessite un démon Ontyra en marche."
+  }
+}

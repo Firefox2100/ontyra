@@ -16,3 +16,10 @@ spikes/
 # benchmark run results (immutable files named by run label)
 tests/benchmark_test/results/*
 !tests/benchmark_test/results/.gitkeep
+.coverage
+
+# local daemon data and sandbox artefacts
+.devdata/
+.uv-cache/
+pytest-of-*/
+.tmp-probe/

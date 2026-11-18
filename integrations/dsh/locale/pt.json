@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Memória Ontyra",
+    "description": "Memória de longo prazo para todos os harness: briefing no início da sessão, recall em cada prompt e as ferramentas ontyra_*. Requer um daemon Ontyra a correr."
+  }
+}

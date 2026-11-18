@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Ontyra 记忆",
+    "description": "所有 harness 共用的长期记忆：会话开始给简报、每条 prompt 做召回，并提供 ontyra_* 工具。需要一个运行中的 Ontyra 守护进程。"
+  }
+}

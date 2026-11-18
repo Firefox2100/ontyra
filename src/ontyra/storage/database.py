@@ -35,6 +35,22 @@ class Capabilities:
     exclusive_access: bool  # only one connection may open the data path
 
 
+def normalize_url(url: str) -> str:
+    """Turn the backslashes of a Windows path into forward slashes in an embedded URL.
+
+    `f"surrealkv://{Path.home()}/ontyra.db"` produces `surrealkv://C:\\Users\\me\\...` on Windows,
+    and `urlparse` reads `C:` as a host and the rest as a port, so the SDK rejects the URL before
+    the engine ever sees the path. The engine resolves the path itself and accepts forward
+    slashes on Windows, so the rewrite is enough. Server URLs are left untouched: their authority
+    and port are real.
+    """
+
+    scheme, separator, rest = url.partition("://")
+    if not separator or scheme not in _EMBEDDED_SCHEMES or "\\" not in rest:
+        return url
+    return f"{scheme}://{rest.replace('\\', '/')}"
+
+
 def capabilities_for(url: str) -> Capabilities:
     scheme = urlparse(url).scheme or url.split(":", 1)[0]
     if scheme in ("ws", "wss"):
@@ -98,6 +114,7 @@ class Database:
         password: str | None = None,
         timeout: float = 30.0,  # noqa: ASYNC109 - SDK request timeout, not asyncio's
     ) -> Database:
+        url = normalize_url(url)
         caps = capabilities_for(url)
         try:
             conn: Any = (

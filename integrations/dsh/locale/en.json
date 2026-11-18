@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Ontyra memory",
+    "description": "Long-term memory for every harness: a briefing at session start, recall on each prompt, and the ontyra_* tools. Needs a running Ontyra daemon."
+  }
+}

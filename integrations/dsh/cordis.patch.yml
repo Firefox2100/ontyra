@@ -1,0 +1,5 @@
+# The Ontyra memory plugin for DeepSeek Harness. `id` is the Loader entry id, so it is also the
+# settings namespace the plugin's own settings card edits ("ontyra").
+- insert:
+    - id: ontyra
+      name: dsh-ontyra-memory

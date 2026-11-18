@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Ontyra-Gedächtnis",
+    "description": "Langzeitgedächtnis für alle Harnesses: Briefing zu Sitzungsbeginn, Recall bei jedem Prompt und die ontyra_*-Werkzeuge. Benötigt einen laufenden Ontyra-Daemon."
+  }
+}

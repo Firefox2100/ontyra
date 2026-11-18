@@ -1,0 +1,75 @@
+{
+  "name": "dsh-ontyra-memory",
+  "version": "0.1.0",
+  "description": "Ontyra long-term memory for DeepSeek Harness: a session briefing, recall on every prompt, the lite tool surface, and opt-in episodes.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.2-rc.1 <0.2.3"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "ontyra",
+    "memory",
+    "long-term-memory"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5",
+    "@deepseek-ai/dsh": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-agent": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-api-remotes": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-client-locale": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-llm": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-session": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-session-projection": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-system-prompt": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/dsh-tools": ">=0.2.2-rc.1 <0.2.3",
+    "@deepseek-ai/schemastery": "^3.18.4"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": { "optional": true },
+    "@deepseek-ai/dsh": { "optional": true },
+    "@deepseek-ai/dsh-agent": { "optional": true },
+    "@deepseek-ai/dsh-api-remotes": { "optional": true },
+    "@deepseek-ai/dsh-client-locale": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-settings": { "optional": true },
+    "@deepseek-ai/dsh-llm": { "optional": true },
+    "@deepseek-ai/dsh-session": { "optional": true },
+    "@deepseek-ai/dsh-session-projection": { "optional": true },
+    "@deepseek-ai/dsh-system-prompt": { "optional": true },
+    "@deepseek-ai/dsh-tools": { "optional": true },
+    "@deepseek-ai/schemastery": { "optional": true }
+  },
+  "files": [
+    "lib",
+    "locale",
+    "skills",
+    "scripts",
+    "cordis.patch.yml",
+    "README.md"
+  ]
+}
