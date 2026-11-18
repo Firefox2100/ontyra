@@ -19,6 +19,7 @@ from ontyra.services import (
     OntologyService,
     RecallService,
     RerankTrainingService,
+    TaskService,
     errors,
 )
 from ontyra.services.context import GLOBAL_OWNER
@@ -57,6 +58,9 @@ class Services(Protocol):
 
     @property
     def consolidation(self) -> ConsolidationService: ...
+
+    @property
+    def tasks(self) -> TaskService: ...
 
     @property
     def reranking(self) -> RerankTrainingService: ...
@@ -117,6 +121,13 @@ def get_consolidation_service(services: ServicesDep) -> ConsolidationService:
 
 
 ConsolidationServiceDep = Annotated[ConsolidationService, Depends(get_consolidation_service)]
+
+
+def get_task_service(services: ServicesDep) -> TaskService:
+    return services.tasks
+
+
+TaskServiceDep = Annotated[TaskService, Depends(get_task_service)]
 
 
 def get_feedback_service(services: ServicesDep) -> FeedbackService:

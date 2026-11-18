@@ -57,6 +57,12 @@ async def test_duplicate_scan(world_app, worlds, bench: BenchSettings, profile: 
             for pair in s.false:
                 print("  false:", pair)
         assert report.unembedded == 0
+        # the same findings become tasks once: one per cluster (and per update), then none
+        queued = await app.tasks.detect(caller)
+        clusters = [t for t in queued.created if t.kind == "consolidate"]
+        assert len(clusters) == len(report.duplicates)
+        assert len(queued.created) - len(clusters) <= len(report.updates)
+        assert (await app.tasks.detect(caller)).created == []
         if profile.baseline:  # the lexical embedder: only never merge things that differ
             assert s.precision >= 0.9, s.false
 

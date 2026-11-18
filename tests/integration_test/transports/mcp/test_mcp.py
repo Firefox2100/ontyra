@@ -121,7 +121,7 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
         assert hints.read_only_hint is not None and hints.destructive_hint is not None
     reads = {
         "recall", "check", "briefing", "ask", "get", "concepts", "search", "overview",
-        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes", "find_duplicates",
+        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes", "find_duplicates", "pending_tasks",
     }  # fmt: skip
     for name in reads:
         assert tools[name].annotations.read_only_hint is True, name  # type: ignore[union-attr]
@@ -131,5 +131,8 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
     # committing can retract or replace memories; a proposal or a rejection destroys nothing
     assert tools["approve"].annotations.destructive_hint is True  # type: ignore[union-attr]
     assert tools["approve_ontology_change"].annotations.destructive_hint is True  # type: ignore[union-attr]
-    for name in ("remember", "propose_ontology_change", "reject", "reject_ontology_change"):
+    for name in (
+        "remember", "propose_ontology_change", "reject", "reject_ontology_change",
+        "detect_tasks", "claim_task", "complete_task",
+    ):  # fmt: skip
         assert tools[name].annotations.destructive_hint is False, name  # type: ignore[union-attr]

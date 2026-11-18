@@ -5,7 +5,8 @@ title: Finding duplicates
 Memories pile up. An agent that did not look first can store a rule that is already there, worded
 differently, and recall then spends your token budget on both. `POST /v1/consolidation/scan` (the
 `find_duplicates` MCP tool in the `full` profile) reports them. It only reads: nothing is merged,
-superseded or retracted. You resolve a cluster with an ordinary proposal.
+superseded or retracted. You resolve a cluster with an ordinary proposal; [maintenance
+tasks](./maintenance.md) queue the clusters and record what was decided.
 
 ```bash
 curl -s localhost:8787/v1/consolidation/scan -H 'content-type: application/json' -d '{}'

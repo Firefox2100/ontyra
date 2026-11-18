@@ -149,6 +149,7 @@ class OntologyChangeService:
                         RecordId("task", new_id()),
                         Task(
                             kind="review_ontology_change",
+                            owner=GLOBAL_OWNER,
                             target=cid,
                             payload={"op": record.op, "by": caller.actor.name},
                             created_by=caller.actor_id,

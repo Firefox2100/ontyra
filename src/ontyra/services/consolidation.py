@@ -158,6 +158,7 @@ class ConsolidationService:
 
 def _member(doc: SearchDoc, texts: dict[RecordId, str]) -> Member:
     return Member(
+        owner=doc.owner,
         memory=doc.memory,
         revision=doc.rev,
         kind=doc.kind,

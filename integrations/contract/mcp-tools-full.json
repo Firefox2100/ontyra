@@ -441,6 +441,84 @@
     "name": "check"
   },
   {
+    "description": "Take a pending task so others do not. Side effect: the task is marked claimed by you.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "task": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "type": "object"
+    },
+    "name": "claim_task"
+  },
+  {
+    "description": "Finish a claimed task. Resolve it first with an ordinary proposal (`remember`: supersede the duplicates), then complete with decision `merge` or `supersede` and that proposal's id; `distinct` says the memories differ (not raised again); `defer` parks it. Side effect: the task is closed.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "result": {
+          "additionalProperties": false,
+          "description": "How a maintenance task was resolved. `merge` (a duplicate cluster) and `supersede` (an\nupdate) must cite the proposal that did it; `distinct` says the memories are different\nthings and the finding is not raised again; `defer` parks the task for later.",
+          "properties": {
+            "decision": {
+              "enum": [
+                "merge",
+                "supersede",
+                "distinct",
+                "defer"
+              ],
+              "type": "string"
+            },
+            "note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "proposal": {
+              "anyOf": [
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "decision"
+          ],
+          "type": "object"
+        },
+        "task": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "task",
+        "result"
+      ],
+      "type": "object"
+    },
+    "name": "complete_task"
+  },
+  {
     "description": "Find concepts by label or alias (`python`, `ssh`) to get the ids that `about`, anchors and qualifiers refer to, with their relations. Empty: no such concept; propose one with `propose_ontology_change` rather than guessing an id.",
     "input_schema": {
       "additionalProperties": false,
@@ -455,6 +533,15 @@
       "type": "object"
     },
     "name": "concepts"
+  },
+  {
+    "description": "Scan for duplicates and updates and queue each finding once as a task. Side effect: task records are created (and tasks whose memories changed are closed); no memory is changed.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "detect_tasks"
   },
   {
     "description": "Read-only scan for memories that say the same thing (clusters, oldest first) and for restatements with a changed value (updates). Nothing is changed: resolve a cluster with a `supersede` or `retract` proposal via `remember`.",
@@ -780,6 +867,48 @@
       "type": "object"
     },
     "name": "pending_proposals"
+  },
+  {
+    "description": "Maintenance work waiting for judgment: duplicate clusters and updates to confirm, each with a card (what to look at, the choices). Claim one with `claim_task`.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "review_proposal",
+                  "review_stale_dependent",
+                  "review_contradiction",
+                  "review_ontology_change",
+                  "review_concept_drift",
+                  "consolidate",
+                  "summarize",
+                  "refresh_index",
+                  "expire_check",
+                  "resolve_mention"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "pending_tasks"
   },
   {
     "description": "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, or `deprecate`. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts.",

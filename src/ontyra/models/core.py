@@ -223,9 +223,13 @@ class Task(Record):
     """Work that needs judgment: queued by the service, performed by a human or agent."""
 
     kind: TaskKind
+    owner: Annotated[OwnerRef, Indexed()]
     status: Literal["pending", "claimed", "done", "failed", "parked"] = "pending"
     target: RecordId | None = None
-    payload: dict[str, Any] = {}
+    # a task is created once for the same finding: `dedupe_key` names it (e.g. the revisions of a
+    # duplicate cluster), so a change to any of them is a new task
+    dedupe_key: Annotated[str | None, Indexed()] = None
+    payload: dict[str, Any] = {}  # the card: instructions, what to look at, the choices
     result: dict[str, Any] = {}
     min_tier: int | None = None
     created_by: ActorRef

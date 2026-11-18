@@ -122,6 +122,7 @@ def memory_writes(prepared: Sequence[Prepared], actor: RecordId, now: datetime) 
                         RecordId("task", new_id()),
                         Task(
                             kind="review_stale_dependent",
+                            owner=p.memory.owner,
                             target=dep,
                             payload={"source": str(p.rev), "reason": p.reason},
                             created_by=actor,

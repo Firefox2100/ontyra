@@ -16,6 +16,7 @@ from ontyra.transports.rest.routers import (
     recall,
     reranker,
     resources,
+    tasks,
 )
 
 # (router, mounted under /v1?) -- health stays at the root for probes
@@ -26,6 +27,7 @@ VERSIONED: list[APIRouter] = [
     recall.router,
     explore.router,
     consolidation.router,
+    tasks.router,
     concepts.router,
     ontology_changes.router,
     resources.router,

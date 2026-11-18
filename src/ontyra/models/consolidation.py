@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from ontyra.models.base import MemoryRef, Model, RevRef
+from ontyra.models.base import MemoryRef, Model, OwnerRef, RevRef
 from ontyra.models.kinds import KindName
 
 
@@ -17,6 +17,7 @@ class ScanRequest(Model):
 
 
 class Member(Model):
+    owner: OwnerRef
     memory: MemoryRef
     revision: RevRef
     kind: KindName

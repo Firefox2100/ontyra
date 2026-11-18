@@ -13,7 +13,7 @@ from pydantic import Field
 
 from ontyra.models import RecordId
 from ontyra.models.consolidation import ScanReport, ScanRequest
-from ontyra.models.core import Proposal
+from ontyra.models.core import Proposal, TaskKind
 from ontyra.models.ontology import ConceptView
 from ontyra.models.ontology_change import ChangeRequest, ChangeResult, OntologyChange
 from ontyra.models.proposals import ProposalRequest, ProposalResult
@@ -28,6 +28,7 @@ from ontyra.models.recall import (
     SearchRequest,
     SearchResult,
 )
+from ontyra.models.tasks import DetectReport, TaskResult, TaskView
 from ontyra.services import Caller, errors
 from ontyra.services.views import MemoryDetail, MemoryView, Neighbors
 from ontyra.transports.auth import resolve_caller
@@ -244,6 +245,55 @@ def create_mcp(
         )
         async def find_duplicates(request: ScanRequest) -> ScanReport:
             return await run(lambda s, c: s.consolidation.scan(c, request))
+
+        @mcp.tool(
+            title="Open maintenance tasks",
+            annotations=READ,
+            description="Maintenance work waiting for judgment: duplicate clusters and updates "
+            "to confirm, each with a card (what to look at, the choices). Claim one with "
+            "`claim_task`.",
+        )
+        async def pending_tasks(
+            kind: list[TaskKind] | None = None,
+            limit: Annotated[int, Field(ge=1, le=200)] = 50,
+        ) -> list[TaskView]:
+            return await run(lambda s, c: s.tasks.list(c, kinds=kind or [], limit=limit))
+
+        @mcp.tool(
+            title="Look for maintenance work",
+            annotations=PROPOSE,
+            description="Scan for duplicates and updates and queue each finding once as a task. "
+            "Side effect: task records are created (and tasks whose memories changed are "
+            "closed); no memory is changed.",
+        )
+        async def detect_tasks() -> DetectReport:
+            return await run(lambda s, c: s.tasks.detect(c))
+
+        @mcp.tool(
+            title="Claim a maintenance task",
+            annotations=PROPOSE,
+            description="Take a pending task so others do not. Side effect: the task is marked "
+            "claimed by you.",
+        )
+        async def claim_task(task: str) -> TaskView:
+            return await run(
+                lambda s, c: s.tasks.claim(c, RecordId("task", task.removeprefix("task:")))
+            )
+
+        @mcp.tool(
+            title="Complete a maintenance task",
+            annotations=PROPOSE,
+            description="Finish a claimed task. Resolve it first with an ordinary proposal "
+            "(`remember`: supersede the duplicates), then complete with decision `merge` or "
+            "`supersede` and that proposal's id; `distinct` says the memories differ (not "
+            "raised again); `defer` parks it. Side effect: the task is closed.",
+        )
+        async def complete_task(task: str, result: TaskResult) -> TaskView:
+            return await run(
+                lambda s, c: s.tasks.complete(
+                    c, RecordId("task", task.removeprefix("task:")), result
+                )
+            )
 
         @mcp.tool(
             title="Search memories",

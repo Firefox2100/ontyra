@@ -162,6 +162,7 @@ class MemoryService:
                         RecordId("task", new_id()),
                         Task(
                             kind="review_proposal",
+                            owner=caller.owner,
                             target=pid,
                             payload={"actor": caller.actor.name, "ops": len(ops)},
                             created_by=caller.actor_id,

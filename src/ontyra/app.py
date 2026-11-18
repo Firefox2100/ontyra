@@ -27,6 +27,7 @@ from ontyra.services import (
     PolicyEngine,
     RecallService,
     RerankTrainingService,
+    TaskService,
 )
 from ontyra.services.recall_fusion import FusionRecallService
 from ontyra.storage import Database, SchemaManager, SurrealStore
@@ -54,6 +55,7 @@ class Application:
     explore: ExplorationService
     feedback: FeedbackService
     consolidation: ConsolidationService
+    tasks: TaskService
     reranking: RerankTrainingService
     embedder: Embedder | None
 
@@ -103,6 +105,7 @@ class Application:
             )
         comparer = decider if isinstance(decider, StatementComparer) else None
         consolidation = ConsolidationService(store, embedder, settings.consolidation, comparer)
+        tasks = TaskService(store, now, consolidation)
         feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
         actors = ActorService(store, now, settings.actor_trust)
         token = settings.auth.token
@@ -131,6 +134,7 @@ class Application:
             explore=ExplorationService(store, memory, ontology, recall, now),
             feedback=feedback,
             consolidation=consolidation,
+            tasks=tasks,
             reranking=RerankTrainingService(
                 store, feedback, reranker, now, settings.rerank.min_examples
             ),

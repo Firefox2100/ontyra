@@ -181,3 +181,30 @@ async def test_the_duplicate_scan_is_a_read_only_report(client: httpx.AsyncClien
     assert (
         await client.post("/v1/consolidation/scan", json={"kinds": ["nope"]})
     ).status_code == 422
+
+
+async def test_maintenance_tasks_over_http(client: httpx.AsyncClient) -> None:
+    text = "Use uv for Python dependency management and never run pip install directly."
+    for ref in ("a", "b"):
+        added = await client.post(
+            "/v1/proposals", json={"ops": [directive(text, ref)]}, headers=HUMAN
+        )
+        assert added.status_code == 201, added.text
+    detected = await client.post("/v1/tasks/detect", headers=HUMAN)
+    assert detected.status_code == 200, detected.text
+    (task,) = detected.json()["created"]
+    assert task["kind"] == "consolidate" and task["card"]["choices"]
+    listed = (await client.get("/v1/tasks", headers=HUMAN)).json()
+    assert [t["id"] for t in listed] == [task["id"]]
+    tid = task["id"].removeprefix("task:")
+    assert (await client.post(f"/v1/tasks/{tid}/claim", headers=HUMAN)).json()[
+        "status"
+    ] == "claimed"
+    assert (await client.post(f"/v1/tasks/{tid}/claim", headers=HUMAN)).status_code == 409
+    bad = await client.post(f"/v1/tasks/{tid}/complete", json={"decision": "merge"}, headers=HUMAN)
+    assert bad.status_code == 422  # a merge must cite its proposal
+    done = await client.post(
+        f"/v1/tasks/{tid}/complete", json={"decision": "distinct"}, headers=HUMAN
+    )
+    assert done.status_code == 200 and done.json()["status"] == "done"
+    assert (await client.get("/v1/tasks/task:nope", headers=HUMAN)).status_code == 404
