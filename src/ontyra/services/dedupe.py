@@ -34,13 +34,47 @@ _MONTHS = {name: i for i, name in enumerate(_MONTH_NAMES.split(), 1)}
 _TOKEN = re.compile(r"[a-z]++|\d++(?:\.\d++)?")
 
 
+def _at_word_end(text: str, index: int) -> bool:
+    """Whether `index` sits on a regex word boundary, i.e. no word character starts there."""
+    if index >= len(text):
+        return True
+    return not (text[index].isalnum() or text[index] == "_")
+
+
+def _expand_numerals(text: str) -> str:
+    """Expand `450k` to `450000` and strip ordinal suffixes (`3rd` to `3`) in one linear pass.
+
+    The equivalent regexes could restart at every digit of a long run and were therefore
+    super-linear on adversarial input (Sonar S8786); the scan below advances monotonically.
+    """
+    out: list[str] = []
+    i = 0
+    while i < len(text):
+        start = i
+        while i < len(text) and text[i].isdigit():
+            i += 1
+        if i == start:
+            out.append(text[i])
+            i += 1
+            continue
+        digits = text[start:i]
+        if text.startswith("k", i) and _at_word_end(text, i + 1):
+            out.append(str(int(digits) * 1000))
+            i += 1
+        elif text[i : i + 2] in ("st", "nd", "rd", "th") and _at_word_end(text, i + 2):
+            out.append(digits)
+            i += 2
+        else:
+            out.append(digits)
+    return "".join(out)
+
+
 def values(text: str) -> set[str]:
     """The numbers, versions, dates and identifiers with digits in a text, normalised
     (`450k` = `450,000`, `3rd` = `3`, `three` = `3`, `March` = `m3`)."""
     t = text.lower()
     t = re.sub(r"(\d),(\d{3})", r"\1\2", t)
-    t = re.sub(r"(\d++)k\b", lambda m: str(int(m.group(1)) * 1000), t)
-    t = re.sub(r"(\d++)(st|nd|rd|th)\b", r"\1", t)
+    t = _expand_numerals(t)
     out: set[str] = set()
     for word in _TOKEN.findall(t):
         if word in _NUMBER_WORDS:

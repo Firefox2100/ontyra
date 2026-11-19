@@ -14,6 +14,12 @@ def test_values_are_normalised() -> None:
     assert values("Use pytest") == set()
 
 
+def test_a_numeral_suffix_only_expands_at_a_word_boundary() -> None:
+    assert values("1k2") == {"1", "2"}  # the k belongs to the following digits
+    assert values("3rd5") == {"3", "5"}  # no ordinal strip inside a word
+    assert values("03rd") == {"03"}  # leading zeros survive the ordinal strip
+
+
 @pytest.mark.parametrize(
     ("a", "b"),
     [
