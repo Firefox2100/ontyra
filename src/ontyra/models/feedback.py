@@ -100,6 +100,7 @@ class FeedbackSummary(Model):
     retracted: int
     by_label: dict[str, int]
     trainable_examples: int  # active events that map to a training pair
+    with_features: int = 0  # active events whose recall trace kept the memory's lane scores
 
 
 class RerankExample(Model):

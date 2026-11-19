@@ -296,7 +296,21 @@ class FeedbackService:
             retracted=count["retracted"],
             by_label=by_label,
             trainable_examples=len(await self.examples(caller.owner if caller else None)),
+            with_features=await self._with_features(rows),
         )
+
+    async def _with_features(self, rows: list[Feedback]) -> int:
+        """Active events whose trace holds the lane scores of the revision judged."""
+        cited = [f for f in rows if f.state == "active" and f.trace and f.revision]
+        traces = await self.store.get_many(list({f.trace for f in cited if f.trace}))
+        count = 0
+        for f in cited:
+            trace = traces.get(f.trace) if f.trace else None
+            if isinstance(trace, RecallTrace) and any(
+                r["rev"] == str(f.revision) for r in trace.scoring.get("candidates", [])
+            ):
+                count += 1
+        return count
 
 
 class RerankTrainingService:

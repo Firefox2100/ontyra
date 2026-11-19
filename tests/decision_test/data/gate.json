@@ -1,0 +1,601 @@
+[
+ {
+  "id": "g001",
+  "realm": "dev",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Which database does tidewatch use in production?",
+    "reply": "PostgreSQL 16."
+   }
+  ],
+  "say": "and who set that up?",
+  "why": "pronoun"
+ },
+ {
+  "id": "g002",
+  "realm": "dev",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Can you rename the helper in utils?",
+    "reply": "Done, renamed to parse_tide."
+   }
+  ],
+  "say": "do the same for the other one",
+  "why": "ellipsis"
+ },
+ {
+  "id": "g003",
+  "realm": "dev",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Should the retry limit be 3 or 5?",
+    "reply": "I'd go with 5, the upstream is flaky."
+   }
+  ],
+  "say": "ok go ahead",
+  "why": "bare go-ahead"
+ },
+ {
+  "id": "g004",
+  "realm": "dev",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "The deploy failed on the migration step.",
+    "reply": "The migration needs the new column first."
+   }
+  ],
+  "say": "why did it fail again?",
+  "why": "pronoun"
+ },
+ {
+  "id": "g005",
+  "realm": "office",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Draft the invoice for the Harbor account.",
+    "reply": "Drafted: 4,200 EUR net."
+   }
+  ],
+  "say": "send it to them tomorrow instead",
+  "why": "pronouns"
+ },
+ {
+  "id": "g006",
+  "realm": "office",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Who approves travel above 2,000 euros?",
+    "reply": "The finance director."
+   }
+  ],
+  "say": "and below that?",
+  "why": "ellipsis"
+ },
+ {
+  "id": "g007",
+  "realm": "office",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Book the large meeting room on Friday at ten.",
+    "reply": "Booked."
+   }
+  ],
+  "say": "make it eleven",
+  "why": "ellipsis"
+ },
+ {
+  "id": "g008",
+  "realm": "office",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Summarise the vendor contract.",
+    "reply": "Three-year term, auto-renews each year."
+   }
+  ],
+  "say": "what's the notice period for that?",
+  "why": "demonstrative"
+ },
+ {
+  "id": "g009",
+  "realm": "research",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Which dataset did the 2024 replication use?",
+    "reply": "The Okavango soil survey."
+   }
+  ],
+  "say": "was it public?",
+  "why": "pronoun"
+ },
+ {
+  "id": "g010",
+  "realm": "research",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "What sample size did the pilot have?",
+    "reply": "Forty-two participants."
+   }
+  ],
+  "say": "and the follow-up?",
+  "why": "ellipsis"
+ },
+ {
+  "id": "g011",
+  "realm": "research",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Cite the Lindqvist paper in section 3.",
+    "reply": "Added."
+   }
+  ],
+  "say": "same for the second author's thesis",
+  "why": "ellipsis"
+ },
+ {
+  "id": "g012",
+  "realm": "daily",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "What's on my list for Saturday?",
+    "reply": "Groceries and the dentist."
+   }
+  ],
+  "say": "move the first one to Sunday",
+  "why": "pronoun"
+ },
+ {
+  "id": "g013",
+  "realm": "daily",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Is the boiler service due?",
+    "reply": "Yes, in March."
+   }
+  ],
+  "say": "who did it last time?",
+  "why": "pronoun"
+ },
+ {
+  "id": "g014",
+  "realm": "daily",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Plan dinner for four.",
+    "reply": "Lasagne with a salad?"
+   }
+  ],
+  "say": "yes, that",
+  "why": "bare answer"
+ },
+ {
+  "id": "g015",
+  "realm": "hobby",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Which glaze did I use on the blue vase?",
+    "reply": "Celadon over iron slip."
+   }
+  ],
+  "say": "how long did I fire it?",
+  "why": "pronoun"
+ },
+ {
+  "id": "g016",
+  "realm": "hobby",
+  "label": "refers_back",
+  "history": [
+   {
+    "say": "Tune the second string down a tone.",
+    "reply": "Done."
+   }
+  ],
+  "say": "now the third",
+  "why": "ellipsis"
+ },
+ {
+  "id": "g017",
+  "realm": "dev",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Which database does tidewatch use in production?",
+    "reply": "PostgreSQL 16."
+   }
+  ],
+  "say": "how do I rotate the API keys for the staging cluster?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g018",
+  "realm": "dev",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Can you rename the helper in utils?",
+    "reply": "Done, renamed to parse_tide."
+   }
+  ],
+  "say": "what is the default timeout of the dev API client?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g019",
+  "realm": "dev",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Should the retry limit be 3 or 5?",
+    "reply": "I'd go with 5."
+   }
+  ],
+  "say": "which Python version does the repo pin?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g020",
+  "realm": "dev",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "The deploy failed on the migration step.",
+    "reply": "The migration needs the new column first."
+   }
+  ],
+  "say": "where do the integration tests keep their fixtures?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g021",
+  "realm": "dev",
+  "label": "standalone",
+  "history": [],
+  "say": "What port is the dev API on?",
+  "why": "first message"
+ },
+ {
+  "id": "g022",
+  "realm": "office",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Draft the invoice for the Harbor account.",
+    "reply": "Drafted: 4,200 EUR net."
+   }
+  ],
+  "say": "what is the policy for approving travel above 2,000 euros?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g023",
+  "realm": "office",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Who approves travel above 2,000 euros?",
+    "reply": "The finance director."
+   }
+  ],
+  "say": "which template do we use for the quarterly report?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g024",
+  "realm": "office",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Book the large meeting room on Friday at ten.",
+    "reply": "Booked."
+   }
+  ],
+  "say": "how do I request a new laptop from IT?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g025",
+  "realm": "research",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Which dataset did the 2024 replication use?",
+    "reply": "The Okavango soil survey."
+   }
+  ],
+  "say": "how should references be formatted in the thesis?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g026",
+  "realm": "research",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "What sample size did the pilot have?",
+    "reply": "Forty-two participants."
+   }
+  ],
+  "say": "which statistical test did we agree on for the interim analysis?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g027",
+  "realm": "research",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Cite the Lindqvist paper in section 3.",
+    "reply": "Added."
+   }
+  ],
+  "say": "what is the deadline for the ethics amendment?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g028",
+  "realm": "daily",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "What's on my list for Saturday?",
+    "reply": "Groceries and the dentist."
+   }
+  ],
+  "say": "what time does the pharmacy on Mill Street close?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g029",
+  "realm": "daily",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Is the boiler service due?",
+    "reply": "Yes, in March."
+   }
+  ],
+  "say": "when is the glass collection this month?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g030",
+  "realm": "daily",
+  "label": "standalone",
+  "history": [],
+  "say": "remind me which allergy my sister has",
+  "why": "first message"
+ },
+ {
+  "id": "g031",
+  "realm": "hobby",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Which glaze did I use on the blue vase?",
+    "reply": "Celadon over iron slip."
+   }
+  ],
+  "say": "which brand of acrylic paint do I prefer for miniatures?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g032",
+  "realm": "hobby",
+  "label": "standalone",
+  "history": [
+   {
+    "say": "Tune the second string down a tone.",
+    "reply": "Done."
+   }
+  ],
+  "say": "what tempo do I practise the scale at?",
+  "why": "topic switch"
+ },
+ {
+  "id": "g033",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Which database does tidewatch use?",
+    "reply": "PostgreSQL 16."
+   }
+  ],
+  "say": "thanks!",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g034",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Rename the helper.",
+    "reply": "Done."
+   }
+  ],
+  "say": "ok, great",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g035",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Book the meeting room.",
+    "reply": "Booked for Friday at ten."
+   }
+  ],
+  "say": "perfect, that works",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g036",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "What is the notice period?",
+    "reply": "Ninety days."
+   }
+  ],
+  "say": "got it",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g037",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Any news on the build?",
+    "reply": "It's green again."
+   }
+  ],
+  "say": "lol nice",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g038",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "How do I rebase?",
+    "reply": "Run git rebase main."
+   }
+  ],
+  "say": "cool, thanks for the help",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g039",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "good morning",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g040",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Plan dinner for four.",
+    "reply": "Lasagne with a salad?"
+   }
+  ],
+  "say": "never mind",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g041",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Which dataset did they use?",
+    "reply": "The Okavango soil survey."
+   }
+  ],
+  "say": "hmm, interesting",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g042",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "The boiler service is in March.",
+    "reply": "Noted."
+   }
+  ],
+  "say": "ok",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g043",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "I'll look at it on Monday.",
+    "reply": "Fine by me."
+   }
+  ],
+  "say": "sounds good",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g044",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Anything else on the list?",
+    "reply": "No."
+   }
+  ],
+  "say": "that's all for now",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g045",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "The kiln door stuck again.",
+    "reply": "It happens to the best of us."
+   }
+  ],
+  "say": "haha",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g046",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "alright then",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g047",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [
+   {
+    "say": "Fixed the typo in the report.",
+    "reply": "Thanks, merged."
+   }
+  ],
+  "say": "thank you so much",
+  "why": "pleasantry"
+ },
+ {
+  "id": "g048",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "hello",
+  "why": "pleasantry"
+ }
+]

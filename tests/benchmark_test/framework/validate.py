@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from benchmark_test.framework.models import TRAPS, Case, MemorySpec, World
+from ontyra.calibration.models import TRAPS, Case, MemorySpec, World
 from ontyra.models.ontology import concept_slug
 from ontyra.models.uri import canonical_uri
 from ontyra.services.text import coverage

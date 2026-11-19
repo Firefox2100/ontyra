@@ -11,16 +11,17 @@ import json
 import pytest
 
 from benchmark_test.framework.config import BenchSettings, Profile
-from benchmark_test.framework.models import DATA, Case, load_cases, world_ids
-from benchmark_test.framework.probe import Probe
+from benchmark_test.framework.paths import TEST_DATA
 from benchmark_test.framework.results import summarise
 from benchmark_test.framework.run import play
 from benchmark_test.framework.score import StepScore
+from ontyra.calibration.models import Case, load_cases, world_ids
+from ontyra.calibration.probe import Probe
 
 
 def known_failures() -> dict[str, str]:
     """Cases the hash baseline failed when it was frozen (`baseline.py`)."""
-    path = DATA / "baselines" / "hash.json"
+    path = TEST_DATA / "baselines" / "hash.json"
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))["failing"]

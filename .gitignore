@@ -19,6 +19,9 @@ tests/benchmark_test/results/*
 # model-driven evaluation results
 tests/evaluation_test/results/*
 !tests/evaluation_test/results/.gitkeep
+# decision-model benchmark results
+tests/decision_test/results/*
+!tests/decision_test/results/.gitkeep
 .coverage
 
 # local daemon data and sandbox artefacts

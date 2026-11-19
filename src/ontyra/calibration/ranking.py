@@ -16,7 +16,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from benchmark_test.framework.models import Step
+from ontyra.calibration.models import Step
 
 COLUMNS = (
     "key",
@@ -122,7 +122,8 @@ def metrics_for(ranks: dict[str, int], n_negative: int) -> dict[str, float]:
     dcg = sum(1.0 / math.log2(r + 1) for r in ordered if r <= 10)
     ideal = sum(1.0 / math.log2(i + 2) for i in range(min(n_rel, 10)))
     out["ndcg@10"] = dcg / ideal
-    # AUC: a relevant memory at pessimistic rank r has r - 1 - (relevant ahead of it) negatives above it
+    # AUC: a relevant memory at pessimistic rank r has r - 1 - (relevant ahead of it)
+    # negatives above it
     ahead = [r - 1 - i for i, r in enumerate(ordered)]
     out["auc"] = (
         1.0 if n_negative == 0 else 1.0 - sum(max(a, 0) for a in ahead) / (n_rel * n_negative)

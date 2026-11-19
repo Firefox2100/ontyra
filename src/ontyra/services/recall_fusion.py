@@ -62,6 +62,7 @@ class FusionResult:
     dropped: list[dict[str, Any]] = field(default_factory=lambda: [])
     decided: bool = False  # the decision model answered for this request
     none: float | None = None  # its probability that none of the candidates applies
+    order: list[Candidate] = field(default_factory=lambda: [])  # every candidate, best first
 
 
 def _probability(score: float) -> float:
@@ -171,13 +172,13 @@ class FusionRecallService(RecallService):
             ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
         if not cut:
             self._describe(ranked, raw)
-            return FusionResult(ranked, raw)
+            return FusionResult(ranked, raw, order=ranked)
         if cosines and top_cos < cfg.abstain_cosine:
             self._describe(ranked, raw)
             dropped = [
                 {"rev": str(c.rev), "reason": "silent: best cosine below abstain"} for c in ranked
             ]
-            return FusionResult([], raw, True, dropped)
+            return FusionResult([], raw, True, dropped, order=ranked)
         judgement = None
         if self.decider is not None and situation is not None and ranked:
             judgement = await self._decide(situation, ranked, raw)
@@ -196,7 +197,13 @@ class FusionRecallService(RecallService):
                     {"rev": str(c.rev), "reason": f"below margin ({raw[c.rev].final:.2f})"}
                 )
         return FusionResult(
-            keep, raw, False, dropped, judgement is not None, judgement.none if judgement else None
+            keep,
+            raw,
+            False,
+            dropped,
+            judgement is not None,
+            judgement.none if judgement else None,
+            ranked,
         )
 
     @staticmethod
@@ -257,4 +264,49 @@ class FusionRecallService(RecallService):
             return await self._finish(caller, request, "recall", [], [], ctx, [])
         situation = situation_text(request, text) if request.decide else None
         result = await self.fuse(caller, text, ctx, request.kinds, situation=situation)
-        return await self._finish(caller, request, "recall", result.ranked, [], ctx, result.dropped)
+        return await self._finish(
+            caller,
+            request,
+            "recall",
+            result.ranked,
+            [],
+            ctx,
+            result.dropped,
+            self._scoring(result),
+        )
+
+    def _scoring(self, result: FusionResult) -> dict[str, Any]:
+        """The features of this request for the trace: lane scores of the best candidates in
+        fused order, plus what decided the cut. Calibration replays the cut from them."""
+        limit = self.cfg.trace_candidates
+        if limit <= 0:
+            return {}
+        rows: list[dict[str, Any]] = []
+        for rank, c in enumerate(result.order[:limit], 1):
+            s = result.scores[c.rev]
+            rows.append(
+                {
+                    "rev": str(c.rev),
+                    "rank": rank,
+                    "cosine": s.cosine,
+                    "bm25": s.bm25,
+                    "lexical": round(s.lexical, 4),
+                    "dense": round(s.dense, 4),
+                    "concept": s.concept,
+                    "fused": round(s.fused, 4),
+                    "rerank": s.rerank,
+                    "decision": s.decision,
+                    "final": round(s.final, 4),
+                }
+            )
+        return {
+            "engine": "fusion",
+            "abstained": result.abstained,
+            "decided": result.decided,
+            "none": result.none,
+            "pool": len(result.scores),
+            "best_cosine": max(
+                (s.cosine for s in result.scores.values() if s.cosine is not None), default=None
+            ),
+            "candidates": rows,
+        }

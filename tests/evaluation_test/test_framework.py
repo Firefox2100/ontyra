@@ -6,7 +6,6 @@ import json
 
 from fastmcp import Client
 
-from benchmark_test.framework.models import World
 from evaluation_test.framework.agent import Executed, load_contract, run_agent, tool_specs
 from evaluation_test.framework.llm import Reply, ScriptedChat, ToolCall, clean
 from evaluation_test.framework.models import (
@@ -31,6 +30,7 @@ from evaluation_test.framework.score import (
     score_tool_call,
     score_write,
 )
+from ontyra.calibration.models import World
 from ontyra.transports.mcp import create_mcp
 
 SCHEMAS = {t["name"]: t["input_schema"] for t in load_contract("full")}

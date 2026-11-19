@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import combinations
 
-from benchmark_test.framework.models import World
+from ontyra.calibration.models import World
 from ontyra.models.consolidation import ScanReport
 
 

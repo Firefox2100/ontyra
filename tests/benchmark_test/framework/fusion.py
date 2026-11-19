@@ -10,8 +10,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from benchmark_test.framework.models import Case, Step
-from benchmark_test.framework.ranking import (
+from ontyra.calibration.models import Case, Step
+from ontyra.calibration.ranking import (
     Row,
     labels,
     lane_value,

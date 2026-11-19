@@ -14,8 +14,8 @@ from pathlib import Path
 from benchmark_test.conftest import STAMP
 from benchmark_test.framework.config import BenchSettings, Profile
 from benchmark_test.framework.duplicates import score
-from benchmark_test.framework.models import world_ids
 from benchmark_test.framework.results import RESULTS, git_state
+from ontyra.calibration.models import world_ids
 from ontyra.models.consolidation import ScanRequest
 
 

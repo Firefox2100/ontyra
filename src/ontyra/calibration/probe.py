@@ -11,8 +11,8 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from benchmark_test.framework.models import Step
 from ontyra.app import Application
+from ontyra.calibration.models import Step
 from ontyra.models.search import SearchDoc
 from ontyra.services import Caller
 from ontyra.services.recall import Candidate

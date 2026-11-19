@@ -65,7 +65,7 @@ class Delivery(Record):
     notified: bool = False  # a correction notice was already sent
 
 
-@registry.table("recall_trace", immutable=True)
+@registry.table("recall_trace", immutable=True, prunable=True)
 class RecallTrace(Record):
     """Why each item of a recall pack was (or was not) delivered, for debugging and evaluation."""
 
@@ -76,4 +76,7 @@ class RecallTrace(Record):
     request: dict[str, Any]
     items: list[dict[str, Any]]
     dropped: list[dict[str, Any]] = []
+    # What the engine saw: the best candidates' lane scores (the features calibration and
+    # reranker training learn from), and whether the request stayed silent.
+    scoring: dict[str, Any] = {}
     created_at: datetime

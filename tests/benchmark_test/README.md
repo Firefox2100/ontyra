@@ -27,7 +27,7 @@ Settings that change the pipeline are the production ones (`ONTYRA_RECALL__*`), 
 
 ## What is where
 
-- `data/worlds/commons/`: **one pool for a whole person's memory** (350 memories, 266 concepts):
+- `src/ontyra/calibration/data/worlds/commons/` (ships with the package): **one pool for a whole person's memory** (350 memories, 266 concepts):
   a directory with `world.json` plus one file per domain (`00-core`, `dev-quayside`,
   `dev-other`, `office-finance`, `office-admin`, nine `research-*` fields, `daily-personal`,
   `daily-home`, `misc-hobbies`). Everything lives in one store on purpose: leakage between
@@ -36,7 +36,7 @@ Settings that change the pipeline are the production ones (`ONTYRA_RECALL__*`), 
   superseded, retracted, expired, qualifier, anchor, overridden, contradicted, opposite,
   homonym, twin, stale) appears at least three times; `test_data.py` enforces both.
   Memories can use shorthands (`about`, `at`, `q`, `strength`, see `framework/models.py`).
-- `data/cases/recall/*.json` (291 cases): `include` (must come back), `exclude` (must not),
+- `src/ontyra/calibration/data/cases/recall/*.json` (291 cases): `include` (must come back), `exclude` (must not),
   `allow`/`allow_prefix` (arguable, never penalised). **Scoring policy:** anything else that
   comes back from the *same domain part* as an expected memory is *tolerated* (counted, not
   penalised: a neighbouring finance rule next to the right finance rule is not a leak);

@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from benchmark_test.framework.config import BenchSettings, Profile
-from benchmark_test.framework.models import Case, MemorySpec, Step, World, memory_fields
 from benchmark_test.framework.results import summarise, write_result
 from benchmark_test.framework.score import Cell, score_step
 from benchmark_test.framework.validate import case_problems, world_problems
+from ontyra.calibration.models import Case, MemorySpec, Step, World, memory_fields
 from ontyra.models.recall import Caution, RecallItem, RecallPack
 
 KEYS = {"memory:a": "a", "memory:b": "b", "memory:c": "c"}
@@ -295,7 +295,7 @@ def test_a_paraphrase_may_not_reuse_the_memorys_words() -> None:
 
 
 def test_the_big_world_loads_from_its_directory() -> None:
-    from benchmark_test.framework.models import load_world, world_ids
+    from ontyra.calibration.models import load_world, world_ids
 
     assert "commons" in world_ids()
     big = load_world("commons")
@@ -308,7 +308,7 @@ def test_the_big_world_loads_from_its_directory() -> None:
 
 
 def test_rank_lane_is_pessimistic_about_ties_and_ranks_unretrieved_last() -> None:
-    from benchmark_test.framework.ranking import rank_lane
+    from ontyra.calibration.ranking import rank_lane
 
     values: dict[str, float | None] = {"a": 0.5, "b": 0.9, "c": 0.5, "d": None}
     # relevant a; negatives b (above), c (tied), d (not retrieved): a is third
@@ -317,7 +317,7 @@ def test_rank_lane_is_pessimistic_about_ties_and_ranks_unretrieved_last() -> Non
 
 
 def test_metrics_follow_the_ranks_of_the_relevant_memories() -> None:
-    from benchmark_test.framework.ranking import metrics_for
+    from ontyra.calibration.ranking import metrics_for
 
     perfect = metrics_for({"a": 1, "b": 2}, n_negative=10)
     assert perfect["r@1"] == 0.5 and perfect["r@3"] == 1.0 and perfect["auc"] == 1.0
@@ -327,7 +327,7 @@ def test_metrics_follow_the_ranks_of_the_relevant_memories() -> None:
 
 
 def test_step_metrics_skip_memories_that_do_not_apply_and_treat_same_domain_as_neutral() -> None:
-    from benchmark_test.framework.ranking import Row, step_metrics
+    from ontyra.calibration.ranking import Row, step_metrics
 
     def row(key: str, bm25: float, applies: bool = True) -> Row:
         return Row(key, bm25, None, None, 1.0, applies, None, None)
@@ -345,7 +345,7 @@ def test_step_metrics_skip_memories_that_do_not_apply_and_treat_same_domain_as_n
 
 def test_fusion_methods_combine_lanes_per_request() -> None:
     from benchmark_test.framework.fusion import linear, rrf
-    from benchmark_test.framework.ranking import Row
+    from ontyra.calibration.ranking import Row
 
     rows = [
         Row("lexical-only", 10.0, None, None, 1.0, True, None, None),

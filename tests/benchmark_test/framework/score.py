@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from benchmark_test.framework.models import Step
+from ontyra.calibration.models import Step
 from ontyra.models.recall import RecallPack
 
 

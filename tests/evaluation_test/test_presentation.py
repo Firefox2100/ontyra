@@ -8,11 +8,11 @@ memory is worth; compact against rich shows what the extra tokens buy.
 
 from __future__ import annotations
 
-from benchmark_test.framework.models import load_world
 from evaluation_test.framework.config import EvalSettings
 from evaluation_test.framework.llm import Chat
 from evaluation_test.framework.models import load_presentation_cases
 from evaluation_test.framework.run import run_presentation_case
+from ontyra.calibration.models import load_world
 from ontyra.models.recall import RecallRequest
 from ontyra.services.recall_pack import estimate_tokens
 

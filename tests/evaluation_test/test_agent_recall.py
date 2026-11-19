@@ -8,12 +8,12 @@ from __future__ import annotations
 
 from benchmark_test.framework.config import BenchSettings
 from benchmark_test.framework.dialogue import Built, Turn, load_dialogues, play_dialogue
-from benchmark_test.framework.models import load_world
 from benchmark_test.framework.results import summarise
 from evaluation_test.framework.agent import load_contract, tool_specs
 from evaluation_test.framework.config import EvalSettings
 from evaluation_test.framework.llm import Chat, Message
 from evaluation_test.framework.run import system_prompt
+from ontyra.calibration.models import load_world
 from ontyra.models.recall import RecallContext, RecallRequest
 
 

@@ -1,4 +1,7 @@
-"""Benchmark data: worlds (what is stored) and cases (what must come back), as JSON files."""
+"""Benchmark data: worlds (what is stored) and cases (what must come back), as JSON files.
+
+The data ships with the package (`data/`): the benchmark suites and `ontyra calibrate` read the
+same labelled worlds and cases."""
 
 from __future__ import annotations
 
@@ -17,7 +20,7 @@ from ontyra.models.ontology import (
 )
 from ontyra.models.recall import RecallContext
 
-DATA = Path(__file__).resolve().parents[1] / "data"
+DATA = Path(__file__).resolve().parent / "data"
 
 
 class Strict(BaseModel):

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from benchmark_test.framework.dialogue import Dialogue, load_dialogues
-from benchmark_test.framework.models import Case, World, load_cases, load_world, world_ids
 from benchmark_test.framework.validate import (
     case_problems,
     coverage_report,
@@ -14,6 +13,7 @@ from benchmark_test.framework.validate import (
     trap_counts,
     world_problems,
 )
+from ontyra.calibration.models import Case, World, load_cases, load_world, world_ids
 
 
 @pytest.fixture(scope="module")
@@ -60,7 +60,7 @@ def test_the_world_covers_every_kind_in_every_domain_group(all_worlds: dict[str,
 
 
 def test_every_planted_trap_is_present_often_enough(all_worlds: dict[str, World]) -> None:
-    from benchmark_test.framework.models import TRAPS
+    from ontyra.calibration.models import TRAPS
 
     for world in all_worlds.values():
         counts = trap_counts(world)

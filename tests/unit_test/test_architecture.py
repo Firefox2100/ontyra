@@ -23,7 +23,7 @@ ALLOWED_INTERNAL: dict[str, set[str]] = {
     "config": {"models"},
 }
 # layers that may import any internal layer (composition root, entry points)
-ROOT_LEVEL = {"app", "cli", "__main__", "__init__", "_version"}
+ROOT_LEVEL = {"app", "cli", "calibration", "__main__", "__init__", "_version"}
 
 # third-party top-level package -> layers allowed to import it
 CONFINED_THIRD_PARTY: dict[str, set[str]] = {

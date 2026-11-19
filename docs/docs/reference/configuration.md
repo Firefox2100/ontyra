@@ -122,6 +122,7 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_RECALL__FUSION_ALPHA` | float | `0.2` |
 | `ONTYRA_RECALL__FUSION_BASELINE` | `mean` \| `min` | `mean` |
 | `ONTYRA_RECALL__FUSION_MARGIN` | float | `0.1` |
+| `ONTYRA_RECALL__CALIBRATED_FOR` | str \| None | unset |
 | `ONTYRA_RECALL__ABSTAIN_COSINE` | float | `0.0` |
 | `ONTYRA_RECALL__CONCEPT_BOOST` | float | `0.0` |
 | `ONTYRA_RECALL__RERANK_CANDIDATES` | int | `30` |
@@ -129,6 +130,8 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_RECALL__DECISION_CANDIDATES` | int | `8` |
 | `ONTYRA_RECALL__DECISION_WEIGHT` | float | `0.5` |
 | `ONTYRA_RECALL__DECISION_MARGIN` | float | `0.15` |
+| `ONTYRA_RECALL__TRACE_CANDIDATES` | int | `30` |
+| `ONTYRA_RECALL__TRACE_RETENTION_DAYS` | int | `180` |
 | `ONTYRA_RECALL__RELEVANCE_THRESHOLD` | float | `0.25` |
 | `ONTYRA_RECALL__VECTOR_FLOOR` | float | `0.3` |
 | `ONTYRA_RECALL__LANE_WEIGHTS` | dict | `{'lexical': 1.0, 'vector': 1.0, 'concept': 0.9}` |

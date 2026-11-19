@@ -13,9 +13,9 @@ import sys
 from pathlib import Path
 
 from benchmark_test.framework.fusion import alpha_sweep, evaluate, pick_best, standard_methods
-from benchmark_test.framework.models import Case, Step, load_cases, load_world
-from benchmark_test.framework.ranking import Row
 from benchmark_test.framework.results import read_rows
+from ontyra.calibration.models import Case, Step, load_cases, load_world
+from ontyra.calibration.ranking import Row
 
 
 def requests_of(result: Path, cases: dict[str, Case]) -> list[tuple[Case, Step, list[Row]]]:

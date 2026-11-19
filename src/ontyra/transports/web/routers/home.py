@@ -3,7 +3,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from ontyra.transports.rest.deps import MemoryServiceDep, OntologyChangeServiceDep
+from ontyra.transports.rest.deps import (
+    MemoryServiceDep,
+    OntologyChangeServiceDep,
+    RecallServiceDep,
+)
 from ontyra.transports.web.deps import UiCallerDep, templates
 
 router = APIRouter(prefix="/ui", tags=["ui"], include_in_schema=False)
@@ -20,6 +24,7 @@ async def home(
     caller: UiCallerDep,
     memory: MemoryServiceDep,
     changes: OntologyChangeServiceDep,
+    recall: RecallServiceDep,
 ) -> HTMLResponse:
     pending = await memory.pending(caller, 200)
     held = await changes.pending(caller, 200)
@@ -29,5 +34,11 @@ async def home(
     return templates.TemplateResponse(
         request,
         "home.html",
-        {"pending": len(pending), "held": len(held), "kinds": kinds, "nav": "home"},
+        {
+            "pending": len(pending),
+            "held": len(held),
+            "kinds": kinds,
+            "nav": "home",
+            "calibration": recall.calibration_note(),
+        },
     )

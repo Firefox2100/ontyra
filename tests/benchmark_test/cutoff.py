@@ -20,9 +20,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from benchmark_test.framework.models import Step, load_cases, load_world
-from benchmark_test.framework.ranking import Row, labels
 from benchmark_test.framework.results import read_rows
+from ontyra.calibration.models import Step, load_cases, load_world
+from ontyra.calibration.ranking import Row, labels
 
 OVERFETCH = 150
 

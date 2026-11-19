@@ -4,11 +4,11 @@ defer when it cannot know)? The cards are built by the daemon's own card functio
 
 from __future__ import annotations
 
-from benchmark_test.framework.models import load_world
 from evaluation_test.framework.config import EvalSettings
 from evaluation_test.framework.llm import Chat
 from evaluation_test.framework.models import load_decision_cases
 from evaluation_test.framework.run import build_card, run_decision_case
+from ontyra.calibration.models import load_world
 
 
 async def test_decisions(chat: Chat, settings: EvalSettings, recorder, capsys) -> None:

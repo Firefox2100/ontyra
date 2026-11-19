@@ -263,6 +263,17 @@ class SurrealStore:
         )[0]
         return [decode(r)["id"] for r in rows]
 
+    async def uncited_traces(self, before: datetime, limit: int) -> list[RecordId]:
+        rows = (
+            await self.db.query(
+                "SELECT id FROM recall_trace WHERE created_at < $before "
+                "AND id NOT IN (SELECT VALUE trace FROM feedback WHERE trace != NONE) "
+                "LIMIT $limit",
+                {"before": before, "limit": limit},
+            )
+        )[0]
+        return [decode(r)["id"] for r in rows]
+
     async def unembedded(self, model: str, limit: int = 64) -> list[SearchDoc]:
         rows = (
             await self.db.query(

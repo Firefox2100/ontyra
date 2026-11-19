@@ -12,12 +12,12 @@ from uuid import uuid4
 import pytest
 
 from benchmark_test.framework.config import BenchSettings
-from benchmark_test.framework.models import World, load_world
-from benchmark_test.framework.run import load_world as populate
 from evaluation_test.framework.config import EvalSettings
 from evaluation_test.framework.llm import Chat, LangChainChat
 from evaluation_test.framework.results import write_result
 from ontyra.app import Application
+from ontyra.calibration.models import World, load_world
+from ontyra.calibration.world import populate
 from ontyra.config import Settings
 from ontyra.models import PolicyConfig
 from ontyra.services import Caller

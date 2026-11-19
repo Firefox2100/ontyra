@@ -13,9 +13,9 @@ import pytest
 
 from benchmark_test.framework.config import BenchSettings, Profile
 from benchmark_test.framework.dialogue import STRATEGIES, load_dialogues, play_dialogue
-from benchmark_test.framework.models import Case
 from benchmark_test.framework.results import summarise
 from benchmark_test.framework.score import StepScore
+from ontyra.calibration.models import Case
 
 
 async def test_dialogue_suite(

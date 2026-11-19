@@ -1,0 +1,1066 @@
+[
+ {
+  "id": "p001",
+  "a": "The 2026 marketing budget is 450,000 EUR.",
+  "b": "Marketing has 450k euros allocated for the year 2026.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p002",
+  "a": "The 2026 marketing budget is 450,000 EUR.",
+  "b": "The marketing budget for 2026 is 450,000 EUR.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p003",
+  "a": "Use vitest for tests in lanternkit; do not add jest.",
+  "b": "Lanternkit's test runner must be vitest, and jest should not be introduced.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p004",
+  "a": "Use vitest for tests in lanternkit; do not add jest.",
+  "b": "In lanternkit use vitest for tests; do not add jest.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p005",
+  "a": "Include a strong simple baseline, such as logistic regression or an MLP, before claiming gains from a graph model.",
+  "b": "Always compare a graph model against a solid plain baseline (logistic regression, MLP) so any improvement can be believed.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p006",
+  "a": "Include a strong simple baseline, such as logistic regression or an MLP, before claiming gains from a graph model.",
+  "b": "Before claiming gains from a graph model, include a strong simple baseline such as logistic regression or an MLP.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p007",
+  "a": "When the user asks to learn a topic, explain step by step with an example and define every technical term.",
+  "b": "If asked to teach something, walk through it in stages, give an example, and explain all jargon.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p008",
+  "a": "When the user asks to learn a topic, explain step by step with an example and define every technical term.",
+  "b": "When the user wants to learn a topic, explain it step by step with an example and define each technical term.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p009",
+  "a": "The user's birthday is 12 March and Alex's birthday is 3 August.",
+  "b": "Birthdays: the user on March 12th, Alex on August 3rd.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p010",
+  "a": "The user's birthday is 12 March and Alex's birthday is 3 August.",
+  "b": "The user's birthday is 12 March; Alex's birthday is 3 August.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p011",
+  "a": "Social-science papers use APA 7 author-year citations.",
+  "b": "Cite sources in APA 7 author-date format when writing for the social sciences.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p012",
+  "a": "Social-science papers use APA 7 author-year citations.",
+  "b": "Social science papers use APA 7 author-year citations.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p013",
+  "a": "Alex likes a phone call on Sunday evenings.",
+  "b": "Sunday evening is when Alex prefers to be phoned.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p014",
+  "a": "Alex likes a phone call on Sunday evenings.",
+  "b": "Alex likes getting a phone call on Sunday evenings.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p015",
+  "a": "A biological replicate is an independent animal or independent culture; technical replicates do not count towards n.",
+  "b": "n counts only independent animals or cultures; repeated measurements of the same sample are not replicates.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p016",
+  "a": "A biological replicate is an independent animal or independent culture; technical replicates do not count towards n.",
+  "b": "A biological replicate is an independent animal or culture; technical replicates do not count toward n.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p017",
+  "a": "For double-blind submissions remove author names and citations that identify yourself.",
+  "b": "In a double-blind review submission, strip your own name and any self-identifying references.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p018",
+  "a": "For double-blind submissions remove author names and citations that identify yourself.",
+  "b": "For double-blind submissions, remove author names and citations that identify you.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p019",
+  "a": "On weekends do not propose work meetings or deadlines; keep suggestions to personal plans.",
+  "b": "Saturdays and Sundays are for personal plans only: no work meetings, no deadlines.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p020",
+  "a": "On weekends do not propose work meetings or deadlines; keep suggestions to personal plans.",
+  "b": "Do not propose work meetings or deadlines on weekends; keep suggestions to personal plans.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p021",
+  "a": "Debrief every participant after the session; any deception needs prior ethics approval.",
+  "b": "After each session participants must be debriefed, and any use of deception requires earlier ethics sign-off.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p022",
+  "a": "Debrief every participant after the session; any deception needs prior ethics approval.",
+  "b": "Debrief every participant after the session; deception needs ethics approval beforehand.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p023",
+  "a": "Large downloads and database files kept in the home directory exhaust its small quota; put them under /local.",
+  "b": "Home has a tiny quota, so big downloads and databases belong in /local rather than ~.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p024",
+  "a": "Large downloads and database files kept in the home directory exhaust its small quota; put them under /local.",
+  "b": "Large downloads and database files in the home directory exhaust its small quota; keep them under /local.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p025",
+  "a": "The user is a programmer by training and now leads a research group.",
+  "b": "Trained as a programmer, the user currently heads a research group.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p026",
+  "a": "A seven-minute train connection in Utrecht was missed twice; allow at least fifteen minutes between trains.",
+  "b": "Changing trains at Utrecht with only 7 minutes failed two times, so plan for 15 minutes or more between connections.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p027",
+  "a": "For papers behind a paywall, try the publisher's site or the archive directly from the university network before looking for other copies.",
+  "b": "When a paper is behind a paywall, go to the publisher or archive over the campus network before hunting for alternative copies.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p028",
+  "a": "For papers behind a paywall, try the publisher's site or the archive directly from the university network before looking for other copies.",
+  "b": "For paywalled papers, first try the publisher's site or the archive directly from the university network before other copies.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p029",
+  "a": "Economic series are in FRED, Eurostat and the World Bank open data portal.",
+  "b": "For economic time series use FRED, Eurostat or the World Bank's open data.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p030",
+  "a": "Economic series are in FRED, Eurostat and the World Bank open data portal.",
+  "b": "Economic series can be found in FRED, Eurostat and the World Bank open data portal.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p031",
+  "a": "The commute is 25 minutes by train from Rotterdam Centraal; the 8:12 train is the usual one.",
+  "b": "Getting to work takes 25 minutes on the train out of Rotterdam Centraal, normally the 8:12.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p032",
+  "a": "The commute is 25 minutes by train from Rotterdam Centraal; the 8:12 train is the usual one.",
+  "b": "The commute is 25 minutes by train from Rotterdam Centraal; usually the 8:12 train.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p033",
+  "a": "Suggest books by translated fiction authors and avoid thrillers; the user reads about 20 pages every evening.",
+  "b": "Recommend translated literary fiction, not thrillers; reading pace is roughly twenty pages a night.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p034",
+  "a": "Suggest books by translated fiction authors and avoid thrillers; the user reads about 20 pages every evening.",
+  "b": "Suggest books by translated fiction authors and avoid thrillers; the user reads about 20 pages each evening.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p035",
+  "a": "Pixel is on antibiotics: give one tablet with breakfast until 8 November.",
+  "b": "Until November 8th Pixel takes an antibiotic, a single tablet at breakfast.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p036",
+  "a": "Pixel is on antibiotics: give one tablet with breakfast until 8 November.",
+  "b": "Pixel is on antibiotics: one tablet with breakfast until 8 November.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p037",
+  "a": "Plot the data first and report the correlation coefficient with its confidence interval; correlation is not causation.",
+  "b": "Look at a plot before anything else, then give the correlation with a CI, and remember it does not imply causation.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p038",
+  "a": "A downloaded dataset used different units from its documentation; compare summary statistics and units right after download.",
+  "b": "Dataset units once disagreed with the docs, so check units and summary stats immediately after a download.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p039",
+  "a": "A downloaded dataset used different units from its documentation; compare summary statistics and units right after download.",
+  "b": "A downloaded dataset used different units than its documentation; compare summary statistics and units right after downloading.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p040",
+  "a": "On weekdays keep Tuesday and Thursday mornings free for focused research work.",
+  "b": "Reserve Tuesday and Thursday mornings on weekdays for deep research work.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p041",
+  "a": "On weekdays keep Tuesday and Thursday mornings free for focused research work.",
+  "b": "On weekdays keep Tuesday and Thursday mornings free for focused research.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p042",
+  "a": "Chose Benjamini-Hochberg over Bonferroni for gene expression screens because Bonferroni was too conservative.",
+  "b": "For screening gene expression we went with Benjamini-Hochberg because Bonferroni's correction was too strict.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p043",
+  "a": "Chose Benjamini-Hochberg over Bonferroni for gene expression screens because Bonferroni was too conservative.",
+  "b": "Chose Benjamini-Hochberg over Bonferroni for gene expression screens, as Bonferroni was too conservative.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p044",
+  "a": "Write docstrings in Google style in pipeline-ml.",
+  "b": "Docstrings in the pipeline-ml project follow the Google convention.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p045",
+  "a": "Write docstrings in Google style in pipeline-ml.",
+  "b": "Use Google-style docstrings in pipeline-ml.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p046",
+  "a": "To expose a service on a work server, either put it behind the installed Apache as a reverse proxy on port 8888, or stop Apache and listen directly on port 8888; no other port is reachable.",
+  "b": "Publishing a service from a work server works two ways: proxy it through the existing Apache on 8888, or shut Apache down and bind 8888 yourself. Nothing else is reachable.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p047",
+  "a": "To expose a service on a work server, either put it behind the installed Apache as a reverse proxy on port 8888, or stop Apache and listen directly on port 8888; no other port is reachable.",
+  "b": "To expose a service on a work server, put it behind the installed Apache reverse proxy on port 8888, or stop Apache and listen on 8888 directly; no other port is reachable.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p048",
+  "a": "Ask for confirmation before sending any email or message on the user's behalf; drafts are fine.",
+  "b": "Never send an email or message on the user's behalf without checking first, though writing drafts is okay.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p049",
+  "a": "Ask for confirmation before sending any email or message on the user's behalf; drafts are fine.",
+  "b": "Ask for confirmation before sending any email or message for the user; drafts are fine.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p050",
+  "a": "Format tables without vertical lines, put units in the column headers, and align numbers on the decimal point.",
+  "b": "Tables: no vertical rules, units go in the headers, decimals aligned.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p051",
+  "a": "Format tables without vertical lines, put units in the column headers, and align numbers on the decimal point.",
+  "b": "Format tables without vertical lines, with units in the column headers and numbers aligned on the decimal point.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p052",
+  "a": "Use the journal's LaTeX template and manage the bibliography with biblatex in the journal's style.",
+  "b": "Write in the journal-provided LaTeX template and handle references through biblatex using the journal's style.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p053",
+  "a": "The compute budget is two GPU-weeks per paper; log GPU-hours in the experiment sheet.",
+  "b": "Each paper gets 2 GPU-weeks of compute, and GPU hours are tracked in the experiment spreadsheet.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p054",
+  "a": "The compute budget is two GPU-weeks per paper; log GPU-hours in the experiment sheet.",
+  "b": "The compute budget is two GPU-weeks per paper; record GPU-hours in the experiment sheet.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p055",
+  "a": "Always give measurements in metric units, and temperatures in Celsius.",
+  "b": "Use the metric system for all measurements, Celsius for temperature.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p056",
+  "a": "Always give measurements in metric units, and temperatures in Celsius.",
+  "b": "Always give measurements in metric units and temperatures in Celsius.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p057",
+  "a": "Only port 8888 is open on the work servers; a load balancer sits in front of it and cannot be configured, except that a domain can be assigned to a server.",
+  "b": "Work servers expose just port 8888 behind an unconfigurable load balancer; the one thing you can do is point a domain at a server.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p058",
+  "a": "Only port 8888 is open on the work servers; a load balancer sits in front of it and cannot be configured, except that a domain can be assigned to a server.",
+  "b": "Only port 8888 is open on the work servers; a load balancer in front cannot be configured, but a domain can be assigned to a server.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p059",
+  "a": "Reply concisely: lead with the answer, then at most three short supporting points.",
+  "b": "Keep replies short: the answer up front followed by no more than three brief points.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p060",
+  "a": "Reply concisely: lead with the answer, then at most three short supporting points.",
+  "b": "Reply concisely: answer first, then at most three short supporting points.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p061",
+  "a": "Round p-values to three decimals and effect sizes to two.",
+  "b": "Report p-values with 3 decimal places and effect sizes with 2.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p062",
+  "a": "Round p-values to three decimals and effect sizes to two.",
+  "b": "Round p-values to three decimals and effect sizes to two decimals.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p063",
+  "a": "Never commit secrets or .env files; fetch credentials with the vault CLI.",
+  "b": "Secrets and .env files must stay out of version control; pull credentials using the vault command-line tool.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p064",
+  "a": "Never commit secrets or .env files; fetch credentials with the vault CLI.",
+  "b": "Never commit secrets or .env files; get credentials from the vault CLI.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p065",
+  "a": "Board meeting minutes are confidential and are stored only in the board folder, never in the shared team drive.",
+  "b": "Keep board minutes in the board folder alone; they are confidential and must not go on the team's shared drive.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p066",
+  "a": "Board meeting minutes are confidential and are stored only in the board folder, never in the shared team drive.",
+  "b": "Board meeting minutes are confidential: store them only in the board folder, not the shared team drive.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p067",
+  "a": "Chose TypeScript strict mode for storefront because most production bugs were undefined access.",
+  "b": "Storefront runs TypeScript in strict mode, since undefined access caused the majority of bugs in production.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p068",
+  "a": "Chose a mixed-mode survey, web plus phone, to reach older respondents.",
+  "b": "To include older respondents the survey uses two modes: online and telephone.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p069",
+  "a": "Batch size 512 ran out of memory on the 24 GB card; batch size 256 with gradient accumulation fit.",
+  "b": "On the 24GB GPU a batch of 512 hit out-of-memory, whereas 256 plus gradient accumulation worked.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p070",
+  "a": "IEEE style numbers references in square brackets in order of first appearance.",
+  "b": "In IEEE format citations are bracketed numbers assigned by first appearance.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p071",
+  "a": "IEEE style numbers references in square brackets in order of first appearance.",
+  "b": "IEEE style numbers references in square brackets in the order of first appearance.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p072",
+  "a": "Laptops are depreciated straight-line over 3 years and furniture over 8 years.",
+  "b": "Straight-line depreciation: three years for laptops, eight for furniture.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p073",
+  "a": "Laptops are depreciated straight-line over 3 years and furniture over 8 years.",
+  "b": "Laptops are depreciated straight-line over 3 years, furniture over 8.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p074",
+  "a": "State the full model formula with every predictor and interaction in the methods section.",
+  "b": "The methods section must spell out the whole model formula including all predictors and interactions.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p075",
+  "a": "State the full model formula with every predictor and interaction in the methods section.",
+  "b": "State the full model formula, with every predictor and interaction, in the methods section.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p076",
+  "a": "Tidewatch production runs PostgreSQL 14.",
+  "b": "The production database for Tidewatch is PostgreSQL version 14.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p077",
+  "a": "Tidewatch production runs PostgreSQL 14.",
+  "b": "Tidewatch runs PostgreSQL 14 in production.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p078",
+  "a": "Prefer Python, MongoDB, React and Neo4j over equivalent technologies.",
+  "b": "When choosing tools favour Python, MongoDB, React and Neo4j rather than their equivalents.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p079",
+  "a": "Prefer Python, MongoDB, React and Neo4j over equivalent technologies.",
+  "b": "Prefer Python, MongoDB, React and Neo4j over comparable technologies.",
+  "label": "dup",
+  "source": "light-edit"
+ },
+ {
+  "id": "p080",
+  "a": "A manuscript was desk-rejected for exceeding the word limit; read the author guidelines before writing.",
+  "b": "One paper got desk-rejected for being over the word limit, so go through the author guidelines before you start writing.",
+  "label": "dup",
+  "source": "paraphrase"
+ },
+ {
+  "id": "p081",
+  "a": "When planning meals or recipes, exclude peanuts and keep dishes vegetarian unless the user asks otherwise.",
+  "b": "The user is allergic to peanuts; check ingredients and restaurant menus.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p082",
+  "a": "Paper is collected on the first Tuesday of the month, plastic every second Thursday, and glass goes to the bank at the supermarket.",
+  "b": "Plastic is collected every Monday.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p083",
+  "a": "Tyre pressure is 2.5 bar at the front and 2.7 bar at the rear when the car is loaded.",
+  "b": "Tyre pressure is 2.2 bar all round.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p084",
+  "a": "Pixel is a dog, fed twice a day at 7:30 and 18:00, and walked before breakfast.",
+  "b": "Weekday morning routine: feed Pixel, run, shower, breakfast, then read the news summary and the calendar before 8:00.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p085",
+  "a": "The user's birthday is 12 March and Alex's birthday is 3 August.",
+  "b": "Buy a birthday present for Alex before the third of August.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p086",
+  "a": "Prefer Python, MongoDB, React and Neo4j over equivalent technologies.",
+  "b": "The user's preferred technology stack is Python, MongoDB, React and Neo4j.",
+  "label": "dup",
+  "source": "natural"
+ },
+ {
+  "id": "p087",
+  "a": "Use poetry for dependency management in pipeline-ml; do not use uv in this repository.",
+  "b": "Pipeline-ml runs on Python 3.10.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p088",
+  "a": "Use poetry for dependency management in pipeline-ml; do not use uv in this repository.",
+  "b": "Pipeline-ml runs on Python 3.11 since the CUDA image upgrade.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p089",
+  "a": "Use poetry for dependency management in pipeline-ml; do not use uv in this repository.",
+  "b": "Use uv for Python dependency management in tidewatch; do not run pip install directly.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p090",
+  "a": "Use poetry for dependency management in pipeline-ml; do not use uv in this repository.",
+  "b": "Chose uv over poetry for tidewatch dependency management because installs are much faster.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p091",
+  "a": "Pipeline-ml runs on Python 3.10.",
+  "b": "Pipeline-ml runs on Python 3.11 since the CUDA image upgrade.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p092",
+  "a": "Upgrade storefront CI to Node 22 before the LTS change.",
+  "b": "Lanternkit supports Node.js 20 and 22.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p093",
+  "a": "Use pytest for tests in tidewatch; do not write unittest.TestCase classes.",
+  "b": "Limit pytest-xdist to two workers when running the tidewatch test suite.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p094",
+  "a": "Use uv for Python dependency management in tidewatch; do not run pip install directly.",
+  "b": "Tidewatch targets Python 3.12.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p095",
+  "a": "Use uv for Python dependency management in tidewatch; do not run pip install directly.",
+  "b": "Chose uv over poetry for tidewatch dependency management because installs are much faster.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p096",
+  "a": "Add type hints to every new Python function.",
+  "b": "Throwaway scripts under tidewatch/scripts do not need type hints.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p097",
+  "a": "Do not deploy tidewatch on Fridays.",
+  "b": "Hold all tidewatch deploys until the first of November.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p098",
+  "a": "Tidewatch production runs PostgreSQL 14.",
+  "b": "Tidewatch production runs PostgreSQL 16.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p099",
+  "a": "Tidewatch production runs PostgreSQL 14.",
+  "b": "Tidewatch stores its data in MySQL.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p100",
+  "a": "Tidewatch production runs PostgreSQL 14.",
+  "b": "On 2026-09-12 tidewatch production was migrated to PostgreSQL 16.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p101",
+  "a": "Tidewatch production runs PostgreSQL 16.",
+  "b": "Tidewatch stores its data in MySQL.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p102",
+  "a": "Tidewatch production runs PostgreSQL 16.",
+  "b": "Tidewatch targets Python 3.12.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p103",
+  "a": "Tidewatch production runs PostgreSQL 16.",
+  "b": "On 2026-09-12 tidewatch production was migrated to PostgreSQL 16.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p104",
+  "a": "Tidewatch stores its data in MySQL.",
+  "b": "Chose SQLite for the tidewatch local cache instead of Redis because a single process owns the cache.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p105",
+  "a": "On the work servers the user has no root access: sudo is a modified binary that runs only a handful of exact commands, essentially switching services on and off.",
+  "b": "Start or stop Apache, MySQL or PostgreSQL on a work server only through the permitted sudo service commands; nothing else that needs root is available.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p106",
+  "a": "Never suggest commands that need root on the work servers, such as apt install, editing system files or installing system packages; propose a user-space alternative or ask the administrators.",
+  "b": "When a task needs root on a work server: stop, list exactly what is needed, and send the request to the server administrators.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p107",
+  "a": "Home directories on the work servers have very little space.",
+  "b": "Large downloads and database files kept in the home directory exhaust its small quota; put them under /local.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p108",
+  "a": "On the work servers install software under /local/software and keep source code, databases and other data under /local, never in the home directory.",
+  "b": "Large downloads and database files kept in the home directory exhaust its small quota; put them under /local.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p109",
+  "a": "On the work servers install software under /local/software and keep source code, databases and other data under /local, never in the home directory.",
+  "b": "Install software from source on a work server: build it in /local/software, set the install prefix there, and add its bin directory to PATH in the shell profile.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p110",
+  "a": "Only port 8888 is open on the work servers; a load balancer sits in front of it and cannot be configured, except that a domain can be assigned to a server.",
+  "b": "The load balancer in front of port 8888 cannot be controlled; the only thing that can be set is the domain assigned to the server.",
+  "label": "dup",
+  "source": "natural"
+ },
+ {
+  "id": "p111",
+  "a": "To expose a service on a work server, either put it behind the installed Apache as a reverse proxy on port 8888, or stop Apache and listen directly on port 8888; no other port is reachable.",
+  "b": "Publish a new web application on a work server: run it on a local port, add an Apache reverse proxy rule or virtual host for it, serve it through 8888, and ask for a domain to be assigned.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p112",
+  "a": "Do not use WebSockets in software that will run on a work server, because the load balancer does not support them; use plain HTTP requests instead.",
+  "b": "The load balancer in front of the work servers has no WebSocket support.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p113",
+  "a": "Employees get 25 days of annual leave.",
+  "b": "Employees get 28 days of annual leave; up to 5 unused days carry over until 31 March.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p114",
+  "a": "Take meeting minutes: note attendees, decisions and action items with owner and due date, and send them within 24 hours.",
+  "b": "Write action items in minutes as Owner, action, due date, one per line.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p115",
+  "a": "Take meeting minutes: note attendees, decisions and action items with owner and due date, and send them within 24 hours.",
+  "b": "Store all meeting minutes in the shared team drive.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p116",
+  "a": "Buy equipment over 1,000 EUR: collect three quotes, raise a purchase order, and get procurement approval before ordering.",
+  "b": "Invoices above 10,000 EUR need two approvers.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p117",
+  "a": "Process a refund: verify the order, check the 14-day return window, refund to the original payment method, and log the ticket.",
+  "b": "Process a refund: verify the order, check the 30-day return window, refund to the original payment method, and log the ticket.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p118",
+  "a": "File an expense report: collect itemised receipts, upload them to the expense portal within 30 days, pick the cost center, and submit for approval.",
+  "b": "Every expense needs an itemised receipt; a card slip alone is rejected.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p119",
+  "a": "Expense claims above 300 EUR need director approval.",
+  "b": "Expense claims above 500 EUR need director approval; below that the line manager approves.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p120",
+  "a": "Expense claims above 300 EUR need director approval.",
+  "b": "Invoices above 10,000 EUR need two approvers.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p121",
+  "a": "Expense claims above 500 EUR need director approval; below that the line manager approves.",
+  "b": "Invoices above 10,000 EUR need two approvers.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p122",
+  "a": "The meal allowance on domestic business trips is 45 EUR per day.",
+  "b": "The meal allowance on business trips abroad is 60 EUR per day.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p123",
+  "a": "The standard VAT rate is 20%.",
+  "b": "Since 1 July 2026 the standard VAT rate is 21% and the reduced rate for books and food is 9%.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p124",
+  "a": "Laptops are depreciated straight-line over 4 years.",
+  "b": "Laptops are depreciated straight-line over 3 years and furniture over 8 years.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p125",
+  "a": "The 2026 marketing budget is 450,000 EUR.",
+  "b": "The 2026 marketing budget is 480,000 EUR, of which 120,000 EUR is reserved for events.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p126",
+  "a": "Cost center 4410 is Marketing, 4420 is Sales, and 5100 is Engineering.",
+  "b": "Cost center 4420 is Marketing.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p127",
+  "a": "Supplier payments run every Thursday; invoices approved after Wednesday noon wait for the next run.",
+  "b": "Pay supplier invoices within 30 days of receipt.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p128",
+  "a": "Supplier payments run every Thursday; invoices approved after Wednesday noon wait for the next run.",
+  "b": "Pay supplier invoices on day 45 to improve cash flow unless the supplier has a discount clause.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p129",
+  "a": "Round only for the final presentation; keep full precision in intermediate calculations.",
+  "b": "Round a final result to the significant figures of the least precise measurement that went into it.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p130",
+  "a": "Pay supplier invoices within 30 days of receipt.",
+  "b": "Pay supplier invoices on day 45 to improve cash flow unless the supplier has a discount clause.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p131",
+  "a": "Zebrafish work runs under animal protocol ZF-2023-07.",
+  "b": "Zebrafish work runs under animal protocol ZF-2026-02 since the renewal; every cage card must carry it.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p132",
+  "a": "The zebrafish reference genome is GRCz10.",
+  "b": "The zebrafish reference genome is GRCz11, annotated with Ensembl release 110.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p133",
+  "a": "Molarity is moles of solute per litre of solution and changes with temperature.",
+  "b": "Molality is moles of solute per kilogram of solvent and does not change with temperature.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p134",
+  "a": "Round a final result to the significant figures of the least precise measurement that went into it.",
+  "b": "Quote a measurement with its uncertainty to one significant figure (two if the leading digit is 1) and the same decimal places in the value.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p135",
+  "a": "Round a final result to the significant figures of the least precise measurement that went into it.",
+  "b": "Round p-values to three decimals and effect sizes to two.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p136",
+  "a": "Before reusing a dataset check its licence and cite its DOI.",
+  "b": "Deposit your own datasets in Zenodo to get a DOI before the paper is submitted.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p137",
+  "a": "The user's system reaches the internet only through the university network: archives, publishers and other educational resources are accessible, UDP traffic does not work, and some domains may be blocked.",
+  "b": "Avoid UDP-based protocols and tools such as QUIC, HTTP/3 or UDP tunnels, because UDP does not work on the university network; use TCP alternatives.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p138",
+  "a": "The user's system reaches the internet only through the university network: archives, publishers and other educational resources are accessible, UDP traffic does not work, and some domains may be blocked.",
+  "b": "When a website or download fails, consider that the university network may be blocking that domain before debugging further.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p139",
+  "a": "For papers behind a paywall, try the publisher's site or the archive directly from the university network before looking for other copies.",
+  "b": "When a paper is wanted, look in Zotero first to see whether it is already there, and search elsewhere only if it is not.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p140",
+  "a": "Zotero runs locally on the user's system and holds the user's paper library.",
+  "b": "Collect every paper found during research and send it to the user's Zotero running on the system.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p141",
+  "a": "Collect every paper found during research and send it to the user's Zotero running on the system.",
+  "b": "When a paper is wanted, look in Zotero first to see whether it is already there, and search elsewhere only if it is not.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p142",
+  "a": "Collect every paper found during research and send it to the user's Zotero running on the system.",
+  "b": "Get a paper: search Zotero by title, DOI or author; if it is missing find it online, add it to Zotero, then use the copy from Zotero.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p143",
+  "a": "When a paper is wanted, look in Zotero first to see whether it is already there, and search elsewhere only if it is not.",
+  "b": "Get a paper: search Zotero by title, DOI or author; if it is missing find it online, add it to Zotero, then use the copy from Zotero.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p144",
+  "a": "Get a paper: search Zotero by title, DOI or author; if it is missing find it online, add it to Zotero, then use the copy from Zotero.",
+  "b": "Keep all references in Zotero with the DOI filled in; never type a bibliography by hand.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p145",
+  "a": "The detector response model is a Geant4 simulation, version 11.1.",
+  "b": "The detector response model is a Geant4 simulation, version 11.2 since the September upgrade.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p146",
+  "a": "Never enter the detector hall during a beam run; check that the interlock lamp is green before opening the door.",
+  "b": "The detector hall is closed for maintenance until 31 August; no access without the safety officer.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p147",
+  "a": "Counterbalance the order of conditions to control order effects and keep participants unaware of the hypothesis.",
+  "b": "Chose a within-subject design to cut the required sample size, with counterbalanced order.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p148",
+  "a": "Psychology manuscripts follow APA 7: author-year citations, and statistics written as p = .03 without a leading zero.",
+  "b": "Social-science papers use APA 7 author-year citations.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p149",
+  "a": "Report exact p values such as p = .034 rather than p < .05, except for p < .001.",
+  "b": "Round p-values to three decimals and effect sizes to two.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p150",
+  "a": "Correct for multiple comparisons with Bonferroni or Benjamini-Hochberg when testing more than one hypothesis.",
+  "b": "Chose Benjamini-Hochberg over Bonferroni for gene expression screens because Bonferroni was too conservative.",
+  "label": "distinct",
+  "source": "natural"
+ },
+ {
+  "id": "p151",
+  "a": "Analyses use R 4.2 with the tidyverse.",
+  "b": "Analyses use R 4.4 with the tidyverse; Python is for pipelines only.",
+  "label": "update",
+  "source": "natural"
+ },
+ {
+  "id": "p152",
+  "a": "A manuscript was desk-rejected for exceeding the word limit; read the author guidelines before writing.",
+  "b": "Check the journal's word limit before submitting the manuscript.",
+  "label": "distinct",
+  "source": "natural"
+ }
+]

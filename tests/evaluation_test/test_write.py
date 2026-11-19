@@ -9,12 +9,12 @@ from __future__ import annotations
 
 from fastmcp import Client
 
-from benchmark_test.framework.models import load_world
 from evaluation_test.framework.agent import tool_specs
 from evaluation_test.framework.config import EvalSettings
 from evaluation_test.framework.llm import Chat
 from evaluation_test.framework.models import load_write_cases
 from evaluation_test.framework.run import run_write_case
+from ontyra.calibration.models import load_world
 from ontyra.transports.mcp import create_mcp
 
 

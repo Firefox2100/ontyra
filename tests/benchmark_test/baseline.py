@@ -12,7 +12,7 @@ import json
 import sys
 from pathlib import Path
 
-from benchmark_test.framework.models import DATA
+from benchmark_test.framework.paths import TEST_DATA
 
 
 def freeze(result: Path) -> Path:
@@ -22,7 +22,7 @@ def freeze(result: Path) -> Path:
         for c in run["cases"]
         if not c["passed"]
     }
-    out = DATA / "baselines" / "hash.json"
+    out = TEST_DATA / "baselines" / "hash.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     body = {
         "written_from": result.name,

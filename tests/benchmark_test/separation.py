@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 
 from benchmark_test.framework.config import Profile
-from benchmark_test.framework.models import load_cases, load_world
 from ontyra.adapters import build_embedder
+from ontyra.calibration.models import load_cases, load_world
 
 
 def cosine(a: list[float], b: list[float]) -> float:

@@ -11,9 +11,9 @@ import json
 import sys
 from pathlib import Path
 
-from benchmark_test.framework.models import Case, load_cases
-from benchmark_test.framework.ranking import LANES, Row, lane_value
 from benchmark_test.framework.results import read_rows
+from ontyra.calibration.models import Case, load_cases
+from ontyra.calibration.ranking import LANES, Row, lane_value
 
 
 def _rank_table(rows: list[Row]) -> dict[str, dict[str, int]]:

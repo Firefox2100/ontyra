@@ -7,8 +7,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import sys
 from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
 
 import uvicorn
 
@@ -58,6 +61,64 @@ async def _db_command(settings: Settings, command: str, *, yes: bool) -> int:
         await db.close()
 
 
+async def _own_command(settings: Settings, *, yes: bool) -> int:
+    from ontyra.calibration import own
+
+    if settings.recall.engine != "fusion":
+        print("The check needs ONTYRA_RECALL__ENGINE=fusion.", file=sys.stderr)
+        return 2
+    print(
+        "The check reads your configured database (nothing is written) and embeds about 60 of its "
+        f"memories' first words plus the benchmark's off-topic queries with "
+        f"{settings.embedding.provider} {settings.embedding.name or ''}."
+    )
+    if settings.embedding.provider != "hash" and not yes:
+        print("Re-run with --yes to call the embedder (it may be billed).", file=sys.stderr)
+        return 2
+    print("\n" + own.render(await own.probe(settings, progress=print)))
+    return 0
+
+
+async def _calibrate_command(
+    settings: Settings, saved: dict[str, Any] | None, out: str | None, *, yes: bool
+) -> int:
+    from ontyra.calibration import runner
+
+    if saved is not None:
+        recording = saved["recording"]
+    else:
+        need = runner.estimate(settings)
+        print(
+            f"Calibration will embed up to {need['embedding_texts_at_most']} texts "
+            f"({need['memories']} memories, {need['recall_requests']} requests, "
+            f"{need['pair_texts']} statement pairs) with {settings.embedding.provider} "
+            f"{settings.embedding.name or ''}."
+        )
+        if need["rerank_requests"]:
+            print(f"It will also make {need['rerank_requests']} rerank requests.")
+        if need["decision_requests"]:
+            print(f"It will also make {need['decision_requests']} decision-model requests.")
+        paid = (
+            settings.embedding.provider != "hash"
+            or need["rerank_requests"]
+            or need["decision_requests"]
+        )
+        if paid and not yes:
+            print("Re-run with --yes to call the models (they may be billed).", file=sys.stderr)
+            return 2
+        recording = await runner.record(settings, progress=print)
+        print(
+            f"{recording['embedding_requests']} embedding requests "
+            f"({recording['embedding_texts']} texts) in {recording['seconds']} s"
+        )
+    report = runner.analyse(recording)
+    print("\n" + runner.render(report))
+    if out:
+        await asyncio.to_thread(runner.save, Path(out), recording, report)
+        print(f"\nsaved to {out} (re-read with --from, no model calls)")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ontyra", description="Ontyra memory daemon")
     parser.add_argument("--version", action="version", version=f"ontyra {__version__}")
@@ -68,6 +129,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     db = sub.add_parser("db", help="schema administration")
     db.add_argument("action", choices=["apply", "sync", "wipe", "status"])
     db.add_argument("--yes", action="store_true", help="confirm destructive actions (wipe)")
+    cal = sub.add_parser(
+        "calibrate",
+        help="suggest recall and duplicate-scan thresholds for the configured embedder",
+        description="Runs the bundled labelled benchmark through the configured embedder (this "
+        "calls it, once; embedding requests are listed first) and prints suggested settings. "
+        "Nothing is changed; the deployed database is not touched.",
+    )
+    cal.add_argument("--yes", action="store_true", help="run, calling the configured embedder")
+    cal.add_argument("--out", help="write the recording and report here (JSON)")
+    cal.add_argument(
+        "--own",
+        action="store_true",
+        help="instead: check the abstention threshold on your own store (read-only)",
+    )
+    cal.add_argument("--from", dest="source", help="analyse a saved recording: no model calls")
     args = parser.parse_args(argv)
 
     settings = load_settings()
@@ -79,6 +155,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             create_rest_app(settings), host=host, port=port, log_level=settings.log_level.lower()
         )
         return 0
+    if args.command == "calibrate" and args.own:
+        return asyncio.run(_own_command(settings, yes=args.yes))
+    if args.command == "calibrate":
+        saved = json.loads(Path(args.source).read_text("utf-8")) if args.source else None
+        return asyncio.run(_calibrate_command(settings, saved, args.out, yes=args.yes))
     return asyncio.run(_db_command(settings, args.action, yes=args.yes))
 
 

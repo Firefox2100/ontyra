@@ -16,9 +16,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Literal
 
-from benchmark_test.framework.models import Case, Step, Strict
 from benchmark_test.framework.score import SECTIONS, StepScore, score_step
 from ontyra.app import Application
+from ontyra.calibration.models import Case, Step, Strict
 from ontyra.models.recall import RecallContext, RecallPack, RecallRequest
 from ontyra.services import Caller
 from ontyra.services.text import STOPWORDS, content_tokens
@@ -235,9 +235,9 @@ async def play_dialogue(
 def load_dialogues() -> list[Dialogue]:
     import json
 
-    from benchmark_test.framework.models import DATA
+    from benchmark_test.framework.paths import TEST_DATA
 
     found: list[Dialogue] = []
-    for path in sorted((DATA / "cases" / "dialogue").glob("*.json")):
+    for path in sorted((TEST_DATA / "cases" / "dialogue").glob("*.json")):
         found += [Dialogue.model_validate(raw) for raw in json.loads(path.read_text("utf-8"))]
     return found

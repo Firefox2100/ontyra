@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Overview</h1>
+{% if calibration %}<div class="card"><span class="tag warn">calibration</span> {{ calibration }}</div>{% endif %}
 <div class="card row">
   <div><a href="/ui/review"><b>{{ pending }}</b> proposal{{ '' if pending == 1 else 's' }} waiting</a></div>
   <div><a href="/ui/review"><b>{{ held }}</b> ontology change{{ '' if held == 1 else 's' }} waiting</a></div>

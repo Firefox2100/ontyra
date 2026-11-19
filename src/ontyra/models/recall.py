@@ -22,6 +22,7 @@ class RecallSettings(Model):
     fusion_alpha: float = 0.2  # weight of the lexical score; 1 - alpha goes to the dense score
     fusion_baseline: Literal["mean", "min"] = "mean"  # dense score = (cos - base) / (top - base)
     fusion_margin: float = 0.1  # keep candidates within this of the best fused score
+    calibrated_for: str | None = None  # the embedder the thresholds were tuned for (calibrate)
     abstain_cosine: float = 0.0  # stay silent when the best cosine is below this (per embedder)
     concept_boost: float = 0.0  # added to the fused score, times the concept lane weight
     rerank_candidates: int = 30  # how many top candidates the reranker sees
@@ -30,6 +31,8 @@ class RecallSettings(Model):
     decision_candidates: int = 8  # top candidates the decision model is asked about
     decision_weight: float = 0.5  # share of its probability in the final score
     decision_margin: float = 0.15  # keep candidates within this of the best blended score
+    trace_candidates: int = 30  # candidates whose lane scores a recall trace keeps (0: none)
+    trace_retention_days: int = 180  # traces older than this are deleted unless feedback cites them
     relevance_threshold: float = 0.25  # input-driven recall stays silent below this
     vector_floor: float = 0.3  # cosine at or below this counts as no similarity
     lane_weights: dict[str, float] = {"lexical": 1.0, "vector": 1.0, "concept": 0.9}

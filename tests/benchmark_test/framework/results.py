@@ -11,9 +11,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from benchmark_test.framework.models import Case
-from benchmark_test.framework.ranking import COLUMNS, Row, mean_metrics, step_metrics
 from benchmark_test.framework.score import Cell, StepScore
+from ontyra.calibration.models import Case
+from ontyra.calibration.ranking import COLUMNS, Row, mean_metrics, step_metrics
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
 

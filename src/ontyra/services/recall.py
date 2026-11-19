@@ -8,10 +8,11 @@ Stages: 1 resolve context → 2 candidates (lanes) → 3 visibility → 4 qualif
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Literal
 
 from ontyra.models import RecordId, new_id
@@ -28,7 +29,7 @@ from ontyra.models.recall import (
     RecallSettings,
 )
 from ontyra.models.search import Delivery, RecallTrace, SearchDoc
-from ontyra.ports import Create, Embedder, Hit, Reranker, Store, Update, Upsert
+from ontyra.ports import Create, Delete, Embedder, Hit, Reranker, Store, Update, Upsert
 from ontyra.services.anchors import AnchorService, Chain
 from ontyra.services.context import Caller
 from ontyra.services.indexing import doc_id
@@ -56,6 +57,9 @@ _BOOKKEEPING = {
 
 
 # ---- stage 1: resolved context ---------------------------------------------------------
+
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -177,6 +181,25 @@ class RecallService:
         self.embedder = embedder
         self.reranker = reranker
         self.rerank_top_n = rerank_top_n
+        self._last_prune: datetime | None = None
+
+    def calibration_note(self) -> str | None:
+        """A sentence for the operator when the fusion thresholds were tuned for another embedder
+        (or none), else None. The thresholds are set by `ontyra calibrate` (plans/22)."""
+        if self.embedder is None or self.cfg.engine != "fusion":
+            return None
+        name = self.embedder.name
+        if self.cfg.calibrated_for == name or name.startswith("hash-"):
+            return None
+        if self.cfg.calibrated_for is None:
+            return (
+                f"Recall thresholds are not marked as calibrated for {name}:"
+                " run `ontyra calibrate`."
+            )
+        return (
+            f"Recall thresholds were calibrated for {self.cfg.calibrated_for}, but {name} is"
+            " running: run `ontyra calibrate`."
+        )
 
     # ---- stage 1 ---------------------------------------------------------------------
 
@@ -518,9 +541,14 @@ class RecallService:
         path: str,
         dropped: list[dict[str, Any]],
         ctx: Resolved,
+        scoring: dict[str, Any] | None = None,
     ) -> None:
         now = self.now()
         items = pack.items()
+        if scoring and scoring.get("candidates"):
+            shown = {str(i.revision) for i in items}
+            for row in scoring["candidates"]:
+                row["shown"] = row["rev"] in shown
         trace_id = RecordId("recall_trace", new_id())
         writes: list[Any] = [
             Create.of(
@@ -533,6 +561,7 @@ class RecallService:
                     request=request.model_dump(mode="json"),
                     items=[i.model_dump(mode="json", exclude={"detail"}) for i in items],
                     dropped=dropped,
+                    scoring=scoring or {},
                     created_at=now,
                 ),
             )
@@ -570,6 +599,22 @@ class RecallService:
                 )
         await self.store.apply(writes)
         pack.trace = trace_id
+        await self._prune_traces()
+
+    async def _prune_traces(self) -> None:
+        """Delete traces older than the retention that no feedback cites; at most once an hour.
+        A failure costs nothing."""
+        days = self.cfg.trace_retention_days
+        now = self.now()
+        if days <= 0 or (self._last_prune and now - self._last_prune < timedelta(hours=1)):
+            return
+        self._last_prune = now
+        try:
+            stale = await self.store.uncited_traces(now - timedelta(days=days), limit=1000)
+            if stale:
+                await self.store.apply([Delete(rid) for rid in stale])
+        except Exception:
+            log.warning("recall trace retention sweep failed", exc_info=True)
 
     def _affordances(self, pack: RecallPack) -> list[str]:
         out: list[str] = []
@@ -699,6 +744,7 @@ class RecallService:
         extra_cautions: list[Caution],
         ctx: Resolved,
         dropped: list[dict[str, Any]],
+        scoring: dict[str, Any] | None = None,
     ) -> RecallPack:
         kept, cautions, d1 = await self.precedence(ranked)
         kept, d2 = self.collapse(kept)
@@ -731,7 +777,7 @@ class RecallService:
         pack.affordances = self._affordances(pack)
         pack.rendered = render_pack(pack, request.profile)
         pack.tokens = estimate_tokens(pack.rendered) if pack.rendered else 0
-        await self._record(caller, pack, request, path, [*dropped, *d1, *d2, *d3], ctx)
+        await self._record(caller, pack, request, path, [*dropped, *d1, *d2, *d3], ctx, scoring)
         return pack
 
 

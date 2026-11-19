@@ -1131,6 +1131,11 @@
           "trainable_examples": {
             "title": "Trainable Examples",
             "type": "integer"
+          },
+          "with_features": {
+            "default": 0,
+            "title": "With Features",
+            "type": "integer"
           }
         },
         "required": [

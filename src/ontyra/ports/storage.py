@@ -108,6 +108,10 @@ class Store(Protocol):
         """Episodes older than `before` that no revision cites (`derived_from`)."""
         ...
 
+    async def uncited_traces(self, before: datetime, limit: int) -> list[RecordId]:
+        """Recall traces created before `before` that no feedback event cites."""
+        ...
+
     async def unembedded(self, model: str, limit: int = 64) -> list[SearchDoc]:
         """Live index rows that have no vector under `model`."""
         ...

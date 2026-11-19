@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from benchmark_test.framework.models import load_world
 from evaluation_test.framework.agent import load_contract
 from evaluation_test.framework.models import (
     load_decision_cases,
@@ -13,6 +12,7 @@ from evaluation_test.framework.models import (
     load_write_cases,
 )
 from evaluation_test.framework.run import KIND_OF, build_card, skill_section
+from ontyra.calibration.models import load_world
 from ontyra.models.recall import RecallRequest
 from ontyra.services.tasks import CHOICES
 
