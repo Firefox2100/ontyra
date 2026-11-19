@@ -46,6 +46,8 @@ async def test_lite_profile_lists_a_handful_of_tools(app: Application) -> None:
         "ask",
         "get",
         "remember",
+        "pending_proposals",
+        "amend",
         "concepts",
         "propose_ontology_change",
     }
@@ -54,7 +56,16 @@ async def test_lite_profile_lists_a_handful_of_tools(app: Application) -> None:
 async def test_full_profile_adds_browsing_and_review(app: Application) -> None:
     async with server(app, "full") as client:
         names = {t.name for t in await client.list_tools()}
-    assert {"search", "overview", "neighbors", "list_memories", "approve", "reject"} <= names
+    assert {
+        "search",
+        "overview",
+        "neighbors",
+        "list_memories",
+        "approve",
+        "reject",
+        "withdraw",
+        "request_changes",
+    } <= names
     assert {"recall", "remember"} <= names
 
 
@@ -137,6 +148,7 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
     reads = {
         "recall", "check", "briefing", "ask", "get", "concepts", "search", "overview",
         "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes", "find_duplicates", "pending_tasks",
+        "preview_ontology_change", "concept_history", "ontology_history", "check_ontology",
     }  # fmt: skip
     for name in reads:
         assert tools[name].annotations.read_only_hint is True, name  # type: ignore[union-attr]
@@ -149,5 +161,6 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
     for name in (
         "remember", "propose_ontology_change", "reject", "reject_ontology_change",
         "detect_tasks", "claim_task", "complete_task", "resolve_task", "feedback",
+        "amend_ontology_change", "withdraw_ontology_change", "amend", "withdraw", "request_changes",
     ):  # fmt: skip
         assert tools[name].annotations.destructive_hint is False, name  # type: ignore[union-attr]

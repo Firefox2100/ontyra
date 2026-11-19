@@ -78,5 +78,5 @@ class RecallTrace(Record):
     dropped: list[dict[str, Any]] = []
     # What the engine saw: the best candidates' lane scores (the features calibration and
     # reranker training learn from), and whether the request stayed silent.
-    scoring: dict[str, Any] = {}
+    scoring: dict[str, Any] | None = None  # None: recorded before scores were kept, or turned off
     created_at: datetime

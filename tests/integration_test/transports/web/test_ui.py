@@ -74,6 +74,25 @@ async def test_a_proposal_can_be_rejected_with_a_reason(ui: httpx.AsyncClient) -
     assert "linter" not in (await ui.get("/ui/memories?kind=directive")).text
 
 
+async def test_a_reviewer_can_send_a_proposal_back_and_the_agent_amends_it(
+    ui: httpx.AsyncClient,
+) -> None:
+    pid = await propose(ui)
+    sent = await ui.post(f"/ui/proposals/{pid}/request-changes", data={"comment": "name the repo"})
+    assert sent.status_code == 303
+    detail = await ui.get(f"/ui/proposals/{pid}")
+    assert "changes_requested" in detail.text and "name the repo" in detail.text
+    assert "changes requested" in (await ui.get("/ui/review")).text
+    ops = DIRECTIVE["ops"]
+    amended = await ui.post(
+        f"/v1/proposals/{pid}/amend",
+        json={"ops": ops, "why": "named it", "expect_version": 1},
+        headers=AGENT,
+    )
+    assert amended.status_code == 200 and amended.json()["version"] == 2
+    assert (await ui.get(f"/v1/proposals/{pid}")).json()["status"] == "pending"
+
+
 async def test_ontology_changes_are_reviewed_in_the_console(ui: httpx.AsyncClient) -> None:
     body = {"change": {"op": "define", "concept": {"label": "Zig"}}, "rationale": "user uses Zig"}
     held = (await ui.post("/v1/ontology/changes", json=body, headers=AGENT)).json()
@@ -156,3 +175,72 @@ async def test_the_tasks_page_finds_and_resolves_duplicates(make_app) -> None:
         assert "merge" in done.text  # listed under recently closed
         cross_site = await ui.post("/ui/tasks/detect", headers={"Origin": "http://evil.example"})
         assert cross_site.status_code == 403
+
+
+async def test_the_ontology_can_be_edited_with_a_preview_and_reverted_in_the_console(
+    ui: httpx.AsyncClient,
+) -> None:
+    made = await ui.post(
+        "/ui/ontology/apply",
+        data={"op": "define", "label": "Zig", "definition": "a language", "rationale": "new"},
+    )
+    assert made.status_code == 303 and made.headers["location"] == "/ui/concepts/zig"
+    edit = {"op": "edit", "concept": "zig", "definition": "a systems language", "rationale": "x"}
+    shown = await ui.post("/ui/ontology/preview", data=edit)
+    assert shown.status_code == 200 and "edit concept:zig" in shown.text and "Apply" in shown.text
+    bad = await ui.post("/ui/ontology/preview", data={**edit, "concept": "nothing"})
+    assert "cannot apply" in bad.text
+    assert (await ui.post("/ui/ontology/apply", data=edit)).status_code == 303
+    page = await ui.get("/ui/concepts/zig")
+    assert "systems language" in page.text and "v2" in page.text and "edit</a>" in page.text
+    history = await ui.get("/ui/ontology/history?concept=zig")
+    assert "Revert" in history.text
+    change = history.text.split("/ui/ontology/changes/")[1].split("/revert")[0]
+    assert (await ui.post(f"/ui/ontology/changes/{change}/revert")).status_code == 303
+    assert (
+        "a systems language"
+        not in (await ui.get("/ui/concepts/zig")).text.split("Investigation")[0]
+    )
+    assert (await ui.get("/ui/ontology/check")).status_code == 200
+    assert (await ui.get("/ui/ontology/new?op=split&concept=zig")).status_code == 200
+
+
+async def test_per_op_controls_the_version_diff_and_the_bulk_edit(ui: httpx.AsyncClient) -> None:
+    two = {
+        "ops": [
+            {
+                "op": "add", "ref": "a", "kind": "directive",
+                "fields": {"text": "use tabs in makefiles", "strength": "should", "rule": "tabs"},
+            },
+            {
+                "op": "add", "ref": "b", "kind": "directive",
+                "fields": {"text": "prefer small commits", "strength": "should", "rule": "small"},
+            },
+        ]
+    }  # fmt: skip
+    r = await ui.post("/v1/proposals", json=two, headers=AGENT)
+    pid = r.json()["proposal"].split(":", 1)[1]
+    other = (await ui.post("/v1/proposals", json=DIRECTIVE, headers=AGENT)).json()["proposal"]
+    page = await ui.get(f"/ui/proposals/{pid}")
+    assert 'name="ops" value="1"' in page.text and "Approve selected" in page.text
+    bulk = await ui.post(
+        "/ui/proposals/overlay",
+        data={"ids": [pid, other.split(":", 1)[1]], "scope": "universal"},
+    )
+    assert bulk.status_code == 303
+    stored = (await ui.get(f"/v1/proposals/{pid}")).json()
+    assert stored["version"] == 2 and all(
+        o["fields"]["scope"] == "universal" for o in stored["ops"]
+    )
+    versions = await ui.get(f"/ui/proposals/{pid}/versions")
+    assert "universal" in versions.text and "v1" in versions.text
+    done = await ui.post(
+        f"/ui/proposals/{pid}/approve-ops",
+        data={"ops": ["0"], "reason": "the second is a style call", "version": "2"},
+    )
+    assert done.status_code == 303
+    final = (await ui.get(f"/v1/proposals/{pid}")).json()
+    assert final["status"] == "committed" and [d["status"] for d in final["decisions"]] == [
+        "approved",
+        "rejected",
+    ]

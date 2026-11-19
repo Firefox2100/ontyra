@@ -7,21 +7,26 @@ single daemon process writes the ontology (it is invalidated by this service's o
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime
 
-from ontyra.models import RecordId
+from ontyra.models import RecordId, new_id
 from ontyra.models.ontology import (
     Concept,
     ConceptDefinition,
+    ConceptHistory,
+    ConceptRev,
+    ConceptVersion,
     ConceptView,
+    EdgeEvent,
     Related,
     RelationName,
     RelationRequest,
     RelationView,
     concept_slug,
 )
-from ontyra.ports import Create, Relate, Store, Update
+from ontyra.ports import Create, Relate, Store, Update, Write
 from ontyra.services import errors
 from ontyra.services.context import Caller
 from ontyra.services.reasoner import Ontology
@@ -34,6 +39,9 @@ class OntologyService:
         self.store = store
         self.now = now
         self._snapshot: Ontology | None = None
+        # One writer at a time: a change plans from the snapshot and then commits one batch, so
+        # two changes must not interleave (the daemon is one process; plans/23).
+        self.lock = asyncio.Lock()
 
     # ---- snapshot -------------------------------------------------------------
 
@@ -43,7 +51,10 @@ class OntologyService:
             rows = await self.store.select("concept", limit=MAX_CONCEPTS)
             concepts = {c.id: c for c in rows if isinstance(c, Concept) and c.id is not None}
             edges = await self.store.edges("related", limit=MAX_CONCEPTS * 10)
-            self._snapshot = Ontology(concepts, [(e["in"], e["relation"], e["out"]) for e in edges])
+            self._snapshot = Ontology(
+                concepts,
+                [(e["in"], e["relation"], e["out"]) for e in edges if not e.get("ended_at")],
+            )
         return self._snapshot
 
     def invalidate(self) -> None:
@@ -83,27 +94,52 @@ class OntologyService:
         return await self._view(caller, c, onto)
 
     async def lookup(self, caller: Caller, term: str) -> list[ConceptView]:
-        """Concepts whose label or alias matches `term` (the agent never guesses ids)."""
+        """Concepts whose label or alias matches `term` (the agent never guesses ids). A
+        deprecated concept is not offered: a split one stands for what it became."""
         onto = await self.ontology()
         ids = onto.find(term)
         if not ids:
             slug = RecordId("concept", concept_slug(term)) if term.strip() else None
             ids = [slug] if slug is not None and slug in onto.concepts else []
-        # a deprecated concept is not listed next to the one that replaced it
-        ids = [
-            i
-            for i in ids
-            if not (onto.concepts[i].status == "deprecated" and onto.concepts[i].replaced_by in ids)
-        ]
-        return [await self._view(caller, onto.concepts[i], onto) for i in ids]
+        offered: list[RecordId] = []
+        for i in ids:
+            how, targets = onto.live(i)
+            offered += targets if how in ("redirect", "split") else [i] if how == "ok" else []
+        offered = list(dict.fromkeys(offered))
+        return [await self._view(caller, onto.concepts[i], onto) for i in offered]
 
     async def list(
-        self, caller: Caller, *, scheme: str | None = None, limit: int = 200
+        self,
+        caller: Caller,
+        *,
+        scheme: str | None = None,
+        limit: int = 200,
+        include_deprecated: bool = False,
     ) -> list[ConceptView]:
         onto = await self.ontology()
         concepts = sorted(onto.concepts.values(), key=lambda c: c.label.casefold())
-        picked = [c for c in concepts if scheme is None or c.scheme == scheme][:limit]
+        picked = [
+            c
+            for c in concepts
+            if (scheme is None or c.scheme == scheme)
+            and (include_deprecated or c.status == "active")
+        ][:limit]
         return [await self._view(caller, c, onto) for c in picked]
+
+    async def use(self, token: RecordId) -> tuple[RecordId | None, str | None]:
+        """A concept as a *writer* may use it: the live concept (a one-to-one replacement is
+        followed) and a note saying so, or `None` and the reason it cannot be used."""
+        onto = await self.ontology()
+        if token not in onto.concepts:
+            return None, f"{token} does not exist"
+        how, targets = onto.live(token)
+        if how == "ok":
+            return token, None
+        if how == "redirect":
+            return targets[0], f"{token} is deprecated; {targets[0]} replaces it"
+        if how == "split":
+            return None, (f"{token} was split: choose one of {', '.join(str(t) for t in targets)}")
+        return None, f"{token} is deprecated and nothing replaces it"
 
     async def _view(self, caller: Caller, c: Concept, onto: Ontology) -> ConceptView:
         assert c.id is not None
@@ -119,6 +155,8 @@ class OntologyService:
             dimension=c.dimension,
             status=c.status,
             replaced_by=c.replaced_by,
+            successors=onto.successors(c.id),
+            deprecation_reason=c.reason,
             relations=[
                 RelationView(
                     direction=d,  # type: ignore[arg-type]
@@ -133,7 +171,10 @@ class OntologyService:
 
     # ---- writes -----------------------------------------------------------------
 
-    async def define(self, caller: Caller, request: ConceptDefinition) -> ConceptView:
+    async def define_writes(
+        self, caller: Caller, request: ConceptDefinition, *, change: RecordId | None = None
+    ) -> tuple[RecordId, list[Write]]:
+        """The writes that create a concept: the concept, its first version and its parents."""
         label = request.label.strip()
         if not label:
             raise errors.InvalidRequestError("a concept needs a label")
@@ -160,15 +201,144 @@ class OntologyService:
             dimension=request.dimension,
             values=request.values,
             created_at=now,
+            version=1,
         )
-        writes = [Create.of(cid, concept)]
+        writes: list[Write] = [
+            Create.of(cid, concept),
+            self.version_write(cid, concept, 1, caller, change),
+        ]
         writes += [
             Relate("related", cid, parent, {"relation": "is_a", "by": caller.actor_id, "at": now})
             for parent in parents
         ]
-        await self.store.apply(writes)
-        self.invalidate()
+        return cid, writes
+
+    def version_write(
+        self, cid: RecordId, c: Concept, seq: int, caller: Caller | None, change: RecordId | None
+    ) -> Write:
+        """The immutable version row for the concept as `c` now is."""
+        return Create.of(
+            RecordId("concept_rev", new_id()),
+            ConceptRev(
+                concept=cid,
+                seq=seq,
+                label=c.label,
+                aliases=list(c.aliases),
+                definition=c.definition,
+                status=c.status,
+                replaced_by=c.replaced_by,
+                reason=c.reason,
+                change=change,
+                by=caller.actor_id if caller else None,
+                at=self.now(),
+            ),
+        )
+
+    async def define(self, caller: Caller, request: ConceptDefinition) -> ConceptView:
+        async with self.lock:
+            cid, writes = await self.define_writes(caller, request)
+            await self.store.apply(writes)
+            self.invalidate()
         return await self.get(caller, cid)
+
+    async def edge_ids(self, source: RecordId, relation: str, target: RecordId) -> list[RecordId]:
+        """The live edges `source -relation-> target` (ended ones are history)."""
+        rows = await self.store.edges("related", source=source, target=target)
+        return [r["id"] for r in rows if r.get("relation") == relation and not r.get("ended_at")]
+
+    async def canonicalise_index(self, caller: Caller, limit: int = 1000) -> int:
+        """The opportunistic update (plans/23): index rows (`search_doc.about`, derived data) that
+        still carry a concept replaced one-to-one are rewritten to the live concept. Recall is
+        correct without it (the reasoner follows replacements); this keeps the index tidy and
+        the lane fast. Memory revisions are never touched. Returns the rows changed."""
+        onto = await self.ontology()
+        moved = {
+            cid: targets[0]
+            for cid in onto.concepts
+            for how, targets in [onto.live(cid)]
+            if how == "redirect"
+        }
+        if not moved:
+            return 0
+        docs = await self.store.docs(caller.visible_owners(), about=list(moved), limit=limit)
+        writes: list[Write] = []
+        for d in docs:
+            if d.id is None:
+                continue
+            about = list(dict.fromkeys(moved.get(c, c) for c in d.about))
+            if about != d.about:
+                writes.append(Update(d.id, {"about": about}))
+        await self.store.apply(writes)
+        return len(writes)
+
+    # ---- history (investigation) -------------------------------------------------
+
+    async def history(self, concept: RecordId) -> ConceptHistory:
+        """Versions of a concept, the relations it has had, and the changes that touched it.
+        Ordinary reads never show these."""
+        onto = await self.ontology()
+        c = onto.concepts.get(concept)
+        if c is None:
+            raise errors.NotFoundError(f"unknown concept {concept}")
+        revs = sorted(
+            (
+                r
+                for r in await self.store.select("concept_rev", {"concept": concept}, limit=1000)
+                if isinstance(r, ConceptRev)
+            ),
+            key=lambda r: r.seq,
+        )
+        out = await self.store.edges("related", source=concept)
+        inn = await self.store.edges("related", target=concept)
+        events = [
+            EdgeEvent(
+                relation=e["relation"],
+                direction="out",
+                other=e["out"],
+                added_at=e["at"],
+                ended_at=e.get("ended_at"),
+                ended_by_change=e.get("ended_by_change"),
+            )
+            for e in out
+        ] + [
+            EdgeEvent(
+                relation=e["relation"],
+                direction="in",
+                other=e["in"],
+                added_at=e["at"],
+                ended_at=e.get("ended_at"),
+                ended_by_change=e.get("ended_by_change"),
+            )
+            for e in inn
+        ]
+        changes = [
+            ch.id
+            for ch in await self.store.select(
+                "ontology_change", limit=2000, order_by="created_at", descending=True
+            )
+            if ch.id is not None and concept in (getattr(ch, "touched", None) or [])
+        ]
+        return ConceptHistory(
+            concept=concept,
+            current=c.version,
+            versions=[
+                ConceptVersion(
+                    seq=r.seq,
+                    label=r.label,
+                    aliases=r.aliases,
+                    definition=r.definition,
+                    status=r.status,
+                    replaced_by=r.replaced_by,
+                    reason=r.reason,
+                    change=r.change,
+                    by=r.by,
+                    at=r.at,
+                )
+                for r in revs
+            ],
+            relations=sorted(events, key=lambda e: e.added_at),
+            changes=changes,
+        )
 
     async def relate(self, caller: Caller, request: RelationRequest) -> ConceptView:
         src = await self.resolve(request.source)

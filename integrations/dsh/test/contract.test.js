@@ -25,6 +25,8 @@ test('lite registers the daemon’s lite tools, prefixed', () => {
     'ontyra_ask',
     'ontyra_get',
     'ontyra_remember',
+    'ontyra_pending_proposals',
+    'ontyra_amend',
   ])
 })
 
@@ -100,6 +102,8 @@ const ROUTES = {
   ontyra_ask: ['POST', '/v1/ask'],
   ontyra_get: ['GET', /^\/v1\/memories\/[^/]+\/detail(\?.*)?$/],
   ontyra_remember: ['POST', '/v1/proposals'],
+  ontyra_pending_proposals: ['GET', /^\/v1\/proposals\?limit=\d+$/],
+  ontyra_amend: ['POST', /^\/v1\/proposals\/[^/]+\/amend$/],
   ontyra_concepts: ['GET', /^\/v1\/concepts\?term=[^&]+$/],
   ontyra_propose_ontology_change: ['POST', '/v1/ontology/changes'],
 }
@@ -112,6 +116,8 @@ test('every tool calls a route the daemon serves', () => {
     ontyra_ask: { question: 'conflicts' },
     ontyra_get: { memory: 'abc' },
     ontyra_remember: { ops: [] },
+    ontyra_pending_proposals: {},
+    ontyra_amend: { proposal: 'abc', request: { ops: [], why: 'x' } },
     ontyra_concepts: { term: 'python' },
     ontyra_propose_ontology_change: { change: {}, rationale: 'x' },
   }

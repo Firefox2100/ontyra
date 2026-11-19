@@ -114,6 +114,151 @@
         "title": "AliasChange",
         "type": "object"
       },
+      "AmendChange": {
+        "additionalProperties": false,
+        "description": "Replace the change of a waiting ontology change: a new version, validated again.",
+        "properties": {
+          "change": {
+            "discriminator": {
+              "mapping": {
+                "add_alias": "#/components/schemas/AliasChange",
+                "define": "#/components/schemas/DefineChange",
+                "deprecate": "#/components/schemas/DeprecateChange",
+                "edit": "#/components/schemas/EditChange",
+                "merge": "#/components/schemas/MergeChange",
+                "relate": "#/components/schemas/RelateChange",
+                "reparent": "#/components/schemas/ReparentChange",
+                "restore": "#/components/schemas/RestoreChange",
+                "split": "#/components/schemas/SplitChange",
+                "unrelate": "#/components/schemas/UnrelateChange"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DefineChange"
+              },
+              {
+                "$ref": "#/components/schemas/RelateChange"
+              },
+              {
+                "$ref": "#/components/schemas/AliasChange"
+              },
+              {
+                "$ref": "#/components/schemas/DeprecateChange"
+              },
+              {
+                "$ref": "#/components/schemas/MergeChange"
+              },
+              {
+                "$ref": "#/components/schemas/EditChange"
+              },
+              {
+                "$ref": "#/components/schemas/UnrelateChange"
+              },
+              {
+                "$ref": "#/components/schemas/ReparentChange"
+              },
+              {
+                "$ref": "#/components/schemas/SplitChange"
+              },
+              {
+                "$ref": "#/components/schemas/RestoreChange"
+              }
+            ],
+            "title": "Change"
+          },
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect Version"
+          },
+          "why": {
+            "description": "What you changed and why (kept with the older version)",
+            "title": "Why",
+            "type": "string"
+          }
+        },
+        "required": [
+          "change",
+          "why"
+        ],
+        "title": "AmendChange",
+        "type": "object"
+      },
+      "AmendRequest": {
+        "additionalProperties": false,
+        "description": "Replace the ops of a pending proposal: a new version, validated again.",
+        "properties": {
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The version you based this on; refused when it moved on",
+            "title": "Expect Version"
+          },
+          "ops": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add": "#/components/schemas/AddMemory",
+                  "annotate": "#/components/schemas/Annotate",
+                  "link": "#/components/schemas/LinkMemories",
+                  "retract": "#/components/schemas/RetractMemory",
+                  "revise": "#/components/schemas/ReviseMemory",
+                  "supersede": "#/components/schemas/SupersedeMemory"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AddMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/ReviseMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/SupersedeMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/RetractMemory"
+                },
+                {
+                  "$ref": "#/components/schemas/LinkMemories"
+                },
+                {
+                  "$ref": "#/components/schemas/Annotate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Ops",
+            "type": "array"
+          },
+          "why": {
+            "description": "What you changed and why (kept with the older version)",
+            "title": "Why",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ops",
+          "why"
+        ],
+        "title": "AmendRequest",
+        "type": "object"
+      },
       "Annotate": {
         "additionalProperties": false,
         "description": "Attach a note to an EXISTING memory (`target` is its id). It stores nothing new: use\n`add` for that.",
@@ -154,9 +299,82 @@
         "title": "Annotate",
         "type": "object"
       },
+      "ApproveBody": {
+        "properties": {
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect Version"
+          }
+        },
+        "title": "ApproveBody",
+        "type": "object"
+      },
+      "ApproveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect Version"
+          },
+          "ops": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Op numbers to commit (what they need is included); default all. The rest are rejected with `reason`.",
+            "title": "Ops"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "ApproveRequest",
+        "type": "object"
+      },
       "AskRequest": {
         "additionalProperties": false,
         "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
           "context": {
             "$ref": "#/components/schemas/RecallContext",
             "default": {
@@ -187,6 +405,7 @@
               "absence",
               "conflicts",
               "changes_since",
+              "as_of",
               "prerequisites_of",
               "explain"
             ],
@@ -302,6 +521,33 @@
         "title": "Caution",
         "type": "object"
       },
+      "ChangePreview": {
+        "additionalProperties": false,
+        "description": "What a change would do, without proposing it.",
+        "properties": {
+          "advice": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Advice",
+            "type": "array"
+          },
+          "effects": {
+            "$ref": "#/components/schemas/Effects"
+          },
+          "op": {
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "effects"
+        ],
+        "title": "ChangePreview",
+        "type": "object"
+      },
       "ChangeRequest": {
         "additionalProperties": false,
         "properties": {
@@ -311,8 +557,13 @@
                 "add_alias": "#/components/schemas/AliasChange",
                 "define": "#/components/schemas/DefineChange",
                 "deprecate": "#/components/schemas/DeprecateChange",
+                "edit": "#/components/schemas/EditChange",
                 "merge": "#/components/schemas/MergeChange",
-                "relate": "#/components/schemas/RelateChange"
+                "relate": "#/components/schemas/RelateChange",
+                "reparent": "#/components/schemas/ReparentChange",
+                "restore": "#/components/schemas/RestoreChange",
+                "split": "#/components/schemas/SplitChange",
+                "unrelate": "#/components/schemas/UnrelateChange"
               },
               "propertyName": "op"
             },
@@ -331,6 +582,21 @@
               },
               {
                 "$ref": "#/components/schemas/MergeChange"
+              },
+              {
+                "$ref": "#/components/schemas/EditChange"
+              },
+              {
+                "$ref": "#/components/schemas/UnrelateChange"
+              },
+              {
+                "$ref": "#/components/schemas/ReparentChange"
+              },
+              {
+                "$ref": "#/components/schemas/SplitChange"
+              },
+              {
+                "$ref": "#/components/schemas/RestoreChange"
               }
             ],
             "title": "Change"
@@ -359,6 +625,16 @@
             "title": "Advice",
             "type": "array"
           },
+          "effects": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Effects"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "description": "A record id as `table:id`.",
             "examples": [
@@ -385,8 +661,10 @@
           "status": {
             "enum": [
               "pending",
+              "changes_requested",
               "applied",
-              "rejected"
+              "rejected",
+              "withdrawn"
             ],
             "title": "Status",
             "type": "string"
@@ -551,6 +829,179 @@
         "title": "ConceptDefinition",
         "type": "object"
       },
+      "ConceptHistory": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "title": "RecordId",
+              "type": "string"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "concept": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current"
+          },
+          "relations": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeEvent"
+            },
+            "title": "Relations",
+            "type": "array"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptVersion"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "concept",
+          "current",
+          "versions",
+          "relations",
+          "changes"
+        ],
+        "title": "ConceptHistory",
+        "type": "object"
+      },
+      "ConceptVersion": {
+        "additionalProperties": false,
+        "description": "One entry of a concept's history (investigation tools only).",
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced By"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "label",
+          "aliases",
+          "definition",
+          "status",
+          "replaced_by",
+          "reason",
+          "change",
+          "by",
+          "at"
+        ],
+        "title": "ConceptVersion",
+        "type": "object"
+      },
       "ConceptView": {
         "additionalProperties": false,
         "properties": {
@@ -571,6 +1022,17 @@
               }
             ],
             "title": "Definition"
+          },
+          "deprecation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deprecation Reason"
           },
           "dimension": {
             "anyOf": [
@@ -631,6 +1093,19 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "successors": {
+            "default": [],
+            "items": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "title": "RecordId",
+              "type": "string"
+            },
+            "title": "Successors",
+            "type": "array"
           },
           "value_type": {
             "title": "Value Type",
@@ -819,6 +1294,17 @@
             "title": "Op",
             "type": "string"
           },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
           "replaced_by": {
             "anyOf": [
               {
@@ -910,6 +1396,171 @@
           "keep"
         ],
         "title": "DuplicateCluster",
+        "type": "object"
+      },
+      "EdgeEvent": {
+        "additionalProperties": false,
+        "description": "A relation of the concept as it was added and, when it was, ended.",
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "out",
+              "in"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "ended_by_change": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended By Change"
+          },
+          "other": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "relation": {
+            "title": "Relation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "relation",
+          "direction",
+          "other",
+          "added_at",
+          "ended_at",
+          "ended_by_change"
+        ],
+        "title": "EdgeEvent",
+        "type": "object"
+      },
+      "EditChange": {
+        "additionalProperties": false,
+        "description": "Say the same thing better: a clearer label, a tighter definition, other names. The meaning\nmust not change (otherwise define a new concept and deprecate this one); the id never does.\nThe previous label stays as an alias.",
+        "properties": {
+          "add_aliases": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Add Aliases",
+            "type": "array"
+          },
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "op": {
+            "const": "edit",
+            "default": "edit",
+            "title": "Op",
+            "type": "string"
+          },
+          "remove_aliases": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Remove Aliases",
+            "type": "array"
+          }
+        },
+        "required": [
+          "concept"
+        ],
+        "title": "EditChange",
+        "type": "object"
+      },
+      "Effects": {
+        "additionalProperties": false,
+        "description": "What a change does (or would do), for a preview and for a reviewer.",
+        "properties": {
+          "memories": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "default": {},
+            "title": "Memories",
+            "type": "object"
+          },
+          "summary": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Summary",
+            "type": "array"
+          },
+          "touched": {
+            "default": [],
+            "items": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "title": "RecordId",
+              "type": "string"
+            },
+            "title": "Touched",
+            "type": "array"
+          }
+        },
+        "title": "Effects",
         "type": "object"
       },
       "EpisodeIn": {
@@ -1860,6 +2511,21 @@
             "title": "Change",
             "type": "object"
           },
+          "comments": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1892,6 +2558,21 @@
               }
             ],
             "title": "Decided By"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History"
           },
           "id": {
             "anyOf": [
@@ -1948,15 +2629,94 @@
             ],
             "title": "Reason"
           },
+          "reverted_by": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverted By"
+          },
+          "reverts": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverts"
+          },
           "status": {
             "default": "pending",
             "enum": [
               "pending",
+              "changes_requested",
               "applied",
-              "rejected"
+              "rejected",
+              "withdrawn"
             ],
             "title": "Status",
             "type": "string"
+          },
+          "touched": {
+            "anyOf": [
+              {
+                "items": {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "title": "RecordId",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Touched"
+          },
+          "undo": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Undo"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
           }
         },
         "required": [
@@ -1969,6 +2729,92 @@
           "created_at"
         ],
         "title": "OntologyChange",
+        "type": "object"
+      },
+      "OntologyCheck": {
+        "additionalProperties": false,
+        "description": "A read-only report on the ontology's health (nothing is fixed automatically).",
+        "properties": {
+          "concepts": {
+            "title": "Concepts",
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/OntologyFinding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "live_edges": {
+            "title": "Live Edges",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "concepts",
+          "live_edges",
+          "findings"
+        ],
+        "title": "OntologyCheck",
+        "type": "object"
+      },
+      "OntologyFinding": {
+        "additionalProperties": false,
+        "properties": {
+          "change": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "concepts": {
+            "default": [],
+            "items": {
+              "description": "A record id as `table:id`.",
+              "examples": [
+                "memory:0194f3a1b2c3d4e5f6a7"
+              ],
+              "title": "RecordId",
+              "type": "string"
+            },
+            "title": "Concepts",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "title": "OntologyFinding",
         "type": "object"
       },
       "Overview": {
@@ -2094,6 +2940,21 @@
             "title": "RecordId",
             "type": "string"
           },
+          "comments": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          },
           "decided_at": {
             "anyOf": [
               {
@@ -2142,6 +3003,21 @@
             ],
             "title": "Decision Reason"
           },
+          "decisions": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decisions"
+          },
           "findings": {
             "default": [],
             "items": {
@@ -2150,6 +3026,21 @@
             },
             "title": "Findings",
             "type": "array"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History"
           },
           "id": {
             "anyOf": [
@@ -2231,8 +3122,10 @@
           "status": {
             "enum": [
               "pending",
+              "changes_requested",
               "committed",
-              "rejected"
+              "rejected",
+              "withdrawn"
             ],
             "title": "Status",
             "type": "string"
@@ -2241,6 +3134,17 @@
             "format": "date-time",
             "title": "Submitted At",
             "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
           }
         },
         "required": [
@@ -2389,14 +3293,35 @@
             ],
             "title": "Reason"
           },
+          "rejected_ops": {
+            "default": [],
+            "items": {
+              "type": "integer"
+            },
+            "title": "Rejected Ops",
+            "type": "array"
+          },
           "status": {
             "enum": [
               "pending",
+              "changes_requested",
               "committed",
-              "rejected"
+              "rejected",
+              "withdrawn"
             ],
             "title": "Status",
             "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
           }
         },
         "required": [
@@ -2809,6 +3734,17 @@
       },
       "RejectBody": {
         "properties": {
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect Version"
+          },
           "reason": {
             "title": "Reason",
             "type": "string"
@@ -2820,8 +3756,35 @@
         "title": "RejectBody",
         "type": "object"
       },
-      "RejectIn": {
+      "RejectRequest": {
+        "additionalProperties": false,
         "properties": {
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect Version"
+          },
+          "ops": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Op numbers to reject (what needs them goes too); default the whole proposal. The rest stay pending as a new version.",
+            "title": "Ops"
+          },
           "reason": {
             "title": "Reason",
             "type": "string"
@@ -2830,7 +3793,7 @@
         "required": [
           "reason"
         ],
-        "title": "RejectIn",
+        "title": "RejectRequest",
         "type": "object"
       },
       "RelateChange": {
@@ -2864,7 +3827,8 @@
               "alternative_to",
               "replaced_by",
               "depends_on",
-              "disjoint_with"
+              "disjoint_with",
+              "split_into"
             ],
             "title": "Relation",
             "type": "string"
@@ -2921,6 +3885,80 @@
           "label"
         ],
         "title": "RelationView",
+        "type": "object"
+      },
+      "ReparentChange": {
+        "additionalProperties": false,
+        "description": "Replace one broader concept by another, atomically.",
+        "properties": {
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "from_parent": {
+            "title": "From Parent",
+            "type": "string"
+          },
+          "op": {
+            "const": "reparent",
+            "default": "reparent",
+            "title": "Op",
+            "type": "string"
+          },
+          "relation": {
+            "default": "is_a",
+            "enum": [
+              "is_a",
+              "part_of"
+            ],
+            "title": "Relation",
+            "type": "string"
+          },
+          "to_parent": {
+            "title": "To Parent",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept",
+          "from_parent",
+          "to_parent"
+        ],
+        "title": "ReparentChange",
+        "type": "object"
+      },
+      "RequestChanges": {
+        "additionalProperties": false,
+        "description": "Send a proposal back to its submitter: it leaves the approve queue until amended.",
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "expect_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect Version"
+          },
+          "op_comments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Op Comments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "comment"
+        ],
+        "title": "RequestChanges",
         "type": "object"
       },
       "RerankerRun": {
@@ -3245,6 +4283,32 @@
           "uri"
         ],
         "title": "ResourceRequest",
+        "type": "object"
+      },
+      "RestoreChange": {
+        "additionalProperties": false,
+        "description": "Put a concept back to the fields it had at an earlier version (also how an edit, a\ndeprecation or a merge is undone). It makes a new version; nothing is rewritten.",
+        "properties": {
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "op": {
+            "const": "restore",
+            "default": "restore",
+            "title": "Op",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "concept",
+          "version"
+        ],
+        "title": "RestoreChange",
         "type": "object"
       },
       "RetractMemory": {
@@ -3732,6 +4796,43 @@
         "title": "Signal",
         "type": "object"
       },
+      "SplitChange": {
+        "additionalProperties": false,
+        "description": "One concept turned out to be several: the source is deprecated (kept as a tombstone) and\npoints to what it became. `into` are existing concepts (ids, labels) or new ones to define.",
+        "properties": {
+          "into": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ConceptDefinition"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "minItems": 2,
+            "title": "Into",
+            "type": "array"
+          },
+          "op": {
+            "const": "split",
+            "default": "split",
+            "title": "Op",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "into"
+        ],
+        "title": "SplitChange",
+        "type": "object"
+      },
       "SupersedeMemory": {
         "additionalProperties": false,
         "description": "`new` (a `ref` from this proposal, or an existing memory id) replaces `target`.",
@@ -4070,6 +5171,26 @@
         "title": "TrainOptions",
         "type": "object"
       },
+      "UnrelateChange": {
+        "additionalProperties": false,
+        "description": "End one relation (the edge is kept as history).",
+        "properties": {
+          "op": {
+            "const": "unrelate",
+            "default": "unrelate",
+            "title": "Op",
+            "type": "string"
+          },
+          "relation": {
+            "$ref": "#/components/schemas/RelationRequest"
+          }
+        },
+        "required": [
+          "relation"
+        ],
+        "title": "UnrelateChange",
+        "type": "object"
+      },
       "UpdateCandidate": {
         "additionalProperties": false,
         "description": "The same statement with a changed value (a version, an amount, a date): `newer` probably\nsupersedes `older`. Not a duplicate: merging would lose the update.",
@@ -4242,6 +5363,20 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WithdrawRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "WithdrawRequest",
         "type": "object"
       }
     }
@@ -5172,6 +6307,16 @@
             }
           },
           {
+            "in": "query",
+            "name": "include_deprecated",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Deprecated",
+              "type": "boolean"
+            }
+          },
+          {
             "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",
@@ -5521,6 +6666,98 @@
           }
         },
         "summary": "One concept with its relations",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/concepts/{concept_id}/history": {
+      "get": {
+        "description": "Earlier versions of its label, aliases, definition and status, the relations it has had (ended ones included), and the ontology changes that touched it. Ordinary reads never show these.",
+        "operationId": "concept_history_v1_concepts__concept_id__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "concept_id",
+            "required": true,
+            "schema": {
+              "title": "Concept Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A concept's versions and relation history (investigation)",
         "tags": [
           "ontology"
         ]
@@ -6630,6 +7867,7 @@
     },
     "/v1/ontology/changes": {
       "get": {
+        "description": "`pending=false` is the investigation view: applied and decided changes, newest first, optionally for one `concept` or one `op`.",
         "operationId": "list_changes_v1_ontology_changes_get",
         "parameters": [
           {
@@ -6640,6 +7878,38 @@
               "default": true,
               "title": "Pending",
               "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "concept",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Concept"
+            }
+          },
+          {
+            "in": "query",
+            "name": "op",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Op"
             }
           },
           {
@@ -6730,13 +8000,13 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Ontology changes: held for review (default) or the recent history",
+        "summary": "Ontology changes: held for review (default) or the history",
         "tags": [
           "ontology"
         ]
       },
       "post": {
-        "description": "Add, relate, alias, merge or deprecate concepts. A human's change applies at once; an agent's is held for review (unless its op is configured to auto-apply). The result's `advice` lists similar existing concepts: prefer an alias or a merge to a duplicate.",
+        "description": "Define, relate, alias, edit, merge, split, reparent or deprecate concepts. A human's change applies at once; an agent's is held for review (unless its op is configured to auto-apply). The result's `advice` lists similar existing concepts: prefer an alias or a merge to a duplicate.",
         "operationId": "propose_v1_ontology_changes_post",
         "parameters": [
           {
@@ -6827,6 +8097,284 @@
         ]
       }
     },
+    "/v1/ontology/changes/check": {
+      "get": {
+        "description": "Read-only: loops, dangling or missing links, shared names, deprecated concepts still in use, unused concepts. Each finding names the change that most likely caused it.",
+        "operationId": "check_v1_ontology_changes_check_get",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OntologyCheck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ontology health report",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/preview": {
+      "post": {
+        "description": "Validates the change and returns its effects: the concepts it touches, the live memories about them, one line per effect, and advice (for example a definition that reads like a different meaning). Nothing is written.",
+        "operationId": "preview_v1_ontology_changes_preview_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Say what an ontology change would do, without proposing it",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/{change_id}/amend": {
+      "post": {
+        "description": "Replaces the change with a new version, validated again (its proposer or a human reviewer); the older version is kept in its history.",
+        "operationId": "amend_v1_ontology_changes__change_id__amend_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "title": "Change Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmendChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Amend a waiting ontology change",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
     "/v1/ontology/changes/{change_id}/approve": {
       "post": {
         "operationId": "approve_v1_ontology_changes__change_id__approve_post",
@@ -6890,6 +8438,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ApproveBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -7014,6 +8579,310 @@
           }
         },
         "summary": "Reject a held change (human only)",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/{change_id}/request-changes": {
+      "post": {
+        "operationId": "request_changes_v1_ontology_changes__change_id__request_changes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "title": "Change Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestChanges"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send a waiting ontology change back to its proposer (human only)",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/{change_id}/revert": {
+      "post": {
+        "description": "Applies the change's stored undo as one new change. Refused while a later change touched the same concepts: revert those first.",
+        "operationId": "revert_v1_ontology_changes__change_id__revert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "title": "Change Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo an applied change (human only)",
+        "tags": [
+          "ontology"
+        ]
+      }
+    },
+    "/v1/ontology/changes/{change_id}/withdraw": {
+      "post": {
+        "operationId": "withdraw_v1_ontology_changes__change_id__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "title": "Change Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw a waiting ontology change",
         "tags": [
           "ontology"
         ]
@@ -7423,9 +9292,111 @@
         ]
       }
     },
+    "/v1/proposals/{proposal_id}/amend": {
+      "post": {
+        "description": "Replaces the ops with a new version, validated again; the older version is kept in the proposal's history. The submitter or a reviewer may amend while it is waiting (pending or changes requested).",
+        "operationId": "amend_v1_proposals__proposal_id__amend_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Amend a waiting proposal",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
     "/v1/proposals/{proposal_id}/approve": {
       "post": {
-        "description": "Re-validates against the data as it is now, then commits atomically.",
+        "description": "Re-validates against the data as it is now, then commits atomically. With `ops` only those ops (and the ops they need) commit and the rest are rejected with `reason`. `expect_version` refuses the approval when the proposal was amended since you read it.",
         "operationId": "approve_v1_proposals__proposal_id__approve_post",
         "parameters": [
           {
@@ -7487,6 +9458,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ApproveRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -7509,7 +9497,7 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Approve a pending proposal",
+        "summary": "Approve a waiting proposal (all of it, or chosen ops)",
         "tags": [
           "proposals"
         ]
@@ -7517,6 +9505,7 @@
     },
     "/v1/proposals/{proposal_id}/reject": {
       "post": {
+        "description": "With `ops`, only those ops (and what needs them) are rejected; the rest keeps waiting as a new version.",
         "operationId": "reject_v1_proposals__proposal_id__reject_post",
         "parameters": [
           {
@@ -7582,7 +9571,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RejectIn"
+                "$ref": "#/components/schemas/RejectRequest"
               }
             }
           },
@@ -7610,7 +9599,211 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Reject a pending proposal",
+        "summary": "Reject a waiting proposal (all of it, or chosen ops)",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
+    "/v1/proposals/{proposal_id}/request-changes": {
+      "post": {
+        "description": "A human reviewer only. The proposal leaves the approve queue until it is amended.",
+        "operationId": "request_changes_v1_proposals__proposal_id__request_changes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestChanges"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send a waiting proposal back to its submitter with comments",
+        "tags": [
+          "proposals"
+        ]
+      }
+    },
+    "/v1/proposals/{proposal_id}/withdraw": {
+      "post": {
+        "description": "Final: nothing is committed. Its submitter or a reviewer.",
+        "operationId": "withdraw_v1_proposals__proposal_id__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw a waiting proposal",
         "tags": [
           "proposals"
         ]

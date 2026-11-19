@@ -268,7 +268,7 @@ class FusionRecallService(RecallService):
             caller,
             request,
             "recall",
-            result.ranked,
+            [*result.ranked, *await self.triggered_extras(caller, request, result.ranked)],
             [],
             ctx,
             result.dropped,

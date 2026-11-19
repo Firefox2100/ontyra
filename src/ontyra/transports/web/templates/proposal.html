@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Proposal{% endblock %}
 {% block body %}
-<h1>Proposal <span class="tag {{ 'ok' if p.status == 'committed' else ('warn' if p.status == 'pending' else 'must') }}">{{ p.status }}</span></h1>
+<h1>Proposal <span class="tag {{ 'ok' if p.status == 'committed' else ('warn' if p.status in ('pending', 'changes_requested') else 'must') }}">{{ p.status }}</span> <span class="muted small">version {{ p.version or 1 }}</span></h1>
 <div class="card small muted">
   submitted {{ p.submitted_at.strftime('%Y-%m-%d %H:%M') }} · policy: {{ p.decision_reason }}
   {% if p.note %}<br>{{ p.note }}{% endif %}
@@ -9,21 +9,39 @@
 {% if p.findings %}<h2>Findings</h2><div class="card">
 {% for f in p.findings %}<div><span class="tag {{ 'must' if f.severity == 'error' else 'warn' }}">{{ f.severity }}</span>
 <code>{{ f.code }}</code> {{ f.message }}</div>{% endfor %}</div>{% endif %}
-<h2>Operations</h2>
+{% if p.comments %}<h2>Comments</h2><div class="card">
+{% for c in p.comments %}<div class="small"><span class="tag">v{{ c.version }}{% if c.op is defined %} · op {{ c.op }}{% endif %}</span> {{ c.text }}</div>{% endfor %}</div>{% endif %}
+<h2>Operations {% if p.history %}<a class="small" href="/ui/proposals/{{ p.id.id }}/versions">versions ({{ p.history|length + 1 }})</a>{% endif %}</h2>
+{% set waiting = p.status in ('pending', 'changes_requested') %}
+{% if waiting %}<form method="post" id="perop">
+<input type="hidden" name="version" value="{{ p.version or 1 }}">{% endif %}
 {% for op in p.ops %}
 <div class="card">
-  <div class="row"><span class="tag">{{ op.op }}</span>{% if op.kind %}<span class="tag">{{ op.kind }}</span>{% endif %}
+  <div class="row">{% if waiting %}<input type="checkbox" name="ops" value="{{ loop.index0 }}" aria-label="op {{ loop.index0 }}">{% endif %}
+    <span class="muted small">op {{ loop.index0 }}</span><span class="tag">{{ op.op }}</span>{% if op.kind %}<span class="tag">{{ op.kind }}</span>{% endif %}
     {% if op.fields and op.fields.strength %}<span class="tag {{ 'must' if op.fields.strength == 'must' }}">{{ op.fields.strength }}</span>{% endif %}
-    {% if op.fields and op.fields.scope == 'universal' %}<span class="tag">universal</span>{% endif %}</div>
+    {% if op.fields and op.fields.scope == 'universal' %}<span class="tag">universal</span>{% endif %}
+    {% if deps.get(loop.index0) %}<span class="small muted">needs op {{ deps[loop.index0] | join(', ') }}</span>{% endif %}</div>
   {% if op.fields and op.fields.text %}<div style="margin-top:6px">{{ op.fields.text }}</div>{% endif %}
   {% if op.fields and op.fields.anchors %}<div class="small muted">anchors: {% for a in op.fields.anchors %}<code>{{ a.uri }}</code> {% endfor %}</div>{% endif %}
+  {% for c in p.comments or [] if c.op is defined and c.op == loop.index0 and c.version == (p.version or 1) %}<div class="small"><span class="tag warn">comment</span> {{ c.text }}</div>{% endfor %}
   <details><summary class="small muted">raw</summary><pre>{{ op | tojson(indent=2) }}</pre></details>
 </div>
 {% endfor %}
-{% if p.status == 'pending' %}
+{% if waiting %}
+<div class="row small">
+  <input type="text" name="reason" placeholder="reason for the others / for rejecting">
+  <button class="go" formaction="/ui/proposals/{{ p.id.id }}/approve-ops">Approve selected (and what they need)</button>
+  <button class="no" formaction="/ui/proposals/{{ p.id.id }}/reject-ops">Reject selected (and what needs them)</button>
+</div></form>{% endif %}
+{% if p.decisions %}<h2>Decisions</h2><div class="card small">
+{% for d in p.decisions %}<div>v{{ d.version }} · op {{ d.op }} · <span class="tag {{ 'ok' if d.status == 'approved' else 'must' }}">{{ d.status }}</span> {{ d.summary }}{% if d.reason %} — {{ d.reason }}{% endif %}</div>{% endfor %}</div>{% endif %}
+{% if p.status in ('pending', 'changes_requested') %}
 <div class="row">
   <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/approve"><button class="go">Approve</button></form>
   <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/reject">
     <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+  <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/request-changes">
+    <input type="text" name="comment" placeholder="what should change" required><button>Request changes</button></form>
 </div>{% endif %}
 {% endblock %}

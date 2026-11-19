@@ -659,3 +659,21 @@ async def test_unscoped_directive_is_flagged_when_written(app: Application, agen
     assert flagged.status == "committed"  # advice, not a rejection
     ok = await app.memory.submit(agent, add("answer in English", scope="universal"))
     assert not ok.findings
+
+
+async def test_a_trigger_fires_in_input_driven_recall_whatever_the_message_says(
+    app: Application, agent: Caller, remember, concepts
+) -> None:
+    await remember(
+        "lesson",
+        "pin the base image digest when you touch a Dockerfile",
+        qualifiers=[{"concept": str(concepts["docker"]), "role": "trigger"}],
+    )
+    await app.indexer.backfill()
+    message = RecallRequest(query="what is the weather like on thursday", context=HERE)
+    assert not (await app.recall.recall(agent, message)).items()  # no signal, no trigger
+    ctx = RecallContext(uris=HERE.uris, signals=[Signal(concept="docker")])
+    pack = await app.recall.recall(
+        agent, RecallRequest(query="what is the weather like on thursday", context=ctx)
+    )
+    assert pack.items() and pack.items()[0].flags == ["triggered"]

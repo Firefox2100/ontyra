@@ -1,5 +1,451 @@
 [
   {
+    "description": "Replace the ops of a proposal that is still waiting (`pending` or `changes_requested`) with a corrected list and say why; it becomes a new version and goes back to review. Use this instead of sending a second proposal when a `pending_similar` finding names it, or when a reviewer asked for changes. Pass `expect_version` (from `pending_proposals`).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "type": "string"
+        },
+        "request": {
+          "additionalProperties": false,
+          "description": "Replace the ops of a pending proposal: a new version, validated again.",
+          "properties": {
+            "expect_version": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "The version you based this on; refused when it moved on"
+            },
+            "ops": {
+              "items": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "Create a NEW memory (item + first revision). This is how anything gets stored: pick the\n`kind` and give its `fields`. Say where it applies (`scope: universal`, or `anchors` /\n`about`), or a directive is flagged as unscoped.",
+                    "properties": {
+                      "derived_from": {
+                        "default": [],
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "description": "A record id as `table:id`.",
+                              "examples": [
+                                "memory:0194f3a1b2c3d4e5f6a7"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "evidence": {
+                        "default": [],
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "properties": {
+                            "episode": {
+                              "anyOf": [
+                                {
+                                  "description": "A record id as `table:id`.",
+                                  "examples": [
+                                    "memory:0194f3a1b2c3d4e5f6a7"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Optional: the episode id, when you know it."
+                            },
+                            "quote": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Words from the conversation, copied literally (a sentence)."
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "fields": {
+                        "additionalProperties": true,
+                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
+                        "type": "object"
+                      },
+                      "kind": {
+                        "enum": [
+                          "fact",
+                          "directive",
+                          "decision",
+                          "event",
+                          "procedure",
+                          "task",
+                          "lesson"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "add",
+                        "default": "add",
+                        "type": "string"
+                      },
+                      "ref": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "valid_from": {
+                        "anyOf": [
+                          {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "fields",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "New revision of an existing memory; `fields` overlay the current revision.",
+                    "properties": {
+                      "evidence": {
+                        "default": [],
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "properties": {
+                            "episode": {
+                              "anyOf": [
+                                {
+                                  "description": "A record id as `table:id`.",
+                                  "examples": [
+                                    "memory:0194f3a1b2c3d4e5f6a7"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Optional: the episode id, when you know it."
+                            },
+                            "quote": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Words from the conversation, copied literally (a sentence)."
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "fields": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "memory": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "revise",
+                        "default": "revise",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "reason_code": {
+                        "default": "refined",
+                        "enum": [
+                          "corrected",
+                          "outdated",
+                          "refined",
+                          "merged",
+                          "resolved_contradiction",
+                          "source_retracted"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "memory",
+                      "fields",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "`new` (a `ref` from this proposal, or an existing memory id) replaces `target`.",
+                    "properties": {
+                      "new": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "op": {
+                        "const": "supersede",
+                        "default": "supersede",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "reason_code": {
+                        "enum": [
+                          "corrected",
+                          "outdated",
+                          "refined",
+                          "merged",
+                          "resolved_contradiction",
+                          "source_retracted"
+                        ],
+                        "type": "string"
+                      },
+                      "target": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "new",
+                      "target",
+                      "reason_code",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Declare a memory wrong/polluted. Dependents derived from it are flagged stale.",
+                    "properties": {
+                      "memory": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "retract",
+                        "default": "retract",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "memory",
+                      "reason",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Relate two EXISTING memories (ids from recall, or `ref`s of this proposal). It stores\nnothing new: use `add` for that.",
+                    "properties": {
+                      "op": {
+                        "const": "link",
+                        "default": "link",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "relation": {
+                        "enum": [
+                          "contradicts",
+                          "overrides",
+                          "refines",
+                          "promoted_to"
+                        ],
+                        "type": "string"
+                      },
+                      "source": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "target": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "relation",
+                      "source",
+                      "target",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Attach a note to an EXISTING memory (`target` is its id). It stores nothing new: use\n`add` for that.",
+                    "properties": {
+                      "kind": {
+                        "default": "comment",
+                        "enum": [
+                          "comment",
+                          "tag",
+                          "flag"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "annotate",
+                        "default": "annotate",
+                        "type": "string"
+                      },
+                      "target": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "text",
+                      "op"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "why": {
+              "description": "What you changed and why (kept with the older version)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "ops",
+            "why"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "proposal",
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "amend"
+  },
+  {
     "description": "Structural questions answered exactly (what applies here, history\u2026).",
     "input_schema": {
       "additionalProperties": false,
@@ -7,6 +453,18 @@
         "request": {
           "additionalProperties": false,
           "properties": {
+            "at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
             "context": {
               "additionalProperties": false,
               "default": {
@@ -104,6 +562,7 @@
                 "absence",
                 "conflicts",
                 "changes_since",
+                "as_of",
                 "prerequisites_of",
                 "explain"
               ],
@@ -530,12 +989,29 @@
     "name": "get"
   },
   {
-    "description": "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, or `deprecate`. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts.",
+    "description": "Your proposals (and, with permission, the global ones) that are still waiting: `pending`, or `changes_requested` with the reviewer's `comments`. Check it before proposing something that may already be waiting, and when the user says a proposal needs changes. Each has a `version`, its ops and findings.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "pending_proposals"
+  },
+  {
+    "description": "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, `deprecate`, or `edit` a concept's label, definition or aliases (say the same thing better; if the meaning changes, define a new concept and deprecate the old one instead). A concept never changes id; a deprecated one stays and points to its successor. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts and for an edit that looks like a different meaning.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "request": {
           "additionalProperties": false,
+          "description": "The ontology change of the `lite` MCP profile: the common operations only. A weak\ntool-caller is unlikely to need `split`, `reparent`, `unrelate` or `restore`.",
           "properties": {
             "change": {
               "oneOf": [
@@ -670,7 +1146,8 @@
                             "alternative_to",
                             "replaced_by",
                             "depends_on",
-                            "disjoint_with"
+                            "disjoint_with",
+                            "split_into"
                           ],
                           "type": "string"
                         },
@@ -728,6 +1205,17 @@
                       "default": "deprecate",
                       "type": "string"
                     },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
                     "replaced_by": {
                       "anyOf": [
                         {
@@ -764,6 +1252,61 @@
                   "required": [
                     "source",
                     "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Say the same thing better: a clearer label, a tighter definition, other names. The meaning\nmust not change (otherwise define a new concept and deprecate this one); the id never does.\nThe previous label stays as an alias.",
+                  "properties": {
+                    "add_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "definition": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "label": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "op": {
+                      "const": "edit",
+                      "default": "edit",
+                      "type": "string"
+                    },
+                    "remove_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "concept",
                     "op"
                   ],
                   "type": "object"

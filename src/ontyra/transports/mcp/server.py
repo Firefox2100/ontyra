@@ -15,9 +15,24 @@ from ontyra.models import RecordId
 from ontyra.models.consolidation import ScanReport, ScanRequest
 from ontyra.models.core import Proposal, TaskKind
 from ontyra.models.feedback import FeedbackRequest, FeedbackView
-from ontyra.models.ontology import ConceptView
-from ontyra.models.ontology_change import ChangeRequest, ChangeResult, OntologyChange
-from ontyra.models.proposals import LiteProposalRequest, ProposalRequest, ProposalResult
+from ontyra.models.ontology import ConceptHistory, ConceptView, OntologyCheck
+from ontyra.models.ontology_change import (
+    AmendChange,
+    ChangePreview,
+    ChangeRequest,
+    ChangeResult,
+    LiteChangeRequest,
+    OntologyChange,
+)
+from ontyra.models.proposals import (
+    AmendRequest,
+    ApproveRequest,
+    LiteProposalRequest,
+    ProposalRequest,
+    ProposalResult,
+    RequestChanges,
+    WithdrawRequest,
+)
 from ontyra.models.recall import (
     AskRequest,
     AskResult,
@@ -221,17 +236,105 @@ def create_mcp(
     async def concepts(term: str) -> list[ConceptView]:
         return await run(lambda s, c: s.ontology.lookup(c, term))
 
-    @mcp.tool(
-        title="Propose an ontology change",
-        annotations=PROPOSE,
-        description="Propose an ontology change: `define` a concept, `relate` two, "
-        "`add_alias`, `merge` duplicates, or `deprecate`. Held for review unless a human "
-        "makes it. Check `concepts` first; read `advice` for similar existing concepts.",
-    )
-    async def propose_ontology_change(request: ChangeRequest) -> ChangeResult:
+    async def propose_ontology_change(request: Any) -> ChangeResult:
         return await run(lambda s, c: s.ontology_changes.propose(c, request))
 
+    propose_ontology_change.__annotations__["request"] = (
+        ChangeRequest if profile == "full" else LiteChangeRequest
+    )
+    mcp.tool(
+        title="Propose an ontology change",
+        annotations=PROPOSE,
+        description="Propose an ontology change: `define` a concept, `relate` two, `add_alias`, "
+        "`merge` duplicates, `deprecate`, or `edit` a concept's label, definition or aliases "
+        "(say the same thing better; if the meaning changes, define a new concept and "
+        "deprecate the old one instead). A concept never changes id; a deprecated one stays "
+        "and points to its successor. Held for review unless a human makes it. Check `concepts` "
+        "first; read `advice` for similar existing concepts and for an edit that looks like a "
+        "different meaning.",
+    )(propose_ontology_change)
+
+    @mcp.tool(
+        title="Pending proposals",
+        annotations=READ,
+        description="Your proposals (and, with permission, the global ones) that are still "
+        "waiting: `pending`, or `changes_requested` with the reviewer's `comments`. Check it "
+        "before proposing something that may already be waiting, and when the user says a "
+        "proposal needs changes. Each has a `version`, its ops and findings.",
+    )
+    async def pending_proposals(
+        limit: Annotated[int, Field(ge=1, le=200)] = 50,
+    ) -> list[Proposal]:
+        return await run(lambda s, c: s.memory.pending(c, limit))
+
+    @mcp.tool(
+        title="Amend a waiting proposal",
+        annotations=PROPOSE,
+        description="Replace the ops of a proposal that is still waiting (`pending` or "
+        "`changes_requested`) with a corrected list and say why; it becomes a new version and "
+        "goes back to review. Use this instead of sending a second proposal when a "
+        "`pending_similar` finding names it, or when a reviewer asked for changes. Pass "
+        "`expect_version` (from `pending_proposals`).",
+    )
+    async def amend(proposal: str, request: AmendRequest) -> ProposalResult:
+        rid = RecordId("proposal", proposal.removeprefix("proposal:"))
+        return await run(lambda s, c: s.memory.amend(c, rid, request))
+
     if profile == "full":
+
+        @mcp.tool(
+            title="Withdraw a waiting proposal",
+            annotations=REJECT,
+            description="Take back your own proposal that is still waiting (final; nothing is "
+            "committed). Use it when the user changed their mind or it was a mistake.",
+        )
+        async def withdraw(proposal: str, reason: str) -> ProposalResult:
+            rid = RecordId("proposal", proposal.removeprefix("proposal:"))
+            return await run(lambda s, c: s.memory.withdraw(c, rid, WithdrawRequest(reason=reason)))
+
+        @mcp.tool(
+            title="Preview an ontology change",
+            annotations=READ,
+            description="Say what an ontology change would do without proposing it: the concepts "
+            "it touches, how many live memories are about them, and advice. Use it before "
+            "`split`, `reparent`, `merge` or `deprecate`.",
+        )
+        async def preview_ontology_change(request: ChangeRequest) -> ChangePreview:
+            return await run(lambda s, c: s.ontology_changes.preview(c, request))
+
+        @mcp.tool(
+            title="Concept history",
+            annotations=READ,
+            description="Investigation only: a concept's earlier versions (label, aliases, "
+            "definition, status), the relations it has had including ended ones, and the "
+            "ontology changes that touched it. Ordinary tools never show these.",
+        )
+        async def concept_history(concept: str) -> ConceptHistory:
+            rid = RecordId("concept", concept.removeprefix("concept:"))
+            return await run(lambda s, c: s.ontology.history(rid))
+
+        @mcp.tool(
+            title="Ontology change history",
+            annotations=READ,
+            description="Investigation only: applied and decided ontology changes, newest first, "
+            "optionally for one concept or one op.",
+        )
+        async def ontology_history(
+            concept: str | None = None,
+            op: str | None = None,
+            limit: Annotated[int, Field(ge=1, le=200)] = 50,
+        ) -> list[OntologyChange]:
+            rid = RecordId("concept", concept.removeprefix("concept:")) if concept else None
+            return await run(lambda s, c: s.ontology_changes.history(c, limit, concept=rid, op=op))
+
+        @mcp.tool(
+            title="Ontology health check",
+            annotations=READ,
+            description="Read-only report: loops, dangling links, shared names, deprecated "
+            "concepts still in use, unused concepts. Nothing is fixed.",
+        )
+        async def check_ontology() -> OntologyCheck:
+            return await run(lambda s, c: s.ontology_check.check(c))
 
         @mcp.tool(
             title="Pending ontology changes",
@@ -242,6 +345,41 @@ def create_mcp(
             limit: Annotated[int, Field(ge=1, le=200)] = 50,
         ) -> list[OntologyChange]:
             return await run(lambda s, c: s.ontology_changes.pending(c, limit))
+
+        @mcp.tool(
+            title="Amend a waiting ontology change",
+            annotations=PROPOSE,
+            description="Replace a waiting ontology change (yours, or any if you are a reviewer) "
+            "with a corrected one and say why: a new version, back to review. Use it instead of "
+            "proposing a second change when `advice` says a similar one is waiting, or when "
+            "changes were requested.",
+        )
+        async def amend_ontology_change(change: str, request: AmendChange) -> ChangeResult:
+            rid = RecordId("ontology_change", change.removeprefix("ontology_change:"))
+            return await run(lambda s, c: s.ontology_changes.amend(c, rid, request))
+
+        @mcp.tool(
+            title="Withdraw a waiting ontology change",
+            annotations=REJECT,
+            description="Take back your own waiting ontology change (final; nothing is applied).",
+        )
+        async def withdraw_ontology_change(change: str, reason: str) -> ChangeResult:
+            rid = RecordId("ontology_change", change.removeprefix("ontology_change:"))
+            return await run(
+                lambda s, c: s.ontology_changes.withdraw(c, rid, WithdrawRequest(reason=reason))
+            )
+
+        @mcp.tool(
+            title="Revert an ontology change",
+            annotations=APPROVE,
+            description="Undo an applied ontology change by applying its stored undo. Side "
+            "effect: the shared ontology changes for everyone. Needs a human credential with "
+            "global write; refused while a later change touched the same concepts. Call it only "
+            "when the user asks.",
+        )
+        async def revert_ontology_change(change: str, reason: str) -> ChangeResult:
+            rid = RecordId("ontology_change", change.removeprefix("ontology_change:"))
+            return await run(lambda s, c: s.ontology_changes.revert(c, rid, reason))
 
         @mcp.tool(
             title="Approve an ontology change",
@@ -389,34 +527,38 @@ def create_mcp(
             )
 
         @mcp.tool(
-            title="Pending proposals",
-            annotations=READ,
-            description="Proposals held for review that you may see.",
-        )
-        async def pending_proposals(
-            limit: Annotated[int, Field(ge=1, le=200)] = 50,
-        ) -> list[Proposal]:
-            return await run(lambda s, c: s.memory.pending(c, limit))
-
-        @mcp.tool(
             title="Approve a proposal",
             annotations=APPROVE,
             description="Approve a held proposal. Side effect: commits it, which can add, "
             "supersede or retract memories. Only a human credential may review: call it only "
             "when the user explicitly asks you to approve that proposal, never for your own.",
         )
-        async def approve(proposal: str) -> ProposalResult:
+        async def approve(proposal: str, request: ApproveRequest | None = None) -> ProposalResult:
             rid = RecordId("proposal", proposal.removeprefix("proposal:"))
-            return await run(lambda s, c: s.memory.approve(c, rid))
+            return await run(lambda s, c: s.memory.approve(c, rid, request))
 
         @mcp.tool(
             title="Reject a proposal",
             annotations=REJECT,
-            description="Reject a held proposal with a reason (nothing is committed).",
+            description="Reject a held proposal with a reason (nothing is committed). With `ops` "
+            "only those ops (and what needs them) are rejected; the rest keeps waiting.",
         )
-        async def reject(proposal: str, reason: str) -> ProposalResult:
+        async def reject(
+            proposal: str, reason: str, ops: list[int] | None = None
+        ) -> ProposalResult:
             rid = RecordId("proposal", proposal.removeprefix("proposal:"))
-            return await run(lambda s, c: s.memory.reject(c, rid, reason))
+            return await run(lambda s, c: s.memory.reject(c, rid, reason, ops))
+
+        @mcp.tool(
+            title="Ask for changes to a proposal",
+            annotations=REJECT,
+            description="Send a held proposal back to its submitter with a comment (and optional "
+            "comments per op number): it leaves the approve queue until it is amended. Only a "
+            "human credential may review; call it only when the user asks.",
+        )
+        async def request_changes(proposal: str, request: RequestChanges) -> ProposalResult:
+            rid = RecordId("proposal", proposal.removeprefix("proposal:"))
+            return await run(lambda s, c: s.memory.request_changes(c, rid, request))
 
     return mcp
 

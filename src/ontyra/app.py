@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -29,6 +30,8 @@ from ontyra.services import (
     RerankTrainingService,
     TaskService,
 )
+from ontyra.services.maintenance import Maintenance
+from ontyra.services.ontology_check import OntologyChecker
 from ontyra.services.recall_fusion import FusionRecallService
 from ontyra.storage import Database, SchemaManager, SurrealStore
 from ontyra.transports.rest import create_app
@@ -49,6 +52,7 @@ class Application:
     memory: MemoryService
     ontology: OntologyService
     ontology_changes: OntologyChangeService
+    ontology_check: OntologyChecker
     anchors: AnchorService
     indexer: IndexService
     recall: RecallService
@@ -56,6 +60,7 @@ class Application:
     feedback: FeedbackService
     consolidation: ConsolidationService
     tasks: TaskService
+    maintenance: Maintenance
     reranking: RerankTrainingService
     embedder: Embedder | None
 
@@ -111,7 +116,15 @@ class Application:
             )
         comparer = decider if isinstance(decider, StatementComparer) else None
         consolidation = ConsolidationService(store, embedder, settings.consolidation, comparer)
-        tasks = TaskService(store, now, consolidation, memory, settings.tasks.expiry_warn_days)
+        tasks = TaskService(
+            store,
+            now,
+            consolidation,
+            memory,
+            settings.tasks.expiry_warn_days,
+            ontology,
+            settings.tasks.refine_cap,
+        )
         feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
         actors = ActorService(store, now, settings.actor_trust)
         token = settings.auth.token
@@ -134,6 +147,7 @@ class Application:
             ontology_changes=OntologyChangeService(
                 store, ontology, now, settings.ontology.auto_apply
             ),
+            ontology_check=OntologyChecker(ontology),
             anchors=anchors,
             indexer=indexer,
             recall=recall,
@@ -141,6 +155,7 @@ class Application:
             feedback=feedback,
             consolidation=consolidation,
             tasks=tasks,
+            maintenance=Maintenance(actors, tasks, store, settings.tasks, ontology=ontology),
             reranking=RerankTrainingService(
                 store, feedback, reranker, now, settings.rerank.min_examples
             ),
@@ -180,9 +195,15 @@ async def create_application(
 @asynccontextmanager
 async def open_application(settings: Settings) -> AsyncGenerator[Application]:
     application = await create_application(settings)
+    scheduler: asyncio.Task[None] | None = None
+    if settings.tasks.detect_every_hours > 0:
+        scheduler = asyncio.create_task(application.maintenance.run_forever())
     try:
         yield application
     finally:
+        if scheduler is not None:
+            scheduler.cancel()
+            await asyncio.gather(scheduler, return_exceptions=True)
         await application.close()
 
 

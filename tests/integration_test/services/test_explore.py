@@ -198,3 +198,42 @@ async def test_overview_orients_the_agent(
     assert ov.concepts == ["pytest (1)"]
     assert ov.anchor_chain[0] == f"{PROJECT}/a.py" and ov.qualifiers_observed == ["Python=3.12"]
     assert any(v.startswith("recall(") for v in ov.verbs) and len(ov.recent) == 2
+
+
+async def test_ask_as_of_shows_what_was_in_force_then(
+    app: Application, agent: Caller, remember, clock
+) -> None:
+    import pytest
+
+    from ontyra.services.errors import InvalidRequestError
+
+    old = await remember("fact", "the deploy window is on tuesday")
+    gone = await remember("fact", "the staging host is called mercury")
+    before_change = clock()
+    await app.memory.submit(
+        agent,
+        ProposalRequest(
+            ops=[
+                ReviseMemory(
+                    memory=old,
+                    fields={"text": "the deploy window is on thursday", "object": "thursday"},
+                    reason="moved",
+                ),
+                RetractMemory(memory=gone, reason="host renamed"),
+            ]
+        ),
+    )
+    then = await app.explore.ask(agent, AskRequest(question="as_of", at=before_change))
+    texts = {m["memory"]: m for m in then.answer["memories"]}
+    assert {str(old), str(gone)} <= set(texts)
+    assert "tuesday" in texts[str(old)]["text"]
+    assert texts[str(old)]["current_now"] is False and texts[str(gone)]["current_now"] is False
+    assert "since been revised" in then.summary
+    now = await app.explore.ask(agent, AskRequest(question="as_of", at=clock()))
+    assert str(gone) not in {m["memory"] for m in now.answer["memories"]}
+    narrowed = await app.explore.ask(
+        agent, AskRequest(question="as_of", at=before_change, topic="staging host")
+    )
+    assert [m["memory"] for m in narrowed.answer["memories"]] == [str(gone)]
+    with pytest.raises(InvalidRequestError):
+        await app.explore.ask(agent, AskRequest(question="as_of"))

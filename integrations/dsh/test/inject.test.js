@@ -18,6 +18,7 @@ import {
   humanPrompt,
   initialState,
   isSubagent,
+  needsChangesNote,
   messageText,
   PLUGIN,
   render,
@@ -128,4 +129,15 @@ test('each session recalls its own turn, even when the numbers collide', () => {
   assert.equal(unclaimedTurn(recalled, 'b', 1), true, 'turn numbers are per session')
   claimTurn(recalled, 'b', 1)
   assert.equal(unclaimedTurn(recalled, 'a', 2), true, 'the next turn recalls again')
+})
+
+test('proposals sent back by a reviewer become one line, others are ignored', () => {
+  assert.equal(needsChangesNote([{ status: 'pending', id: 'proposal:a' }]), undefined)
+  assert.equal(needsChangesNote('nope'), undefined)
+  const note = needsChangesNote([
+    { status: 'changes_requested', id: 'proposal:b' },
+    { status: 'pending', id: 'proposal:c' },
+  ])
+  assert.match(note ?? '', /1 proposal\(s\) need changes .*proposal:b/)
+  assert.match(note ?? '', /ontyra_amend/)
 })

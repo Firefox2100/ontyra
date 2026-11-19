@@ -37,6 +37,20 @@ export function humanPrompt(messages) {
 }
 
 /**
+ * One line telling the agent that a reviewer sent proposals back (undefined when none was).
+ * @param {unknown} proposals - the daemon's list of waiting proposals.
+ * @returns {string | undefined} the note, or undefined when nothing needs changes.
+ */
+export function needsChangesNote(proposals) {
+  if (!Array.isArray(proposals)) return undefined
+  const sent = proposals.filter((p) => p?.status === 'changes_requested')
+  if (sent.length === 0) return undefined
+  const ids = sent.map((p) => String(p.id ?? p.proposal)).join(', ')
+  return `${sent.length} proposal(s) need changes before review (${ids}). Call ontyra_pending_proposals `
+    + 'to read the comments, then ontyra_amend them.'
+}
+
+/**
  * Wrap the daemon's rendered text as one reference-data block.
  * The framing is the same promise the hook makes: memory is data about the project, not a
  * directive issued by the agent's operator.

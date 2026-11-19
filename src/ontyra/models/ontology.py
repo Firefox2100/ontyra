@@ -24,6 +24,7 @@ RelationName = Literal[
     "replaced_by",
     "depends_on",
     "disjoint_with",
+    "split_into",
 ]
 
 
@@ -51,6 +52,29 @@ class Concept(Record):
     replaced_by: ConceptRef | None = None
     created_at: datetime
     updated_at: datetime | None = None
+    # plans/23. Nullable so concepts stored before versions still validate: `version` is the
+    # sequence number of the latest `concept_rev` (None: none written yet), `reason` why it was
+    # deprecated.
+    version: int | None = None
+    reason: str | None = None
+
+
+@registry.table("concept_rev", immutable=True)
+class ConceptRev(Record):
+    """One version of a concept's editable fields. History only: ordinary reads use `concept`
+    (the current state); versions surface only through the investigation tools."""
+
+    concept: Annotated[ConceptRef, Indexed()]
+    seq: int
+    label: str
+    aliases: list[str] = []
+    definition: str | None = None
+    status: Literal["active", "deprecated"] = "active"
+    replaced_by: ConceptRef | None = None
+    reason: str | None = None
+    change: RecordId | None = None  # the ontology change that made it (None: before versions)
+    by: ActorRef | None = None
+    at: datetime
 
 
 @registry.table("related", edge=(("concept",), ("concept",)))
@@ -60,6 +84,10 @@ class Related(Record):
     relation: RelationName
     by: ActorRef
     at: datetime
+    # An ended edge is history: the reasoner and every read ignore it (plans/23).
+    ended_at: datetime | None = None
+    ended_by: ActorRef | None = None
+    ended_by_change: RecordId | None = None
 
 
 ResourceKind = Literal[
@@ -122,6 +150,8 @@ class ConceptView(Model):
     dimension: str | None
     status: str
     replaced_by: RecordId | None
+    successors: list[RecordId] = []  # a split concept: what it became
+    deprecation_reason: str | None = None
     relations: list[RelationView] = []
     memories: int = 0  # live memories about this concept (directly)
 
@@ -133,3 +163,53 @@ class ResourceRequest(Model):
     parents: list[str] = []
     same_as: list[str] = []
     instance_of: list[str] = []  # concept ids or labels
+
+
+class ConceptVersion(Model):
+    """One entry of a concept's history (investigation tools only)."""
+
+    seq: int
+    label: str
+    aliases: list[str]
+    definition: str | None
+    status: str
+    replaced_by: RecordId | None
+    reason: str | None
+    change: RecordId | None
+    by: RecordId | None
+    at: datetime
+
+
+class EdgeEvent(Model):
+    """A relation of the concept as it was added and, when it was, ended."""
+
+    relation: str
+    direction: Literal["out", "in"]
+    other: RecordId
+    added_at: datetime
+    ended_at: datetime | None
+    ended_by_change: RecordId | None
+
+
+class ConceptHistory(Model):
+    concept: RecordId
+    current: int | None  # latest version number (None: never edited since versions began)
+    versions: list[ConceptVersion]
+    relations: list[EdgeEvent]
+    changes: list[RecordId]  # ontology changes that touched it, newest first
+
+
+class OntologyFinding(Model):
+    severity: Literal["error", "warning", "info"]
+    code: str
+    message: str
+    concepts: list[RecordId] = []
+    change: RecordId | None = None  # the change that most likely caused it
+
+
+class OntologyCheck(Model):
+    """A read-only report on the ontology's health (nothing is fixed automatically)."""
+
+    concepts: int
+    live_edges: int
+    findings: list[OntologyFinding]

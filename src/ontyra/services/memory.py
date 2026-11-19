@@ -11,9 +11,17 @@ from ontyra.models import RecordId, new_id
 from ontyra.models.core import Actor, Episode, Memory, Proposal, RevState, Task
 from ontyra.models.episodes import EpisodeSettings
 from ontyra.models.kinds import RevisionBase
-from ontyra.models.proposals import Finding, ProposalRequest, ProposalResult
+from ontyra.models.proposals import (
+    AmendRequest,
+    ApproveRequest,
+    Finding,
+    ProposalRequest,
+    ProposalResult,
+    RequestChanges,
+    WithdrawRequest,
+)
 from ontyra.ports import Create, Delete, Store, StoreConflictError, Update, Write
-from ontyra.services import errors
+from ontyra.services import errors, review
 from ontyra.services.anchors import AnchorService
 from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.ontology import OntologyService
@@ -216,16 +224,70 @@ class MemoryService:
             created=created if status == "committed" else {},
         )
 
-    async def approve(self, reviewer: Caller, proposal: RecordId) -> ProposalResult:
-        """Commit a pending proposal (re-validated against the data as it is now)."""
+    # ---- review: approve, reject, amend, withdraw, request changes (plans/24) -------
+
+    @staticmethod
+    def _version(p: Proposal) -> int:
+        return p.version or 1
+
+    @classmethod
+    def _check_version(cls, p: Proposal, expected: int | None) -> None:
+        if expected is not None and expected != cls._version(p):
+            raise errors.ConflictError(
+                f"{p.id} is at version {cls._version(p)}, not {expected}: it changed, read it again"
+            )
+
+    def _stamp(self, who: Caller) -> dict[str, Any]:
+        return {"by": str(who.actor_id), "at": self.now().isoformat()}
+
+    def _decisions(
+        self, p: Proposal, numbers: Sequence[int], status: str, reviewer: Caller, reason: str | None
+    ) -> list[dict[str, Any]]:
+        out = [*(p.decisions or [])]
+        for n in numbers:
+            out.append(
+                {
+                    "version": self._version(p),
+                    "op": n,
+                    "summary": review.summary(p.ops[n]),
+                    "status": status,
+                    "reason": reason,
+                    **self._stamp(reviewer),
+                }
+            )
+        return out
+
+    async def approve(
+        self, reviewer: Caller, proposal: RecordId, request: ApproveRequest | None = None
+    ) -> ProposalResult:
+        """Commit a waiting proposal (re-validated against the data as it is now): all its ops,
+        or the chosen ones plus what they need, in which case the rest are rejected."""
+        request = request or ApproveRequest()
         p = await self._pending(proposal)
         self._may_review(reviewer, p)
+        self._check_version(p, request.expect_version)
+        everything = list(range(len(p.ops)))
+        chosen = (
+            everything
+            if request.ops is None
+            else sorted(review.needs(p.ops, review.check_numbers(p.ops, request.ops)))
+        )
+        left_out = [n for n in everything if n not in chosen]
+        if not chosen:
+            raise errors.InvalidRequestError("approve at least one op, or reject the proposal")
+        if left_out and not (request.reason and request.reason.strip()):
+            raise errors.InvalidRequestError("a partial approval needs a `reason` for the others")
         submitter = await self._caller_of(p)
-        v = await self._revalidate(submitter, p)
+        v = await self._revalidate(submitter, p, [p.ops[n] for n in chosen])
         if not v.ok:
             raise errors.InvalidProposalError(v.findings)
         now = self.now()
         created = {k: mem for k, (mem, _rev) in v.refs.items()}
+        decisions = [
+            *self._decisions(p, chosen, "approved", reviewer, None),
+        ]
+        p_after = p.model_copy(update={"decisions": decisions})
+        decisions = self._decisions(p_after, left_out, "rejected", reviewer, request.reason)
         writes = [
             *memory_writes(v.prepared, submitter.actor_id, now),
             Update(
@@ -235,42 +297,227 @@ class MemoryService:
                     "decided_at": now,
                     "decided_by": reviewer.actor_id,
                     "findings": [f.model_dump(mode="json") for f in v.findings],
-                    "result": {"created": {k: str(m) for k, m in created.items()}},
+                    "result": {
+                        "created": {k: str(m) for k, m in created.items()},
+                        "rejected_ops": left_out,
+                    },
+                    "decisions": decisions,
                 },
             ),
             *(await self._close_task(proposal, "approved", now)),
         ]
         await self._apply(writes)
         await self._committed(v.prepared)
+        included = sorted(set(chosen) - set(request.ops or chosen))
+        note = f"approved by {reviewer.actor.name}"
+        if included:
+            note += f" (also op(s) {included}, which the chosen ones need)"
         return ProposalResult(
             proposal=proposal,
             status="committed",
             decision="review",
-            reason=f"approved by {reviewer.actor.name}",
+            reason=note,
             findings=v.findings,
             created=created,
+            version=self._version(p),
+            rejected_ops=left_out,
         )
 
-    async def reject(self, reviewer: Caller, proposal: RecordId, reason: str) -> ProposalResult:
-        self._may_review(reviewer, await self._pending(proposal))
+    async def reject(
+        self,
+        reviewer: Caller,
+        proposal: RecordId,
+        reason: str,
+        ops: list[int] | None = None,
+        expect_version: int | None = None,
+    ) -> ProposalResult:
+        """Reject the whole waiting proposal, or only the chosen ops (and what needs them): the
+        rest stays waiting as a new version."""
+        p = await self._pending(proposal)
+        self._may_review(reviewer, p)
+        self._check_version(p, expect_version)
+        everything = list(range(len(p.ops)))
+        gone = (
+            everything
+            if ops is None
+            else sorted(review.needed_by(p.ops, review.check_numbers(p.ops, ops)))
+        )
+        now = self.now()
+        if len(gone) == len(everything):
+            await self.store.apply(
+                [
+                    Update(
+                        proposal,
+                        {
+                            "status": "rejected",
+                            "decided_at": now,
+                            "decided_by": reviewer.actor_id,
+                            "decision_reason": reason,
+                            "decisions": self._decisions(p, gone, "rejected", reviewer, reason),
+                        },
+                    ),
+                    *await self._close_task(proposal, "rejected", now),
+                ]
+            )
+            return ProposalResult(
+                proposal=proposal,
+                status="rejected",
+                decision="review",
+                reason=reason,
+                version=self._version(p),
+                rejected_ops=gone,
+            )
+        keep = [p.ops[n] for n in everything if n not in gone]
+        submitter = await self._caller_of(p)
+        v = await self._revalidate(submitter, p, keep)
+        if not v.ok:
+            raise errors.InvalidProposalError(v.findings)
+        version = self._version(p)
+        entry = {
+            "version": version,
+            "ops": p.ops,
+            "why": f"ops {gone} rejected: {reason}",
+            **self._stamp(reviewer),
+        }
+        await self.store.apply(
+            [
+                Update(
+                    proposal,
+                    {
+                        "ops": keep,
+                        "version": version + 1,
+                        "history": [*(p.history or []), entry],
+                        "status": "pending",
+                        "findings": [f.model_dump(mode="json") for f in v.findings],
+                        "decisions": self._decisions(p, gone, "rejected", reviewer, reason),
+                    },
+                )
+            ]
+        )
+        return ProposalResult(
+            proposal=proposal,
+            status="pending",
+            decision="review",
+            reason=f"ops {gone} rejected; the others are still waiting",
+            findings=v.findings,
+            version=version + 1,
+            rejected_ops=gone,
+        )
+
+    async def amend(
+        self, caller: Caller, proposal: RecordId, request: AmendRequest
+    ) -> ProposalResult:
+        """A new version of a waiting proposal, validated again (its submitter or a reviewer)."""
+        p = await self._pending(proposal)
+        if p.actor != caller.actor_id and not self._can_review(caller, p):
+            raise errors.PermissionDeniedError("only its submitter or a reviewer may amend this")
+        if not request.why.strip():
+            raise errors.InvalidRequestError("an amendment needs a `why`")
+        self._check_version(p, request.expect_version)
+        submitter = await self._caller_of(p)
+        v = await self.validator.validate(
+            submitter,
+            ProposalRequest(ops=request.ops, space=p.space, note=p.note),
+            exclude=proposal,
+        )
+        if not v.ok:
+            raise errors.InvalidProposalError(v.findings)
+        decision, reason = self.policy.decide(submitter, _summaries(v.prepared), v.findings)
+        if decision == "reject":
+            raise errors.InvalidRequestError(f"the policy refuses this amendment: {reason}")
+        version = self._version(p)
+        entry = {"version": version, "ops": p.ops, "why": request.why, **self._stamp(caller)}
+        await self.store.apply(
+            [
+                Update(
+                    proposal,
+                    {
+                        "ops": [op.model_dump(mode="json") for op in request.ops],
+                        "version": version + 1,
+                        "history": [*(p.history or []), entry],
+                        "status": "pending",
+                        "findings": [f.model_dump(mode="json") for f in v.findings],
+                    },
+                )
+            ]
+        )
+        return ProposalResult(
+            proposal=proposal,
+            status="pending",
+            decision="review",
+            reason=f"version {version + 1}, amended by {caller.actor.name}",
+            findings=v.findings,
+            version=version + 1,
+        )
+
+    async def withdraw(
+        self, caller: Caller, proposal: RecordId, request: WithdrawRequest
+    ) -> ProposalResult:
+        """Take back a waiting proposal (its submitter or a reviewer): final, nothing commits."""
+        p = await self._pending(proposal)
+        if p.actor != caller.actor_id and not self._can_review(caller, p):
+            raise errors.PermissionDeniedError("only its submitter or a reviewer may withdraw this")
         now = self.now()
         await self.store.apply(
             [
                 Update(
                     proposal,
                     {
-                        "status": "rejected",
+                        "status": "withdrawn",
                         "decided_at": now,
-                        "decided_by": reviewer.actor_id,
-                        "decision_reason": reason,
+                        "decided_by": caller.actor_id,
+                        "decision_reason": request.reason,
                     },
                 ),
-                *await self._close_task(proposal, "rejected", now),
+                *await self._close_task(proposal, "withdrawn", now),
             ]
         )
         return ProposalResult(
-            proposal=proposal, status="rejected", decision="review", reason=reason
+            proposal=proposal,
+            status="withdrawn",
+            decision="review",
+            reason=request.reason,
+            version=self._version(p),
         )
+
+    async def request_changes(
+        self, reviewer: Caller, proposal: RecordId, request: RequestChanges
+    ) -> ProposalResult:
+        """Send a waiting proposal back with comments; it leaves the approve queue until its
+        submitter amends it."""
+        p = await self._pending(proposal)
+        self._may_review(reviewer, p)
+        self._check_version(p, request.expect_version)
+        if not request.comment.strip():
+            raise errors.InvalidRequestError("say what should change")
+        review.check_numbers(p.ops, request.op_comments)
+        version, stamp = self._version(p), self._stamp(reviewer)
+        added = [
+            {"version": version, "text": request.comment, **stamp},
+            *(
+                {"version": version, "op": n, "text": text, **stamp}
+                for n, text in sorted(request.op_comments.items())
+            ),
+        ]
+        await self.store.apply(
+            [
+                Update(
+                    proposal,
+                    {"status": "changes_requested", "comments": [*(p.comments or []), *added]},
+                )
+            ]
+        )
+        return ProposalResult(
+            proposal=proposal,
+            status="changes_requested",
+            decision="review",
+            reason=request.comment,
+            version=version,
+        )
+
+    @classmethod
+    def _can_review(cls, who: Caller, p: Proposal) -> bool:
+        return who.actor.kind == "human" and who.can_write(cls._target(p))
 
     @staticmethod
     def _target(p: Proposal) -> RecordId:
@@ -293,7 +540,7 @@ class MemoryService:
         if caller.can_write(GLOBAL_OWNER):
             rows = await self.store.select(
                 "proposal",
-                {"status": "pending"},
+                where_in={"status": ["pending", "changes_requested"]},
                 where_any={"owner": caller.owner, "space": "global"},
                 limit=limit,
                 order_by="submitted_at",
@@ -301,7 +548,8 @@ class MemoryService:
         else:
             rows = await self.store.select(
                 "proposal",
-                {"status": "pending", "owner": caller.owner},
+                {"owner": caller.owner},
+                where_in={"status": ["pending", "changes_requested"]},
                 limit=limit,
                 order_by="submitted_at",
             )
@@ -437,8 +685,8 @@ class MemoryService:
 
     async def _pending(self, proposal: RecordId) -> Proposal:
         p = await self._proposal(proposal)
-        if p.status != "pending":
-            raise errors.ProposalStateError(f"{proposal} is {p.status}, not pending")
+        if p.status not in ("pending", "changes_requested"):
+            raise errors.ProposalStateError(f"{proposal} is {p.status}: it is no longer waiting")
         return p
 
     async def _caller_of(self, p: Proposal) -> Caller:
@@ -447,9 +695,13 @@ class MemoryService:
             raise errors.NotFoundError(f"submitting actor {p.actor} no longer exists")
         return Caller(actor=actor, owner=p.owner, permissions=frozenset(p.permissions))
 
-    async def _revalidate(self, caller: Caller, p: Proposal) -> Validation:
-        request = ProposalRequest.model_validate({"ops": p.ops, "note": p.note, "space": p.space})
-        return await self.validator.validate(caller, request)
+    async def _revalidate(
+        self, caller: Caller, p: Proposal, ops: list[dict[str, Any]] | None = None
+    ) -> Validation:
+        request = ProposalRequest.model_validate(
+            {"ops": p.ops if ops is None else ops, "note": p.note, "space": p.space}
+        )
+        return await self.validator.validate(caller, request, exclude=p.id)
 
     async def _close_task(self, proposal: RecordId, outcome: str, now: datetime) -> list[Write]:
         tasks = await self.store.select(

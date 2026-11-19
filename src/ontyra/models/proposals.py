@@ -152,9 +152,53 @@ class Finding(Model):
 
 class ProposalResult(Model):
     proposal: RecordId
-    status: Literal["pending", "committed", "rejected"]
+    status: Literal["pending", "changes_requested", "committed", "rejected", "withdrawn"]
     decision: Decision
     reason: str | None = None
     findings: list[Finding] = []
     created: dict[str, RecordId] = {}  # op `ref` (or "op<N>") -> new memory id
     duplicate_of_idempotency_key: bool = False
+    version: int | None = None  # the proposal's version after this operation
+    rejected_ops: list[int] = []  # op numbers (of the version reviewed) that were not committed
+
+
+class AmendRequest(Model):
+    """Replace the ops of a pending proposal: a new version, validated again."""
+
+    ops: Annotated[list[Op], Field(min_length=1)]
+    why: str = Field(description="What you changed and why (kept with the older version)")
+    expect_version: int | None = Field(
+        default=None, description="The version you based this on; refused when it moved on"
+    )
+
+
+class WithdrawRequest(Model):
+    reason: str
+
+
+class RequestChanges(Model):
+    """Send a proposal back to its submitter: it leaves the approve queue until amended."""
+
+    comment: str
+    op_comments: dict[int, str] = {}  # op number (0-based, of the version reviewed) -> comment
+    expect_version: int | None = None
+
+
+class ApproveRequest(Model):
+    ops: list[int] | None = Field(
+        default=None,
+        description="Op numbers to commit (what they need is included); default all. The rest "
+        "are rejected with `reason`.",
+    )
+    reason: str | None = None  # why the others were rejected (required for a partial approval)
+    expect_version: int | None = None
+
+
+class RejectRequest(Model):
+    reason: str
+    ops: list[int] | None = Field(
+        default=None,
+        description="Op numbers to reject (what needs them goes too); default the whole proposal. "
+        "The rest stay pending as a new version.",
+    )
+    expect_version: int | None = None

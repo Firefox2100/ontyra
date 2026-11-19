@@ -46,8 +46,8 @@ Facts are superseded, not decayed. History stays available.
 Concepts (`python`, `docker`, `localai`) and relations between them (`is_a`, `part_of`, `same_as`,
 `replaced_by`, `depends_on`, `disjoint_with`) let a memory about one thing be found from a related
 one, and give conditions a vocabulary. Agents propose ontology changes (define, relate, add an
-alias, deprecate, merge); a human approves them unless the operation is configured for automatic
-approval.
+alias, edit, split, merge, deprecate); a human approves them unless the operation is configured
+for automatic approval. See [The ontology](../guides/ontology.md).
 
 ## Recall
 

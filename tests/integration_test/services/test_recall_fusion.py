@@ -135,6 +135,7 @@ async def test_a_trace_keeps_the_lane_scores_of_the_candidates(
     await remember("fact", "the oven runs hotter than its dial says")
     await fusion.indexer.backfill()
     pack, trace = await _trace_of(fusion, agent, "how are tidewatch releases tagged")
+    assert trace.scoring is not None
     rows = trace.scoring["candidates"]
     assert trace.scoring["abstained"] is False and trace.scoring["pool"] >= 1
     assert [r["rank"] for r in rows] == list(range(1, len(rows) + 1))
@@ -149,6 +150,7 @@ async def test_traces_keep_the_cut_off_candidates_and_the_silence(
     await remember("fact", "the oven runs hotter than its dial says")
     await fusion.indexer.backfill()
     _, trace = await _trace_of(fusion, agent, "zzzz qqqq xxxx")
+    assert trace.scoring is not None
     assert trace.scoring["candidates"] == [] or not any(
         r["shown"] for r in trace.scoring["candidates"]
     )
@@ -157,7 +159,7 @@ async def test_traces_keep_the_cut_off_candidates_and_the_silence(
 async def test_trace_candidates_zero_keeps_no_scores(make_app, agent: Caller) -> None:
     app = await make_app(recall=RecallSettings(engine="fusion", trace_candidates=0))
     _, trace = await _trace_of(app, agent, "anything")
-    assert trace.scoring == {}
+    assert trace.scoring is None
 
 
 async def test_old_traces_are_pruned_unless_feedback_cites_them(make_app, clock, remember) -> None:
@@ -215,3 +217,21 @@ async def test_a_note_says_when_the_thresholds_were_tuned_for_another_embedder(m
     assert "small-embedder" in (app.recall.calibration_note() or "")
     app.recall.cfg = RecallSettings(engine="fusion", calibrated_for="big-embedder")
     assert app.recall.calibration_note() is None
+
+
+async def test_a_trigger_fires_in_fusion_recall_too(
+    fusion: Application, agent: Caller, remember, concepts
+) -> None:
+    from ontyra.models.recall import Signal
+
+    await remember(
+        "lesson",
+        "pin the base image digest when you touch a Dockerfile",
+        qualifiers=[{"concept": str(concepts["docker"]), "role": "trigger"}],
+    )
+    await fusion.indexer.backfill()
+    asked = RecallRequest(query="what is the weather like on thursday")
+    assert not (await fusion.recall.recall(agent, asked)).items()
+    ctx = RecallContext(signals=[Signal(concept="docker")])
+    pack = await fusion.recall.recall(agent, asked.model_copy(update={"context": ctx}))
+    assert pack.items() and pack.items()[0].flags == ["triggered"]

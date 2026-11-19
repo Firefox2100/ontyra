@@ -13,7 +13,10 @@ merged by the daemon.
 1. **Detect**: `POST /v1/tasks/detect` (MCP `detect_tasks`). Each finding is queued once, keyed by
    the revisions it concerns, so running it again adds nothing, and a decision that two memories are
    `distinct` is not asked again. A task whose memories were changed or retracted since is closed as
-   obsolete.
+   obsolete. The daemon also runs it by itself: first `ONTYRA_TASKS__DETECT_FIRST_AFTER_MINUTES`
+   (10) after start, then every `ONTYRA_TASKS__DETECT_EVERY_HOURS` (24; `0` turns it off), once for
+   the global memory and once for each user's own memory. It only queues tasks (and asks the
+   optional decision model about duplicate candidates); nothing is changed until a task is decided.
 2. **Look**: `GET /v1/tasks` (MCP `pending_tasks`; `kind` and `status` filter). Each task has a
    **card**: instructions, the memories involved, and the choices.
 3. **Claim**: `POST /v1/tasks/{id}/claim` so two agents do not do the same work (`/release` gives

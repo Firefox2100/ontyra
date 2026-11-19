@@ -24,6 +24,7 @@ import {
   humanPrompt,
   initialState,
   isSubagent,
+  needsChangesNote,
   PLUGIN,
   PROJECTION_KEY,
   render,
@@ -160,6 +161,17 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
         profile: 'compact',
       }, signal, settings.timeoutMs)
       if (briefing !== undefined) parts.push({ name: 'briefing', text: briefing })
+      try {
+        const timeout = AbortSignal.timeout(Math.max(1, Math.trunc(Number(settings.timeoutMs)) || 1500))
+        const waiting = await client.call(
+          { method: 'GET', path: '/v1/proposals?limit=50' },
+          AbortSignal.any([signal, timeout]),
+        )
+        const note = needsChangesNote(waiting)
+        if (note !== undefined) parts.push({ name: 'proposals', text: note })
+      } catch {
+        // The note is a courtesy: a slow or absent daemon costs nothing.
+      }
     }
 
     // A step's batch carries a human prompt only when one just arrived — the opening of a turn, or

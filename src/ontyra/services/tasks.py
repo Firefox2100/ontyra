@@ -19,6 +19,7 @@ from ontyra.models import RecordId, new_id
 from ontyra.models.consolidation import DuplicateCluster, ScanRequest, UpdateCandidate
 from ontyra.models.core import Proposal, Task, TaskKind
 from ontyra.models.kinds import RevisionBase
+from ontyra.models.ontology import Concept
 from ontyra.models.proposals import ProposalRequest, RetractMemory, SupersedeMemory
 from ontyra.models.search import SearchDoc
 from ontyra.models.tasks import (
@@ -33,6 +34,7 @@ from ontyra.services.consolidation import ConsolidationService
 from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.indexing import doc_id
 from ontyra.services.memory import MemoryService
+from ontyra.services.ontology import OntologyService
 
 CHOICES: dict[TaskKind, list[str]] = {
     "consolidate": ["merge", "distinct", "defer"],
@@ -40,6 +42,7 @@ CHOICES: dict[TaskKind, list[str]] = {
     "review_stale_dependent": ["keep", "retract", "revise", "defer"],
     "review_feedback": ["retract", "revise", "keep", "defer"],
     "expire_check": ["retract", "revise", "keep", "defer"],
+    "review_concept_drift": ["revise", "keep", "retract", "defer"],
 }
 NEEDS_PROPOSAL = {"merge", "supersede", "retract", "revise"}
 
@@ -125,6 +128,29 @@ def expiry_card(
     }
 
 
+def refinement_card(
+    *, doc: SearchDoc, text: str, concept: Concept, successors: list[tuple[RecordId, str]]
+) -> dict[str, Any]:
+    names = ", ".join(f"{label} ({cid})" for cid, label in successors)
+    return {
+        "finding": "concept_split",
+        "memory": str(doc.memory),
+        "kind": doc.kind,
+        "text": text,
+        "concept": {"id": str(doc.about[0]) if doc.about else None, "label": concept.label},
+        "successors": [{"id": str(cid), "label": label} for cid, label in successors],
+        "instructions": (
+            f"This memory is about {concept.label}, which was split into {names}. It is still "
+            "found for any of them, so nothing is lost; if it is really about one, `revise` it "
+            "(a proposal that changes `about` to that concept) and complete with `revise` and "
+            "that proposal. If it holds for all of them, complete with `keep` (not raised "
+            "again). `retract` if it is no longer true; `defer` parks it."
+        ),
+        "revisions": [str(doc.rev)],
+        "choices": CHOICES["review_concept_drift"],
+    }
+
+
 class TaskService:
     def __init__(
         self,
@@ -133,7 +159,11 @@ class TaskService:
         consolidation: ConsolidationService,
         memory: MemoryService,
         expiry_warn_days: int = 14,
+        ontology: OntologyService | None = None,
+        refine_cap: int = 200,
     ) -> None:
+        self.ontology = ontology
+        self.refine_cap = refine_cap
         self.store = store
         self.now = now
         self.consolidation = consolidation
@@ -185,6 +215,7 @@ class TaskService:
                 ("review_contradiction", key, update.newer.memory, card, update.newer.owner)
             )
         findings += await self._expiry_findings(caller, now)
+        findings += await self._refinement_findings(caller)
         for kind, key, target, card, owner in findings:
             if key in seen:
                 continue
@@ -212,6 +243,40 @@ class TaskService:
         report.closed = await self._close_obsolete(caller, now)
         report.reopened = await self._reopen_rejected(caller, now)
         return report
+
+    async def _refinement_findings(
+        self, caller: Caller
+    ) -> list[tuple[TaskKind, str, RecordId | None, dict[str, Any], Any]]:
+        """Live memories still about a concept that was split: which successor is it about?
+        Optional precision work (recall already finds them), capped per split concept."""
+        if self.ontology is None:
+            return []
+        onto = await self.ontology.ontology()
+        out: list[tuple[TaskKind, str, RecordId | None, dict[str, Any], Any]] = []
+        for cid, c in onto.concepts.items():
+            targets = onto.successors(cid)
+            if c.status != "deprecated" or not targets:
+                continue
+            docs = await self.store.docs(
+                caller.visible_owners(), about=[cid], limit=self.refine_cap
+            )
+            texts = {
+                r: rec.text
+                for r, rec in (await self.store.get_many([d.rev for d in docs])).items()
+                if isinstance(rec, RevisionBase)
+            }
+            succ = [(t, onto.concepts[t].label) for t in targets if t in onto.concepts]
+            for doc in docs:
+                card = refinement_card(
+                    doc=doc.model_copy(update={"about": [cid]}),
+                    text=texts.get(doc.rev, doc.text),
+                    concept=c,
+                    successors=succ,
+                )
+                out.append(
+                    ("review_concept_drift", f"refine:{doc.rev}:{cid}", doc.memory, card, doc.owner)
+                )
+        return out
 
     async def _expiry_findings(
         self, caller: Caller, now: datetime
@@ -394,6 +459,7 @@ class TaskService:
             "expire_check",
             "review_feedback",
             "review_stale_dependent",
+            "review_concept_drift",
         ):
             ops = [
                 RetractMemory(

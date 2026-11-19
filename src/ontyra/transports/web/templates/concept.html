@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ c.label }}{% endblock %}
+{% block body %}
+<h1>{{ c.label }} <code>{{ c.id }}</code>
+  {% if c.status != 'active' %}<span class="tag warn">{{ c.status }}</span>{% endif %}</h1>
+<div class="card">
+  {% if c.definition %}<div>{{ c.definition }}</div>{% endif %}
+  {% if c.aliases %}<div class="small muted">aliases: {{ c.aliases | join(', ') }}</div>{% endif %}
+  {% if c.replaced_by %}<div class="small">replaced by <a href="/ui/concepts/{{ c.replaced_by.id }}">{{ c.replaced_by }}</a></div>{% endif %}
+  {% if c.successors %}<div class="small">split into {% for s in c.successors %}<a href="/ui/concepts/{{ s.id }}">{{ s }}</a>{{ ', ' if not loop.last }}{% endfor %}</div>{% endif %}
+  {% if c.deprecation_reason %}<div class="small muted">{{ c.deprecation_reason }}</div>{% endif %}
+  <div class="small muted">{{ c.memories }} live memor{{ 'y' if c.memories == 1 else 'ies' }} directly about it · scheme {{ c.scheme }} · value type {{ c.value_type }}</div>
+</div>
+<h2>Relations</h2>
+<div class="card">
+{% for r in c.relations %}<div class="small">{{ r.direction }} <code>{{ r.relation }}</code> <a href="/ui/concepts/{{ r.other.id }}">{{ r.label }}</a></div>
+{% else %}<div class="muted small">none</div>{% endfor %}
+</div>
+{% if c.status == 'active' %}
+<h2>Change it</h2>
+<div class="card row small">
+  <a href="/ui/ontology/new?op=edit&concept={{ c.id.id }}">edit</a>
+  <a href="/ui/ontology/new?op=relate&concept={{ c.id.id }}">relate</a>
+  <a href="/ui/ontology/new?op=unrelate&concept={{ c.id.id }}">unrelate</a>
+  <a href="/ui/ontology/new?op=reparent&concept={{ c.id.id }}">reparent</a>
+  <a href="/ui/ontology/new?op=deprecate&concept={{ c.id.id }}">deprecate</a>
+  <a href="/ui/ontology/new?op=merge&concept={{ c.id.id }}">merge into…</a>
+  <a href="/ui/ontology/new?op=split&concept={{ c.id.id }}">split</a>
+</div>
+{% else %}<div class="card row small"><a href="/ui/ontology/new?op=restore&concept={{ c.id.id }}">restore a version</a></div>{% endif %}
+<h2>Investigation: versions and history</h2>
+<div class="card small">
+{% for v in history.versions %}<div><b>v{{ v.seq }}</b> {{ v.at.strftime('%Y-%m-%d %H:%M') }} · {{ v.label }}{% if v.aliases %} ({{ v.aliases | join(', ') }}){% endif %}
+  <span class="tag">{{ v.status }}</span>{% if v.reason %} {{ v.reason }}{% endif %}
+  {% if v.definition %}<div class="muted">{{ v.definition }}</div>{% endif %}</div>
+{% else %}<div class="muted">no earlier versions recorded.</div>{% endfor %}
+{% for e in history.relations %}<div class="muted">{{ e.direction }} {{ e.relation }} {{ e.other }} · added {{ e.added_at.strftime('%Y-%m-%d') }}{% if e.ended_at %} · <b>ended</b> {{ e.ended_at.strftime('%Y-%m-%d') }}{% endif %}</div>{% endfor %}
+<div style="margin-top:8px"><a href="/ui/ontology/history?concept={{ c.id.id }}">changes that touched it ({{ history.changes|length }})</a></div>
+</div>
+{% endblock %}

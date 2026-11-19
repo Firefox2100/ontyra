@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Proposal versions{% endblock %}
+{% block body %}
+<h1>Versions of <a href="/ui/proposals/{{ p.id.id }}">{{ p.id }}</a></h1>
+{% for pair in pairs %}
+<div class="card">
+  <div class="row"><b>v{{ pair.from }} → v{{ pair.to }}</b>{% if pair.why %}<span class="small">{{ pair.why }}</span>{% endif %}
+    {% if pair.by %}<span class="muted small">{{ pair.by }}</span>{% endif %}</div>
+  <pre>{% for kind, line in pair.diff %}<span style="color:{{ 'var(--ok, #2a7)' if kind == 'add' else ('var(--must, #c33)' if kind == 'del' else 'inherit') }}">{{ line }}</span>
+{% endfor %}</pre>
+</div>
+{% else %}<div class="empty">No earlier versions.</div>{% endfor %}
+{% endblock %}

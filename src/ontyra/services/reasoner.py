@@ -115,6 +115,23 @@ class Ontology:
             cur = nxt[0]
             seen.add(cur)
 
+    def successors(self, concept: RecordId) -> list[RecordId]:
+        """What a split concept became (empty when it was not split)."""
+        return sorted(self._out.get("split_into", {}).get(concept, ()), key=str)
+
+    def live(self, concept: RecordId) -> tuple[str, list[RecordId]]:
+        """How a concept may be used by a new writer: `("ok", [it])`, `("redirect", [successor])`
+        for a one-to-one replacement, `("split", [successors])` or `("gone", [])`."""
+        c = self.concepts.get(concept)
+        if c is None or c.status != "deprecated":
+            return "ok", [concept]
+        target = self.resolve(concept)
+        if target != concept and self.concepts[target].status != "deprecated":
+            return "redirect", [target]
+        if self.successors(concept):
+            return "split", self.successors(concept)
+        return "gone", []
+
     # ---- entailment ---------------------------------------------------------
 
     def _up_closure(self, concept: RecordId) -> set[RecordId]:
@@ -165,6 +182,10 @@ class Ontology:
         put(concept, 1.0, "mentioned")
         for old in self._in.get("replaced_by", {}).get(start, ()):
             put(old, W_REPLACED, f"{old.id} was replaced by {start.id}")
+        for old in self._in.get("split_into", {}).get(start, ()):  # what it was split from
+            put(old, W_REPLACED, f"{start.id} was split out of {old.id}")
+        for new in self._out.get("split_into", {}).get(start, ()):  # what a split became
+            put(new, W_REPLACED, f"{start.id} was split into {new.id}")
         for d, dist in self.descendants(start).items():
             put(d, W_DESCENDANT**dist, f"{d.id} is a kind of {start.id}")
         for a, dist in self.ancestors(start).items():

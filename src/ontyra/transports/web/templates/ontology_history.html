@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Ontology history{% endblock %}
+{% block body %}
+<h1>Ontology change history</h1>
+<form class="row" method="get" action="/ui/ontology/history" style="margin-bottom:14px">
+  <input type="text" name="concept" value="{{ concept }}" placeholder="concept id"><input type="text" name="op" value="{{ op }}" placeholder="op"><button>Filter</button>
+</form>
+{% for c in rows %}
+<div class="card">
+  <div class="row"><span class="tag {{ 'ok' if c.status == 'applied' else '' }}">{{ c.status }}</span><span class="tag">{{ c.op }}</span>
+    <span class="muted small">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    {% if c.reverted_by %}<span class="tag warn">reverted</span>{% endif %}</div>
+  <div class="small">{{ c.rationale }}</div>
+  <div class="small muted">{% for t in c.touched or [] %}<a href="/ui/concepts/{{ t.id }}">{{ t }}</a> {% endfor %}</div>
+  {% if c.status == 'applied' and c.undo and not c.reverted_by %}
+  <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/revert" style="margin-top:6px">
+    <input type="text" name="reason" placeholder="why revert"><button class="no">Revert</button></form>{% endif %}
+</div>
+{% else %}<div class="empty">No changes.</div>{% endfor %}
+{% endblock %}

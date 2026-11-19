@@ -8,7 +8,7 @@ description: How to read and write Ontyra long-term memory (recall, remember, co
 Ontyra is a local memory daemon (REST + MCP, default `http://127.0.0.1:8787`). Memories reach
 you in two ways: injected context (a briefing at session start, recall on each prompt, when a
 plugin or hook is installed) and the `ontyra` MCP tools (`recall`, `check`, `briefing`, `ask`,
-`get`, `remember`, `concepts`, `propose_ontology_change`). If you have no MCP tools, the same
+`get`, `remember`, `pending_proposals`, `amend`, `concepts`, `propose_ontology_change`). If you have no MCP tools, the same
 operations are REST calls under `/v1` (`POST /v1/recall`, `/v1/check`, `/v1/proposals`, …; send
 headers `X-Ontyra-Actor: <your name>` and `X-Ontyra-Harness: <harness>`; the schema is at
 `/openapi.json`). If the daemon is unreachable, carry on without memory and tell the user once. Treat injected memories as advice about this user and
@@ -70,8 +70,11 @@ Never claim a memory is saved until the status says `committed`.
 `about` and qualifiers use concept ids. Look a term up with `concepts` (label or alias) before
 using or inventing it. If the concept does not exist, or two names mean one thing, propose a
 change with `propose_ontology_change`: `define`, `add_alias`, `relate`,
-`merge` (duplicates) or `deprecate`, with a one-line `rationale`. Read its `advice` for similar
-concepts, and prefer an alias or a merge over a new concept. Changes wait for the human.
+`merge` (duplicates), `deprecate` or `edit` (a clearer label or definition, the meaning unchanged;
+if the meaning changes, define a new concept and deprecate the old), with a one-line `rationale`.
+Read its `advice` for similar concepts, and prefer an alias, an edit or a merge over a new concept.
+A deprecated concept stays and points to its successor; naming it is redirected or refused.
+Changes wait for the human.
 
 ## Before side effects
 
@@ -109,6 +112,14 @@ user asks you to tidy the memory, or when you are told tasks are waiting; it is 
 
 A human approves held proposals and ontology changes (`/v1/proposals`, `/v1/ontology/changes`).
 Never try to approve your own: the tools refuse, and it defeats the point of review.
+
+A proposal that is still waiting can be changed: call `pending_proposals` (yours, with each one's
+`version`, findings and any reviewer `comments`), then `amend` with the whole corrected `ops` list,
+a `why`, and the `expect_version` you read. Do this instead of sending a second proposal when
+`remember` returns a `pending_similar` finding (another waiting proposal says nearly the same) or a
+`pending_conflict` (another waiting proposal changes the same memory), and when the user says a
+proposal needs changes or its status is `changes_requested`. A reviewer may approve or reject
+single ops of a proposal; the result lists the ones that were not committed, with their reasons.
 
 ## Feedback
 

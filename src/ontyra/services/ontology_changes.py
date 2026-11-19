@@ -12,22 +12,27 @@ from datetime import datetime
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.core import Task
-from ontyra.models.ontology import Concept, concept_slug
+from ontyra.models.ontology import concept_slug
 from ontyra.models.ontology_change import (
     AliasChange,
+    AmendChange,
     Change,
+    ChangePreview,
     ChangeRequest,
     ChangeResult,
     DefineChange,
     DeprecateChange,
+    Effects,
     MergeChange,
     OntologyChange,
     RelateChange,
 )
-from ontyra.ports import Create, Store, Update
+from ontyra.models.proposals import RequestChanges, WithdrawRequest
+from ontyra.ports import Create, Store, Update, Write
 from ontyra.services import errors
 from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.ontology import OntologyService
+from ontyra.services.ontology_plans import OntologyPlanner, Plan
 
 SIMILAR = 0.5
 
@@ -53,13 +58,16 @@ class OntologyChangeService:
         self.ontology = ontology
         self.now = now
         self.auto_apply = set(auto_apply or [])
+        self.planner = OntologyPlanner(ontology, now)
 
     # ---- validation -------------------------------------------------------------------
 
     async def _taken(self, term: str, onto_ids: dict[str, RecordId]) -> RecordId | None:
         return onto_ids.get(term.casefold().strip())
 
-    async def validate(self, change: Change) -> list[str]:
+    async def validate(
+        self, change: Change, caller: Caller, *, exclude: RecordId | None = None
+    ) -> list[str]:
         """Raise `InvalidRequestError`/`NotFoundError` for a bad change; return advice."""
         onto = await self.ontology.ontology()
         names: dict[str, RecordId] = {}
@@ -113,14 +121,49 @@ class OntologyChangeService:
                     raise errors.InvalidRequestError("cannot merge a concept into itself")
                 if onto.concepts[a].status == "deprecated":
                     raise errors.InvalidRequestError(f"{a} is already deprecated")
+            case _:  # the other ops are checked by planning them
+                pass
+        advice += await self._waiting_advice(change, exclude)
+        advice += (await self.planner.plan(change, caller, None)).advice
         return advice
+
+    async def _waiting(self, exclude: RecordId | None) -> list[OntologyChange]:
+        rows = await self.store.select(
+            "ontology_change",
+            where_in={"status": ["pending", "changes_requested"]},
+            limit=200,
+        )
+        return [r for r in rows if isinstance(r, OntologyChange) and r.id != exclude]
+
+    async def _waiting_advice(self, change: Change, exclude: RecordId | None) -> list[str]:
+        """Other changes still waiting that say the same thing or touch the same concept: advice
+        for the writer and the reviewer (never an error)."""
+        waiting = await self._waiting(exclude)
+        advice: list[str] = []
+        for other in waiting[:50]:
+            payload = other.change
+            if isinstance(change, DefineChange) and payload.get("op") == "define":
+                label = str(payload.get("concept", {}).get("label", ""))
+                if _similar(change.concept.label, label):
+                    advice.append(
+                        f"pending_similar: {other.id} (waiting) defines {label!r}: amend it "
+                        "instead of proposing another"
+                    )
+            else:
+                mine = {str(change.model_dump().get(k)) for k in ("concept", "source", "into")}
+                theirs = {str(payload.get(k)) for k in ("concept", "source", "into")}
+                if (mine & theirs) - {"None"}:
+                    advice.append(
+                        f"pending_conflict: {other.id} (waiting) also changes the same concept"
+                    )
+        return advice[:5]
 
     # ---- decide -----------------------------------------------------------------------
 
     async def propose(self, caller: Caller, request: ChangeRequest) -> ChangeResult:
         if not request.rationale.strip():
             raise errors.InvalidRequestError("a change needs a rationale")
-        advice = await self.validate(request.change)
+        advice = await self.validate(request.change, caller)
         now = self.now()
         cid = RecordId("ontology_change", new_id())
         record = OntologyChange(
@@ -136,11 +179,15 @@ class OntologyChangeService:
         if caller.can_review(GLOBAL_OWNER) or (
             caller.can_write(GLOBAL_OWNER) and request.change.op in self.auto_apply
         ):
-            await self._apply(caller, request.change)
             record.status = "applied"
             record.decided_by = caller.actor_id
             record.decided_at = now
-            await self.store.apply([Create.of(cid, record)])
+
+            def finish(plan: Plan) -> Write:
+                record.touched, record.undo = plan.touched, plan.undo
+                return Create.of(cid, record)
+
+            await self._apply(caller, request.change, cid, finish)
         else:
             await self.store.apply(
                 [
@@ -178,37 +225,65 @@ class OntologyChangeService:
             ]
         )
 
-    async def approve(self, reviewer: Caller, change: RecordId) -> ChangeResult:
+    @staticmethod
+    def _version(rec: OntologyChange) -> int:
+        return rec.version or 1
+
+    def _check_version(self, rec: OntologyChange, expected: int | None) -> None:
+        if expected is not None and expected != self._version(rec):
+            raise errors.ConflictError(
+                f"{rec.id} is at version {self._version(rec)}, not {expected}: read it again"
+            )
+
+    def _waiting_or_raise(self, rec: OntologyChange) -> None:
+        if rec.status not in ("pending", "changes_requested"):
+            raise errors.ProposalStateError(f"change {rec.id} is already {rec.status}")
+
+    async def approve(
+        self, reviewer: Caller, change: RecordId, expect_version: int | None = None
+    ) -> ChangeResult:
         if reviewer.actor.kind != "human":
             raise errors.InvalidRequestError("only a human can approve an ontology change")
         if not reviewer.can_write(GLOBAL_OWNER):
             raise errors.PermissionDeniedError("changing the ontology needs global write access")
         rec = await self._get(change)
-        if rec.status != "pending":
-            raise errors.ProposalStateError(f"change {change} is already {rec.status}")
+        self._waiting_or_raise(rec)
+        self._check_version(rec, expect_version)
         parsed = ChangeRequest.model_validate({"change": rec.change, "rationale": rec.rationale})
-        await self.validate(parsed.change)  # the ontology may have moved since the proposal
-        await self._apply(reviewer, parsed.change)
+        # the ontology may have moved since the proposal
+        await self.validate(parsed.change, reviewer, exclude=change)
         now = self.now()
-        await self.store.apply(
-            [
-                Update(
-                    change,
-                    {"status": "applied", "decided_by": reviewer.actor_id, "decided_at": now},
-                )
-            ]
-        )
+
+        def finish(plan: Plan) -> Write:
+            return Update(
+                change,
+                {
+                    "status": "applied",
+                    "decided_by": reviewer.actor_id,
+                    "decided_at": now,
+                    "touched": plan.touched,
+                    "undo": plan.undo,
+                },
+            )
+
+        await self._apply(reviewer, parsed.change, change, finish)
         await self._close_task(change, reviewer)
         return ChangeResult(id=change, status="applied", op=rec.op, advice=rec.advice)
 
-    async def reject(self, reviewer: Caller, change: RecordId, reason: str) -> ChangeResult:
+    async def reject(
+        self,
+        reviewer: Caller,
+        change: RecordId,
+        reason: str,
+        expect_version: int | None = None,
+    ) -> ChangeResult:
         if reviewer.actor.kind != "human":
             raise errors.InvalidRequestError("only a human can reject an ontology change")
         if not reviewer.can_write(GLOBAL_OWNER):
             raise errors.PermissionDeniedError("changing the ontology needs global write access")
         rec = await self._get(change)
-        if rec.status != "pending":
-            raise errors.ProposalStateError(f"change {change} is already {rec.status}")
+        self._waiting_or_raise(rec)
+        self._check_version(rec, expect_version)
         await self.store.apply(
             [
                 Update(
@@ -226,46 +301,231 @@ class OntologyChangeService:
         return ChangeResult(id=change, status="rejected", op=rec.op, reason=reason)
 
     async def pending(self, caller: Caller, limit: int = 50) -> list[OntologyChange]:
-        where: dict[str, object] = {"status": "pending"}
+        where: dict[str, object] = {}
         if not caller.can_write(GLOBAL_OWNER):
             where["owner"] = caller.owner
-        rows = await self.store.select("ontology_change", where, limit=limit, order_by="created_at")
-        return [r for r in rows if isinstance(r, OntologyChange)]
-
-    async def history(self, caller: Caller, limit: int = 50) -> list[OntologyChange]:
-        where = None if caller.can_write(GLOBAL_OWNER) else {"owner": caller.owner}
         rows = await self.store.select(
-            "ontology_change", where, limit=limit, order_by="created_at", descending=True
+            "ontology_change",
+            where,
+            where_in={"status": ["pending", "changes_requested"]},
+            limit=limit,
+            order_by="created_at",
         )
         return [r for r in rows if isinstance(r, OntologyChange)]
 
+    async def history(
+        self,
+        caller: Caller,
+        limit: int = 50,
+        *,
+        concept: RecordId | None = None,
+        op: str | None = None,
+    ) -> list[OntologyChange]:
+        """Applied and decided changes, newest first (the investigation view); `concept`
+        keeps those that touched it, `op` one kind."""
+        where: dict[str, object] | None = (
+            None if caller.can_write(GLOBAL_OWNER) else {"owner": caller.owner}
+        )
+        if op:
+            where = {**(where or {}), "op": op}
+        rows = await self.store.select(
+            "ontology_change",
+            where,
+            limit=2000 if concept else limit,
+            order_by="created_at",
+            descending=True,
+        )
+        found = [r for r in rows if isinstance(r, OntologyChange)]
+        if concept is not None:
+            found = [r for r in found if concept in (r.touched or [])]
+        return found[:limit]
+
     # ---- apply ------------------------------------------------------------------------
 
-    async def _apply(self, caller: Caller, change: Change) -> None:
-        match change:
-            case DefineChange(concept=d):
-                await self.ontology.define(caller, d)
-            case RelateChange(relation=r):
-                await self.ontology.relate(caller, r)
-            case AliasChange(concept=term, alias=alias):
-                await self._add_aliases(await self.ontology.resolve(term), [alias])
-            case DeprecateChange(concept=term, replaced_by=other):
-                await self.ontology.deprecate(
-                    caller,
-                    await self.ontology.resolve(term),
-                    await self.ontology.resolve(other) if other else None,
-                )
-            case MergeChange(source=src, into=dst):
-                a, b = await self.ontology.resolve(src), await self.ontology.resolve(dst)
-                onto = await self.ontology.ontology()
-                old: Concept = onto.concepts[a]
-                await self._add_aliases(b, [old.label, *old.aliases])
-                await self.ontology.deprecate(caller, a, b)
+    async def _apply(
+        self,
+        caller: Caller,
+        change: Change,
+        change_id: RecordId,
+        finish: Callable[[Plan], Write],
+    ) -> Plan:
+        """Plan the change from the current ontology and commit it in one batch together with
+        the change record (`finish` builds that write from the plan), one writer at a time."""
+        async with self.ontology.lock:
+            plan = await self.planner.plan(change, caller, change_id)
+            await self.store.apply([*plan.writes, finish(plan)])
+            self.ontology.invalidate()
+        return plan
 
-    async def _add_aliases(self, concept: RecordId, aliases: list[str]) -> None:
-        onto = await self.ontology.ontology()
-        c = onto.concepts[concept]
-        merged = list(dict.fromkeys([*c.aliases, *(a.strip() for a in aliases if a.strip())]))
-        merged = [a for a in merged if a.casefold() != c.label.casefold()]
-        await self.store.apply([Update(concept, {"aliases": merged, "updated_at": self.now()})])
-        self.ontology.invalidate()
+    def _can_amend(self, who: Caller, rec: OntologyChange) -> bool:
+        return rec.proposed_by == who.actor_id or (
+            who.actor.kind == "human" and who.can_write(GLOBAL_OWNER)
+        )
+
+    def _stamp(self, who: Caller) -> dict[str, str]:
+        return {"by": str(who.actor_id), "at": self.now().isoformat()}
+
+    async def amend(self, caller: Caller, change: RecordId, request: AmendChange) -> ChangeResult:
+        """A new version of a waiting change (its proposer or a human reviewer), validated
+        again; the older version is kept in its history."""
+        rec = await self._get(change)
+        self._waiting_or_raise(rec)
+        if not self._can_amend(caller, rec):
+            raise errors.PermissionDeniedError("only its proposer or a reviewer may amend this")
+        if not request.why.strip():
+            raise errors.InvalidRequestError("an amendment needs a `why`")
+        self._check_version(rec, request.expect_version)
+        advice = await self.validate(request.change, caller, exclude=change)
+        version = self._version(rec)
+        entry = {
+            "version": version,
+            "change": rec.change,
+            "why": request.why,
+            **self._stamp(caller),
+        }
+        await self.store.apply(
+            [
+                Update(
+                    change,
+                    {
+                        "change": request.change.model_dump(mode="json"),
+                        "op": request.change.op,
+                        "version": version + 1,
+                        "history": [*(rec.history or []), entry],
+                        "status": "pending",
+                        "advice": advice,
+                    },
+                )
+            ]
+        )
+        return ChangeResult(
+            id=change,
+            status="pending",
+            op=request.change.op,
+            advice=advice,
+            reason=f"version {version + 1}",
+        )
+
+    async def withdraw(
+        self, caller: Caller, change: RecordId, request: WithdrawRequest
+    ) -> ChangeResult:
+        rec = await self._get(change)
+        self._waiting_or_raise(rec)
+        if not self._can_amend(caller, rec):
+            raise errors.PermissionDeniedError("only its proposer or a reviewer may withdraw this")
+        await self.store.apply(
+            [
+                Update(
+                    change,
+                    {
+                        "status": "withdrawn",
+                        "decided_by": caller.actor_id,
+                        "decided_at": self.now(),
+                        "reason": request.reason,
+                    },
+                )
+            ]
+        )
+        await self._close_task(change, caller)
+        return ChangeResult(id=change, status="withdrawn", op=rec.op, reason=request.reason)
+
+    async def request_changes(
+        self, reviewer: Caller, change: RecordId, request: RequestChanges
+    ) -> ChangeResult:
+        """Send a waiting change back to its proposer with a comment."""
+        if reviewer.actor.kind != "human" or not reviewer.can_write(GLOBAL_OWNER):
+            raise errors.PermissionDeniedError("only a human reviewer can ask for changes")
+        rec = await self._get(change)
+        self._waiting_or_raise(rec)
+        self._check_version(rec, request.expect_version)
+        if not request.comment.strip():
+            raise errors.InvalidRequestError("say what should change")
+        comment = {"version": self._version(rec), "text": request.comment, **self._stamp(reviewer)}
+        await self.store.apply(
+            [
+                Update(
+                    change,
+                    {"status": "changes_requested", "comments": [*(rec.comments or []), comment]},
+                )
+            ]
+        )
+        return ChangeResult(
+            id=change, status="changes_requested", op=rec.op, reason=request.comment
+        )
+
+    async def revert(self, reviewer: Caller, change: RecordId, why: str) -> ChangeResult:
+        """Undo an applied change by applying its stored undo, as one new change. Refused when a
+        later change touched the same concepts (revert those first)."""
+        if reviewer.actor.kind != "human":
+            raise errors.InvalidRequestError("only a human can revert an ontology change")
+        if not reviewer.can_write(GLOBAL_OWNER):
+            raise errors.PermissionDeniedError("changing the ontology needs global write access")
+        if not why.strip():
+            raise errors.InvalidRequestError("a revert needs a reason")
+        rec = await self._get(change)
+        if rec.status != "applied" or not rec.undo:
+            raise errors.ProposalStateError(f"{change} cannot be reverted (it is {rec.status})")
+        if rec.reverted_by is not None:
+            raise errors.ProposalStateError(f"{change} was already reverted by {rec.reverted_by}")
+        mine = set(rec.touched or [])
+        everything = [
+            c
+            for c in await self.history(reviewer, 2000)
+            if c.id is not None and c.id != change and c.status == "applied"
+        ]
+        newer = {c.id for c in everything if c.created_at > rec.created_at}
+        later = [
+            c
+            for c in everything
+            if c.id in newer
+            and c.reverted_by is None  # an undone change no longer counts
+            and c.reverts not in newer  # nor does a revert of a later change: they cancel out
+            and mine & set(c.touched or [])
+        ]
+        if later:
+            raise errors.ConflictError(
+                "later changes touched the same concepts: revert them first ("
+                + ", ".join(str(c.id) for c in later[:5])
+                + ")"
+            )
+        undo = [ChangeRequest(change=u, rationale=why).change for u in rec.undo]  # type: ignore[arg-type]
+        now = self.now()
+        rid = RecordId("ontology_change", new_id())
+        async with self.ontology.lock:
+            touched = frozenset(mine)
+            plans = [await self.planner.plan(u, reviewer, rid, touched) for u in undo]
+            record = OntologyChange(
+                owner=reviewer.owner,
+                change={"op": "revert", "change": str(change)},
+                op="revert",
+                rationale=why,
+                status="applied",
+                proposed_by=reviewer.actor_id,
+                proposer_kind=reviewer.actor.kind,
+                created_at=now,
+                decided_by=reviewer.actor_id,
+                decided_at=now,
+                touched=sorted({t for p in plans for t in p.touched}, key=str),
+                undo=[u for p in plans for u in p.undo],
+                reverts=change,
+            )
+            await self.store.apply(
+                [
+                    *(w for p in plans for w in p.writes),
+                    Create.of(rid, record),
+                    Update(change, {"reverted_by": rid}),
+                ]
+            )
+            self.ontology.invalidate()
+        return ChangeResult(id=rid, status="applied", op="revert")
+
+    async def preview(self, caller: Caller, request: ChangeRequest) -> ChangePreview:
+        """What the change would do now, without proposing or writing anything."""
+        advice = await self.validate(request.change, caller)
+        plan = await self.planner.plan(request.change, caller, None)
+        memories = {str(c): await self.ontology.count_memories(caller, c) for c in plan.touched}
+        return ChangePreview(
+            op=request.change.op,
+            advice=advice,
+            effects=Effects(summary=plan.lines, touched=plan.touched, memories=memories),
+        )

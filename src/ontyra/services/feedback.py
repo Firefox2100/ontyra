@@ -307,7 +307,7 @@ class FeedbackService:
         for f in cited:
             trace = traces.get(f.trace) if f.trace else None
             if isinstance(trace, RecallTrace) and any(
-                r["rev"] == str(f.revision) for r in trace.scoring.get("candidates", [])
+                r["rev"] == str(f.revision) for r in (trace.scoring or {}).get("candidates", [])
             ):
                 count += 1
         return count

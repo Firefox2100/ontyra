@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from ontyra.models import Record, RecordId, new_id, registry
 from ontyra.models.anchors import Anchor
-from ontyra.models.core import Episode, Memory, RevState
+from ontyra.models.core import Episode, Memory, Proposal, RevState
 from ontyra.models.episodes import EpisodeSettings
 from ontyra.models.kinds import DirectiveRev, RevisionBase, fields_guide
 from ontyra.models.proposals import (
@@ -98,7 +98,11 @@ class ProposalValidator:
         self.ontology = ontology
         self.anchors = anchors
 
-    async def validate(self, caller: Caller, request: ProposalRequest) -> Validation:
+    async def validate(
+        self, caller: Caller, request: ProposalRequest, *, exclude: RecordId | None = None
+    ) -> Validation:
+        """Check a proposal. `exclude` is a pending proposal being amended: it is not compared
+        with itself."""
         v = Validation(owner=GLOBAL_OWNER if request.space == "global" else caller.owner)
         ctx = _Ctx(self, caller, v)
         if v.owner != caller.owner and not caller.can_write(v.owner):
@@ -128,7 +132,76 @@ class ProposalValidator:
                 await ctx.link(i, op)
             else:
                 await ctx.annotate(i, op)
+        await self._pending_findings(ctx, request, exclude)
         return v
+
+    async def _visible_pending(self, caller: Caller, exclude: RecordId | None) -> list[Proposal]:
+        """Proposals still waiting that the caller may see (its own, and the global ones when it
+        may write the global memory): what a new write should know about before duplicating."""
+        statuses = {"status": ["pending", "changes_requested"]}
+        if caller.can_write(GLOBAL_OWNER):
+            rows = await self.store.select(
+                "proposal",
+                where_in=statuses,
+                where_any={"owner": caller.owner, "space": "global"},
+                limit=200,
+            )
+        else:
+            rows = await self.store.select(
+                "proposal", {"owner": caller.owner}, where_in=statuses, limit=200
+            )
+        return [r for r in rows if isinstance(r, Proposal) and r.id != exclude]
+
+    async def _pending_findings(
+        self, ctx: _Ctx, request: ProposalRequest, exclude: RecordId | None
+    ) -> None:
+        """Advice about other waiting proposals (never an error, never used by recall)."""
+        waiting = await self._visible_pending(ctx.caller, exclude)
+        if not waiting:
+            return
+        for i, op in enumerate(request.ops):
+            hits = 0
+            for p in waiting:
+                for n, other in enumerate(p.ops):
+                    if hits >= 5:
+                        break
+                    kind = other.get("op")
+                    if isinstance(op, AddMemory) and kind == "add" and other.get("kind") == op.kind:
+                        other_fields: dict[str, Any] = other.get("fields") or {}
+                        text = str(other_fields.get("text", ""))
+                        mine = str(op.fields.get("text", ""))
+                        score = similarity(mine, text)
+                        if mine and score >= SIMILAR_THRESHOLD:
+                            hits += 1
+                            ctx.warn(
+                                i,
+                                "pending_similar",
+                                f"{p.id} (waiting for review) op {n} says nearly the same: "
+                                f"{text[:100]!r}",
+                                proposal=str(p.id),
+                                op_number=n,
+                                similarity=round(score, 2),
+                                hint="amend that proposal instead of adding another",
+                            )
+                    target = (
+                        op.memory
+                        if isinstance(op, ReviseMemory | RetractMemory)
+                        else op.target
+                        if isinstance(op, SupersedeMemory)
+                        else None
+                    )
+                    if target is not None and kind in ("revise", "retract", "supersede"):
+                        other_target = other.get("memory") or other.get("target")
+                        if other_target is not None and str(other_target) == str(target):
+                            hits += 1
+                            ctx.warn(
+                                i,
+                                "pending_conflict",
+                                f"{p.id} (waiting for review) op {n} also changes {target}",
+                                proposal=str(p.id),
+                                op_number=n,
+                                hint="amend that proposal, or wait for it to be decided",
+                            )
 
 
 class _Ctx:
@@ -357,18 +430,23 @@ class _Ctx:
             return model
         onto = await self.o.ontology.ontology()
         bad = False
+        about: list[RecordId] = []
         for cid in model.about:
-            c = onto.concepts.get(cid)
-            if c is None:
+            if cid not in onto.concepts:
                 self.error(i, "unknown_concept", f"{cid} does not exist", concept=str(cid))
                 bad = True
-            elif c.status == "deprecated":
-                self.warn(
-                    i,
-                    "deprecated_concept",
-                    f"{cid} is deprecated" + (f"; use {c.replaced_by}" if c.replaced_by else ""),
-                    concept=str(cid),
+                continue
+            live, note = await self.o.ontology.use(cid)
+            if live is None:
+                self.error(
+                    i, "deprecated_concept", note or f"{cid} is deprecated", concept=str(cid)
                 )
+                bad = True
+                continue
+            if live != cid:
+                self.warn(i, "deprecated_concept", f"{note}: used instead", concept=str(cid))
+            about.append(live)
+        model.about = list(dict.fromkeys(about))
         for q in model.qualifiers:
             qc = onto.concepts.get(q.concept)
             if qc is None:

@@ -102,9 +102,22 @@ body=$(jq -n \
 
 reply=$(post "$path" "$body") || exit 0
 
-silent=$(jq -r 'if .silent == false then "false" else "true" end' <<<"$reply" 2>/dev/null) || exit 0
-rendered=$(jq -r '.rendered // ""' <<<"$reply" 2>/dev/null) || exit 0
-[ "$silent" = "true" ] || [ -z "$rendered" ] && exit 0
+silent=$(jq -r 'if .silent == false then "false" else "true" end' <<<"$reply" 2>/dev/null) || silent=true
+rendered=$(jq -r '.rendered // ""' <<<"$reply" 2>/dev/null) || rendered=""
+[ "$silent" = "true" ] && rendered=""
 
-jq -n --arg event "$event" --arg text "$rendered" \
+# At the start of a session: say when a reviewer sent proposals back with comments.
+note=""
+if [ "$event" = SessionStart ]; then
+  waiting=$(curl -sS --max-time 4 "$url/v1/proposals?limit=50" "${auth[@]}" \
+    -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" 2>/dev/null) || waiting='[]'
+  note=$(jq -r '[.[]? | select(.status == "changes_requested")] | if length == 0 then "" else
+    "Ontyra: \(length) proposal(s) need changes before review (" + (map(.proposal // .id) | join(", ")) +
+    "). Call pending_proposals to read the comments, then amend them." end' <<<"$waiting" 2>/dev/null) || note=""
+fi
+text="$rendered"
+[ -n "$note" ] && text="${text:+$text$'\n\n'}$note"
+[ -n "$text" ] || exit 0
+
+jq -n --arg event "$event" --arg text "$text" \
   '{hookSpecificOutput: {hookEventName: $event, additionalContext: $text}}'

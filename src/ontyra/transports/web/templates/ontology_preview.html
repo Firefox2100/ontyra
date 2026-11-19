@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Preview{% endblock %}
+{% block body %}
+<h1>Preview</h1>
+{% if error %}<div class="card"><span class="tag must">cannot apply</span> {{ error }}</div>
+<a href="javascript:history.back()">back</a>
+{% else %}
+<div class="card">
+  <div><span class="tag">{{ p.op }}</span> {{ rationale }}</div>
+  {% for line in p.effects.summary %}<div style="margin-top:6px">{{ line }}</div>{% endfor %}
+  {% for cid, n in p.effects.memories.items() %}{% if n %}<div class="small muted">{{ n }} live memor{{ 'y' if n == 1 else 'ies' }} about <code>{{ cid }}</code></div>{% endif %}{% endfor %}
+  {% for a in p.advice %}<div class="small"><span class="tag warn">advice</span> {{ a }}</div>{% endfor %}
+</div>
+<form method="post" action="/ui/ontology/apply" class="row">
+{% for k, v in fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+<button class="go">Apply</button> <a href="javascript:history.back()">back</a>
+</form>
+{% endif %}
+{% endblock %}

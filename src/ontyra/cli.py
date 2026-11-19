@@ -22,6 +22,66 @@ from ontyra.config import Settings, load_settings
 from ontyra.storage import Database, SchemaManager
 
 
+async def _backup_command(
+    settings: Settings, command: str, path: str | None, *, keep: int | None, yes: bool
+) -> int:
+    """`db export` (a SurrealQL file of the whole database) and `db import` (into an empty one)."""
+    from datetime import UTC, datetime
+
+    from ontyra.storage import backup
+
+    cfg = settings.db
+    creds = {
+        "namespace": cfg.namespace,
+        "database": cfg.database,
+        "username": cfg.username,
+        "password": cfg.password.get_secret_value(),
+    }
+    target = f"{cfg.url} ns={cfg.namespace} db={cfg.database}"
+    if command == "export":
+        file = Path(path or "backups")
+        if file.suffix != ".surql":
+            file = file / backup.default_name(datetime.now(UTC))
+        text = await backup.export_sql(cfg.url, timeout=600, **creds)
+        await asyncio.to_thread(backup.write_private, file, text)
+        print(f"exported {target} to {file} ({len(text) // 1024} KiB)")
+        if keep is not None:
+            for old in await asyncio.to_thread(backup.prune, file.parent, keep):
+                print(f"  removed older export {old}")
+        return 0
+    if not path:
+        print("db import needs the file to import", file=sys.stderr)
+        return 2
+    db = await Database.connect(
+        cfg.url,
+        namespace=cfg.namespace,
+        database=cfg.database,
+        username=cfg.username,
+        password=cfg.password.get_secret_value(),
+        timeout=cfg.timeout,
+    )
+    try:
+        try:
+            rows: list[Any] = (await db.query("SELECT count() FROM memory GROUP ALL"))[0]
+        except Exception:  # no schema yet: an empty database
+            rows = []
+        if rows and rows[0].get("count"):
+            print(
+                f"{target} already holds memories: import only into an empty database",
+                file=sys.stderr,
+            )
+            return 2
+    finally:
+        await db.close()
+    if not yes:
+        print(f"refusing to import {path} into {target} without --yes", file=sys.stderr)
+        return 2
+    text = await asyncio.to_thread(Path(path).read_text, "utf-8")
+    await backup.import_sql(cfg.url, text, timeout=600, **creds)
+    print(f"imported {path} into {target}")
+    return 0
+
+
 async def _db_command(settings: Settings, command: str, *, yes: bool) -> int:
     db = await Database.connect(
         settings.db.url,
@@ -127,7 +187,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     serve.add_argument("--host", help="bind address (default: ONTYRA_SERVER__HOST)")
     serve.add_argument("--port", type=int, help="port (default: ONTYRA_SERVER__PORT)")
     db = sub.add_parser("db", help="schema administration")
-    db.add_argument("action", choices=["apply", "sync", "wipe", "status"])
+    db.add_argument("action", choices=["apply", "sync", "wipe", "status", "export", "import"])
+    db.add_argument(
+        "path", nargs="?", help="export: file or directory (default ./backups); import: file"
+    )
+    db.add_argument(
+        "--keep", type=int, help="export: keep only this many newest exports in the directory"
+    )
     db.add_argument("--yes", action="store_true", help="confirm destructive actions (wipe)")
     cal = sub.add_parser(
         "calibrate",
@@ -160,6 +226,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "calibrate":
         saved = json.loads(Path(args.source).read_text("utf-8")) if args.source else None
         return asyncio.run(_calibrate_command(settings, saved, args.out, yes=args.yes))
+    if args.action in ("export", "import"):
+        return asyncio.run(
+            _backup_command(settings, args.action, args.path, keep=args.keep, yes=args.yes)
+        )
     return asyncio.run(_db_command(settings, args.action, yes=args.yes))
 
 

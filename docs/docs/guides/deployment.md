@@ -47,8 +47,19 @@ after storing memories, re-embed: wipe and start over (pre-release).
 
 ## Backups
 
-Everything is in `./data/surrealdb`. Stop the stack (`docker compose stop`), copy the directory,
-start it again.
+Export the database as one SurrealQL file (schema and every record) while the stack is running:
+
+```bash
+ontyra db export                       # ./backups/ontyra-YYYYmmdd-HHMMSS.surql, readable by you only
+ontyra db export /srv/backups --keep 14    # into a directory, keeping the 14 newest exports
+ontyra db import backups/ontyra-....surql --yes   # into an EMPTY database (refuses otherwise)
+```
+
+It reads the same `ONTYRA_DB__*` settings as the daemon and needs a SurrealDB server (not an
+embedded database). Take an export before every upgrade that changes the schema, and schedule one
+(a cron job or systemd timer running `ontyra db export /path --keep N`). The files hold all your
+memories: keep them as private as the database. Copying `./data/surrealdb` with the stack stopped
+(`docker compose stop`) also works.
 
 ## Without Docker
 

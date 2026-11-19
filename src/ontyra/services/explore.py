@@ -22,6 +22,7 @@ from ontyra.models.recall import (
     SearchRequest,
     SearchResult,
 )
+from ontyra.models.registry import registry
 from ontyra.models.search import RecallTrace
 from ontyra.ports import Store
 from ontyra.services import errors
@@ -29,6 +30,7 @@ from ontyra.services.context import Caller
 from ontyra.services.memory import MemoryService
 from ontyra.services.ontology import OntologyService
 from ontyra.services.recall import Candidate, RecallService, assess
+from ontyra.services.text import coverage
 from ontyra.services.validation import rev_state_id
 from ontyra.services.views import MemoryDetail, Neighbors
 
@@ -39,7 +41,7 @@ VERBS = [
     "get(memory, expand=history|links|evidence|applies) - one memory in depth",
     "neighbors(memory|concept) - what is connected",
     "ask(question) - applies_here, supersession_chain, absence, conflicts, changes_since, "
-    "prerequisites_of, explain",
+    "as_of, prerequisites_of, explain",
     "check(intent) - before an action with side effects",
     "concepts(term) - resolve a term to ontology concepts",
 ]
@@ -286,6 +288,8 @@ class ExplorationService:
             return await self._conflicts(caller, request)
         if q == "changes_since":
             return await self._changes(caller, request)
+        if q == "as_of":
+            return await self._as_of(caller, request)
         if q == "prerequisites_of":
             mem = self._need_memory(request)
             view = await self.memory.get_memory(caller, mem)
@@ -331,6 +335,59 @@ class ExplorationService:
             question="conflicts",
             answer={"contradictions": pairs},
             summary=f"{len(pairs)} unresolved contradiction(s) among applicable memories",
+        )
+
+    async def _as_of(self, caller: Caller, request: AskRequest) -> AskResult:
+        """The memories as they stood at `at`: each memory's revision that was in force then
+        (committed, valid, not yet superseded, retracted or expired), optionally narrowed to a
+        `topic` by word overlap. It reads the revision history, not the search index."""
+        if request.at is None:
+            raise errors.InvalidRequestError("as_of needs `at`")
+        at = request.at
+        owners = set(caller.visible_owners())
+        ids = await self.store.revision_states_at(at, limit=2000)
+        # a revision's status record shares its id part (`fact_rev:X` <-> `rev_state:X`)
+        tables = [spec.table for spec in registry.kinds.values()]
+        revs = await self.store.get_many([RecordId(t, i.id) for i in ids for t in tables])
+        memories = await self.store.get_many(
+            list({r.memory for r in revs.values() if isinstance(r, RevisionBase)})
+        )
+        rows: list[dict[str, Any]] = []
+        for rid, rev in revs.items():
+            if not isinstance(rev, RevisionBase):
+                continue
+            memory = memories.get(rev.memory)
+            if not isinstance(memory, Memory) or memory.owner not in owners:
+                continue
+            expires = getattr(rev, "expires_at", None)
+            if expires is not None and expires <= at:
+                continue
+            rows.append(
+                {
+                    "memory": str(memory.id),
+                    "revision": str(rid),
+                    "kind": memory.kind,
+                    "seq": rev.seq,
+                    "text": rev.text,
+                    "current_now": memory.current == rid and memory.status == "active",
+                }
+            )
+        if request.topic:
+            scored = [(coverage(request.topic, r["text"]), r) for r in rows]
+            rows = [r for c, r in sorted(scored, key=lambda x: -x[0]) if c > 0]
+        rows = rows[:50]
+        changed = sum(not r["current_now"] for r in rows)
+        return AskResult(
+            question="as_of",
+            answer={"as_of": at.isoformat(), "memories": rows},
+            summary=(
+                f"{len(rows)} memory(ies) in force at {at.isoformat()}"
+                + (
+                    f"; {changed} of them have since been revised, superseded or retracted"
+                    if changed
+                    else ""
+                )
+            ),
         )
 
     async def _changes(self, caller: Caller, request: AskRequest) -> AskResult:

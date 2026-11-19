@@ -561,7 +561,7 @@ class RecallService:
                     request=request.model_dump(mode="json"),
                     items=[i.model_dump(mode="json", exclude={"detail"}) for i in items],
                     dropped=dropped,
-                    scoring=scoring or {},
+                    scoring=scoring or None,
                     created_at=now,
                 ),
             )
@@ -653,7 +653,26 @@ class RecallService:
                 dropped.append(
                     {"rev": str(c.rev), "reason": f"below threshold ({c.relevance:.2f})"}
                 )
+        relevant += await self.triggered_extras(caller, request, relevant)
         return await self._finish(caller, request, "recall", relevant, [], ctx, dropped)
+
+    async def triggered_extras(
+        self, caller: Caller, request: RecallRequest, have: list[Candidate]
+    ) -> list[Candidate]:
+        """The trigger lane of input-driven recall: memories whose `trigger` qualifier is
+        satisfied by the conditions in `request.context` are delivered whatever the message says
+        (a briefing already does this). Needs signals: a trigger is a condition on observed
+        state."""
+        if not request.context.signals:
+            return []
+        _, keep = await self.briefing_candidates(caller, request)
+        known = {c.rev for c in have}
+        extra = [
+            c
+            for c in keep
+            if c.assessment is not None and c.assessment.outcome.triggered and c.rev not in known
+        ]
+        return await self.rank(extra, query=None, ranked_by_text=False) if extra else []
 
     async def briefing_candidates(
         self, caller: Caller, request: RecallRequest, topics: str = ""

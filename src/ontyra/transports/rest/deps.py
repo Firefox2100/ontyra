@@ -23,6 +23,7 @@ from ontyra.services import (
     errors,
 )
 from ontyra.services.context import GLOBAL_OWNER
+from ontyra.services.ontology_check import OntologyChecker
 from ontyra.transports.auth import resolve_caller
 
 
@@ -43,6 +44,9 @@ class Services(Protocol):
 
     @property
     def ontology_changes(self) -> OntologyChangeService: ...
+
+    @property
+    def ontology_check(self) -> OntologyChecker: ...
 
     @property
     def anchors(self) -> AnchorService: ...
@@ -93,6 +97,13 @@ def get_ontology_change_service(services: ServicesDep) -> OntologyChangeService:
 
 
 OntologyChangeServiceDep = Annotated[OntologyChangeService, Depends(get_ontology_change_service)]
+
+
+def get_ontology_checker(services: ServicesDep) -> OntologyChecker:
+    return services.ontology_check
+
+
+OntologyCheckerDep = Annotated[OntologyChecker, Depends(get_ontology_checker)]
 
 
 def get_anchor_service(services: ServicesDep) -> AnchorService:

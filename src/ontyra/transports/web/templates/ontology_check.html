@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Ontology health{% endblock %}
+{% block body %}
+<h1>Ontology health</h1>
+<div class="card small muted">{{ report.concepts }} concepts · {{ report.live_edges }} live relations · {{ report.findings|length }} finding(s). Read-only: nothing is fixed automatically.</div>
+{% for f in report.findings %}
+<div class="card"><span class="tag {{ 'must' if f.severity == 'error' else ('warn' if f.severity == 'warning' else '') }}">{{ f.severity }}</span>
+  <code>{{ f.code }}</code> {{ f.message }}
+  <div class="small muted">{% for c in f.concepts %}<a href="/ui/concepts/{{ c.id }}">{{ c }}</a> {% endfor %}
+  {% if f.change %}· last change <a href="/ui/ontology/history">{{ f.change }}</a>{% endif %}</div></div>
+{% else %}<div class="empty">No findings.</div>{% endfor %}
+{% endblock %}

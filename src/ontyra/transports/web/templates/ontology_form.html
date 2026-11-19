@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Change the ontology{% endblock %}
+{% block body %}
+<h1>Change the ontology</h1>
+<div class="row small" style="margin-bottom:10px">{% for o in ops %}<a href="/ui/ontology/new?op={{ o }}&concept={{ concept }}" class="{{ 'on' if o == op }}">{{ o }}</a> {% endfor %}</div>
+<form class="card" method="post" action="/ui/ontology/preview">
+<input type="hidden" name="op" value="{{ op }}">
+{% if op == 'define' %}
+  <label>Label <input type="text" name="label" required></label><br>
+  <label>Definition <input type="text" name="definition" size="60"></label><br>
+  <label>Aliases (comma separated) <input type="text" name="aliases"></label><br>
+  <label>Is a (comma separated) <input type="text" name="is_a"></label>
+{% elif op == 'edit' %}
+  <p class="small muted">Say the same thing better. If the meaning changes, define a new concept and deprecate this one.</p>
+  <label>Concept <input type="text" name="concept" value="{{ concept }}" required></label><br>
+  <label>New label <input type="text" name="label"></label><br>
+  <label>New definition <input type="text" name="definition" size="60"></label><br>
+  <label>Add aliases <input type="text" name="add_aliases"></label><br>
+  <label>Remove aliases <input type="text" name="remove_aliases"></label>
+{% elif op == 'relate' or op == 'unrelate' %}
+  <label>Source <input type="text" name="source" value="{{ concept }}" required></label>
+  <label>Relation <select name="relation">{% for r in ['is_a','part_of','instance_of','same_as','alternative_to','depends_on','disjoint_with'] %}<option>{{ r }}</option>{% endfor %}</select></label>
+  <label>Target <input type="text" name="target" required></label>
+{% elif op == 'reparent' %}
+  <label>Concept <input type="text" name="concept" value="{{ concept }}" required></label>
+  <label>Relation <select name="relation"><option>is_a</option><option>part_of</option></select></label><br>
+  <label>From parent <input type="text" name="from_parent" required></label>
+  <label>To parent <input type="text" name="to_parent" required></label>
+{% elif op == 'deprecate' %}
+  <label>Concept <input type="text" name="concept" value="{{ concept }}" required></label>
+  <label>Replaced by (optional) <input type="text" name="replaced_by"></label><br>
+  <label>Reason <input type="text" name="reason" size="60"></label>
+{% elif op == 'merge' %}
+  <label>Source (becomes an alias, deprecated) <input type="text" name="source" value="{{ concept }}" required></label>
+  <label>Into <input type="text" name="into" required></label>
+{% elif op == 'split' %}
+  <label>Source <input type="text" name="source" value="{{ concept }}" required></label><br>
+  <label>Into (one per line: an existing concept, or a new label)<br><textarea name="into" rows="4" cols="50" required></textarea></label>
+{% elif op == 'restore' %}
+  <label>Concept <input type="text" name="concept" value="{{ concept }}" required></label>
+  <label>Version <input type="number" name="version" min="1" required></label>
+{% endif %}
+<br><label>Why <input type="text" name="rationale" size="70" required></label>
+<div style="margin-top:10px"><button>Preview</button></div>
+</form>
+{% endblock %}

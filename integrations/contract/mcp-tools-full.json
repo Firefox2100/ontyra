@@ -1,11 +1,1083 @@
 [
   {
+    "description": "Replace the ops of a proposal that is still waiting (`pending` or `changes_requested`) with a corrected list and say why; it becomes a new version and goes back to review. Use this instead of sending a second proposal when a `pending_similar` finding names it, or when a reviewer asked for changes. Pass `expect_version` (from `pending_proposals`).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "type": "string"
+        },
+        "request": {
+          "additionalProperties": false,
+          "description": "Replace the ops of a pending proposal: a new version, validated again.",
+          "properties": {
+            "expect_version": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "The version you based this on; refused when it moved on"
+            },
+            "ops": {
+              "items": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "Create a NEW memory (item + first revision). This is how anything gets stored: pick the\n`kind` and give its `fields`. Say where it applies (`scope: universal`, or `anchors` /\n`about`), or a directive is flagged as unscoped.",
+                    "properties": {
+                      "derived_from": {
+                        "default": [],
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "description": "A record id as `table:id`.",
+                              "examples": [
+                                "memory:0194f3a1b2c3d4e5f6a7"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "evidence": {
+                        "default": [],
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "properties": {
+                            "episode": {
+                              "anyOf": [
+                                {
+                                  "description": "A record id as `table:id`.",
+                                  "examples": [
+                                    "memory:0194f3a1b2c3d4e5f6a7"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Optional: the episode id, when you know it."
+                            },
+                            "quote": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Words from the conversation, copied literally (a sentence)."
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "fields": {
+                        "additionalProperties": true,
+                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
+                        "type": "object"
+                      },
+                      "kind": {
+                        "enum": [
+                          "fact",
+                          "directive",
+                          "decision",
+                          "event",
+                          "procedure",
+                          "task",
+                          "lesson"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "add",
+                        "default": "add",
+                        "type": "string"
+                      },
+                      "ref": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "valid_from": {
+                        "anyOf": [
+                          {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "fields",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "New revision of an existing memory; `fields` overlay the current revision.",
+                    "properties": {
+                      "evidence": {
+                        "default": [],
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "properties": {
+                            "episode": {
+                              "anyOf": [
+                                {
+                                  "description": "A record id as `table:id`.",
+                                  "examples": [
+                                    "memory:0194f3a1b2c3d4e5f6a7"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Optional: the episode id, when you know it."
+                            },
+                            "quote": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "Words from the conversation, copied literally (a sentence)."
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "fields": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "memory": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "revise",
+                        "default": "revise",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "reason_code": {
+                        "default": "refined",
+                        "enum": [
+                          "corrected",
+                          "outdated",
+                          "refined",
+                          "merged",
+                          "resolved_contradiction",
+                          "source_retracted"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "memory",
+                      "fields",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "`new` (a `ref` from this proposal, or an existing memory id) replaces `target`.",
+                    "properties": {
+                      "new": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "op": {
+                        "const": "supersede",
+                        "default": "supersede",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "reason_code": {
+                        "enum": [
+                          "corrected",
+                          "outdated",
+                          "refined",
+                          "merged",
+                          "resolved_contradiction",
+                          "source_retracted"
+                        ],
+                        "type": "string"
+                      },
+                      "target": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "new",
+                      "target",
+                      "reason_code",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Declare a memory wrong/polluted. Dependents derived from it are flagged stale.",
+                    "properties": {
+                      "memory": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "retract",
+                        "default": "retract",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "memory",
+                      "reason",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Relate two EXISTING memories (ids from recall, or `ref`s of this proposal). It stores\nnothing new: use `add` for that.",
+                    "properties": {
+                      "op": {
+                        "const": "link",
+                        "default": "link",
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "relation": {
+                        "enum": [
+                          "contradicts",
+                          "overrides",
+                          "refines",
+                          "promoted_to"
+                        ],
+                        "type": "string"
+                      },
+                      "source": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "target": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "description": "A record id as `table:id`.",
+                            "examples": [
+                              "memory:0194f3a1b2c3d4e5f6a7"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "relation",
+                      "source",
+                      "target",
+                      "op"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "description": "Attach a note to an EXISTING memory (`target` is its id). It stores nothing new: use\n`add` for that.",
+                    "properties": {
+                      "kind": {
+                        "default": "comment",
+                        "enum": [
+                          "comment",
+                          "tag",
+                          "flag"
+                        ],
+                        "type": "string"
+                      },
+                      "op": {
+                        "const": "annotate",
+                        "default": "annotate",
+                        "type": "string"
+                      },
+                      "target": {
+                        "description": "A record id as `table:id`.",
+                        "examples": [
+                          "memory:0194f3a1b2c3d4e5f6a7"
+                        ],
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "text",
+                      "op"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "why": {
+              "description": "What you changed and why (kept with the older version)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "ops",
+            "why"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "proposal",
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "amend"
+  },
+  {
+    "description": "Replace a waiting ontology change (yours, or any if you are a reviewer) with a corrected one and say why: a new version, back to review. Use it instead of proposing a second change when `advice` says a similar one is waiting, or when changes were requested.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "type": "string"
+        },
+        "request": {
+          "additionalProperties": false,
+          "description": "Replace the change of a waiting ontology change: a new version, validated again.",
+          "properties": {
+            "change": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "concept": {
+                      "additionalProperties": false,
+                      "description": "Request: create a concept. The id is derived from the label.",
+                      "properties": {
+                        "aliases": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "definition": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "dimension": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "memory",
+                                "duration"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "is_a": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "scheme": {
+                          "default": "domain",
+                          "enum": [
+                            "domain",
+                            "qualifier"
+                          ],
+                          "type": "string"
+                        },
+                        "value_type": {
+                          "default": "bool",
+                          "enum": [
+                            "bool",
+                            "version",
+                            "number",
+                            "enum",
+                            "string"
+                          ],
+                          "type": "string"
+                        },
+                        "values": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "version_scheme": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "semver",
+                                "pep440",
+                                "dotted",
+                                "distro"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        }
+                      },
+                      "required": [
+                        "label"
+                      ],
+                      "type": "object"
+                    },
+                    "op": {
+                      "const": "define",
+                      "default": "define",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "op": {
+                      "const": "relate",
+                      "default": "relate",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": [
+                            "is_a",
+                            "part_of",
+                            "instance_of",
+                            "same_as",
+                            "alternative_to",
+                            "replaced_by",
+                            "depends_on",
+                            "disjoint_with",
+                            "split_into"
+                          ],
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relation",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "relation",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "alias": {
+                      "type": "string"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "add_alias",
+                      "default": "add_alias",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "alias",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "deprecate",
+                      "default": "deprecate",
+                      "type": "string"
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "replaced_by": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "into": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "merge",
+                      "default": "merge",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Say the same thing better: a clearer label, a tighter definition, other names. The meaning\nmust not change (otherwise define a new concept and deprecate this one); the id never does.\nThe previous label stays as an alias.",
+                  "properties": {
+                    "add_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "definition": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "label": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "op": {
+                      "const": "edit",
+                      "default": "edit",
+                      "type": "string"
+                    },
+                    "remove_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "End one relation (the edge is kept as history).",
+                  "properties": {
+                    "op": {
+                      "const": "unrelate",
+                      "default": "unrelate",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": [
+                            "is_a",
+                            "part_of",
+                            "instance_of",
+                            "same_as",
+                            "alternative_to",
+                            "replaced_by",
+                            "depends_on",
+                            "disjoint_with",
+                            "split_into"
+                          ],
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relation",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "relation",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Replace one broader concept by another, atomically.",
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "from_parent": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "reparent",
+                      "default": "reparent",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "default": "is_a",
+                      "enum": [
+                        "is_a",
+                        "part_of"
+                      ],
+                      "type": "string"
+                    },
+                    "to_parent": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "from_parent",
+                    "to_parent",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One concept turned out to be several: the source is deprecated (kept as a tombstone) and\npoints to what it became. `into` are existing concepts (ids, labels) or new ones to define.",
+                  "properties": {
+                    "into": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": false,
+                            "description": "Request: create a concept. The id is derived from the label.",
+                            "properties": {
+                              "aliases": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "definition": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              },
+                              "dimension": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "memory",
+                                      "duration"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              },
+                              "is_a": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "scheme": {
+                                "default": "domain",
+                                "enum": [
+                                  "domain",
+                                  "qualifier"
+                                ],
+                                "type": "string"
+                              },
+                              "value_type": {
+                                "default": "bool",
+                                "enum": [
+                                  "bool",
+                                  "version",
+                                  "number",
+                                  "enum",
+                                  "string"
+                                ],
+                                "type": "string"
+                              },
+                              "values": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "version_scheme": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "semver",
+                                      "pep440",
+                                      "dotted",
+                                      "distro"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              }
+                            },
+                            "required": [
+                              "label"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "op": {
+                      "const": "split",
+                      "default": "split",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Put a concept back to the fields it had at an earlier version (also how an edit, a\ndeprecation or a merge is undone). It makes a new version; nothing is rewritten.",
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "restore",
+                      "default": "restore",
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "version",
+                    "op"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "expect_version": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "why": {
+              "description": "What you changed and why (kept with the older version)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "change",
+            "why"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "change",
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "amend_ontology_change"
+  },
+  {
     "description": "Approve a held proposal. Side effect: commits it, which can add, supersede or retract memories. Only a human credential may review: call it only when the user explicitly asks you to approve that proposal, never for your own.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "proposal": {
           "type": "string"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "expect_version": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "ops": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "integer"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "Op numbers to commit (what they need is included); default all. The rest are rejected with `reason`."
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -39,6 +1111,18 @@
         "request": {
           "additionalProperties": false,
           "properties": {
+            "at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
             "context": {
               "additionalProperties": false,
               "default": {
@@ -136,6 +1220,7 @@
                 "absence",
                 "conflicts",
                 "changes_since",
+                "as_of",
                 "prerequisites_of",
                 "explain"
               ],
@@ -441,6 +1526,15 @@
     "name": "check"
   },
   {
+    "description": "Read-only report: loops, dangling links, shared names, deprecated concepts still in use, unused concepts. Nothing is fixed.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "check_ontology"
+  },
+  {
     "description": "Take a pending task so others do not. Side effect: the task is marked claimed by you.",
     "input_schema": {
       "additionalProperties": false,
@@ -520,6 +1614,22 @@
       "type": "object"
     },
     "name": "complete_task"
+  },
+  {
+    "description": "Investigation only: a concept's earlier versions (label, aliases, definition, status), the relations it has had including ended ones, and the ontology changes that touched it. Ordinary tools never show these.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "concept"
+      ],
+      "type": "object"
+    },
+    "name": "concept_history"
   },
   {
     "description": "Find concepts by label or alias (`python`, `ssh`) to get the ids that `about`, anchors and qualifiers refer to, with their relations. Empty: no such concept; propose one with `propose_ontology_change` rather than guessing an id.",
@@ -865,6 +1975,44 @@
     "name": "neighbors"
   },
   {
+    "description": "Investigation only: applied and decided ontology changes, newest first, optionally for one concept or one op.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "op": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "name": "ontology_history"
+  },
+  {
     "description": "Orientation card: counts, concepts, anchors, recent changes.",
     "input_schema": {
       "additionalProperties": false,
@@ -964,7 +2112,7 @@
     "name": "pending_ontology_changes"
   },
   {
-    "description": "Proposals held for review that you may see.",
+    "description": "Your proposals (and, with permission, the global ones) that are still waiting: `pending`, or `changes_requested` with the reviewer's `comments`. Check it before proposing something that may already be waiting, and when the user says a proposal needs changes. Each has a `version`, its ops and findings.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1023,7 +2171,7 @@
     "name": "pending_tasks"
   },
   {
-    "description": "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, or `deprecate`. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts.",
+    "description": "Say what an ontology change would do without proposing it: the concepts it touches, how many live memories are about them, and advice. Use it before `split`, `reparent`, `merge` or `deprecate`.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1163,7 +2311,8 @@
                             "alternative_to",
                             "replaced_by",
                             "depends_on",
-                            "disjoint_with"
+                            "disjoint_with",
+                            "split_into"
                           ],
                           "type": "string"
                         },
@@ -1221,6 +2370,17 @@
                       "default": "deprecate",
                       "type": "string"
                     },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
                     "replaced_by": {
                       "anyOf": [
                         {
@@ -1257,6 +2417,852 @@
                   "required": [
                     "source",
                     "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Say the same thing better: a clearer label, a tighter definition, other names. The meaning\nmust not change (otherwise define a new concept and deprecate this one); the id never does.\nThe previous label stays as an alias.",
+                  "properties": {
+                    "add_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "definition": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "label": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "op": {
+                      "const": "edit",
+                      "default": "edit",
+                      "type": "string"
+                    },
+                    "remove_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "End one relation (the edge is kept as history).",
+                  "properties": {
+                    "op": {
+                      "const": "unrelate",
+                      "default": "unrelate",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": [
+                            "is_a",
+                            "part_of",
+                            "instance_of",
+                            "same_as",
+                            "alternative_to",
+                            "replaced_by",
+                            "depends_on",
+                            "disjoint_with",
+                            "split_into"
+                          ],
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relation",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "relation",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Replace one broader concept by another, atomically.",
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "from_parent": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "reparent",
+                      "default": "reparent",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "default": "is_a",
+                      "enum": [
+                        "is_a",
+                        "part_of"
+                      ],
+                      "type": "string"
+                    },
+                    "to_parent": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "from_parent",
+                    "to_parent",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One concept turned out to be several: the source is deprecated (kept as a tombstone) and\npoints to what it became. `into` are existing concepts (ids, labels) or new ones to define.",
+                  "properties": {
+                    "into": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": false,
+                            "description": "Request: create a concept. The id is derived from the label.",
+                            "properties": {
+                              "aliases": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "definition": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              },
+                              "dimension": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "memory",
+                                      "duration"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              },
+                              "is_a": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "scheme": {
+                                "default": "domain",
+                                "enum": [
+                                  "domain",
+                                  "qualifier"
+                                ],
+                                "type": "string"
+                              },
+                              "value_type": {
+                                "default": "bool",
+                                "enum": [
+                                  "bool",
+                                  "version",
+                                  "number",
+                                  "enum",
+                                  "string"
+                                ],
+                                "type": "string"
+                              },
+                              "values": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "version_scheme": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "semver",
+                                      "pep440",
+                                      "dotted",
+                                      "distro"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              }
+                            },
+                            "required": [
+                              "label"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "op": {
+                      "const": "split",
+                      "default": "split",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Put a concept back to the fields it had at an earlier version (also how an edit, a\ndeprecation or a merge is undone). It makes a new version; nothing is rewritten.",
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "restore",
+                      "default": "restore",
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "version",
+                    "op"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "rationale": {
+              "description": "Why: what you saw that makes this change right",
+              "type": "string"
+            }
+          },
+          "required": [
+            "change",
+            "rationale"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "preview_ontology_change"
+  },
+  {
+    "description": "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, `deprecate`, or `edit` a concept's label, definition or aliases (say the same thing better; if the meaning changes, define a new concept and deprecate the old one instead). A concept never changes id; a deprecated one stays and points to its successor. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts and for an edit that looks like a different meaning.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "properties": {
+            "change": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "concept": {
+                      "additionalProperties": false,
+                      "description": "Request: create a concept. The id is derived from the label.",
+                      "properties": {
+                        "aliases": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "definition": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "dimension": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "memory",
+                                "duration"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "is_a": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "scheme": {
+                          "default": "domain",
+                          "enum": [
+                            "domain",
+                            "qualifier"
+                          ],
+                          "type": "string"
+                        },
+                        "value_type": {
+                          "default": "bool",
+                          "enum": [
+                            "bool",
+                            "version",
+                            "number",
+                            "enum",
+                            "string"
+                          ],
+                          "type": "string"
+                        },
+                        "values": {
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "version_scheme": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "semver",
+                                "pep440",
+                                "dotted",
+                                "distro"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        }
+                      },
+                      "required": [
+                        "label"
+                      ],
+                      "type": "object"
+                    },
+                    "op": {
+                      "const": "define",
+                      "default": "define",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "op": {
+                      "const": "relate",
+                      "default": "relate",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": [
+                            "is_a",
+                            "part_of",
+                            "instance_of",
+                            "same_as",
+                            "alternative_to",
+                            "replaced_by",
+                            "depends_on",
+                            "disjoint_with",
+                            "split_into"
+                          ],
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relation",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "relation",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "alias": {
+                      "type": "string"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "add_alias",
+                      "default": "add_alias",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "alias",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "deprecate",
+                      "default": "deprecate",
+                      "type": "string"
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "replaced_by": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "into": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "merge",
+                      "default": "merge",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Say the same thing better: a clearer label, a tighter definition, other names. The meaning\nmust not change (otherwise define a new concept and deprecate this one); the id never does.\nThe previous label stays as an alias.",
+                  "properties": {
+                    "add_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "concept": {
+                      "type": "string"
+                    },
+                    "definition": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "label": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "op": {
+                      "const": "edit",
+                      "default": "edit",
+                      "type": "string"
+                    },
+                    "remove_aliases": {
+                      "default": [],
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "End one relation (the edge is kept as history).",
+                  "properties": {
+                    "op": {
+                      "const": "unrelate",
+                      "default": "unrelate",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": [
+                            "is_a",
+                            "part_of",
+                            "instance_of",
+                            "same_as",
+                            "alternative_to",
+                            "replaced_by",
+                            "depends_on",
+                            "disjoint_with",
+                            "split_into"
+                          ],
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "relation",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "relation",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Replace one broader concept by another, atomically.",
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "from_parent": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "reparent",
+                      "default": "reparent",
+                      "type": "string"
+                    },
+                    "relation": {
+                      "default": "is_a",
+                      "enum": [
+                        "is_a",
+                        "part_of"
+                      ],
+                      "type": "string"
+                    },
+                    "to_parent": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "from_parent",
+                    "to_parent",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One concept turned out to be several: the source is deprecated (kept as a tombstone) and\npoints to what it became. `into` are existing concepts (ids, labels) or new ones to define.",
+                  "properties": {
+                    "into": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": false,
+                            "description": "Request: create a concept. The id is derived from the label.",
+                            "properties": {
+                              "aliases": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "definition": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              },
+                              "dimension": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "memory",
+                                      "duration"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              },
+                              "is_a": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "scheme": {
+                                "default": "domain",
+                                "enum": [
+                                  "domain",
+                                  "qualifier"
+                                ],
+                                "type": "string"
+                              },
+                              "value_type": {
+                                "default": "bool",
+                                "enum": [
+                                  "bool",
+                                  "version",
+                                  "number",
+                                  "enum",
+                                  "string"
+                                ],
+                                "type": "string"
+                              },
+                              "values": {
+                                "default": [],
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "version_scheme": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "semver",
+                                      "pep440",
+                                      "dotted",
+                                      "distro"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              }
+                            },
+                            "required": [
+                              "label"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "op": {
+                      "const": "split",
+                      "default": "split",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "into",
+                    "op"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "Put a concept back to the fields it had at an earlier version (also how an edit, a\ndeprecation or a merge is undone). It makes a new version; nothing is rewritten.",
+                  "properties": {
+                    "concept": {
+                      "type": "string"
+                    },
+                    "op": {
+                      "const": "restore",
+                      "default": "restore",
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "concept",
+                    "version",
                     "op"
                   ],
                   "type": "object"
@@ -1438,10 +3444,24 @@
     "name": "recall"
   },
   {
-    "description": "Reject a held proposal with a reason (nothing is committed).",
+    "description": "Reject a held proposal with a reason (nothing is committed). With `ops` only those ops (and what needs them) are rejected; the rest keeps waiting.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
+        "ops": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "proposal": {
           "type": "string"
         },
@@ -1932,6 +3952,54 @@
     "name": "remember"
   },
   {
+    "description": "Send a held proposal back to its submitter with a comment (and optional comments per op number): it leaves the approve queue until it is amended. Only a human credential may review; call it only when the user asks.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "type": "string"
+        },
+        "request": {
+          "additionalProperties": false,
+          "description": "Send a proposal back to its submitter: it leaves the approve queue until amended.",
+          "properties": {
+            "comment": {
+              "type": "string"
+            },
+            "expect_version": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "op_comments": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {},
+              "type": "object"
+            }
+          },
+          "required": [
+            "comment"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "proposal",
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "request_changes"
+  },
+  {
     "description": "Do what the task's card proposes: `merge` (the oldest memory replaces the other members of a duplicate cluster) or `supersede` (the newer memory of an update replaces the older). Side effect: a `supersede` proposal is submitted as you, so it commits or waits for review under the usual policy (memories are replaced, history is kept), then the task is completed citing it.",
     "input_schema": {
       "additionalProperties": false,
@@ -1965,6 +4033,26 @@
       "type": "object"
     },
     "name": "resolve_task"
+  },
+  {
+    "description": "Undo an applied ontology change by applying its stored undo. Side effect: the shared ontology changes for everyone. Needs a human credential with global write; refused while a later change touched the same concepts. Call it only when the user asks.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "change",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "name": "revert_ontology_change"
   },
   {
     "description": "Hybrid search with facet counts to narrow the next query.",
@@ -2096,5 +4184,45 @@
       "type": "object"
     },
     "name": "search"
+  },
+  {
+    "description": "Take back your own proposal that is still waiting (final; nothing is committed). Use it when the user changed their mind or it was a mistake.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "name": "withdraw"
+  },
+  {
+    "description": "Take back your own waiting ontology change (final; nothing is applied).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "change",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "name": "withdraw_ontology_change"
   }
 ]

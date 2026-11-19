@@ -633,5 +633,155 @@
    "helpful",
    "applied"
   ]
+ },
+ {
+  "id": "t-amend-pending",
+  "tags": [
+   "review"
+  ],
+  "why": "the user wants a waiting proposal changed, not a second one",
+  "say": "Proposal:p77 is still waiting. Change its rule to say tabs, not spaces, and resubmit it as a new version.",
+  "split": "tune",
+  "expect": "amend",
+  "contains": [
+   "p77"
+  ]
+ },
+ {
+  "id": "t-amend-changes-requested",
+  "tags": [
+   "review"
+  ],
+  "why": "a reviewer asked for changes: amend that proposal",
+  "say": "The reviewer sent proposal:p88 back with the comment 'too vague, name the repo'. Fix it.",
+  "split": "holdout",
+  "accept": [
+   "pending_proposals"
+  ],
+  "expect": "amend",
+  "contains": [
+   "p88"
+  ]
+ },
+ {
+  "id": "t-list-waiting",
+  "tags": [
+   "review"
+  ],
+  "why": "look at what is waiting before writing again",
+  "say": "Do I already have anything waiting for review about the deploy window?",
+  "split": "tune",
+  "expect": "pending_proposals"
+ },
+ {
+  "id": "t-withdraw-own",
+  "tags": [
+   "review"
+  ],
+  "why": "the user takes back a proposal",
+  "say": "Never mind about proposal:p91, take it back, it was a mistake.",
+  "split": "tune",
+  "expect": "withdraw",
+  "contains": [
+   "p91"
+  ]
+ },
+ {
+  "id": "t-request-changes-asked",
+  "tags": [
+   "review"
+  ],
+  "why": "the user asks for a proposal to be sent back with a comment",
+  "say": "Send proposal:p55 back to the agent: tell it the memory is too long and must be one sentence.",
+  "split": "holdout",
+  "expect": "request_changes",
+  "contains": [
+   "p55"
+  ]
+ },
+ {
+  "id": "t-ontology-history",
+  "tags": [
+   "review"
+  ],
+  "why": "investigate how a concept changed",
+  "say": "How did the concept python3 get its current label? Show me what changed over time.",
+  "split": "tune",
+  "expect": "concept_history",
+  "contains": [
+   "python3"
+  ]
+ },
+ {
+  "id": "t-ontology-check",
+  "tags": [
+   "maintenance"
+  ],
+  "why": "audit the ontology",
+  "say": "Is the ontology in good shape? Look for loops, broken links or names used twice.",
+  "split": "holdout",
+  "expect": "check_ontology"
+ },
+ {
+  "id": "t-ontology-preview",
+  "tags": [
+   "review"
+  ],
+  "why": "look before a structural change",
+  "say": "Before we deprecate the concept old-runtime, tell me what it would affect. Don't change anything yet.",
+  "split": "tune",
+  "expect": "preview_ontology_change",
+  "contains": [
+   "old-runtime"
+  ]
+ },
+ {
+  "id": "t-ontology-amend",
+  "tags": [
+   "review"
+  ],
+  "why": "fix a waiting ontology change",
+  "say": "The ontology change ontology_change:c12 is still waiting; change it to define 'Terraform' with the definition 'infrastructure as code tool'.",
+  "split": "holdout",
+  "expect": "amend_ontology_change",
+  "contains": [
+   "c12"
+  ]
+ },
+ {
+  "id": "t-ontology-withdraw",
+  "tags": [
+   "review"
+  ],
+  "why": "take back a waiting ontology change",
+  "say": "Withdraw my waiting ontology change ontology_change:c40, I proposed it by mistake.",
+  "split": "tune",
+  "expect": "withdraw_ontology_change",
+  "contains": [
+   "c40"
+  ]
+ },
+ {
+  "id": "t-ontology-revert",
+  "tags": [
+   "review"
+  ],
+  "why": "undo an applied ontology change on the user's request",
+  "say": "The merge we applied in ontology_change:c77 was wrong. Undo it.",
+  "split": "holdout",
+  "expect": "revert_ontology_change",
+  "contains": [
+   "c77"
+  ]
+ },
+ {
+  "id": "t-ontology-history-list",
+  "tags": [
+   "review"
+  ],
+  "why": "list what was changed in the ontology recently",
+  "say": "List the ontology changes that were applied recently.",
+  "split": "tune",
+  "expect": "ontology_history"
  }
 ]

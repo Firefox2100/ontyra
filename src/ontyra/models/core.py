@@ -172,7 +172,7 @@ class Proposal(Record):
     owner: OwnerRef  # the submitter's own memory
     space: Literal["own", "global"] = "own"  # where its additions go
     permissions: list[str] = []  # the submitter's permissions when it was made
-    status: Literal["pending", "committed", "rejected"]
+    status: Literal["pending", "changes_requested", "committed", "rejected", "withdrawn"]
     decision: Literal["auto_commit", "review", "reject"]  # policy outcome at submission
     decision_reason: str | None = None
     submitted_at: datetime
@@ -180,9 +180,15 @@ class Proposal(Record):
     decided_by: ActorRef | None = None
     idempotency_key: Annotated[str | None, Indexed()] = None
     note: str | None = None
-    ops: list[dict[str, Any]]
+    ops: list[dict[str, Any]]  # the latest version's ops
     findings: list[dict[str, Any]] = []
     result: dict[str, Any] = {}
+    # review workflow (plans/24). Nullable so proposals stored before it still validate; None
+    # means version 1 and nothing recorded yet.
+    version: int | None = None
+    history: list[dict[str, Any]] | None = None  # older versions: {version, ops, by, at, why}
+    decisions: list[dict[str, Any]] | None = None  # {version, op, status, reason, by, at}
+    comments: list[dict[str, Any]] | None = None  # {version, op?, text, by, at}
 
 
 @registry.table("annotation")

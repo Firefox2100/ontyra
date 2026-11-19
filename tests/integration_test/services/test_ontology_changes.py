@@ -129,7 +129,9 @@ async def test_relate_and_deprecate_apply(app: Application, human: Caller) -> No
     vim = (await app.ontology.lookup(human, "vim"))[0]
     assert any(r.relation == "is_a" for r in vim.relations)
     await app.ontology_changes.propose(human, req(DeprecateChange(concept="Vim")))
-    assert (await app.ontology.lookup(human, "vim"))[0].status == "deprecated"
+    assert await app.ontology.lookup(human, "vim") == []  # a tombstone is not offered for use
+    tomb = await app.ontology.get(human, await app.ontology.resolve("vim"))
+    assert tomb.status == "deprecated"
 
 
 async def test_configured_ops_apply_without_review(

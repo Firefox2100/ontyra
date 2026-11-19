@@ -183,12 +183,14 @@ class AskRequest(Model):
         "absence",
         "conflicts",
         "changes_since",
+        "as_of",
         "prerequisites_of",
         "explain",
     ]
     memory: RecordId | None = None
     topic: str | None = None
     since: datetime | None = None
+    at: datetime | None = None  # as_of: the moment to look at
     trace: RecordId | None = None
     context: RecallContext = RecallContext()
 

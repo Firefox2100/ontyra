@@ -101,6 +101,9 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | Variable | Type | Default |
 |---|---|---|
 | `ONTYRA_TASKS__EXPIRY_WARN_DAYS` | int | `14` |
+| `ONTYRA_TASKS__DETECT_EVERY_HOURS` | float | `24.0` |
+| `ONTYRA_TASKS__DETECT_FIRST_AFTER_MINUTES` | float | `10.0` |
+| `ONTYRA_TASKS__REFINE_CAP` | int | `200` |
 
 ## episodes
 

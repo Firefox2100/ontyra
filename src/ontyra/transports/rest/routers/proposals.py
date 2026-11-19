@@ -3,16 +3,23 @@ from __future__ import annotations
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query, Response
-from pydantic import BaseModel
 
 from ontyra.models import RecordId
 from ontyra.models.core import Proposal
-from ontyra.models.proposals import ProposalRequest, ProposalResult
+from ontyra.models.proposals import (
+    AmendRequest,
+    ApproveRequest,
+    ProposalRequest,
+    ProposalResult,
+    RejectRequest,
+    RequestChanges,
+    WithdrawRequest,
+)
 from ontyra.transports.rest.deps import CallerDep, MemoryServiceDep
 
 router = APIRouter(prefix="/proposals", tags=["proposals"])
 
-_STATUS_CODE = {"committed": 201, "pending": 202, "rejected": 422}
+_STATUS_CODE = {"committed": 201, "pending": 202, "rejected": 422}  # submit only
 
 
 def _id(proposal_id: str) -> RecordId:
@@ -45,7 +52,7 @@ async def submit(
 async def list_proposals(
     caller: CallerDep,
     memory: MemoryServiceDep,
-    status: Annotated[Literal["pending"], Query()] = "pending",
+    status: Annotated[Literal["pending"], Query()] = "pending",  # also lists changes_requested
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
 ) -> list[Proposal]:
     return await memory.pending(caller, limit)
@@ -58,19 +65,62 @@ async def get_proposal(proposal_id: str, caller: CallerDep, memory: MemoryServic
 
 @router.post(
     "/{proposal_id}/approve",
-    summary="Approve a pending proposal",
-    description="Re-validates against the data as it is now, then commits atomically.",
+    summary="Approve a waiting proposal (all of it, or chosen ops)",
+    description="Re-validates against the data as it is now, then commits atomically. With "
+    "`ops` only those ops (and the ops they need) commit and the rest are rejected with `reason`. "
+    "`expect_version` refuses the approval when the proposal was amended since you read it.",
 )
-async def approve(proposal_id: str, caller: CallerDep, memory: MemoryServiceDep) -> ProposalResult:
-    return await memory.approve(caller, _id(proposal_id))
-
-
-class RejectIn(BaseModel):
-    reason: str
-
-
-@router.post("/{proposal_id}/reject", summary="Reject a pending proposal")
-async def reject(
-    proposal_id: str, body: RejectIn, caller: CallerDep, memory: MemoryServiceDep
+async def approve(
+    proposal_id: str,
+    caller: CallerDep,
+    memory: MemoryServiceDep,
+    body: ApproveRequest | None = None,
 ) -> ProposalResult:
-    return await memory.reject(caller, _id(proposal_id), body.reason)
+    return await memory.approve(caller, _id(proposal_id), body)
+
+
+@router.post(
+    "/{proposal_id}/reject",
+    summary="Reject a waiting proposal (all of it, or chosen ops)",
+    description="With `ops`, only those ops (and what needs them) are rejected; the rest keeps "
+    "waiting as a new version.",
+)
+async def reject(
+    proposal_id: str, body: RejectRequest, caller: CallerDep, memory: MemoryServiceDep
+) -> ProposalResult:
+    return await memory.reject(caller, _id(proposal_id), body.reason, body.ops, body.expect_version)
+
+
+@router.post(
+    "/{proposal_id}/amend",
+    summary="Amend a waiting proposal",
+    description="Replaces the ops with a new version, validated again; the older version is kept "
+    "in the proposal's history. The submitter or a reviewer may amend while it is waiting "
+    "(pending or changes requested).",
+)
+async def amend(
+    proposal_id: str, body: AmendRequest, caller: CallerDep, memory: MemoryServiceDep
+) -> ProposalResult:
+    return await memory.amend(caller, _id(proposal_id), body)
+
+
+@router.post(
+    "/{proposal_id}/withdraw",
+    summary="Withdraw a waiting proposal",
+    description="Final: nothing is committed. Its submitter or a reviewer.",
+)
+async def withdraw(
+    proposal_id: str, body: WithdrawRequest, caller: CallerDep, memory: MemoryServiceDep
+) -> ProposalResult:
+    return await memory.withdraw(caller, _id(proposal_id), body)
+
+
+@router.post(
+    "/{proposal_id}/request-changes",
+    summary="Send a waiting proposal back to its submitter with comments",
+    description="A human reviewer only. The proposal leaves the approve queue until it is amended.",
+)
+async def request_changes(
+    proposal_id: str, body: RequestChanges, caller: CallerDep, memory: MemoryServiceDep
+) -> ProposalResult:
+    return await memory.request_changes(caller, _id(proposal_id), body)

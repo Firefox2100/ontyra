@@ -4,12 +4,16 @@
 <h1>Concepts</h1>
 <form class="row" method="get" action="/ui/concepts" style="margin-bottom:14px">
   <input type="text" name="term" value="{{ term }}" placeholder="label or alias"><button>Look up</button>
+  <label class="small"><input type="checkbox" name="deprecated" value="true" {{ 'checked' if deprecated }}> show deprecated</label>
   <span class="muted small">{{ rows|length }} shown</span>
+  <a class="small" href="/ui/ontology/new?op=define">new concept</a> ·
+  <a class="small" href="/ui/ontology/history">change history</a> ·
+  <a class="small" href="/ui/ontology/check">health check</a>
 </form>
 {% for c in rows %}
 <div class="card">
-  <div class="row"><b>{{ c.label }}</b><code>{{ c.id }}</code><span class="tag">{{ c.scheme }}</span>
-    {% if c.status != 'active' %}<span class="tag warn">{{ c.status }}{% if c.replaced_by %} → {{ c.replaced_by }}{% endif %}</span>{% endif %}</div>
+  <div class="row"><a href="/ui/concepts/{{ c.id.id }}"><b>{{ c.label }}</b></a><code>{{ c.id }}</code><span class="tag">{{ c.scheme }}</span>
+    {% if c.status != 'active' %}<span class="tag warn">{{ c.status }}{% if c.replaced_by %} → {{ c.replaced_by }}{% endif %}{% if c.successors %} → {{ c.successors | join(', ') }}{% endif %}</span>{% endif %}</div>
   {% if c.aliases %}<div class="small muted">aliases: {{ c.aliases | join(', ') }}</div>{% endif %}
   {% if c.definition %}<div class="small">{{ c.definition }}</div>{% endif %}
   {% if c.relations %}<div class="small muted">{% for r in c.relations %}{{ r.direction }} <code>{{ r.relation }}</code> {{ r.label }}{{ '; ' if not loop.last }}{% endfor %}</div>{% endif %}

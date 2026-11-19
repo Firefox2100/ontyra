@@ -108,6 +108,11 @@ class Store(Protocol):
         """Episodes older than `before` that no revision cites (`derived_from`)."""
         ...
 
+    async def revision_states_at(self, at: datetime, limit: int) -> list[RecordId]:
+        """Ids of the revisions that were committed and in force at `at` (valid, not yet
+        superseded or retracted), as `rev_state` ids (equal to the revision ids)."""
+        ...
+
     async def uncited_traces(self, before: datetime, limit: int) -> list[RecordId]:
         """Recall traces created before `before` that no feedback event cites."""
         ...

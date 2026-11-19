@@ -9,7 +9,7 @@ What the model gets:
   applies at this location, at this time;
 - **recall** injected for the first prompt of each step, when something clears the relevance bar;
 - the **memory tools** (`ontyra_recall`, `ontyra_check`, `ontyra_briefing`, `ontyra_ask`,
-  `ontyra_get`, `ontyra_remember`, and with the `full` profile `ontyra_concepts`,
+  `ontyra_get`, `ontyra_remember`, `ontyra_pending_proposals`, `ontyra_amend`, and with the `full` profile `ontyra_concepts`,
   `ontyra_propose_ontology_change`) as native harness tools, not MCP tools;
 - **episodes** (on by default; prompt and answer sent to the daemon as session history) and an optional
   capture nudge that asks the model to record what it learned.

@@ -168,14 +168,15 @@ export const TOOLS = [
       question: {
         type: 'string',
         required: true,
-        enum: ['applies_here', 'supersession_chain', 'absence', 'conflicts', 'changes_since', 'prerequisites_of', 'explain'],
+        enum: ['applies_here', 'supersession_chain', 'absence', 'conflicts', 'changes_since', 'as_of', 'prerequisites_of', 'explain'],
         description:
           'Which structural question: applies_here / supersession_chain / prerequisites_of need '
-          + '`memory`; absence needs `topic`; changes_since needs `since`; explain needs `trace`',
+          + '`memory`; absence needs `topic`; changes_since needs `since`; as_of needs `at` (what was in force then; `topic` narrows); explain needs `trace`',
       },
       memory: { type: 'string', description: 'Memory id (`memory:abc` or `abc`)' },
       topic: { type: 'string', description: 'Concept label, anchor or kind; used by absence' },
       since: { type: 'string', description: 'ISO instant; used by changes_since' },
+      at: { type: 'string', description: 'ISO instant; used by as_of' },
       trace: { type: 'string', description: 'Recall trace id; used by explain' },
       context: { type: 'json', description: 'Where the agent is working; omit to use the observed environment' },
     },
@@ -187,6 +188,7 @@ export const TOOLS = [
         memory: args.memory === undefined ? null : recordRef(args.memory, 'memory'),
         topic: args.topic ?? null,
         since: args.since ?? null,
+        at: args.at ?? null,
         trace: args.trace === undefined ? null : recordRef(args.trace, 'trace'),
         context: withContext(args, context),
       },
@@ -267,6 +269,40 @@ export const TOOLS = [
     render: jsonText,
   },
   {
+    name: 'ontyra_pending_proposals',
+    title: 'Pending proposals',
+    description: "Your proposals (and, with permission, the global ones) that are still waiting: `pending`, or `changes_requested` with the reviewer's `comments`. Check it before proposing something that may already be waiting, and when the user says a proposal needs changes. Each has a `version`, its ops and findings.",
+    parameters: {
+      limit: { type: 'number', description: 'How many to list (default 50)' },
+    },
+    request: (args) => ({
+      method: 'GET',
+      path: `/v1/proposals?limit=${encodeURIComponent(String(args.limit ?? 50))}`,
+    }),
+    render: jsonText,
+  },
+  {
+    name: 'ontyra_amend',
+    title: 'Amend a waiting proposal',
+    description: "Replace the ops of a proposal that is still waiting (`pending` or `changes_requested`) with a corrected list and say why; it becomes a new version and goes back to review. Use this instead of sending a second proposal when a `pending_similar` finding names it, or when a reviewer asked for changes. Pass `expect_version` (from `pending_proposals`).",
+    parameters: {
+      proposal: { type: 'string', required: true, description: 'Proposal id, with or without the `proposal:` prefix' },
+      request: {
+        type: 'json',
+        required: true,
+        description:
+          'The amendment: `ops` (the whole corrected list, it replaces the old one), `why` (what you '
+          + 'changed and why) and, from ontyra_pending_proposals, `expect_version`',
+      },
+    },
+    request: (args) => ({
+      method: 'POST',
+      path: `/v1/proposals/${encodeURIComponent(idOf(args.proposal))}/amend`,
+      body: args.request,
+    }),
+    render: jsonText,
+  },
+  {
     name: 'ontyra_concepts',
     title: 'Look up concepts',
     description:
@@ -285,12 +321,9 @@ export const TOOLS = [
   {
     name: 'ontyra_propose_ontology_change',
     title: 'Propose an ontology change',
-    description:
-      'Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` '
-      + 'duplicates, or `deprecate`. Held for review unless a human makes it. Check `concepts` '
-      + 'first; read `advice` for similar existing concepts.',
+    description: "Propose an ontology change: `define` a concept, `relate` two, `add_alias`, `merge` duplicates, `deprecate`, or `edit` a concept's label, definition or aliases (say the same thing better; if the meaning changes, define a new concept and deprecate the old one instead). A concept never changes id; a deprecated one stays and points to its successor. Held for review unless a human makes it. Check `concepts` first; read `advice` for similar existing concepts and for an edit that looks like a different meaning.",
     parameters: {
-      change: { type: 'json', required: true, description: 'One change: define, relate, add_alias, merge or deprecate' },
+      change: { type: 'json', required: true, description: 'One change: define, relate, add_alias, merge, deprecate or edit' },
       rationale: { type: 'string', required: true, description: 'Why: what you saw that makes this change right' },
     },
     request: (args) => ({

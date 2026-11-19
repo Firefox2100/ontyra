@@ -263,6 +263,17 @@ class SurrealStore:
         )[0]
         return [decode(r)["id"] for r in rows]
 
+    async def revision_states_at(self, at: datetime, limit: int) -> list[RecordId]:
+        rows = (
+            await self.db.query(
+                "SELECT id FROM rev_state WHERE state = 'committed' AND valid_from <= $at "
+                "AND (valid_to = NONE OR valid_to > $at) "
+                "AND (retracted_at = NONE OR retracted_at > $at) LIMIT $limit",
+                {"at": at, "limit": limit},
+            )
+        )[0]
+        return [decode(r)["id"] for r in rows]
+
     async def uncited_traces(self, before: datetime, limit: int) -> list[RecordId]:
         rows = (
             await self.db.query(

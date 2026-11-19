@@ -16,7 +16,7 @@ from ontyra.models.base import ActorRef, Indexed, Model, OwnerRef, Record, Recor
 from ontyra.models.ontology import ConceptDefinition, RelationRequest
 from ontyra.models.registry import registry
 
-ChangeStatus = Literal["pending", "applied", "rejected"]
+ChangeStatus = Literal["pending", "changes_requested", "applied", "rejected", "withdrawn"]
 
 
 class DefineChange(Model):
@@ -39,6 +39,7 @@ class DeprecateChange(Model):
     op: Literal["deprecate"] = "deprecate"
     concept: str
     replaced_by: str | None = None
+    reason: str | None = None
 
 
 class MergeChange(Model):
@@ -47,8 +48,65 @@ class MergeChange(Model):
     into: str
 
 
+class EditChange(Model):
+    """Say the same thing better: a clearer label, a tighter definition, other names. The meaning
+    must not change (otherwise define a new concept and deprecate this one); the id never does.
+    The previous label stays as an alias."""
+
+    op: Literal["edit"] = "edit"
+    concept: str
+    label: str | None = None
+    definition: str | None = None  # an empty string clears it
+    add_aliases: list[str] = []
+    remove_aliases: list[str] = []
+
+
+class UnrelateChange(Model):
+    """End one relation (the edge is kept as history)."""
+
+    op: Literal["unrelate"] = "unrelate"
+    relation: RelationRequest
+
+
+class ReparentChange(Model):
+    """Replace one broader concept by another, atomically."""
+
+    op: Literal["reparent"] = "reparent"
+    concept: str
+    relation: Literal["is_a", "part_of"] = "is_a"
+    from_parent: str
+    to_parent: str
+
+
+class SplitChange(Model):
+    """One concept turned out to be several: the source is deprecated (kept as a tombstone) and
+    points to what it became. `into` are existing concepts (ids, labels) or new ones to define."""
+
+    op: Literal["split"] = "split"
+    source: str
+    into: Annotated[list[ConceptDefinition | str], Field(min_length=2)]
+
+
+class RestoreChange(Model):
+    """Put a concept back to the fields it had at an earlier version (also how an edit, a
+    deprecation or a merge is undone). It makes a new version; nothing is rewritten."""
+
+    op: Literal["restore"] = "restore"
+    concept: str
+    version: int
+
+
 Change = Annotated[
-    DefineChange | RelateChange | AliasChange | DeprecateChange | MergeChange,
+    DefineChange
+    | RelateChange
+    | AliasChange
+    | DeprecateChange
+    | MergeChange
+    | EditChange
+    | UnrelateChange
+    | ReparentChange
+    | SplitChange
+    | RestoreChange,
     Field(discriminator="op"),
 ]
 
@@ -67,11 +125,37 @@ class OntologyChange(Record):
     decided_at: datetime | None = None
     reason: str | None = None
     advice: list[str] = []
+    # plans/23: the concepts it touched, and the changes that undo it (applied in order, as one
+    # batch, by a revert). Nullable so changes stored before them still validate.
+    touched: list[RecordId] | None = None
+    undo: list[dict[str, Any]] | None = None
+    # review workflow (plans/24); nullable so changes stored before it still validate
+    version: int | None = None
+    history: list[dict[str, Any]] | None = None  # older versions: {version, change, by, at, why}
+    comments: list[dict[str, Any]] | None = None  # {version, text, by, at}
+    reverts: RecordId | None = None  # a revert: the change it undid
+    reverted_by: RecordId | None = None  # the revert that undid this one
 
 
 class ChangeRequest(Model):
     change: Change
     rationale: str = Field(description="Why: what you saw that makes this change right")
+
+
+class AmendChange(Model):
+    """Replace the change of a waiting ontology change: a new version, validated again."""
+
+    change: Change
+    why: str = Field(description="What you changed and why (kept with the older version)")
+    expect_version: int | None = None
+
+
+class Effects(Model):
+    """What a change does (or would do), for a preview and for a reviewer."""
+
+    summary: list[str] = []  # one line per effect
+    touched: list[RecordId] = []
+    memories: dict[str, int] = {}  # concept -> live memories directly about it
 
 
 class ChangeResult(Model):
@@ -80,3 +164,22 @@ class ChangeResult(Model):
     op: str
     advice: list[str] = []  # similar concepts, duplicates: read before approving
     reason: str | None = None
+    effects: Effects | None = None
+
+
+class ChangePreview(Model):
+    """What a change would do, without proposing it."""
+
+    op: str
+    advice: list[str] = []
+    effects: Effects
+
+
+class LiteChangeRequest(ChangeRequest):
+    """The ontology change of the `lite` MCP profile: the common operations only. A weak
+    tool-caller is unlikely to need `split`, `reparent`, `unrelate` or `restore`."""
+
+    change: Annotated[  # type: ignore[assignment]
+        DefineChange | RelateChange | AliasChange | DeprecateChange | MergeChange | EditChange,
+        Field(discriminator="op"),
+    ]
