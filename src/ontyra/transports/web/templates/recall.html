@@ -3,10 +3,10 @@
 {% block body %}
 <h1>Recall playground</h1>
 <form class="card" method="get" action="/ui/recall">
-  <div class="row"><input type="text" name="query" value="{{ query }}" placeholder="a message, as the user would send it" style="flex:1">
-    <select name="mode"><option value="recall" {{ 'selected' if mode == 'recall' }}>recall</option><option value="briefing" {{ 'selected' if mode == 'briefing' }}>briefing</option></select></div>
-  <div class="row" style="margin-top:8px"><input type="text" name="uri" value="{{ uri }}" placeholder="location URIs, comma separated (file://host/path)" style="flex:1">
-    <input type="text" name="signals" value="{{ signals }}" placeholder="signals: python, linux"><button class="go">Run</button></div>
+  <div class="row"><input type="text" name="query" value="{{ query }}" placeholder="a message, as the user would send it" aria-label="query" style="flex:1">
+    <select name="mode" aria-label="mode"><option value="recall" {{ 'selected' if mode == 'recall' }}>recall</option><option value="briefing" {{ 'selected' if mode == 'briefing' }}>briefing</option></select></div>
+  <div class="row" style="margin-top:8px"><input type="text" name="uri" value="{{ uri }}" placeholder="location URIs, comma separated (file://host/path)" aria-label="location URIs" style="flex:1">
+    <input type="text" name="signals" value="{{ signals }}" placeholder="signals: python, linux" aria-label="signals"><button class="go">Run</button></div>
   <div class="small muted" style="margin-top:6px">No session is sent, so this never touches a real session's delivery ledger. A trace is still stored.</div>
 </form>
 {% if pack %}

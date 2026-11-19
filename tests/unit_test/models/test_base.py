@@ -34,9 +34,10 @@ class TestRecordId:
             RecordId.parse(bad)
 
     def test_equality_and_hash(self) -> None:
-        assert RecordId("a", "1") == RecordId("a", "1")
-        assert RecordId("a", "1") != RecordId("a", "2")
-        assert len({RecordId("a", "1"), RecordId("a", "1")}) == 1
+        first = RecordId("a", "1")
+        assert first == RecordId("a", "1")
+        assert first != RecordId("a", "2")
+        assert len({first, RecordId("a", "1")}) == 1
 
     def test_json_serialises_to_string_and_python_keeps_object(self) -> None:
         ta = TypeAdapter(RecordId)

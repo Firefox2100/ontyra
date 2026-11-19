@@ -5,10 +5,10 @@
 <h2>Proposals ({{ proposals|length }})</h2>
 {% if proposals|length > 1 %}<form method="post" action="/ui/proposals/overlay" id="bulk" class="card small">
   <b>Bulk edit</b> the checked proposals (their add/revise ops get the same fields, as a new version each):
-  <select name="scope"><option value="">scope: unchanged</option><option>contextual</option><option>universal</option></select>
-  <input type="text" name="expires_at" placeholder="expires_at (ISO)">
-  <input type="text" name="anchor" placeholder="add anchor URI">
-  <input type="text" name="about" placeholder="add about (concept ids)">
+  <select name="scope" aria-label="scope"><option value="">scope: unchanged</option><option>contextual</option><option>universal</option></select>
+  <input type="text" name="expires_at" placeholder="expires_at (ISO)" aria-label="expires at (ISO)">
+  <input type="text" name="anchor" placeholder="add anchor URI" aria-label="anchor URI">
+  <input type="text" name="about" placeholder="add about (concept ids)" aria-label="about (concept ids)">
   <button>Apply to checked</button></form>{% endif %}
 {% for p in proposals %}
 <div class="card">
@@ -20,7 +20,7 @@
   <div class="row" style="margin-top:10px">
     <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/approve"><button class="go">Approve</button></form>
     <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/reject">
-      <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+      <input type="text" name="reason" placeholder="reason (optional)" aria-label="reason (optional)"><button class="no">Reject</button></form>
     <a class="small" href="/ui/proposals/{{ p.id.id }}">details</a>
   </div>
 </div>
@@ -38,15 +38,17 @@
   <div class="row" style="margin-top:10px">
     <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/approve"><button class="go">Approve</button></form>
     <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/reject">
-      <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+      <input type="text" name="reason" placeholder="reason (optional)" aria-label="reason (optional)"><button class="no">Reject</button></form>
     <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/request-changes">
-      <input type="text" name="comment" placeholder="what should change" required><button>Request changes</button></form>
+      <input type="text" name="comment" placeholder="what should change" required aria-label="what should change"><button>Request changes</button></form>
   </div>
 </div>
 {% else %}<div class="empty">Nothing waiting.</div>{% endfor %}
 
 {% if recent %}<h2>Recent ontology changes</h2>
-<div class="card"><table>{% for c in recent %}
+<div class="card"><table>
+<tr><th scope="col">Status</th><th scope="col">Op</th><th scope="col">Rationale</th></tr>
+{% for c in recent %}
 <tr><td><span class="tag {{ 'ok' if c.status == 'applied' else '' }}">{{ c.status }}</span></td><td>{{ c.op }}</td>
 <td class="small">{{ c.rationale }}</td></tr>{% endfor %}</table></div>{% endif %}
 {% endblock %}

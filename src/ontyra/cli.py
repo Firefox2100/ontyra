@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -139,8 +140,22 @@ async def _own_command(settings: Settings, *, yes: bool) -> int:
     return 0
 
 
+def _confined_path(raw: str) -> Path:
+    """Resolve a calibration path and refuse to leave the directory the command was started in.
+
+    An agent may invoke this CLI, so a path taken from its arguments must not become a way to
+    read or overwrite files the operator never named (Sonar S8707). The recording is an artifact
+    of the run, written next to it; `--from` reads it back.
+    """
+    base = os.path.realpath(os.getcwd())
+    resolved = os.path.realpath(raw)
+    if resolved != base and not resolved.startswith(base + os.sep):
+        raise SystemExit(f"refusing {raw!r}: it is outside {base}")
+    return Path(resolved)
+
+
 async def _calibrate_command(
-    settings: Settings, saved: dict[str, Any] | None, out: str | None, *, yes: bool
+    settings: Settings, saved: dict[str, Any] | None, out: Path | None, *, yes: bool
 ) -> int:
     from ontyra.calibration import runner
 
@@ -174,7 +189,7 @@ async def _calibrate_command(
     report = runner.analyse(recording)
     print("\n" + runner.render(report))
     if out:
-        await asyncio.to_thread(runner.save, Path(out), recording, report)
+        await asyncio.to_thread(runner.save, out, recording, report)
         print(f"\nsaved to {out} (re-read with --from, no model calls)")
     return 0
 
@@ -224,8 +239,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "calibrate" and args.own:
         return asyncio.run(_own_command(settings, yes=args.yes))
     if args.command == "calibrate":
-        saved = json.loads(Path(args.source).read_text("utf-8")) if args.source else None
-        return asyncio.run(_calibrate_command(settings, saved, args.out, yes=args.yes))
+        saved = json.loads(_confined_path(args.source).read_text("utf-8")) if args.source else None
+        out = _confined_path(args.out) if args.out else None
+        return asyncio.run(_calibrate_command(settings, saved, out, yes=args.yes))
     if args.action in ("export", "import"):
         return asyncio.run(
             _backup_command(settings, args.action, args.path, keep=args.keep, yes=args.yes)

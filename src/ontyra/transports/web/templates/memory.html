@@ -11,6 +11,7 @@
 </div>
 <h2>Fields</h2><div class="card"><pre>{{ m.content | tojson(indent=2) }}</pre></div>
 {% if d.history %}<h2>History</h2><div class="card"><table>
+<tr><th scope="col">#</th><th scope="col">Text</th><th scope="col">State</th></tr>
 {% for r in d.history.revisions %}<tr><td>#{{ r.seq }}</td><td>{{ r.text }}</td>
 <td class="muted small">{{ r.state }}{% for x in r.reasons %} · {{ x.reason_code }}{% if x.reason %}: {{ x.reason }}{% endif %}{% endfor %}</td></tr>{% endfor %}
 </table></div>{% endif %}

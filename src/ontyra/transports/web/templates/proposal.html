@@ -30,7 +30,7 @@
 {% endfor %}
 {% if waiting %}
 <div class="row small">
-  <input type="text" name="reason" placeholder="reason for the others / for rejecting">
+  <input type="text" name="reason" placeholder="reason for the others / for rejecting" aria-label="reason for the decision">
   <button class="go" formaction="/ui/proposals/{{ p.id.id }}/approve-ops">Approve selected (and what they need)</button>
   <button class="no" formaction="/ui/proposals/{{ p.id.id }}/reject-ops">Reject selected (and what needs them)</button>
 </div></form>{% endif %}
@@ -40,8 +40,8 @@
 <div class="row">
   <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/approve"><button class="go">Approve</button></form>
   <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/reject">
-    <input type="text" name="reason" placeholder="reason (optional)"><button class="no">Reject</button></form>
+    <input type="text" name="reason" placeholder="reason (optional)" aria-label="reason (optional)"><button class="no">Reject</button></form>
   <form class="inline" method="post" action="/ui/proposals/{{ p.id.id }}/request-changes">
-    <input type="text" name="comment" placeholder="what should change" required><button>Request changes</button></form>
+    <input type="text" name="comment" placeholder="what should change" required aria-label="what should change"><button>Request changes</button></form>
 </div>{% endif %}
 {% endblock %}

@@ -8,7 +8,9 @@
 </div>
 <h2>Active memories</h2>
 <div class="card">
-<table>{% for kind, n in kinds.items() %}
+<table>
+<tr><th scope="col">Kind</th><th scope="col">Count</th></tr>
+{% for kind, n in kinds.items() %}
 <tr><td><a href="/ui/memories?kind={{ kind }}">{{ kind }}</a></td><td>{{ n }}</td></tr>
 {% endfor %}</table>
 </div>

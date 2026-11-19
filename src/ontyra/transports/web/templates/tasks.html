@@ -45,18 +45,20 @@
     {% elif t.kind in ('review_feedback', 'expire_check', 'review_stale_dependent') %}
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="retract"><button class="no">Retract it</button></form>
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="keep">
-      <input type="text" name="note" placeholder="why it stands (optional)"><button>It stands</button></form>
+      <input type="text" name="note" placeholder="why it stands (optional)" aria-label="why it stands (optional)"><button>It stands</button></form>
     <a class="small" href="/ui/memories/{{ t.target.id }}">open it to revise</a>
     {% endif %}
     {% if t.kind in ('consolidate', 'review_contradiction') %}<form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="distinct">
-      <input type="text" name="note" placeholder="why they differ (optional)"><button>They differ</button></form>{% endif %}
+      <input type="text" name="note" placeholder="why they differ (optional)" aria-label="why they differ (optional)"><button>They differ</button></form>{% endif %}
     {% if t.status != 'parked' %}<form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="defer"><button>Later</button></form>{% endif %}
   </div>
 </div>
 {% else %}<div class="empty">No open maintenance work. Use “Look for new work” to scan.</div>{% endfor %}
 
 {% if recent %}<h2>Recently closed</h2>
-<div class="card"><table>{% for t in recent %}
+<div class="card"><table>
+<tr><th scope="col">Outcome</th><th scope="col">Kind</th><th scope="col">Note</th></tr>
+{% for t in recent %}
 <tr><td><span class="tag ok">{{ t.result.decision or t.result.outcome or t.status }}</span></td><td>{{ t.kind }}</td>
 <td class="small">{{ t.result.note or '' }}</td></tr>{% endfor %}</table></div>{% endif %}
 {% endblock %}
