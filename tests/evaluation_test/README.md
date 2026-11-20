@@ -13,6 +13,7 @@ scripted model (`uv run pytest tests/evaluation_test`: 5 live tests skip, the re
 | presentation | does it act on what recall delivers, rendered `compact`, `rich`, or not at all? Answers are checked with patterns (the rule obeyed, the stale value absent) | `test_presentation.py` |
 | maintenance decisions | shown a task card (built by the daemon's own card functions), does it merge only true duplicates, keep what cannot go stale, defer when it cannot know? | `test_decisions.py` |
 | agent decides to recall | the hook injects recall for the literal message; the model sees it and may call `recall` itself, as the skill asks. Scored on both packs merged, plus how often it recalls on messages that need history and on those that do not | `test_agent_recall.py` |
+| end-to-end scenarios | the same user task in four arms: no memory, injected context (what the hooks do), the lite tools with the shipped skill, and both. Graded by patterns on the answer and by which tools were called; scenarios cover replaced values, retracted errors, rules, a standing preference, tasks that need no memory, and writing. The result keeps whole transcripts so graders can be fixed and runs re-scored offline (`regrade`) | `test_scenarios.py` |
 | agent-written queries | when the model writes the `recall` query from the conversation, how does recall compare with the heuristics of the dialogue suite? | `test_agent_recall.py` |
 
 ## Run it
@@ -26,7 +27,7 @@ Environment (all `BENCH_*`, see `framework/config.py`): `BENCH_LLM_URL` (default
 `http://127.0.0.1:8081/v1`, the owner's LocalAI), `BENCH_LLM_MODEL` (default
 `qwen3.6-35b-a3b-uncensored-1m`), `BENCH_LLM_API_KEY`, `BENCH_LLM_TEMPERATURE` (0),
 `BENCH_LLM_MAX_TOKENS`, `BENCH_LLM_THINKING` (off: Qwen3 style reasoning is slow and noisy; sent as `reasoning_effort: "none"`, which LocalAI honours, plus the `enable_thinking` kwarg),
-`BENCH_REPEAT` (samples per case; useful only above temperature 0), `BENCH_LABEL`, `BENCH_ONLY`,
+`BENCH_ARMS` (scenario arms, default all four), `BENCH_REPEAT` (samples per case; useful only above temperature 0), `BENCH_LABEL`, `BENCH_ONLY`,
 `BENCH_RESULTS_DIR`. The world-based areas use the benchmark's embedder (`BENCH_EMBED_*`, hash by
 default) over the same `commons` world.
 
@@ -69,3 +70,12 @@ so the memory is found) and a `task` (what the user asks the model).
   conversation line as an episode, as the hook does. Measured: how often the model cites at all.
 - **Tool profiles.** `lite` against `full` against `full-bare` says whether the 17 extra tools
   crowd out the right choice and how much the descriptions are worth.
+
+## Comparing models (the tier matrix)
+
+Point `BENCH_LLM_URL` / `BENCH_LLM_MODEL` at each model in turn and run the same areas with a label
+(`BENCH_LABEL=qwen36`); the result files carry the model name, so `results/scenarios-*.json` can be
+compared run against run. Any OpenAI-compatible server works: LocalAI for the local models, or a
+LiteLLM proxy in front of a hosted one (the API key stays in the proxy's configuration; only the
+model name is needed here). A hosted model bills per call: the scenario suite makes up to about
+100 runs of several model calls each, so run one arm first (`BENCH_ARMS=none,both`).

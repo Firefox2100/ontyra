@@ -135,6 +135,9 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_RECALL__DECISION_MARGIN` | float | `0.15` |
 | `ONTYRA_RECALL__TRACE_CANDIDATES` | int | `30` |
 | `ONTYRA_RECALL__TRACE_RETENTION_DAYS` | int | `180` |
+| `ONTYRA_RECALL__FILLER_GATE` | bool | `False` |
+| `ONTYRA_RECALL__FILLER_THRESHOLD` | float | `0.7` |
+| `ONTYRA_RECALL__FILLER_MAX_WORDS` | int | `8` |
 | `ONTYRA_RECALL__RELEVANCE_THRESHOLD` | float | `0.25` |
 | `ONTYRA_RECALL__VECTOR_FLOOR` | float | `0.3` |
 | `ONTYRA_RECALL__LANE_WEIGHTS` | dict | `{'lexical': 1.0, 'vector': 1.0, 'concept': 0.9}` |
@@ -178,4 +181,12 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_AUTH__UI_SESSION_HOURS` | int | `12` |
 | `ONTYRA_AUTH__UI_COOKIE_SECURE` | bool \| None | unset |
 | `ONTYRA_AUTH__UI_ALLOWED_ORIGINS` | list | `[]` |
+
+## backup
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_BACKUP__DIR` | str \| None | unset |
+| `ONTYRA_BACKUP__EVERY_HOURS` | float | `24.0` |
+| `ONTYRA_BACKUP__KEEP` | int | `14` |
 

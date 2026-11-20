@@ -19,6 +19,17 @@ SAME = (
     "Different values or different facts mean no."
 )
 
+MESSAGE_KIND = "What kind of message is the user's new message?"
+MESSAGE_OPTIONS = {
+    "standalone": "A request or question that can be understood on its own, without the earlier "
+    "conversation.",
+    "refers_back": "It only makes sense with the earlier conversation: a pronoun, an ellipsis, "
+    "'that', 'it', 'and below that?', 'ok, go ahead'.",
+    "filler": "A greeting, thanks or reaction that asks for nothing ('thanks', 'ok', 'lol').",
+}
+NO_HISTORY = "(There is no earlier conversation.)"
+FILLER_CHARS = 300
+
 Format = Literal["choice", "noul"]
 
 
@@ -118,6 +129,37 @@ class SystemOneDecider:
             raise DecisionError(f"{self._url} gave no score")
         return score
 
+    async def filler(self, text: str) -> float:
+        import httpx
+
+        body = {
+            "model": self._model,
+            "state": f"User's new message: {clip(text, FILLER_CHARS)}\n{NO_HISTORY}",
+            "questions": {
+                "kind": {
+                    "type": "choice",
+                    "instructions": MESSAGE_KIND,
+                    "criteria": MESSAGE_OPTIONS,
+                }
+            },
+        }
+        try:
+            async with httpx.AsyncClient(
+                timeout=self._timeout, transport=self._transport
+            ) as client:
+                response = await client.post(self._url, headers=self._headers, json=body)
+        except httpx.HTTPError as exc:
+            raise DecisionError(f"{self._url} could not be reached: {exc!r}") from exc
+        if response.status_code >= 400:
+            raise DecisionError(f"{self._url} answered {response.status_code}: {_said(response)}")
+        try:
+            score = _number(response.json()["answers"]["kind"]["probabilities"].get("filler"))
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise DecisionError(f"{self._url} gave an answer that cannot be read: {exc!r}") from exc
+        if score is None:
+            raise DecisionError(f"{self._url} gave no score")
+        return score
+
     def _read(self, answers: dict[str, Any], n: int) -> Judgement:
         if self._format == "noul":
             scores = [
@@ -204,6 +246,26 @@ class LangChainDecider:
             )
         except ValueError as exc:
             raise DecisionError(f"{self._name} gave invalid probabilities: {exc!r}") from exc
+
+    async def filler(self, text: str) -> float:
+        from langchain_core.decisions import Choice
+
+        state = f"User's new message: {clip(text, FILLER_CHARS)}\n{NO_HISTORY}"
+        try:
+            response = await self._model.ainvoke(
+                {
+                    "state": state,
+                    "questions": {
+                        "kind": Choice(instructions=MESSAGE_KIND, criteria=dict(MESSAGE_OPTIONS))
+                    },
+                }
+            )
+            score = _number(response.choices["kind"].probabilities.get("filler"))
+        except Exception as exc:  # the integration's own errors: any of them means "no verdict"
+            raise DecisionError(f"{self._name} could not decide: {exc!r}") from exc
+        if score is None:
+            raise DecisionError(f"{self._name} gave no score")
+        return score
 
     async def same(self, a: str, b: str) -> float:
         from langchain_core.decisions import Noul

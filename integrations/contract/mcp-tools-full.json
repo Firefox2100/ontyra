@@ -1376,6 +1376,10 @@
               "default": true,
               "type": "boolean"
             },
+            "gate": {
+              "default": true,
+              "type": "boolean"
+            },
             "hints": {
               "default": [],
               "items": {
@@ -3383,6 +3387,10 @@
               "type": "object"
             },
             "decide": {
+              "default": true,
+              "type": "boolean"
+            },
+            "gate": {
               "default": true,
               "type": "boolean"
             },

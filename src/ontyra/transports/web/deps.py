@@ -80,9 +80,21 @@ async def same_origin(request: Request) -> None:
     parsed = urlparse(origin)
     candidate = f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
     configured: set[str] = getattr(request.app.state, "ui_allowed_origins", set())
-    request_origin = f"{request.url.scheme}://{request.headers.get('host', '').lower()}"
-    if candidate not in (configured or {request_origin}):
+    host = request.headers.get("host", "").lower()
+    request_origin = f"{request.url.scheme}://{host}"
+    if configured:
+        allowed = candidate in configured
+    else:
+        # no allowlist: the console is for the machine itself, so the page must have been loaded
+        # from a loopback name (a DNS-rebinding page reaches 127.0.0.1 under its own hostname)
+        allowed = candidate == request_origin and _loopback(host)
+    if not allowed:
         raise HTTPException(403, "cross-site request refused")
+
+
+def _loopback(host: str) -> bool:
+    name = host.rsplit(":", 1)[0] if not host.startswith("[") else host.partition("]")[0] + "]"
+    return name in ("localhost", "[::1]") or name.startswith("127.")
 
 
 SameOriginDep = Depends(same_origin)

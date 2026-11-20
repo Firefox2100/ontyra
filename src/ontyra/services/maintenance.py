@@ -16,6 +16,7 @@ from collections.abc import Awaitable, Callable
 from ontyra.models.tasks import DetectReport, TaskSettings
 from ontyra.ports import Store
 from ontyra.services.actors import ActorService
+from ontyra.services.indexing import IndexService
 from ontyra.services.ontology import OntologyService
 from ontyra.services.tasks import TaskService
 
@@ -32,9 +33,11 @@ class Maintenance:
         settings: TaskSettings,
         *,
         ontology: OntologyService | None = None,
+        indexer: IndexService | None = None,
         sleep: Sleep = asyncio.sleep,
     ) -> None:
         self.ontology = ontology
+        self.indexer = indexer
         self.actors = actors
         self.tasks = tasks
         self.store = store
@@ -44,19 +47,29 @@ class Maintenance:
         self.last: dict[str, DetectReport] = {}
 
     async def run_once(self) -> dict[str, DetectReport]:
-        """One detection pass per owner; returns each owner's report."""
+        """One pass per owner; returns each owner's report. An owner whose pass fails is logged
+        and skipped: the others still get theirs."""
         reports: dict[str, DetectReport] = {}
-        global_caller = await self.actors.caller(kind="service", name="scheduler")
-        reports[str(global_caller.owner)] = await self.tasks.detect(global_caller)
-        if self.ontology is not None:
-            await self.ontology.canonicalise_index(global_caller)
-        for owner in await self.store.select("owner", {"kind": "user"}, limit=1000):
-            if owner.id is None:
-                continue
-            caller = await self.actors.caller(kind="service", name="scheduler", owner=owner.id)
-            reports[str(owner.id)] = await self.tasks.detect(caller)
-            if self.ontology is not None:
-                await self.ontology.canonicalise_index(caller)
+        if self.indexer is not None:
+            try:  # memories whose embedding failed at commit time get one now
+                await self.indexer.backfill()
+            except Exception:
+                log.warning("index backfill failed", exc_info=True)
+        callers = [await self.actors.caller(kind="service", name="scheduler")]
+        for owner in await self.store.select("owner", {"kind": "user"}, limit=10_000):
+            if owner.id is not None:
+                callers.append(
+                    await self.actors.caller(kind="service", name="scheduler", owner=owner.id)
+                )
+        for caller in callers:
+            try:
+                reports[str(caller.owner)] = await self.tasks.detect(caller)
+                if self.ontology is not None:
+                    await self.ontology.canonicalise_index(caller)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.warning("scheduled detection failed for %s", caller.owner, exc_info=True)
         self.last = reports
         return reports
 

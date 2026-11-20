@@ -32,8 +32,19 @@ class Mention:
     phrase: str
 
 
+def _singular(word: str) -> str:
+    """A plural folds onto its singular, so `dietary preferences` finds `dietary preference`.
+    Both sides of a match go through this, so a rough rule is enough."""
+    if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+        return word[:-1]
+    return word
+
+
 def _norm(text: str) -> str:
-    return " ".join(re.findall(r"[\w.+#-]+", text.casefold()))
+    """Words as written (`c++`, `24.04`, `c#`), without the sentence punctuation around them,
+    plurals folded."""
+    words = (w.strip(".-") for w in re.findall(r"[\w.+#-]+", text.casefold()))
+    return " ".join(_singular(w) for w in words if w)
 
 
 class Ontology:
@@ -202,7 +213,9 @@ class Ontology:
 
     def find(self, term: str) -> list[RecordId]:
         """Concepts whose label or alias equals `term` (normalised), best match first."""
-        return sorted(self._phrases.get(_norm(term), ()), key=str)
+        ids = self._phrases.get(_norm(term), set())
+        live = [c for c in ids if self.concepts[c].status != "deprecated"]
+        return sorted(live or ids, key=str)  # a merged name belongs to the survivor first
 
     def mentions(self, text: str) -> list[Mention]:
         """Concepts mentioned in free text by label/alias (longest phrase first, no overlap)."""
@@ -217,7 +230,8 @@ class Ontology:
                 ids = self._phrases.get(phrase)
                 if not ids:
                     continue
-                for cid in sorted(ids, key=str):
+                live = [c for c in ids if self.concepts[c].status != "deprecated"]
+                for cid in sorted(live or ids, key=str):
                     found.append(Mention(cid, phrase))
                 for j in range(i, i + n):
                     taken[j] = True

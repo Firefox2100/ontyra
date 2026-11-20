@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, FastAPI
 
 from ontyra.adapters import build_decider, build_embedder, build_reranker
 from ontyra.config import Settings, load_settings
-from ontyra.ports import Embedder, StatementComparer
+from ontyra.ports import Embedder, MessageClassifier, StatementComparer
 from ontyra.services import (
     ActorService,
     AnchorService,
@@ -30,15 +32,19 @@ from ontyra.services import (
     RerankTrainingService,
     TaskService,
 )
+from ontyra.services.backups import BackupService
 from ontyra.services.maintenance import Maintenance
 from ontyra.services.ontology_check import OntologyChecker
 from ontyra.services.recall_fusion import FusionRecallService
-from ontyra.storage import Database, SchemaManager, SurrealStore
+from ontyra.storage import Database, SchemaManager, SurrealStore, backup
 from ontyra.transports.rest import create_app
 
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -61,6 +67,7 @@ class Application:
     consolidation: ConsolidationService
     tasks: TaskService
     maintenance: Maintenance
+    backups: BackupService | None
     reranking: RerankTrainingService
     embedder: Embedder | None
 
@@ -88,6 +95,11 @@ class Application:
             episodes=settings.episodes,
         )
         decider = build_decider(settings.decision)
+        if settings.recall.filler_gate and not isinstance(decider, MessageClassifier):
+            log.warning(
+                "ONTYRA_RECALL__FILLER_GATE is on but no decision model that can classify "
+                "messages is configured (ONTYRA_DECISION__*): the gate does nothing"
+            )
         recall: RecallService
         if settings.recall.engine == "fusion":
             recall = FusionRecallService(
@@ -155,7 +167,10 @@ class Application:
             feedback=feedback,
             consolidation=consolidation,
             tasks=tasks,
-            maintenance=Maintenance(actors, tasks, store, settings.tasks, ontology=ontology),
+            maintenance=Maintenance(
+                actors, tasks, store, settings.tasks, ontology=ontology, indexer=indexer
+            ),
+            backups=_backups(db, settings, now),
             reranking=RerankTrainingService(
                 store, feedback, reranker, now, settings.rerank.min_examples
             ),
@@ -170,6 +185,33 @@ class Application:
 
     async def close(self) -> None:
         await self.db.close()
+
+
+def _backups(db: Database, settings: Settings, now: Callable[[], datetime]) -> BackupService | None:
+    """The scheduled export, when a directory is configured and the database is a server."""
+    cfg = settings.backup
+    if not cfg.dir:
+        return None
+    if cfg.every_hours <= 0 or not db.capabilities.export_import:
+        log.warning(
+            "ONTYRA_BACKUP__DIR is set but scheduled exports are off: they need a SurrealDB "
+            "server (not an embedded database) and ONTYRA_BACKUP__EVERY_HOURS above 0"
+        )
+        return None
+    db_cfg = settings.db
+
+    async def export() -> str:
+        return await backup.export_sql(
+            db_cfg.url,
+            namespace=db_cfg.namespace,
+            database=db_cfg.database,
+            username=db_cfg.username,
+            password=db_cfg.password.get_secret_value(),
+        )
+
+    return BackupService(
+        export, Path(cfg.dir), every_hours=cfg.every_hours, keep=max(1, cfg.keep), now=now
+    )
 
 
 async def create_application(
@@ -195,15 +237,17 @@ async def create_application(
 @asynccontextmanager
 async def open_application(settings: Settings) -> AsyncGenerator[Application]:
     application = await create_application(settings)
-    scheduler: asyncio.Task[None] | None = None
+    scheduled: list[asyncio.Task[None]] = []
     if settings.tasks.detect_every_hours > 0:
-        scheduler = asyncio.create_task(application.maintenance.run_forever())
+        scheduled.append(asyncio.create_task(application.maintenance.run_forever()))
+    if application.backups is not None:
+        scheduled.append(asyncio.create_task(application.backups.run_forever()))
     try:
         yield application
     finally:
-        if scheduler is not None:
-            scheduler.cancel()
-            await asyncio.gather(scheduler, return_exceptions=True)
+        for task in scheduled:
+            task.cancel()
+        await asyncio.gather(*scheduled, return_exceptions=True)
         await application.close()
 
 

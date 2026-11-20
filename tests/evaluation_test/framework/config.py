@@ -18,6 +18,8 @@ class EvalSettings(BaseSettings):
     repeat: int = 1  # samples per case (only useful with a temperature above 0)
     results_dir: str | None = None
 
+    arms: str = "none,injected,tools,both"  # which scenario arms to run (comma separated)
+
     llm_url: str = "http://127.0.0.1:8081/v1"
     llm_model: str = "qwen3.6-35b-a3b-uncensored-1m"
     llm_api_key: str = "none"

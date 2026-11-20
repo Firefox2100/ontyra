@@ -263,6 +263,7 @@ async def test_the_console_signs_in_with_a_human_credential_only(pair: Pair) -> 
             "/v1/admin/users/erin/credentials", json={"name": "bot", "kind": "agent"}, headers=admin
         )
     ).json()["token"]
+    c.base_url = httpx.URL("http://127.0.0.1:8787")  # the console is for the machine itself
     page = await c.get("/ui/review")
     assert page.status_code == 303 and page.headers["location"] == "/ui/login"
     assert (await c.get("/ui/login")).status_code == 200
@@ -272,7 +273,7 @@ async def test_the_console_signs_in_with_a_human_credential_only(pair: Pair) -> 
             "/ui/login", data={"token": ADMIN}, headers={"Origin": "https://attacker.test"}
         )
     ).status_code == 403
-    origin = {"Origin": "http://test"}
+    origin = {"Origin": "http://127.0.0.1:8787"}
     assert (await c.post("/ui/login", data={"token": "nope"}, headers=origin)).status_code == 401
     assert (
         await c.post("/ui/login", data={"token": agent_token}, headers=origin)

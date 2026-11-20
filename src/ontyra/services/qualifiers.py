@@ -138,14 +138,19 @@ def evaluate_one(q: Qualifier, observations: list[Observation], ontology: Ontolo
     an observed concept is declared disjoint with it; unknown: no signal.
     """
     concept = ontology.concepts.get(q.concept)
-    for obs in observations:
-        if not ontology.entails(obs.concept, q.concept):
-            continue
+    entailing = [o for o in observations if ontology.entails(o.concept, q.concept)]
+    if entailing:
         if q.op == "has" and q.value is None:
-            return Tri.NO if obs.value is False else Tri.YES
+            return Tri.NO if any(o.value is False for o in entailing) else Tri.YES
         if concept is None:
             return Tri.UNKNOWN
-        return _check_value(q, obs, concept)
+        # an observation that carries a value decides first: a bare one (a resource that is an
+        # instance of the concept) says the concept is there, not which version
+        for obs in sorted(entailing, key=lambda o: o.value is None):
+            verdict = _check_value(q, obs, concept)
+            if verdict is not Tri.UNKNOWN:
+                return verdict
+        return Tri.UNKNOWN
     if q.op in ("has", "=", "in") and any(
         ontology.disjoint(o.concept, q.concept) for o in observations
     ):

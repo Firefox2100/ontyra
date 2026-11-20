@@ -5,7 +5,8 @@ title: Calibrating thresholds
 Several settings are numbers whose right value depends on the model that produces the scores: the
 cosine below which recall stays silent, how close to the best result a candidate must be, the
 cosines of the duplicate scan. A different embedder needs different values. `ontyra calibrate`
-suggests them.
+suggests them (the fusion weights, `abstain_cosine`, and `concept_boost`: how much a memory about a
+concept the request mentions adds to its score. It stays 0 unless the benchmark shows a gain).
 
 ```bash
 ontyra calibrate            # lists what it will ask of the embedder, then stops

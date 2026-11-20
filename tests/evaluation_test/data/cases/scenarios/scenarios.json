@@ -1,0 +1,435 @@
+[
+ {
+  "id": "expense-approval",
+  "tags": [
+   "stale",
+   "office"
+  ],
+  "why": "a limit was raised: the old one must not be used",
+  "prompt": "My expense claim for a conference trip is 400 EUR. Who has to approve it?",
+  "must": [
+   "line manager"
+  ],
+  "forbid": [
+   "director"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "vat-rate",
+  "tags": [
+   "stale",
+   "office"
+  ],
+  "why": "the standard rate changed on a date",
+  "prompt": "Which VAT rate do I put on an invoice for a book sold today?",
+  "must": [
+   "\\b9 ?%"
+  ],
+  "forbid": [
+   "\\b20 ?%"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "leave-days",
+  "tags": [
+   "stale",
+   "office"
+  ],
+  "why": "the entitlement and the carry-over changed",
+  "prompt": "How many days of annual leave do I get, and can I carry some over?",
+  "must": [
+   "\\b28\\b",
+   "\\b5\\b"
+  ],
+  "forbid": [
+   "\\b25 days"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "home-address",
+  "tags": [
+   "stale",
+   "daily"
+  ],
+  "why": "the user moved",
+  "prompt": "Write the address line for a courier parcel that is coming to me.",
+  "must": [
+   "Kade 7"
+  ],
+  "forbid": [
+   "Havenstraat"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "pg-version",
+  "tags": [
+   "stale",
+   "dev"
+  ],
+  "why": "the production database was upgraded",
+  "prompt": "Which PostgreSQL major version does the tidewatch production database run?",
+  "must": [
+   "\\b16\\b"
+  ],
+  "forbid": [
+   "\\b14\\b"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "genome",
+  "tags": [
+   "stale",
+   "research"
+  ],
+  "why": "the reference genome was replaced",
+  "prompt": "Which reference genome and annotation release should I align my zebrafish reads to?",
+  "must": [
+   "GRCz11",
+   "110"
+  ],
+  "forbid": [
+   "GRCz10"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "animal-protocol",
+  "tags": [
+   "stale",
+   "research"
+  ],
+  "why": "a protocol was renewed",
+  "prompt": "What protocol number has to be on a new cage card?",
+  "must": [
+   "ZF-2026-02"
+  ],
+  "forbid": [
+   "ZF-2023-07"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "python-version",
+  "tags": [
+   "stale",
+   "dev"
+  ],
+  "why": "an image upgrade changed the interpreter",
+  "prompt": "Which Python version should I use to run pipeline-ml?",
+  "must": [
+   "3\\.11"
+  ],
+  "forbid": [
+   "3\\.10"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "refund-window",
+  "tags": [
+   "stale",
+   "office"
+  ],
+  "why": "the return window was extended",
+  "prompt": "A customer asks for a refund 20 days after the order. Is that still possible?",
+  "must": [
+   "(yes|possible|within|can)"
+  ],
+  "forbid": [
+   "(no longer|not possible|too late|outside)"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "laptop-depreciation",
+  "tags": [
+   "stale",
+   "office"
+  ],
+  "why": "the period changed",
+  "prompt": "Over how many years do we depreciate a new laptop?",
+  "must": [
+   "\\b3\\b"
+  ],
+  "forbid": [
+   "\\b4 years"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "events-budget",
+  "tags": [
+   "stale",
+   "office"
+  ],
+  "why": "the budget was revised",
+  "prompt": "How much of the marketing budget is reserved for events this year?",
+  "must": [
+   "120[, ]?000"
+  ],
+  "forbid": [
+   "450[, ]?000"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "tyre-pressure",
+  "tags": [
+   "retracted",
+   "daily"
+  ],
+  "why": "an early value was retracted",
+  "prompt": "What tyre pressure should I set for the loaded car?",
+  "must": [
+   "2\\.5",
+   "2\\.7"
+  ],
+  "forbid": [
+   "2\\.2"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "plastic-collection",
+  "tags": [
+   "retracted",
+   "daily"
+  ],
+  "why": "a wrong weekday was retracted",
+  "prompt": "On which day is plastic waste collected?",
+  "must": [
+   "Thursday"
+  ],
+  "forbid": [
+   "every Monday"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "two-approvers",
+  "tags": [
+   "rule",
+   "office"
+  ],
+  "why": "a threshold rule",
+  "prompt": "A supplier invoice for 12,000 EUR just arrived. What has to happen before it is paid?",
+  "must": [
+   "(two|2) approvers?"
+  ],
+  "forbid": [],
+  "split": "holdout"
+ },
+ {
+  "id": "procurement",
+  "tags": [
+   "rule",
+   "office"
+  ],
+  "why": "a procedure with a threshold",
+  "prompt": "I want to buy a 1,500 EUR workstation for the team. What is the process?",
+  "must": [
+   "(three|3) quotes",
+   "purchase order"
+  ],
+  "forbid": [],
+  "split": "tune"
+ },
+ {
+  "id": "dinner-guests",
+  "tags": [
+   "preference",
+   "daily"
+  ],
+  "why": "a standing dietary preference",
+  "prompt": "Suggest a dinner menu for the guests I am hosting tonight.",
+  "must": [
+   "vegetarian|vegetable|veggie"
+  ],
+  "forbid": [
+   "\\b(chicken|beef|pork|steak|lamb|bacon)\\b"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "add-dependency",
+  "tags": [
+   "rule",
+   "dev"
+  ],
+  "why": "a project rule about tooling",
+  "prompt": "Add the requests library to the tidewatch project. Which command do I run?",
+  "must": [
+   "uv add|uv pip|uv sync"
+  ],
+  "forbid": [
+   "^\\s*pip install"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "publish-app",
+  "tags": [
+   "rule",
+   "dev"
+  ],
+  "why": "an environment rule",
+  "prompt": "I wrote a small web app. How do I publish it on a work server?",
+  "must": [
+   "8888",
+   "(reverse proxy|proxy|virtual host)"
+  ],
+  "forbid": [
+   "open (a |the )?(new )?port"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "find-paper",
+  "tags": [
+   "rule",
+   "research"
+  ],
+  "why": "a habit about where papers live",
+  "prompt": "Find the paper 'Attention Is All You Need' and save it so I can read it later.",
+  "must": [
+   "Zotero"
+  ],
+  "forbid": [],
+  "split": "tune"
+ },
+ {
+  "id": "geant-version",
+  "tags": [
+   "stale",
+   "research"
+  ],
+  "why": "an upgrade",
+  "prompt": "Which Geant4 version does the detector response simulation use?",
+  "must": [
+   "11\\.2"
+  ],
+  "forbid": [
+   "11\\.1\\b"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "arithmetic",
+  "tags": [
+   "none"
+  ],
+  "why": "nothing to remember",
+  "prompt": "What is 17 times 3?",
+  "must": [
+   "\\b51\\b"
+  ],
+  "forbid": [],
+  "split": "tune",
+  "calls": {
+   "require": [],
+   "forbid": [
+    "recall",
+    "check",
+    "remember"
+   ]
+  },
+  "arms": [
+   "none",
+   "tools",
+   "both"
+  ]
+ },
+ {
+  "id": "greeting",
+  "tags": [
+   "none"
+  ],
+  "why": "a pleasantry",
+  "prompt": "Thanks, that was helpful!",
+  "must": [],
+  "forbid": [],
+  "split": "holdout",
+  "calls": {
+   "require": [],
+   "forbid": [
+    "remember"
+   ]
+  },
+  "arms": [
+   "none",
+   "tools",
+   "both"
+  ]
+ },
+ {
+  "id": "save-preference",
+  "tags": [
+   "write"
+  ],
+  "why": "a lasting preference is stated",
+  "prompt": "From now on, always answer me in short bullet points, never in long paragraphs. Please remember that.",
+  "must": [],
+  "forbid": [],
+  "split": "tune",
+  "calls": {
+   "require": [
+    "remember"
+   ],
+   "forbid": []
+  },
+  "arms": [
+   "tools",
+   "both"
+  ],
+  "fresh": true
+ },
+ {
+  "id": "save-decision",
+  "tags": [
+   "write"
+  ],
+  "why": "a decision with a reason",
+  "prompt": "We decided to keep using PostgreSQL for the billing service because the team already knows it. Make a note of that.",
+  "must": [],
+  "forbid": [],
+  "split": "holdout",
+  "calls": {
+   "require": [
+    "remember"
+   ],
+   "forbid": []
+  },
+  "arms": [
+   "tools",
+   "both"
+  ],
+  "fresh": true
+ },
+ {
+  "id": "no-save-chitchat",
+  "tags": [
+   "write"
+  ],
+  "why": "nothing durable",
+  "prompt": "It's rainy today, I think I'll take my umbrella.",
+  "must": [],
+  "forbid": [],
+  "split": "tune",
+  "calls": {
+   "require": [],
+   "forbid": [
+    "remember"
+   ]
+  },
+  "arms": [
+   "tools",
+   "both"
+  ],
+  "fresh": true
+ }
+]

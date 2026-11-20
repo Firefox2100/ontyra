@@ -25,6 +25,7 @@ from ontyra.models.ontology import (
     RelationRequest,
     RelationView,
     concept_slug,
+    try_slug,
 )
 from ontyra.ports import Create, Relate, Store, Update, Write
 from ontyra.services import errors
@@ -32,6 +33,7 @@ from ontyra.services.context import Caller
 from ontyra.services.reasoner import Ontology
 
 MAX_CONCEPTS = 20_000
+HIERARCHY = ("is_a", "part_of", "instance_of")
 
 
 class OntologyService:
@@ -39,6 +41,7 @@ class OntologyService:
         self.store = store
         self.now = now
         self._snapshot: Ontology | None = None
+        self._generation = 0  # bumped by every invalidation: a snapshot read before it is stale
         # One writer at a time: a change plans from the snapshot and then commits one batch, so
         # two changes must not interleave (the daemon is one process; plans/23).
         self.lock = asyncio.Lock()
@@ -48,16 +51,21 @@ class OntologyService:
     async def ontology(self) -> Ontology:
         """The current reasoner snapshot (rebuilt after any ontology write)."""
         if self._snapshot is None:
+            generation = self._generation
             rows = await self.store.select("concept", limit=MAX_CONCEPTS)
             concepts = {c.id: c for c in rows if isinstance(c, Concept) and c.id is not None}
             edges = await self.store.edges("related", limit=MAX_CONCEPTS * 10)
-            self._snapshot = Ontology(
+            built = Ontology(
                 concepts,
                 [(e["in"], e["relation"], e["out"]) for e in edges if not e.get("ended_at")],
             )
+            if generation != self._generation:  # a write landed while this was being read
+                return built  # good for this caller, but never cached
+            self._snapshot = built
         return self._snapshot
 
     def invalidate(self) -> None:
+        self._generation += 1
         self._snapshot = None
 
     # ---- lookup ----------------------------------------------------------------
@@ -74,7 +82,7 @@ class OntologyService:
             cid = RecordId("concept", text.partition(":")[2])
             if cid in onto.concepts:
                 return cid
-        slug = RecordId("concept", concept_slug(text)) if text else None
+        slug = RecordId("concept", try_slug(text) or "") if text and try_slug(text) else None
         if slug is not None and slug in onto.concepts:
             return slug
         found = onto.find(text)
@@ -99,7 +107,7 @@ class OntologyService:
         onto = await self.ontology()
         ids = onto.find(term)
         if not ids:
-            slug = RecordId("concept", concept_slug(term)) if term.strip() else None
+            slug = RecordId("concept", try_slug(term) or "") if try_slug(term) else None
             ids = [slug] if slug is not None and slug in onto.concepts else []
         offered: list[RecordId] = []
         for i in ids:
@@ -189,7 +197,18 @@ class OntologyService:
             raise errors.InvalidRequestError("a version concept needs a version_scheme")
         if request.value_type == "enum" and not request.values:
             raise errors.InvalidRequestError("an enum concept needs its values")
+        taken = {
+            name.casefold().strip(): other
+            for other, c in onto.concepts.items()
+            for name in (c.label, *c.aliases)
+        }
+        for name in (label, *request.aliases):
+            if name.strip() and (hit := taken.get(name.casefold().strip())) is not None:
+                raise errors.InvalidRequestError(f"{name!r} already names {hit}")
         parents = [await self.resolve(p) for p in request.is_a]
+        for parent in parents:
+            if onto.concepts[parent].status == "deprecated":
+                raise errors.InvalidRequestError(f"{parent} is deprecated: use its successor")
         now = self.now()
         concept = Concept(
             label=label,
@@ -341,45 +360,74 @@ class OntologyService:
         )
 
     async def relate(self, caller: Caller, request: RelationRequest) -> ConceptView:
+        """A direct curator write of one relation (changes made through proposals are planned
+        by `OntologyPlanner`, which records them)."""
         src = await self.resolve(request.source)
         dst = await self.resolve(request.target)
         if src == dst:
             raise errors.InvalidRequestError("a concept cannot be related to itself")
-        onto = await self.ontology()
         rel: RelationName = request.relation
-        existing = {(d, r, o) for d, r, o in onto.neighbours(src)}
-        if ("out", rel, dst) in existing:
-            return await self.get(caller, src)
-        if rel in ("is_a", "part_of", "instance_of") and src in onto.ancestors(dst, (rel,)):
-            raise errors.ConflictError(f"{dst} is already a kind of {src}: that would be a cycle")
-        await self.store.apply(
-            [
-                Relate(
-                    "related",
-                    src,
-                    dst,
-                    Related(relation=rel, by=caller.actor_id, at=self.now()).model_dump(
-                        mode="python", exclude={"id"}
-                    ),
+        if rel in ("split_into", "replaced_by"):
+            raise errors.InvalidRequestError(
+                "use a split or a deprecation to say what replaced a concept"
+            )
+        async with self.lock:
+            onto = await self.ontology()
+            for cid in (src, dst):
+                if onto.concepts[cid].status == "deprecated":
+                    raise errors.InvalidRequestError(f"{cid} is deprecated: relate its successor")
+            if ("out", rel, dst) in set(onto.neighbours(src)):
+                return await self.get(caller, src)
+            if rel in HIERARCHY and src in onto.ancestors(dst, HIERARCHY):
+                raise errors.ConflictError(
+                    f"{dst} is already a kind of {src}: that would be a cycle"
                 )
-            ]
-        )
-        self.invalidate()
+            await self.store.apply(
+                [
+                    Relate(
+                        "related",
+                        src,
+                        dst,
+                        Related(relation=rel, by=caller.actor_id, at=self.now()).model_dump(
+                            mode="python", exclude={"id"}
+                        ),
+                    )
+                ]
+            )
+            self.invalidate()
         return await self.get(caller, src)
 
     async def deprecate(
         self, caller: Caller, concept: RecordId, replaced_by: RecordId | None = None
     ) -> ConceptView:
-        onto = await self.ontology()
-        if concept not in onto.concepts:
-            raise errors.NotFoundError(f"unknown concept {concept}")
-        if replaced_by is not None and replaced_by not in onto.concepts:
-            raise errors.NotFoundError(f"unknown concept {replaced_by}")
-        patch: dict[str, object] = {"status": "deprecated", "updated_at": self.now()}
-        if replaced_by is not None:
-            patch["replaced_by"] = replaced_by
-        await self.store.apply([Update(concept, patch)])
-        self.invalidate()
+        """A direct curator write (a new version is recorded, like any other change)."""
+        async with self.lock:
+            onto = await self.ontology()
+            c = onto.concepts.get(concept)
+            if c is None:
+                raise errors.NotFoundError(f"unknown concept {concept}")
+            if replaced_by is not None and replaced_by not in onto.concepts:
+                raise errors.NotFoundError(f"unknown concept {replaced_by}")
+            before = c.version or 1
+            writes: list[Write] = (
+                [] if c.version else [self.version_write(concept, c, 1, None, None)]
+            )
+            patch: dict[str, object] = {
+                "status": "deprecated",
+                "updated_at": self.now(),
+                "version": before + 1,
+            }
+            if replaced_by is not None:
+                patch["replaced_by"] = replaced_by
+            after = c.model_copy(update={"status": "deprecated", "replaced_by": replaced_by})
+            await self.store.apply(
+                [
+                    *writes,
+                    Update(concept, patch),
+                    self.version_write(concept, after, before + 1, caller, None),
+                ]
+            )
+            self.invalidate()
         return await self.get(caller, concept)
 
     async def count_memories(self, caller: Caller, concept: RecordId) -> int:

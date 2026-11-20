@@ -1,0 +1,274 @@
+[
+ {
+  "id": "f00",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "thanks!",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f01",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "ok great, thank you",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f02",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "lol nice",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f03",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "perfect",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f04",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "got it",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f05",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "cool, thanks a lot",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f06",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "haha that worked",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f07",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "good morning",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f08",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "hello again",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f09",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "great job",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f10",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "ok",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f11",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "awesome, thanks",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f12",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "nice one",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f13",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "sounds good",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f14",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "you're the best",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "f15",
+  "realm": "mixed",
+  "label": "filler",
+  "history": [],
+  "say": "thanks, that's all for now",
+  "why": "a reaction that asks for nothing"
+ },
+ {
+  "id": "r00",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "ok, run the migration on the staging server",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r01",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "thanks, now deploy it to production",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r02",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "great, what port does the staging api listen on",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r03",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "nice. remind me how we release tidewatch",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r04",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "cool, can you also bump the version",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r05",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "ok but do we still use pipenv here",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r06",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "thanks! one more thing: which python version does the project need",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r07",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "perfect, now write the changelog entry",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r08",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "got it, so who approves invoices over 10,000",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r09",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "hello, what is on my schedule for tomorrow",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r10",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "good morning, did the backup run last night",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r11",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "sounds good, send the report to the finance team",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r12",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "lol ok, but what is the tyre pressure for the car",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r13",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "ok delete the old branches",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r14",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "awesome, push it",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r15",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "great. should I use a t-test or mann-whitney here",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r16",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "thanks. what recipes do we make on sundays",
+  "why": "has a real request after a pleasantry or is one"
+ },
+ {
+  "id": "r17",
+  "realm": "mixed",
+  "label": "standalone",
+  "history": [],
+  "say": "cool, restart the apache service on the work server",
+  "why": "has a real request after a pleasantry or is one"
+ }
+]

@@ -24,6 +24,13 @@ async def populate(
     for concept in world.concepts:
         await app.ontology.define(curator, concept)
     for rel in world.relations:
+        if rel.relation == "replaced_by":  # a replacement is a deprecation, not a plain relation
+            await app.ontology.deprecate(
+                curator,
+                await app.ontology.resolve(rel.source),
+                await app.ontology.resolve(rel.target),
+            )
+            continue
         await app.ontology.relate(
             curator, RelationRequest(source=rel.source, relation=rel.relation, target=rel.target)
         )

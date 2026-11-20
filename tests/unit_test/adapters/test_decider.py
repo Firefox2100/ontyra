@@ -11,6 +11,7 @@ import pytest
 from ontyra.adapters import LangChainDecider, SystemOneDecider, build_decider
 from ontyra.adapters.decider import clip
 from ontyra.config import DecisionSettings
+from ontyra.ports import MessageClassifier
 from ontyra.ports.errors import DecisionError
 
 SITUATION = "Working at: ssh://user@host\nRequest from the user: where do I install this?"
@@ -215,3 +216,41 @@ async def test_same_cuts_each_memory_to_compare_chars() -> None:
 async def test_same_fails_with_a_decision_error(server: Server) -> None:
     with pytest.raises(DecisionError):
         await decider(server).same("a", "b")
+
+
+async def test_the_filler_question_is_asked_without_history_and_reads_one_probability() -> None:
+    answers = {
+        "kind": {
+            "type": "choice",
+            "choice": "filler",
+            "probabilities": {"standalone": 0.05, "refers_back": 0.05, "filler": 0.9},
+            "confidence": 0.8,
+        }
+    }
+    server = Server(body={"answers": answers})
+    assert await decider(server).filler("thanks!") == 0.9
+    sent = server.sent()
+    assert "thanks!" in sent["state"] and "no earlier conversation" in sent["state"]
+    assert set(sent["questions"]["kind"]["criteria"]) == {"standalone", "refers_back", "filler"}
+    assert isinstance(decider(server), MessageClassifier)
+
+
+async def test_a_filler_answer_that_cannot_be_read_is_a_decision_error() -> None:
+    with pytest.raises(DecisionError):
+        await decider(Server(body={"answers": {}})).filler("ok")
+    with pytest.raises(DecisionError):
+        await decider(Server(status=500, body={"error": {"message": "down"}})).filler("ok")
+
+
+async def test_a_langchain_model_answers_the_filler_question_too() -> None:
+    answers = {
+        "kind": {
+            "type": "choice",
+            "choice": "filler",
+            "probabilities": {"standalone": 0.1, "filler": 0.8},
+            "confidence": 0.7,
+        }
+    }
+    model = _fake_langchain(answers)
+    assert await LangChainDecider(model, name="fake").filler("lol") == 0.8
+    assert "lol" in model.seen[0][0]

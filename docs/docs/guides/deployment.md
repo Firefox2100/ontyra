@@ -56,8 +56,14 @@ ontyra db import backups/ontyra-....surql --yes   # into an EMPTY database (refu
 ```
 
 It reads the same `ONTYRA_DB__*` settings as the daemon and needs a SurrealDB server (not an
-embedded database). Take an export before every upgrade that changes the schema, and schedule one
-(a cron job or systemd timer running `ontyra db export /path --keep N`). The files hold all your
+embedded database). Take an export before every upgrade that changes the schema.
+
+**Scheduled exports** (create `./backups` first with `mkdir -p backups`, otherwise Docker creates it
+owned by root and the daemon cannot write there): set `ONTYRA_BACKUP__DIR` and the daemon exports by itself every
+`ONTYRA_BACKUP__EVERY_HOURS` (24), keeping the newest `ONTYRA_BACKUP__KEEP` (14). It waits out what is
+left of the interval since the newest file, so restarts do not export again. The compose file mounts
+`./backups` for this and runs the daemon as `ONTYRA_UID`/`ONTYRA_GID` (set them in `.env` to your own
+user so the directory is writable and the files are yours; they are readable by you only). The files hold all your
 memories: keep them as private as the database. Copying `./data/surrealdb` with the stack stopped
 (`docker compose stop`) also works.
 

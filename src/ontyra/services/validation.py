@@ -402,10 +402,11 @@ class _Ctx:
         for token in op.derived_from:
             src = await self._resolve(i, token)
             if src is not None:
-                source_memory = await self.o.store.get(src[0])
-                if not isinstance(source_memory, Memory) or source_memory.owner != self.v.owner:
-                    self.error(i, "owner_mismatch", "derived memories must have the same owner")
-                    continue
+                if not src[2]:  # an existing memory; one added in this proposal has our owner
+                    source_memory = await self.o.store.get(src[0])
+                    if not isinstance(source_memory, Memory) or source_memory.owner != self.v.owner:
+                        self.error(i, "owner_mismatch", "derived memories must have the same owner")
+                        continue
                 sources.append(src[1])
         self._unscoped(i, model, mem)
         await self._similar(i, op.kind, model)
@@ -545,6 +546,12 @@ class _Ctx:
             if isinstance(new_row, Memory) and new_row.owner != t_mem.owner:
                 self.error(i, "owner_mismatch", "both memories must have the same owner")
                 return
+            if new_mem in self.touched:  # another op of this proposal changes it too
+                self.error(
+                    i, "duplicate_target", f"{new_mem} is changed by another op of this proposal"
+                )
+                return
+            self.touched.add(new_mem)
         assert t_rev.id is not None
         self.v.prepared.append(
             PreparedSupersede(

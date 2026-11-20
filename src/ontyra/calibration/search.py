@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import bisect
 import statistics
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
 from ontyra.calibration.models import Case
@@ -21,6 +21,7 @@ from ontyra.calibration.ranking import Row, labels
 
 OVERFETCH = 150  # per lane, as the fusion engine's default
 ALPHAS = (0.0, 0.1, 0.2, 0.3, 0.4, 0.6)
+BOOSTS = (0.0, 0.05, 0.1, 0.2, 0.3)  # `concept_boost`: what a memory about a mentioned concept adds
 MARGINS = tuple(round(0.02 * i, 2) for i in range(1, 21))  # 0.02 .. 0.40
 Baseline = Literal["mean", "min"]
 
@@ -31,6 +32,7 @@ class Setting:
     baseline: Baseline
     margin: float
     tau: float  # abstain when the best cosine is below this (0 = never)
+    boost: float = 0.0  # concept_boost
 
     def env(self) -> dict[str, str]:
         return {
@@ -38,6 +40,7 @@ class Setting:
             "ONTYRA_RECALL__FUSION_BASELINE": self.baseline,
             "ONTYRA_RECALL__FUSION_MARGIN": f"{self.margin:g}",
             "ONTYRA_RECALL__ABSTAIN_COSINE": f"{self.tau:.3f}",
+            "ONTYRA_RECALL__CONCEPT_BOOST": f"{self.boost:g}",
         }
 
 
@@ -52,21 +55,27 @@ class Request:
     relevant: set[str]
     negative: set[str]
     best_cos: float | None = None
-    _ranked: dict[tuple[float, str], tuple[list[float], list[str]]] = field(
+    missing: bool = False  # a relevant memory was never retrieved by any lane: no setting fixes it
+    _ranked: dict[tuple[float, str, float], tuple[list[float], list[str]]] = field(
         default_factory=lambda: {}
     )
 
-    def ranked(self, alpha: float, baseline: Baseline) -> tuple[list[float], list[str]]:
+    def ranked(
+        self, alpha: float, baseline: Baseline, boost: float = 0.0
+    ) -> tuple[list[float], list[str]]:
         """Fused scores, best first (negated, so `bisect` can search them) and the keys."""
-        if (alpha, baseline) not in self._ranked:
-            scores = fused(self.pool, alpha, baseline)
+        key = (alpha, baseline, boost)
+        if key not in self._ranked:
+            scores = fused(self.pool, alpha, baseline, boost)
             keys = sorted(scores, key=lambda k: (-scores[k], k))
-            self._ranked[(alpha, baseline)] = ([-scores[k] for k in keys], keys)
-        return self._ranked[(alpha, baseline)]
+            self._ranked[key] = ([-scores[k] for k in keys], keys)
+        return self._ranked[key]
 
 
-def fused(pool: list[Row], alpha: float, baseline: Baseline) -> dict[str, float]:
-    """The fusion engine's score: `alpha * lexical + (1 - alpha) * dense`."""
+def fused(
+    pool: list[Row], alpha: float, baseline: Baseline, boost: float = 0.0
+) -> dict[str, float]:
+    """The fusion engine's score: `alpha * lexical + (1 - alpha) * dense + boost * concept`."""
     top_bm25 = max((r.bm25 or 0.0 for r in pool), default=0.0) or 1.0
     cosines = [r.cos for r in pool if r.cos is not None]
     base = top = 0.0
@@ -78,8 +87,12 @@ def fused(pool: list[Row], alpha: float, baseline: Baseline) -> dict[str, float]
     out: dict[str, float] = {}
     for r in pool:
         lexical = (r.bm25 or 0.0) / top_bm25 * r.cov if r.bm25 is not None else 0.0
-        dense = max(0.0, (r.cos - base) / span) if r.cos is not None else 0.0
-        out[r.key] = a * lexical + (1 - a) * dense
+        dense = (
+            (1.0 if top - base < 1e-9 else max(0.0, (r.cos - base) / span))
+            if r.cos is not None
+            else 0.0
+        )
+        out[r.key] = a * lexical + (1 - a) * dense + boost * (r.concept or 0.0)
     return out
 
 
@@ -111,6 +124,7 @@ def requests(
                 silent=case.silent,
                 pool=pool,
                 relevant=relevant & set(keys),
+                missing=bool(relevant - set(keys)),
                 negative=negative,
                 best_cos=max(cosines) if cosines else None,
             )
@@ -120,9 +134,11 @@ def requests(
 
 def passes(request: Request, s: Setting) -> bool:
     """Would the engine, with these settings, answer this request correctly?"""
+    if not request.silent and (request.missing or not request.relevant):
+        return False  # what had to come back was never a candidate: no setting can fix that
     if request.best_cos is not None and request.best_cos < s.tau:
         return request.silent  # abstained: right only when silence was expected
-    negated, keys = request.ranked(s.alpha, s.baseline)
+    negated, keys = request.ranked(s.alpha, s.baseline, s.boost)
     if not keys:
         return request.silent
     best = -negated[0]
@@ -173,11 +189,23 @@ def suggest(reqs: list[Request]) -> Suggestion:
     scored = [(sum(passes(r, s) for r in tune), s) for s in grid]
     top = max(score for score, _ in scored)
     ties = [s for score, s in scored if score == top]
+    # the concept boost is searched second, around the settings that tie (a full cross product
+    # would multiply the grid by the number of boosts); the smallest boost among equals wins
+    boosted = [
+        (sum(passes(r, replace(s, boost=c)) for r in tune), replace(s, boost=c))
+        for s in ties
+        for c in BOOSTS
+    ]
+    top = max(score for score, _ in boosted)
+    ties = [s for score, s in boosted if score == top]
+    smallest = min(s.boost for s in ties)
+    ties = [s for s in ties if s.boost == smallest]
     middle = Setting(
         alpha=statistics.median_low(sorted({s.alpha for s in ties})),
         baseline="mean" if sum(s.baseline == "mean" for s in ties) * 2 >= len(ties) else "min",
         margin=statistics.median_low(sorted({s.margin for s in ties})),
         tau=statistics.median_low(sorted({s.tau for s in ties})),
+        boost=smallest,
     )
     chosen = middle if sum(passes(r, middle) for r in tune) == top else ties[0]
     tops = sorted(r.best_cos for r in reqs if r.best_cos is not None)

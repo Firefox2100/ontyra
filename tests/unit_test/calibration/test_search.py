@@ -97,3 +97,15 @@ def test_calibrate_command_lists_the_cost_and_refuses_a_paid_model_without_yes(
     assert main(["calibrate"]) == 2
     captured = capsys.readouterr()
     assert "will embed up to" in captured.out and "--yes" in captured.err
+
+
+def test_a_concept_boost_can_lift_a_memory_the_text_lanes_rank_low() -> None:
+    wanted = Row("about-the-concept", None, 0.54, 0.9, 0.0, True, None, None)
+    other = Row("textual-neighbour", None, 0.55, None, 0.0, True, None, None)
+    far = Row("unrelated", None, 0.10, None, 0.0, True, None, None)
+    req = request([wanted, other, far], {"about-the-concept"})
+    assert not search.passes(req, search.Setting(0.0, "min", 0.05, 0.0, 0.0))  # text lanes alone
+    assert search.passes(
+        req, search.Setting(0.0, "min", 0.05, 0.0, 0.3)
+    )  # the concept lane lifts it
+    assert search.Setting(0.0, "min", 0.05, 0.0, 0.3).env()["ONTYRA_RECALL__CONCEPT_BOOST"] == "0.3"

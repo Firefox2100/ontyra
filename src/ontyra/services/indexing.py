@@ -133,7 +133,10 @@ class IndexService:
             docs = await self.store.unembedded(self.embedder.name, limit=batch)
             if not docs:
                 break
-            total += await self._embed_docs(docs)
+            done = await self._embed_docs(docs)
+            if done == 0:  # nothing took: the same documents would come back for ever
+                break
+            total += done
         return total
 
     async def rebuild_docs(self) -> int:
@@ -150,7 +153,13 @@ class IndexService:
                     [
                         Upsert.of(
                             doc_id(mem.current),
-                            doc_for(rev, mem.current, mem.kind, mem.owner, self.now()),
+                            doc_for(
+                                rev,
+                                mem.current,
+                                mem.kind,
+                                mem.owner,
+                                getattr(rev, "recorded_at", None) or self.now(),
+                            ),
                         )
                     ]
                 )

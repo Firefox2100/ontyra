@@ -7,6 +7,7 @@ differences as `Capabilities` and offers only operations that behave the same ev
 
 from __future__ import annotations
 
+import asyncio
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -19,6 +20,7 @@ from surrealdb import errors as sdk_errors
 from ontyra.storage import errors
 from ontyra.storage.codec import encode
 
+WRITE_CONFLICT_RETRIES = 4  # attempts of an atomic batch the engine asks to be retried
 _EMBEDDED_SCHEMES = {"mem", "memory", "file", "surrealkv", "rocksdb"}
 _SERVER_SCHEMES = {"ws", "wss", "http", "https"}
 
@@ -65,8 +67,10 @@ def capabilities_for(url: str) -> Capabilities:
 def _classify(kind: str, message: str) -> errors.StorageError:
     """Map a SurrealDB error (kind + message) to a storage error."""
     low = message.lower()
-    if "ontyra:conflict" in low or "write conflict" in low or "can be retried" in low:
-        return errors.ConflictError(message)  # our guard, or the engine's optimistic commit
+    if "ontyra:conflict" in low:
+        return errors.ConflictError(message)  # our own guard failed: final
+    if "write conflict" in low or "can be retried" in low:
+        return errors.RetryableConflictError(message)  # the engine's optimistic commit
     if "readonly" in low or "is immutable" in low:
         return errors.ImmutableViolationError(message)
     if "already contains" in low:
@@ -165,7 +169,17 @@ class Database:
         specific storage error for the cause.
         """
         body = "; ".join(s.strip().rstrip(";") for s in statements if s.strip())
-        return await self.query(f"BEGIN; {body}; COMMIT;", vars)
+        for attempt in range(WRITE_CONFLICT_RETRIES):
+            try:
+                return await self.query(f"BEGIN; {body}; COMMIT;", vars)
+            except errors.RetryableConflictError:
+                # The engine says the transaction can be run again (an index or a concurrent
+                # writer touched the same record): nothing was written, so retry. A conflict
+                # of ours (`ontyra:conflict`, a guard that failed) is a plain ConflictError.
+                if attempt == WRITE_CONFLICT_RETRIES - 1:
+                    raise
+                await asyncio.sleep(0.05 * (attempt + 1))
+        raise AssertionError("unreachable")  # pragma: no cover
 
     async def info_db(self) -> dict[str, Any]:
         return (await self.query("INFO FOR DB"))[0]

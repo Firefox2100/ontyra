@@ -334,3 +334,83 @@ async def test_without_a_client_the_loop_stops_after_the_first_call() -> None:
 def test_system_prompt_carries_the_server_instructions() -> None:
     text = system_prompt("/work", "extra note")
     assert "call `recall`" in text and "/work" in text and text.endswith("extra note")
+
+
+# ---- scenarios (offline: scripted model, real server) ------------------------------------------
+
+
+async def test_scenario_data_is_valid_and_graded_by_regex_and_calls() -> None:
+    from evaluation_test.framework.scenario import ARMS, grade, load_scenarios
+
+    scenarios = load_scenarios()
+    assert len({s.id for s in scenarios}) == len(scenarios) >= 20
+    assert {t for s in scenarios for t in s.tags} >= {"stale", "retracted", "rule", "write", "none"}
+    assert all(set(s.arms) <= set(ARMS) for s in scenarios)
+    by_id = {s.id: s for s in scenarios}
+    ok = grade(by_id["expense-approval"], "Your line manager approves it.", [])
+    assert ok.passed
+    bad = grade(by_id["expense-approval"], "The director has to approve.", [])
+    assert not bad.passed and any("director" in f for f in bad.failed)
+    write = by_id["save-preference"]
+    assert not grade(write, "Noted.", []).passed and grade(write, "Noted.", ["remember"]).passed
+    assert not grade(by_id["arithmetic"], "51", ["recall"]).passed
+
+
+async def test_the_arms_give_the_model_memory_in_different_ways(world_app) -> None:
+    from evaluation_test.framework.scenario import load_scenarios, run_scenario
+    from ontyra.calibration.models import load_world
+
+    app, agent, _ = await world_app(load_world("commons"))
+    scenario = next(s for s in load_scenarios() if s.id == "expense-approval")
+    seen: dict[str, list] = {}
+
+    def script(messages, tools, force):  # type: ignore[no-untyped-def]
+        seen["last"] = messages
+        seen["tools"] = tools
+        return Reply(text="The line manager approves claims under 500 EUR.")
+
+    async with Client(create_mcp(lambda: app, profile="lite")) as client:  # type: ignore[arg-type]
+        listed = await client.list_tools()
+        specs = tool_specs(
+            [
+                {"name": t.name, "description": t.description, "input_schema": t.input_schema}
+                for t in listed
+            ]
+        )
+        rows = {}
+        for arm in ("none", "injected", "tools", "both"):
+            rows[arm] = await run_scenario(
+                ScriptedChat(script),
+                scenario,
+                arm,
+                app=app,
+                agent=agent,
+                client=client,
+                specs=specs,
+            )
+            assert bool(seen["tools"]) == (arm in ("tools", "both"))
+            user = seen["last"][1]["content"]
+            assert ("ontyra-context" in user) == (arm in ("injected", "both"))
+            assert ("Ontyra" in seen["last"][0]["content"]) == (arm in ("tools", "both"))
+    assert all(r["passed"] for r in rows.values()) and rows["injected"]["injected"]
+    assert rows["none"]["transcript"][0]["role"] == "system" and not rows["none"]["called"]
+
+
+async def test_a_saved_transcript_is_regraded_without_the_model(world_app) -> None:
+    from evaluation_test.framework.results import summarise
+    from evaluation_test.framework.scenario import (
+        compare,
+        load_scenarios,
+        regrade,
+    )
+
+    scenarios = load_scenarios()
+    rows = [
+        {"variant": "none", "id": "expense-approval", "tags": ["stale"], "passed": False,
+         "final": "Your line manager approves it.", "called": [], "failed": ["old"]},
+        {"variant": "both", "id": "expense-approval", "tags": ["stale"], "passed": True,
+         "final": "The director must approve.", "called": ["recall"], "failed": []},
+    ]  # fmt: skip
+    fixed = regrade(rows, scenarios)
+    assert [r["passed"] for r in fixed] == [True, False]
+    assert compare(summarise(fixed))["both_vs_none"] == -1.0

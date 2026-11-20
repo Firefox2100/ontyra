@@ -43,3 +43,14 @@ probabilities. `ONTYRA_DECISION__PROVIDER=systemone` with `ONTYRA_DECISION__URL`
 `POST {url}/systemone` (for example [Kev-9B](https://huggingface.co/tt-hous/kev-9b) behind
 LocalAI or llama.cpp's server). Requires the `fusion` engine. It is advisory: if it is
 unreachable, recall returns the deterministic result.
+
+### Skipping recall for pleasantries
+
+With `ONTYRA_RECALL__FILLER_GATE=true` the same model is asked, once, whether a short message
+(at most `ONTYRA_RECALL__FILLER_MAX_WORDS`, 8) is a pure pleasantry ("thanks", "ok", "lol"). When
+its probability reaches `ONTYRA_RECALL__FILLER_THRESHOLD` (0.7) the lookup is skipped and recall
+stays silent. The model is asked without any conversation history, a failure or a refusal means "not
+filler", and a message with a real request after a pleasantry is looked up as usual. A bare "ok" or "yes" that answers the agent's own question reads as filler too (the model sees no conversation): usually right, since there is nothing to look up, but a go-ahead before a risky action is then not matched against a rule; the agent's own `check` before such actions is the safety net. On the
+decision benchmark (kev-9b, 82 messages including thanks-then-request near misses) 0.7 skipped 78%
+of the pleasantries and no real request. It is off by default; the saving is one lookup per
+pleasantry, at the price of one 0.2 s model call per short message.

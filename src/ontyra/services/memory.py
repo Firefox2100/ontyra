@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable, Sequence
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.core import Actor, Episode, Memory, Proposal, RevState, Task
@@ -128,11 +128,35 @@ class MemoryService:
                 now - timedelta(days=cfg.retention_days), limit=1000
             )
             if stale:
+                keep = await self._episodes_of_waiting_proposals()
+                stale = [rid for rid in stale if rid not in keep]
+            if stale:
                 await self.store.apply([Delete(rid) for rid in stale])
         except Exception:
             logging.getLogger(__name__).warning("episode retention sweep failed", exc_info=True)
             return 0
         return len(stale)
+
+    async def _episodes_of_waiting_proposals(self) -> set[RecordId]:
+        """Episodes the stored ops of waiting proposals cite as evidence: their `derived_from`
+        edge exists only after a commit, and the review may come after the retention."""
+        waiting = await self.store.select(
+            "proposal", where_in={"status": ["pending", "changes_requested"]}, limit=1000
+        )
+        found: set[RecordId] = set()
+        for p in waiting:
+            if not isinstance(p, Proposal):
+                continue
+            for op in p.ops:
+                cited: list[Any] = op.get("evidence") or []
+                for ev in cited:
+                    entry = cast("dict[str, Any]", ev) if isinstance(ev, dict) else {}
+                    if entry.get("episode"):
+                        try:
+                            found.add(RecordId.parse(str(entry["episode"])))
+                        except ValueError:
+                            continue
+        return found
 
     # ---- proposals ----------------------------------------------------------
 

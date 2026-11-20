@@ -181,12 +181,9 @@ class FeedbackService:
         report alone never changes the memory."""
         assert revision is not None and memory.id is not None
         key = f"feedback:{revision}"
-        report = {
-            "label": event.label,
-            "query": event.query,
-            "by": caller.actor.name,
-            "note": event.note,
-        }
+        report: dict[str, Any] = {"label": event.label}
+        if memory.owner == caller.owner:  # someone else's report on shared memory stays private
+            report |= {"query": event.query, "by": caller.actor.name, "note": event.note}
         existing = await self.store.select("task", {"dedupe_key": key}, limit=1)
         if existing:
             task = existing[0]

@@ -33,7 +33,9 @@ async def ui(review_app: Application) -> AsyncIterator[httpx.AsyncClient]:
     app = create_app(review_app, extra_routers=ROUTERS, ui_actor="owner")
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(
-        transport=transport, base_url="http://test", headers={"Origin": "http://test"}
+        transport=transport,
+        base_url="http://127.0.0.1:8787",
+        headers={"Origin": "http://127.0.0.1:8787"},
     ) as client:
         yield client
 
@@ -118,14 +120,14 @@ async def test_a_cross_site_post_is_refused(ui: httpx.AsyncClient) -> None:
     r = await ui.post(f"/ui/proposals/{pid}/approve", headers={"Origin": "http://evil.example"})
     assert r.status_code == 403
     assert (await ui.get(f"/v1/proposals/{pid}")).json()["status"] == "pending"
-    ok = await ui.post(f"/ui/proposals/{pid}/approve", headers={"Origin": "http://test"})
+    ok = await ui.post(f"/ui/proposals/{pid}/approve", headers={"Origin": "http://127.0.0.1:8787"})
     assert ok.status_code == 303
 
 
 async def test_the_console_is_off_unless_enabled(review_app: Application) -> None:
     app = create_app(review_app)
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1:8787"
     ) as client:
         assert (await client.get("/ui/")).status_code == 404
 
@@ -142,8 +144,8 @@ async def test_the_tasks_page_finds_and_resolves_duplicates(make_app) -> None:
     text = "Use uv for Python dependency management in tidewatch and never run pip install."
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=web),
-        base_url="http://test",
-        headers={"Origin": "http://test"},
+        base_url="http://127.0.0.1:8787",
+        headers={"Origin": "http://127.0.0.1:8787"},
     ) as ui:
         for ref in ("a", "b"):
             op = {
@@ -244,3 +246,16 @@ async def test_per_op_controls_the_version_diff_and_the_bulk_edit(ui: httpx.Asyn
         "approved",
         "rejected",
     ]
+
+
+async def test_a_rebound_hostname_is_refused_without_an_allowlist(
+    review_app: Application,
+) -> None:
+    app = create_app(review_app, extra_routers=ROUTERS, ui_actor="owner")
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://attacker.example:8787",
+        headers={"Origin": "http://attacker.example:8787"},
+    ) as client:  # Host and Origin agree, but the page did not come from this machine
+        denied = await client.post("/ui/tasks/detect")
+    assert denied.status_code == 403

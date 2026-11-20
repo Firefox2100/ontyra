@@ -3678,6 +3678,11 @@
             "title": "Decide",
             "type": "boolean"
           },
+          "gate": {
+            "default": true,
+            "title": "Gate",
+            "type": "boolean"
+          },
           "hints": {
             "default": [],
             "items": {

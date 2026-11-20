@@ -108,7 +108,7 @@ class AuthService:
         if not token:
             return None
         if not self.multi_user:
-            ok = self.token is not None and hmac.compare_digest(token, self.token)
+            ok = self.token is not None and hmac.compare_digest(token.encode(), self.token.encode())
             return Principal() if ok else None
         found = await self.store.select("credential", {"token_hash": hash_token(token)}, limit=1)
         if not found or not isinstance(found[0], Credential) or found[0].id is None:
@@ -148,6 +148,8 @@ class AuthService:
         token binds every caller to the server-configured kind. Multi-user identity comes from
         the stored credential; request identity headers are ignored."""
         if principal.user is None or principal.credential is None:
+            if self.multi_user:  # an account always comes with its credential
+                raise errors.PermissionDeniedError("a credential is required")
             if self.token is not None:
                 kind = self.single_user_kind
             return await self.actors.caller(kind=kind, name=label, harness=harness)

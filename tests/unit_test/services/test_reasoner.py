@@ -110,3 +110,11 @@ def test_mentions_use_labels_and_aliases_longest_first(onto: Ontology) -> None:
 def test_find_is_case_insensitive(onto: Ontology) -> None:
     assert onto.find("PyTest") == [cid("pytest")]
     assert onto.find("nothing") == []
+
+
+def test_plurals_fold_onto_the_singular() -> None:
+    o = build([("vegetarian", "is_a", "dietary_preference")])
+    assert o.find("dietary preferences") == [cid("dietary_preference")]
+    assert [m.concept for m in o.mentions("which dietary preferences apply")] == [
+        cid("dietary_preference")
+    ]

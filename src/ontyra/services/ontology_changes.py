@@ -12,7 +12,7 @@ from datetime import datetime
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.core import Task
-from ontyra.models.ontology import concept_slug
+from ontyra.models.ontology import try_slug
 from ontyra.models.ontology_change import (
     AliasChange,
     AmendChange,
@@ -92,8 +92,8 @@ class OntologyChangeService:
                             f"{name!r} already names {hit}: use it, or add an alias/merge"
                         )
                     if (
-                        concept_slug(name)
-                        and RecordId("concept", concept_slug(name)) in onto.concepts
+                        try_slug(name)
+                        and RecordId("concept", try_slug(name) or "") in onto.concepts
                     ):
                         raise errors.InvalidRequestError(f"{name!r} is already a concept")
                 for parent in d.is_a:
@@ -183,9 +183,9 @@ class OntologyChangeService:
             record.decided_by = caller.actor_id
             record.decided_at = now
 
-            def finish(plan: Plan) -> Write:
+            def finish(plan: Plan) -> list[Write]:
                 record.touched, record.undo = plan.touched, plan.undo
-                return Create.of(cid, record)
+                return [Create.of(cid, record)]
 
             await self._apply(caller, request.change, cid, finish)
         else:
@@ -213,17 +213,26 @@ class OntologyChangeService:
             raise errors.NotFoundError(f"ontology change {change} not found")
         return found
 
-    async def _close_task(self, change: RecordId, reviewer: Caller) -> None:
+    async def _closing(self, change: RecordId) -> list[Write]:
+        """Writes that close the review task of a change (done in the same batch as the decision,
+        so a failure cannot leave an open task for a decided change)."""
         tasks = await self.store.select(
             "task", {"target": change, "kind": "review_ontology_change", "status": "pending"}
         )
-        await self.store.apply(
-            [
-                Update(t.id, {"status": "done", "updated_at": self.now()})
-                for t in tasks
-                if t.id is not None
-            ]
-        )
+        return [
+            Update(t.id, {"status": "done", "updated_at": self.now()})
+            for t in tasks
+            if t.id is not None
+        ]
+
+    async def _unchanged(self, change: RecordId, seen: OntologyChange) -> None:
+        """Called while holding the ontology lock: the change must still be as the caller read it
+        (another reviewer or its proposer may have decided or amended it in between)."""
+        now = await self._get(change)
+        if now.status != seen.status or self._version(now) != self._version(seen):
+            raise errors.ConflictError(
+                f"{change} changed while this was being decided: read it again"
+            )
 
     @staticmethod
     def _version(rec: OntologyChange) -> int:
@@ -254,20 +263,23 @@ class OntologyChangeService:
         await self.validate(parsed.change, reviewer, exclude=change)
         now = self.now()
 
-        def finish(plan: Plan) -> Write:
-            return Update(
-                change,
-                {
-                    "status": "applied",
-                    "decided_by": reviewer.actor_id,
-                    "decided_at": now,
-                    "touched": plan.touched,
-                    "undo": plan.undo,
-                },
-            )
+        def finish(plan: Plan) -> list[Write]:
+            return [
+                Update(
+                    change,
+                    {
+                        "status": "applied",
+                        "decided_by": reviewer.actor_id,
+                        "decided_at": now,
+                        "touched": plan.touched,
+                        "undo": plan.undo,
+                    },
+                ),
+                *closing,
+            ]
 
-        await self._apply(reviewer, parsed.change, change, finish)
-        await self._close_task(change, reviewer)
+        closing = await self._closing(change)
+        await self._apply(reviewer, parsed.change, change, finish, seen=rec)
         return ChangeResult(id=change, status="applied", op=rec.op, advice=rec.advice)
 
     async def reject(
@@ -284,20 +296,22 @@ class OntologyChangeService:
         rec = await self._get(change)
         self._waiting_or_raise(rec)
         self._check_version(rec, expect_version)
-        await self.store.apply(
-            [
-                Update(
-                    change,
-                    {
-                        "status": "rejected",
-                        "decided_by": reviewer.actor_id,
-                        "decided_at": self.now(),
-                        "reason": reason,
-                    },
-                )
-            ]
-        )
-        await self._close_task(change, reviewer)
+        async with self.ontology.lock:
+            await self._unchanged(change, rec)
+            await self.store.apply(
+                [
+                    Update(
+                        change,
+                        {
+                            "status": "rejected",
+                            "decided_by": reviewer.actor_id,
+                            "decided_at": self.now(),
+                            "reason": reason,
+                        },
+                    ),
+                    *await self._closing(change),
+                ]
+            )
         return ChangeResult(id=change, status="rejected", op=rec.op, reason=reason)
 
     async def pending(self, caller: Caller, limit: int = 50) -> list[OntologyChange]:
@@ -347,13 +361,17 @@ class OntologyChangeService:
         caller: Caller,
         change: Change,
         change_id: RecordId,
-        finish: Callable[[Plan], Write],
+        finish: Callable[[Plan], list[Write]],
+        seen: OntologyChange | None = None,
     ) -> Plan:
         """Plan the change from the current ontology and commit it in one batch together with
-        the change record (`finish` builds that write from the plan), one writer at a time."""
+        the change record (`finish` builds those writes from the plan), one writer at a time.
+        `seen` is the held change a decision was based on: it is re-read under the lock."""
         async with self.ontology.lock:
+            if seen is not None and seen.id is not None:
+                await self._unchanged(seen.id, seen)
             plan = await self.planner.plan(change, caller, change_id)
-            await self.store.apply([*plan.writes, finish(plan)])
+            await self.store.apply([*plan.writes, *finish(plan)])
             self.ontology.invalidate()
         return plan
 
@@ -383,21 +401,23 @@ class OntologyChangeService:
             "why": request.why,
             **self._stamp(caller),
         }
-        await self.store.apply(
-            [
-                Update(
-                    change,
-                    {
-                        "change": request.change.model_dump(mode="json"),
-                        "op": request.change.op,
-                        "version": version + 1,
-                        "history": [*(rec.history or []), entry],
-                        "status": "pending",
-                        "advice": advice,
-                    },
-                )
-            ]
-        )
+        async with self.ontology.lock:
+            await self._unchanged(change, rec)
+            await self.store.apply(
+                [
+                    Update(
+                        change,
+                        {
+                            "change": request.change.model_dump(mode="json"),
+                            "op": request.change.op,
+                            "version": version + 1,
+                            "history": [*(rec.history or []), entry],
+                            "status": "pending",
+                            "advice": advice,
+                        },
+                    )
+                ]
+            )
         return ChangeResult(
             id=change,
             status="pending",
@@ -413,20 +433,22 @@ class OntologyChangeService:
         self._waiting_or_raise(rec)
         if not self._can_amend(caller, rec):
             raise errors.PermissionDeniedError("only its proposer or a reviewer may withdraw this")
-        await self.store.apply(
-            [
-                Update(
-                    change,
-                    {
-                        "status": "withdrawn",
-                        "decided_by": caller.actor_id,
-                        "decided_at": self.now(),
-                        "reason": request.reason,
-                    },
-                )
-            ]
-        )
-        await self._close_task(change, caller)
+        async with self.ontology.lock:
+            await self._unchanged(change, rec)
+            await self.store.apply(
+                [
+                    Update(
+                        change,
+                        {
+                            "status": "withdrawn",
+                            "decided_by": caller.actor_id,
+                            "decided_at": self.now(),
+                            "reason": request.reason,
+                        },
+                    ),
+                    *await self._closing(change),
+                ]
+            )
         return ChangeResult(id=change, status="withdrawn", op=rec.op, reason=request.reason)
 
     async def request_changes(
@@ -441,14 +463,19 @@ class OntologyChangeService:
         if not request.comment.strip():
             raise errors.InvalidRequestError("say what should change")
         comment = {"version": self._version(rec), "text": request.comment, **self._stamp(reviewer)}
-        await self.store.apply(
-            [
-                Update(
-                    change,
-                    {"status": "changes_requested", "comments": [*(rec.comments or []), comment]},
-                )
-            ]
-        )
+        async with self.ontology.lock:
+            await self._unchanged(change, rec)
+            await self.store.apply(
+                [
+                    Update(
+                        change,
+                        {
+                            "status": "changes_requested",
+                            "comments": [*(rec.comments or []), comment],
+                        },
+                    )
+                ]
+            )
         return ChangeResult(
             id=change, status="changes_requested", op=rec.op, reason=request.comment
         )

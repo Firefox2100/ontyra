@@ -25,9 +25,11 @@ def passes(
     request: Request, s: Setting, signal: dict[str, float], weight: float, margin: float
 ) -> bool:
     """Would the engine answer this request correctly with the model blended in?"""
+    if not request.silent and (request.missing or not request.relevant):
+        return False
     if request.best_cos is not None and request.best_cos < s.tau:
         return request.silent
-    base = fused(request.pool, s.alpha, s.baseline)
+    base = fused(request.pool, s.alpha, s.baseline, s.boost)
     final = {k: (1 - weight) * f + weight * signal.get(k, 0.0) for k, f in base.items()}
     if not final:
         return request.silent
@@ -62,6 +64,7 @@ def suggest(
     signals: Signals,
     *,
     current: tuple[float, float],
+    deployed: Setting | None = None,
 ) -> Blend | None:
     """The weight and margin that fit best; None when there are too few requests with signals."""
     asked = [r for r in reqs if r.id in signals]
@@ -89,7 +92,7 @@ def suggest(
         current={
             "weight": current[0],
             "margin": current[1],
-            "tune": _score(reqs, s, signals, *current, "tune"),
-            "holdout": _score(reqs, s, signals, *current, "holdout"),
+            "tune": _score(reqs, deployed or s, signals, *current, "tune"),
+            "holdout": _score(reqs, deployed or s, signals, *current, "holdout"),
         },
     )

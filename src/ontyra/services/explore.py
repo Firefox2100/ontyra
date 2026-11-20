@@ -134,7 +134,7 @@ class ExplorationService:
         if "links" in expand:
             detail.links = await self._links(memory)
         if "evidence" in expand:
-            detail.evidence = await self._evidence(view.revision)
+            detail.evidence = await self._evidence(view.revision, caller)
         if "applies" in expand:
             detail.applies = await self._applies(view.revision, context)
         return detail
@@ -157,12 +157,16 @@ class ExplorationService:
                 )
         return out
 
-    async def _evidence(self, rev: RecordId) -> list[dict[str, Any]]:
+    async def _evidence(self, rev: RecordId, caller: Caller) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
+        visible = set(caller.visible_owners())
         for e in await self.store.edges("derived_from", source=rev):
             src = await self.store.get(e["out"])
             item: dict[str, Any] = {"source": str(e["out"])}
             if isinstance(src, Episode):
+                if src.owner not in visible:  # a global memory may cite someone's private prompt
+                    out.append(item)
+                    continue
                 item |= {"role": src.role, "session": src.session, "excerpt": src.content[:300]}
             elif isinstance(src, RevisionBase):
                 item |= {"text": src.text}
@@ -257,7 +261,7 @@ class ExplorationService:
         if q == "absence":
             topic = request.topic or ""
             res = await self.search(
-                caller, SearchRequest(query=topic, context=request.context, limit=5)
+                caller, SearchRequest(query=topic, context=request.context, limit=25)
             )
             ctx = await self.recall.resolve_context(request.context)
             envelope = {
@@ -271,7 +275,7 @@ class ExplorationService:
                 ],
                 "as_of": self.now().isoformat(),
             }
-            related = [h for h in res.hits if h.applies != "no"]
+            related = [h for h in res.hits if h.applies != "no"][:5]
             return AskResult(
                 question=q,
                 answer={

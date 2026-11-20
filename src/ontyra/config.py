@@ -9,7 +9,7 @@ import ipaddress
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ontyra.models import PolicyConfig
@@ -195,6 +195,20 @@ class AuthSettings(BaseModel):
         return self
 
 
+class BackupSettings(BaseModel):
+    """Scheduled exports of the whole database (`ONTYRA_BACKUP__*`). Off until `dir` is set.
+
+    The daemon writes `ontyra-YYYYmmdd-HHMMSS.surql` (schema and every record, readable by its
+    owner only) into `dir` every `every_hours` and keeps the newest `keep`. Needs a SurrealDB
+    server, not an embedded database. The files hold all memories: keep them as private as the
+    database. Restore with `ontyra db import`.
+    """
+
+    dir: str | None = None
+    every_hours: float = Field(default=24.0, ge=0.0, allow_inf_nan=False)  # 0: off
+    keep: int = Field(default=14, ge=1)
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="ONTYRA_",
@@ -222,6 +236,7 @@ class Settings(BaseSettings):
     mcp: McpSettings = McpSettings()
     ui: UiSettings = UiSettings()
     auth: AuthSettings = AuthSettings()
+    backup: BackupSettings = BackupSettings()
     log_level: str = "INFO"
 
     @model_validator(mode="after")

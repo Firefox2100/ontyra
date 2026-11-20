@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
+from pydantic import Field
+
 from ontyra.models.anchors import Scalar
 from ontyra.models.base import Model, RecordId
 from ontyra.models.kinds import KindName
@@ -33,6 +35,11 @@ class RecallSettings(Model):
     decision_margin: float = 0.15  # keep candidates within this of the best blended score
     trace_candidates: int = 30  # candidates whose lane scores a recall trace keeps (0: none)
     trace_retention_days: int = 180  # traces older than this are deleted unless feedback cites them
+    # Skip the lookup for a pure pleasantry (needs the decision model): off until enabled.
+    filler_gate: bool = False
+    # p(filler) at or above this skips recall (no real request was skipped at 0.7 in the benchmark)
+    filler_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
+    filler_max_words: int = Field(default=8, ge=1)  # only messages this short are asked about
     relevance_threshold: float = 0.25  # input-driven recall stays silent below this
     vector_floor: float = 0.3  # cosine at or below this counts as no similarity
     lane_weights: dict[str, float] = {"lexical": 1.0, "vector": 1.0, "concept": 0.9}
@@ -81,6 +88,7 @@ class RecallRequest(Model):
     profile: Literal["compact", "rich"] = "rich"
     redeliver: bool = False  # ignore the ledger (e.g. after context compaction)
     decide: bool = True  # False: skip the decision model for this request even if configured
+    gate: bool = True  # False: look up even a pleasantry (skips the filler gate)
 
 
 class RecallItem(Model):

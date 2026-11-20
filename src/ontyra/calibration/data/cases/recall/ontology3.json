@@ -1,0 +1,202 @@
+[
+ {
+  "id": "onto-diet",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "a dietary-preference question reaches a memory that only names the diet",
+  "mode": "recall",
+  "query": "what dietary preferences should I keep in mind for the dinner menu",
+  "include": [
+   "dl-veg"
+  ],
+  "allow": [
+   "dh-curry"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-docdb",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "`is_a`: a kind-of question reaches a memory that names the product",
+  "mode": "recall",
+  "query": "which document database do I prefer",
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-again"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-graphdb",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "`is_a`: a kind-of question reaches a memory that names the product",
+  "mode": "recall",
+  "query": "which graph database should the new service use",
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-again"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-refmgr",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "`same_as`: a mention of the equivalent tool finds the memory about the named one",
+  "mode": "recall",
+  "query": "look in the reference manager before searching for a paper online",
+  "include": [
+   "rs-zotero-first"
+  ],
+  "allow": [
+   "rs-paper-proc",
+   "rs-zotero-save",
+   "rs-zotero-fact"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-smoke-alarm",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "when do I test the smoke alarm",
+  "include": [
+   "dh-smoke"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-tire",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias that is a spelling variant",
+  "mode": "recall",
+  "query": "what tire pressure for the loaded car",
+  "include": [
+   "dh-tyre"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-prescription",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "when should I refill my prescription",
+  "include": [
+   "dh-meds"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-recipes",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "which recipes do we make on sundays",
+  "include": [
+   "dh-curry"
+  ],
+  "allow": [
+   "dh-sour"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-waste",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "when is the waste collection for paper",
+  "include": [
+   "dh-recycle"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-monthly-budget",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "how much goes to savings in the monthly budget",
+  "include": [
+   "dh-budget"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-ev",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "how far should the ev be charged for daily use",
+  "include": [
+   "dh-ev"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-central-heating",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "daily"
+  ],
+  "why": "an alias of the concept",
+  "mode": "recall",
+  "query": "what to do when the central heating pressure is low",
+  "include": [
+   "dh-boiler"
+  ],
+  "allow": [
+   "dh-boiler-service"
+  ],
+  "split": "holdout"
+ }
+]

@@ -166,3 +166,88 @@ async def test_a_decision_model_needs_the_fusion_engine(make_app) -> None:
         await make_app(decision=configured)
     app = await make_app(recall=RecallSettings(engine="fusion"), decision=configured)
     assert app.recall.decider is not None  # type: ignore[attr-defined]
+
+
+class FillerDecider(FakeDecider):
+    """A decision model that also says whether a message is a pleasantry."""
+
+    def __init__(self, filler: float = 0.0, **kw) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(**kw)
+        self.p, self.asked = filler, []
+
+    async def filler(self, text: str) -> float:
+        self.asked.append(text)
+        if self.fail:
+            raise DecisionError("down")
+        return self.p
+
+
+async def gated(seeded, agent, decider, query, **request):  # type: ignore[no-untyped-def]
+    app, _ = seeded
+    app.recall.decider = decider
+    app.recall.cfg = app.recall.cfg.model_copy(update={"filler_gate": True})
+    return await app.recall.recall(agent, RecallRequest(query=query, **request))
+
+
+async def test_a_pleasantry_skips_the_lookup_and_the_judging(seeded, agent: Caller) -> None:
+    decider = FillerDecider(filler=0.9)
+    pack = await gated(seeded, agent, decider, "thanks!")
+    assert pack.silent and decider.asked == ["thanks!"] and decider.calls == []
+
+
+async def test_the_gate_only_asks_when_it_is_on_and_the_message_is_short(
+    seeded, agent: Caller
+) -> None:
+    app, _ = seeded
+    decider = FillerDecider(filler=0.9)
+    app.recall.decider = decider  # the gate is off by default
+    assert not (await app.recall.recall(agent, RecallRequest(query="run the tests"))).silent
+    assert decider.asked == []
+    long = "thanks " + "so much " * 10 + "run the tests"
+    assert not (await gated(seeded, agent, decider, long)).silent and decider.asked == []
+
+
+async def test_a_message_below_the_threshold_or_a_failing_model_is_recalled_as_usual(
+    seeded, agent: Caller
+) -> None:
+    low = FillerDecider(filler=0.3, loves="pytest")
+    assert not (await gated(seeded, agent, low, "run the tests")).silent
+    broken = FillerDecider(fail=True)
+    assert not (await gated(seeded, agent, broken, "run the tests")).silent
+    skip = FillerDecider(filler=0.99)
+    assert not (await gated(seeded, agent, skip, "run the tests", decide=False)).silent
+    assert skip.asked == []
+
+
+async def test_a_pleasantry_still_delivers_a_satisfied_trigger(make_app) -> None:
+    from ontyra.models.ontology import ConceptDefinition
+    from ontyra.models.proposals import AddMemory, ProposalRequest
+
+    app: Application = await make_app(recall=RecallSettings(engine="fusion", filler_gate=True))
+    caller = await app.actors.caller(kind="human", name="owner")
+    await app.ontology.define(caller, ConceptDefinition(label="Docker"))
+    text = "pin the base image digest when you touch a Dockerfile"
+    done = await app.memory.submit(
+        caller,
+        ProposalRequest(
+            ops=[
+                AddMemory(
+                    kind="lesson",
+                    fields={
+                        "text": text,
+                        "situation": text,
+                        "insight": text,
+                        "qualifiers": [{"concept": "concept:docker", "role": "trigger"}],
+                    },
+                )
+            ]
+        ),
+    )
+    assert done.status == "committed", done.findings
+    await app.indexer.backfill()
+    decider = FillerDecider(filler=0.95)
+    app.recall.decider = decider  # type: ignore[attr-defined]
+    ctx = RecallContext(signals=[Signal(concept="docker")])
+    pack = await app.recall.recall(caller, RecallRequest(query="thanks!", context=ctx))
+    assert decider.asked == ["thanks!"] and decider.calls == []  # no lookup, no judging
+    assert pack.items() and pack.items()[0].flags == ["triggered"]

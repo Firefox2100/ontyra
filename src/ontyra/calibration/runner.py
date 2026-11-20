@@ -105,13 +105,21 @@ async def _scratch(settings: Settings, embedding_dim: int) -> tuple[Database, Ca
             await db.query(f"REMOVE DATABASE IF EXISTS {name}")
             await db.close()
 
-        await SchemaManager(db, embedding_dim=embedding_dim).apply()
+        try:
+            await SchemaManager(db, embedding_dim=embedding_dim).apply()
+        except BaseException:
+            await drop()
+            raise
         return db, drop
 
     async def close() -> None:
         await db.close()
 
-    await SchemaManager(db, embedding_dim=embedding_dim).apply()
+    try:
+        await SchemaManager(db, embedding_dim=embedding_dim).apply()
+    except BaseException:
+        await close()
+        raise
     return db, close
 
 
@@ -253,6 +261,7 @@ def analyse(recording: dict[str, Any]) -> dict[str, Any]:
             recall["fusion_baseline"],
             recall["fusion_margin"],
             recall["abstain_cosine"],
+            recall.get("concept_boost", 0.0),
         )
         recall_out: dict[str, Any] = {
             "suggested": s.setting.env(),
@@ -270,7 +279,7 @@ def analyse(recording: dict[str, Any]) -> dict[str, Any]:
         }
         recall_out["suggested"]["ONTYRA_RECALL__CALIBRATED_FOR"] = recording["embedder"]
         out["recall"] = recall_out
-        out["blends"] = _blends(recording, reqs, s.setting)
+        out["blends"] = _blends(recording, reqs, s.setting, current)
     pairs = duplicates.load_pairs()
     if len(recording.get("pair_cosines", [])) == len(pairs):
         found = duplicates.suggest(pairs, recording["pair_cosines"])
@@ -287,7 +296,10 @@ def analyse(recording: dict[str, Any]) -> dict[str, Any]:
 
 
 def _blends(
-    recording: dict[str, Any], reqs: list[search.Request], setting: search.Setting
+    recording: dict[str, Any],
+    reqs: list[search.Request],
+    setting: search.Setting,
+    deployed: search.Setting,
 ) -> dict[str, Any]:
     """Weight and margin for the decision model and for the reranker, when they were recorded."""
     recall = recording["recall"]
@@ -296,7 +308,11 @@ def _blends(
     if judged:
         signals = {i: dict(zip(j["keys"], j["scores"], strict=False)) for i, j in judged.items()}
         found = blend.suggest(
-            reqs, setting, signals, current=(recall["decision_weight"], recall["decision_margin"])
+            reqs,
+            setting,
+            signals,
+            current=(recall["decision_weight"], recall["decision_margin"]),
+            deployed=deployed,
         )
         if found:
             out["decision"] = {
@@ -309,7 +325,11 @@ def _blends(
     if recording.get("reranked"):
         signals = {r.id: {x.key: x.rerank for x in r.pool if x.rerank is not None} for r in reqs}
         found = blend.suggest(
-            reqs, setting, signals, current=(recall["rerank_weight"], recall["fusion_margin"])
+            reqs,
+            setting,
+            signals,
+            current=(recall["rerank_weight"], recall["fusion_margin"]),
+            deployed=deployed,
         )
         if found:
             out["rerank"] = {

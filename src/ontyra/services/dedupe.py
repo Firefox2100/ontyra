@@ -38,7 +38,7 @@ def values(text: str) -> set[str]:
     """The numbers, versions, dates and identifiers with digits in a text, normalised
     (`450k` = `450,000`, `3rd` = `3`, `three` = `3`, `March` = `m3`)."""
     t = text.lower()
-    t = re.sub(r"(\d),(\d{3})", r"\1\2", t)
+    t = re.sub(r"(?<=\d),(?=\d{3}\b)", "", t)
     t = re.sub(r"(\d+)k\b", lambda m: str(int(m.group(1)) * 1000), t)
     t = re.sub(r"(\d+)(st|nd|rd|th)\b", r"\1", t)
     out: set[str] = set()

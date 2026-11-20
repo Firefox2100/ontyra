@@ -28,6 +28,14 @@ RelationName = Literal[
 ]
 
 
+def try_slug(label: str) -> str | None:
+    """`concept_slug`, or None for a name with no letter or digit in it."""
+    try:
+        return concept_slug(label)
+    except ValueError:
+        return None
+
+
 def concept_slug(label: str) -> str:
     """Stable, readable id for a concept label: `Ubuntu 24.04` → `ubuntu_24_04`."""
     slug = re.sub(r"[^a-z0-9]+", "_", label.casefold()).strip("_")

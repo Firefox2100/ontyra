@@ -51,10 +51,16 @@ class ActorService:
     ) -> Actor:
         """Idempotent by id (default: derived from the name). Trust comes from configuration by
         actor kind, never from the actor itself."""
+        explicit = rid is not None
         rid = rid or RecordId("actor", _slug(name))
         existing = await self.store.get(rid)
         if isinstance(existing, Actor):
-            return existing
+            # kind and trust are the caller's identity *now* (a credential, or the server's
+            # configured kind), never what an older row of the same name says: otherwise a
+            # client could pick up a human actor's kind by sending its name
+            return existing.model_copy(update={"kind": kind, "trust": self.trust.get(kind, 0.5)})
+        if explicit and await self.store.select("actor", {"name": name}, limit=1):
+            name = f"{name}#{str(rid.id)[:6]}"  # a re-issued credential keeps its readable name
         actor = Actor(
             kind=kind,  # type: ignore[arg-type]
             name=name,

@@ -1,8 +1,10 @@
 # Ontyra, production-style: SurrealDB + the daemon (REST and MCP on one port).
-#   cp .env.example .env   # set ONTYRA_DB_PASSWORD
-#   docker compose up -d
-# State lives in ./data (bind mount). Both services use host networking and listen on loopback
-# only (there is no authentication yet): the daemon on ONTYRA_PORT, the database on ONTYRA_DB_PORT.
+#   cp .env.example .env   # set ONTYRA_DB_PASSWORD (and ONTYRA_UID/GID, see below)
+#   mkdir -p backups && docker compose up -d
+# State lives in ./data and scheduled exports in ./backups (bind mounts; create ./backups yourself
+# first, or Docker makes it root-owned and the daemon cannot write there). Both services use host
+# networking and listen on loopback only (the default protection; set ONTYRA_AUTH_TOKEN to require
+# a bearer token): the daemon on ONTYRA_PORT, the database on ONTYRA_DB_PORT.
 # (Host networking also avoids creating a Docker network, and reaches a local model server at
 # localhost.) The image is built from this repository:
 #   docker build --build-arg VERSION=0.1.0 -t ontyra:local .
@@ -34,6 +36,10 @@ services:
       surrealdb:
         condition: service_healthy
     network_mode: host
+    # the exports are written as this user (the host directory must be writable by it)
+    user: "${ONTYRA_UID:-10001}:${ONTYRA_GID:-10001}"
+    volumes:
+      - ./backups:/backups
     environment:
       ONTYRA_DB__URL: ws://127.0.0.1:${ONTYRA_DB_PORT:-18787}/rpc
       ONTYRA_SERVER__HOST: 127.0.0.1
@@ -42,6 +48,10 @@ services:
       # authentication (docs: Authentication): empty means off; a value requires that bearer token
       ONTYRA_AUTH__TOKEN: ${ONTYRA_AUTH_TOKEN:-}
       ONTYRA_MCP__PROFILE: lite
+      # scheduled exports of the whole database into ./backups (docs: Deployment, Backups)
+      ONTYRA_BACKUP__DIR: /backups
+      ONTYRA_BACKUP__EVERY_HOURS: ${ONTYRA_BACKUP_EVERY_HOURS:-24}
+      ONTYRA_BACKUP__KEEP: ${ONTYRA_BACKUP_KEEP:-14}
       # the operator console at /ui (acts as a human, no login: loopback only)
       ONTYRA_UI__ENABLED: "true"
       # an agent's `remember` waits for a human's approval; a human's own writes commit at once

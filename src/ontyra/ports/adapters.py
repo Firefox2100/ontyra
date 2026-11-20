@@ -35,6 +35,19 @@ class Decider(Protocol):
 
 
 @runtime_checkable
+class MessageClassifier(Protocol):
+    """A model that says how likely a message is pure filler (a greeting, thanks or reaction that
+    asks for nothing): a probability, in one pass, no generated text. Optional and advice only:
+    a lookup is skipped for filler, never for a message that might ask for something. Raises
+    `DecisionError`."""
+
+    @property
+    def name(self) -> str: ...
+
+    async def filler(self, text: str) -> float: ...
+
+
+@runtime_checkable
 class StatementComparer(Protocol):
     """A model that says whether two memories state the same thing (only worded differently;
     different values or different facts mean no): a probability, in one pass, no generated

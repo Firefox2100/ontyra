@@ -1,0 +1,89 @@
+[
+ {
+  "id": "onto-part-apache",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "`part_of`: a question about a component reaches the memory that names the stack",
+  "mode": "recall",
+  "query": "how is apache set up on the work servers",
+  "include": [
+   "ws-lamp-fact"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-part-mysql",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "`part_of`: a question about a component reaches the memory that names the stack",
+  "mode": "recall",
+  "query": "which mysql version runs on the work servers",
+  "include": [
+   "ws-lamp-fact"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-kind-ancestor",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "`is_a` two steps up: a question about the broad kind reaches a memory that names a product",
+  "mode": "recall",
+  "query": "which database technology do I like to use",
+  "include": [
+   "dp-stack"
+  ],
+  "allow": [
+   "dp-stack-again",
+   "f-db",
+   "dec-uv"
+  ],
+  "split": "holdout"
+ },
+ {
+  "id": "onto-restraint-docker",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "expansion must not drag in unrelated memories: a plain question about one tool",
+  "mode": "recall",
+  "query": "how do I bring up the local dependencies",
+  "include": [
+   "d-compose"
+  ],
+  "exclude": [
+   "p-migrate"
+  ],
+  "split": "tune"
+ },
+ {
+  "id": "onto-restraint-db",
+  "world": "commons",
+  "tags": [
+   "ontology",
+   "dev"
+  ],
+  "why": "a question about one product in the kind does not need the other products",
+  "mode": "recall",
+  "query": "what is the production postgres version",
+  "include": [
+   "f-db"
+  ],
+  "exclude": [
+   "dp-stack",
+   "dp-stack-again"
+  ],
+  "split": "holdout"
+ }
+]

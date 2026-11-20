@@ -29,7 +29,7 @@ from typing import Any
 from ontyra.models.base import RecordId
 from ontyra.models.decision import Judgement
 from ontyra.models.recall import RecallPack, RecallRequest, RecallSettings
-from ontyra.ports import Decider, DecisionError, Embedder, Reranker, Store
+from ontyra.ports import Decider, DecisionError, Embedder, MessageClassifier, Reranker, Store
 from ontyra.services.anchors import AnchorService
 from ontyra.services.context import Caller
 from ontyra.services.ontology import OntologyService
@@ -163,7 +163,9 @@ class FusionRecallService(RecallService):
             if s.bm25 is not None and top_bm25 > 0:
                 s.lexical = s.bm25 / top_bm25 * coverage(text, c.doc.text)
             if s.cosine is not None:
-                s.dense = max(0.0, (s.cosine - base) / span)
+                # equal cosines (or a single candidate) carry no spread: the best one is fully
+                # dense rather than zero, or a lone paraphrase hit would be dropped
+                s.dense = 1.0 if top_cos - base < 1e-9 else max(0.0, (s.cosine - base) / span)
             s.fused = alpha * s.lexical + (1 - alpha) * s.dense + cfg.concept_boost * s.concept
             s.final = s.fused
         ranked = sorted(pool.values(), key=lambda c: (-raw[c.rev].fused, str(c.rev)))
@@ -263,6 +265,19 @@ class FusionRecallService(RecallService):
         if not text:
             return await self._finish(caller, request, "recall", [], [], ctx, [])
         situation = situation_text(request, text) if request.decide else None
+        if request.decide and request.gate and await self._is_filler(text):
+            # nothing was asked, so no lookup; a satisfied trigger is still delivered
+            triggered = await self.triggered_extras(caller, request, [])
+            return await self._finish(
+                caller,
+                request,
+                "recall",
+                triggered,
+                [],
+                ctx,
+                [{"reason": "filler message: nothing asked, no lookup"}],
+                {"engine": "fusion", "filler": True},
+            )
         result = await self.fuse(caller, text, ctx, request.kinds, situation=situation)
         return await self._finish(
             caller,
@@ -274,6 +289,23 @@ class FusionRecallService(RecallService):
             result.dropped,
             self._scoring(result),
         )
+
+    async def _is_filler(self, text: str) -> bool:
+        """Is this message a pure pleasantry (thanks, ok, lol)? Only asked when the gate is on,
+        a decision model that can say so is configured, and the message is short; any failure
+        means "no": recall is never skipped on a guess."""
+        cfg = self.cfg
+        if (
+            not cfg.filler_gate
+            or not isinstance(self.decider, MessageClassifier)
+            or len(text.split()) > cfg.filler_max_words
+        ):
+            return False
+        try:
+            return await self.decider.filler(text) >= cfg.filler_threshold
+        except DecisionError as exc:
+            log.warning("filler gate skipped: %s", exc)
+            return False
 
     def _scoring(self, result: FusionResult) -> dict[str, Any]:
         """The features of this request for the trace: lane scores of the best candidates in

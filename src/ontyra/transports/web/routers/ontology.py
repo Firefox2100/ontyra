@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from ontyra.models import RecordId
 from ontyra.models.ontology import ConceptDefinition, RelationRequest
@@ -181,18 +181,30 @@ async def preview(
     )
 
 
-@router.post("/ontology/apply", dependencies=[SameOriginDep])
+@router.post("/ontology/apply", response_class=HTMLResponse, dependencies=[SameOriginDep])
 async def apply(
     request: Request,
     caller: UiCallerDep,
     ontology: OntologyServiceDep,
     changes: OntologyChangeServiceDep,
-) -> RedirectResponse:
+) -> Response:
     fields = dict((await request.form()).items())
-    change = await build_change(ontology, fields)
-    await changes.propose(
-        caller, ChangeRequest(change=change, rationale=str(fields.get("rationale", "")).strip())
-    )
+    rationale = str(fields.get("rationale", "")).strip()
+    try:
+        change = await build_change(ontology, fields)
+        await changes.propose(caller, ChangeRequest(change=change, rationale=rationale))
+    except (errors.ServiceError, ValueError) as exc:  # the form said something that cannot apply
+        return templates.TemplateResponse(
+            request,
+            "ontology_preview.html",
+            {
+                "p": None,
+                "error": str(exc),
+                "fields": fields,
+                "rationale": rationale,
+                "nav": "concepts",
+            },
+        )
     target = fields.get("concept") or fields.get("source") or fields.get("label") or ""
     try:
         rid = await ontology.resolve(str(target))

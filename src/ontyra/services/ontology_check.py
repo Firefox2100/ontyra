@@ -94,7 +94,9 @@ class OntologyChecker:
             for name in {c.label.casefold().strip(), *(a.casefold().strip() for a in c.aliases)}:
                 names[name].append(cid)
         for name, ids in names.items():
-            if len(ids) > 1:
+            # a merge hands the tombstone's names to its successor on purpose
+            live = [i for i in ids if concepts[i].status == "active"]
+            if len(live) > 1 or (len(ids) > 1 and not live):
                 add(
                     "warning",
                     "shared_name",

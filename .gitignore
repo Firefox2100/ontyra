@@ -29,3 +29,7 @@ tests/decision_test/results/*
 .uv-cache/
 pytest-of-*/
 .tmp-probe/
+
+# deployment state and exports (all memories): never commit
+/data/
+/backups/

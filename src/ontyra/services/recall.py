@@ -730,6 +730,7 @@ class RecallService:
             kinds=["directive", "lesson", "procedure", "decision"],
             profile="compact",
             redeliver=True,  # an explicit check always answers in full, whatever the ledger says
+            gate=False,  # an action is never a pleasantry
         )
         pack = await self.recall(caller, request)
         briefing = await self.briefing(
@@ -744,6 +745,9 @@ class RecallService:
         pack.must_follow = [*pack.must_follow, *musts]
         pack.path = "check"
         pack.silent = not pack.items()
+        pack.rendered = render_pack(pack, request.profile)  # the musts added above are in it
+        pack.tokens = estimate_tokens(pack.rendered) if pack.rendered else 0
+        pack.affordances = self._affordances(pack)
         # the verdict reflects what matches this intent; standing musts are listed, not judged
         verdict: Literal["clear", "caution"] = "caution" if relevant or has_checks else "clear"
         summary = (

@@ -35,3 +35,8 @@ class UnsupportedByModeError(StorageError):
 
 class ConflictError(StorageError, StoreConflictError):
     """An optimistic-concurrency guard failed: the data changed since it was read."""
+
+
+class RetryableConflictError(ConflictError):
+    """The engine rolled the transaction back because a concurrent write touched the same
+    record (an index update, another writer) and says it can simply be run again."""
