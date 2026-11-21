@@ -260,11 +260,20 @@ class RecallService:
                     )
         if not weights:
             return []
-        docs = await self.store.docs(owners, kinds=kinds, about=list(weights), limit=limit * 3 // 2)
+        # Best weight first, tier by tier, so a flood of memories about a weakly related concept
+        # (fetched newest first) can never push out one about the concept that was mentioned.
         ranked: list[tuple[float, SearchDoc, str]] = []
-        for d in docs:
-            best = max((weights[c] for c in d.about if c in weights), key=lambda t: t[0])
-            ranked.append((best[0], d, best[1]))
+        seen: set[RecordId] = set()
+        for tier in sorted({w for w, _ in weights.values()}, reverse=True):
+            about = [c for c, (w, _) in weights.items() if w == tier]
+            for d in await self.store.docs(owners, kinds=kinds, about=about, limit=limit):
+                if d.rev in seen:
+                    continue
+                seen.add(d.rev)
+                best = max((weights[c] for c in d.about if c in weights), key=lambda t: t[0])
+                ranked.append((best[0], d, best[1]))
+            if len(ranked) >= limit:
+                break
         ranked.sort(key=lambda t: -t[0])
         return ranked[:limit]
 

@@ -11,9 +11,10 @@ Single-daemon assumption: a claim reads the status, then writes it (as the ontol
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.consolidation import DuplicateCluster, ScanRequest, UpdateCandidate
@@ -407,7 +408,7 @@ class TaskService:
         if result.decision not in allowed:
             raise errors.InvalidRequestError(f"decision must be one of {allowed}")
         if result.decision in NEEDS_PROPOSAL:
-            await self._check_proposal(caller, result)
+            await self._check_proposal(caller, task, result)
         elif result.proposal is not None:
             raise errors.InvalidRequestError(f"decision {result.decision!r} takes no proposal")
         awaiting = (
@@ -493,7 +494,7 @@ class TaskService:
             raise errors.NotFoundError(f"proposal {proposal_id} does not exist")
         return proposal
 
-    async def _check_proposal(self, caller: Caller, result: TaskResult) -> None:
+    async def _check_proposal(self, caller: Caller, task: Task, result: TaskResult) -> None:
         if result.proposal is None:
             raise errors.InvalidRequestError(
                 f"decision {result.decision!r} must cite the proposal that did it"
@@ -503,6 +504,10 @@ class TaskService:
             raise errors.InvalidRequestError(
                 f"proposal {result.proposal} is {proposal.status}; cite one that is committed "
                 "or waiting for review"
+            )
+        if not _strings(task.payload, task.target) & _strings(proposal.ops):
+            raise errors.InvalidRequestError(
+                f"proposal {result.proposal} does not touch anything this task is about"
             )
 
     # -- access ----------------------------------------------------------------------------
@@ -530,3 +535,23 @@ class TaskService:
         if not caller.can_write(task.owner):
             raise errors.PermissionDeniedError("you may not change this memory")
         return task
+
+
+def _strings(*parts: Any) -> set[str]:
+    """Every record id (`table:id`) found anywhere in the given values."""
+    found: set[str] = set()
+    stack: list[Any] = list(parts)
+    while stack:
+        item = stack.pop()
+        if isinstance(item, RecordId):
+            found.add(str(item))
+        elif isinstance(item, str):
+            if re.fullmatch(r"[a-z][a-z_]*:[\w-]+", item):
+                found.add(item)
+        elif isinstance(item, dict):
+            stack.extend(cast("dict[str, Any]", item).values())
+        elif isinstance(item, (list, tuple, set)):
+            stack.extend(cast("Sequence[Any]", item))
+        elif hasattr(item, "model_dump"):
+            stack.append(item.model_dump(mode="json"))
+    return found

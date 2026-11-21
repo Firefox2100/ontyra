@@ -410,6 +410,7 @@
                         "type": "string"
                       },
                       "text": {
+                        "maxLength": 5000,
                         "type": "string"
                       }
                     },
@@ -1241,6 +1242,7 @@
             "topic": {
               "anyOf": [
                 {
+                  "maxLength": 500,
                   "type": "string"
                 },
                 {
@@ -1289,6 +1291,8 @@
             "budget_tokens": {
               "anyOf": [
                 {
+                  "maximum": 100000,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -1383,8 +1387,10 @@
             "hints": {
               "default": [],
               "items": {
+                "maxLength": 200,
                 "type": "string"
               },
+              "maxItems": 50,
               "type": "array"
             },
             "kinds": {
@@ -1414,6 +1420,7 @@
             "query": {
               "anyOf": [
                 {
+                  "maxLength": 20000,
                   "type": "string"
                 },
                 {
@@ -3303,6 +3310,8 @@
             "budget_tokens": {
               "anyOf": [
                 {
+                  "maximum": 100000,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -3397,8 +3406,10 @@
             "hints": {
               "default": [],
               "items": {
+                "maxLength": 200,
                 "type": "string"
               },
+              "maxItems": 50,
               "type": "array"
             },
             "kinds": {
@@ -3428,6 +3439,7 @@
             "query": {
               "anyOf": [
                 {
+                  "maxLength": 20000,
                   "type": "string"
                 },
                 {
@@ -3516,6 +3528,7 @@
             "idempotency_key": {
               "anyOf": [
                 {
+                  "maxLength": 200,
                   "type": "string"
                 },
                 {
@@ -3527,6 +3540,7 @@
             "note": {
               "anyOf": [
                 {
+                  "maxLength": 2000,
                   "type": "string"
                 },
                 {
@@ -3922,6 +3936,7 @@
                         "type": "string"
                       },
                       "text": {
+                        "maxLength": 5000,
                         "type": "string"
                       }
                     },
@@ -3934,6 +3949,7 @@
                   }
                 ]
               },
+              "maxItems": 100,
               "minItems": 1,
               "type": "array"
             },
@@ -4174,9 +4190,12 @@
             },
             "limit": {
               "default": 20,
+              "maximum": 200,
+              "minimum": 1,
               "type": "integer"
             },
             "query": {
+              "maxLength": 2000,
               "type": "string"
             }
           },

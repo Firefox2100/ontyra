@@ -21,6 +21,11 @@ authentication—set `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true`. For an inter
 proxy deployment, use `ONTYRA_SERVER__DEPLOYMENT=public` and the multi-user settings described in
 [Authentication and accounts](./authentication.md).
 
+The daemon refuses a request body above `ONTYRA_SERVER__MAX_BODY_BYTES` (default 2 MiB, `0` turns it
+off) with `413`, and the request models cap text length and the number of operations in a proposal
+(100). A reverse proxy should still set its own body, rate and connection limits: those belong to the
+edge.
+
 To keep the deployment outside the checkout, copy `compose.yaml` and `.env` to a directory of
 your choice, leave `image: ontyra:local` and run `docker compose up -d` there. After pulling a
 new version, rebuild the image and run `docker compose up -d` again; the data stays in `./data`.

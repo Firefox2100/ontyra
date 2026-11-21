@@ -15,6 +15,7 @@ from ontyra.models.proposals import (
     AmendRequest,
     ApproveRequest,
     Finding,
+    OverlayRequest,
     ProposalRequest,
     ProposalResult,
     RequestChanges,
@@ -77,6 +78,7 @@ class MemoryService:
         self.on_commit = on_commit  # e.g. embed the new revisions (best effort)
         self.episodes = episodes or EpisodeSettings()
         self._last_prune: datetime | None = None
+        self.ontology = ontology
         self.validator = ProposalValidator(store, now, ontology, anchors, self.episodes)
 
     # ---- episodes -----------------------------------------------------------
@@ -427,6 +429,44 @@ class MemoryService:
             version=version + 1,
             rejected_ops=gone,
         )
+
+    async def overlay(self, caller: Caller, request: OverlayRequest) -> list[ProposalResult]:
+        """Amend each chosen proposal (a new version) with the same fields on its `add` and
+        `revise` ops."""
+        patch: dict[str, Any] = {}
+        if request.scope is not None:
+            patch["scope"] = request.scope
+        if request.expires_at:
+            patch["expires_at"] = request.expires_at
+        results: list[ProposalResult] = []
+        for pid in request.proposals:
+            p = await self.get_proposal(caller, pid)
+            ops: list[dict[str, Any]] = []
+            for op in p.ops:
+                if op.get("op") in ("add", "revise"):
+                    fields: dict[str, Any] = {**op.get("fields", {}), **patch}
+                    if request.anchor:
+                        fields["anchors"] = [
+                            *fields.get("anchors", []),
+                            {"uri": request.anchor, "match": "subtree"},
+                        ]
+                    if request.about:  # labels, slugs or ids; an unknown one is refused
+                        concepts = [str(await self.ontology.resolve(t)) for t in request.about]
+                        fields["about"] = [*fields.get("about", []), *concepts]
+                    op = {**op, "fields": fields}
+                ops.append(op)
+            results.append(
+                await self.amend(
+                    caller,
+                    pid,
+                    AmendRequest(
+                        ops=ProposalRequest.model_validate({"ops": ops}).ops,
+                        why="bulk edit",
+                        expect_version=p.version or 1,
+                    ),
+                )
+            )
+        return results
 
     async def amend(
         self, caller: Caller, proposal: RecordId, request: AmendRequest

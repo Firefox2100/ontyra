@@ -61,7 +61,8 @@ async def test_duplicate_scan(world_app, worlds, bench: BenchSettings, profile: 
         queued = await app.tasks.detect(caller)
         clusters = [t for t in queued.created if t.kind == "consolidate"]
         assert len(clusters) == len(report.duplicates)
-        assert len(queued.created) - len(clusters) <= len(report.updates)
+        contradictions = [t for t in queued.created if t.kind == "review_contradiction"]
+        assert len(contradictions) <= len(report.updates)  # (expiry tasks depend on today's date)
         assert (await app.tasks.detect(caller)).created == []
         if profile.baseline:  # the lexical embedder: only never merge things that differ
             assert s.precision >= 0.9, s.false

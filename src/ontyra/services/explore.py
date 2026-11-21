@@ -457,7 +457,7 @@ class ExplorationService:
     async def overview(self, caller: Caller, context: RecallContext) -> Overview:
         ctx = await self.recall.resolve_context(context)
         docs = await self.store.docs(caller.visible_owners(), limit=10_000)
-        counts = Counter(d.kind for d in docs)
+        counts = await self.store.doc_counts(caller.visible_owners())  # exact; `docs` is a sample
         concepts = Counter(
             ctx.ontology.concepts[c].label
             for d in docs

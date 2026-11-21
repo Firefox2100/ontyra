@@ -245,3 +245,30 @@ async def test_waiting_proposals_of_another_owner_are_not_visible(
     )
     result = await review_app.memory.submit(stranger, request(add("only my space knows this rule")))
     assert not [f for f in result.findings if f.code.startswith("pending_")]
+
+
+async def test_overlay_amends_several_waiting_proposals_with_the_same_fields(
+    review_app: Application, human: Caller
+) -> None:
+    from ontyra.models.ontology import ConceptDefinition
+    from ontyra.models.proposals import OverlayRequest
+
+    await review_app.ontology.define(human, ConceptDefinition(label="Python"))
+    agent = await agent_of(review_app)
+    first = await review_app.memory.submit(agent, request(add("run the linter", "a")))
+    second = await review_app.memory.submit(agent, request(add("pin the python version", "b")))
+    results = await review_app.memory.overlay(
+        human,
+        OverlayRequest(
+            proposals=[first.proposal, second.proposal],
+            scope="contextual",
+            anchor="file://machine/home/mira/src/tidewatch",
+            about=["python"],
+        ),
+    )
+    assert [r.version for r in results] == [2, 2]
+    for result in (first, second):
+        ops = (await review_app.memory.get_proposal(human, result.proposal)).ops
+        fields = ops[0]["fields"]
+        assert fields["scope"] == "contextual" and fields["about"] == ["concept:python"]
+        assert fields["anchors"][0]["match"] == "subtree"

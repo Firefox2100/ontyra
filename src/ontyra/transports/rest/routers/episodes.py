@@ -12,9 +12,11 @@ router = APIRouter(prefix="/episodes", tags=["episodes"])
 
 
 class EpisodeIn(BaseModel):
-    session: str = Field(description="Session or conversation identifier.")
-    role: str = Field(description="Who produced this content, e.g. `user`, `assistant`, `tool`.")
-    content: str
+    session: str = Field(max_length=200, description="Session or conversation identifier.")
+    role: str = Field(
+        max_length=50, description="Who produced this content, e.g. `user`, `assistant`, `tool`."
+    )
+    content: str = Field(max_length=500_000)
     meta: dict[str, Any] = {}
 
 

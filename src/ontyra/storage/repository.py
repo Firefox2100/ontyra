@@ -226,6 +226,15 @@ class SurrealStore:
         rows = (await self.db.query(sql, params))[0]
         return [SearchDoc.model_validate(decode(r)) for r in rows]
 
+    async def doc_counts(self, owners: Sequence[RecordId]) -> dict[str, int]:
+        rows = (
+            await self.db.query(
+                "SELECT kind, count() AS n FROM search_doc WHERE owner IN $owners GROUP BY kind",
+                {"owners": list(owners)},
+            )
+        )[0]
+        return {str(r["kind"]): int(r["n"]) for r in rows}
+
     async def memory_edges(self, edge: str, memories: Sequence[RecordId]) -> list[dict[str, Any]]:
         spec = registry.tables.get(edge)
         if spec is None or spec.edge is None:

@@ -360,3 +360,21 @@ async def test_extending_a_memory_closes_its_expiry_task(make_app, agent: Caller
     assert revised.status == "committed", revised.findings
     assert (await app.tasks.detect(agent)).closed == 1
     assert (await app.tasks.get(agent, task.id)).result["outcome"] == "obsolete"
+
+
+async def test_a_task_cannot_be_closed_with_an_unrelated_proposal(world, agent: Caller) -> None:
+    app, ids = world
+    await app.tasks.detect(agent)
+    task = by_kind(await app.tasks.list(agent), "consolidate")  # about a and b
+    await app.tasks.claim(agent, task.id)
+    elsewhere = await app.memory.submit(
+        agent,
+        ProposalRequest(
+            ops=[SupersedeMemory(new=ids["new"], target=ids["old"], reason_code="outdated")]
+        ),
+    )
+    assert elsewhere.status == "committed", elsewhere.findings
+    with pytest.raises(errors.InvalidRequestError, match="does not touch"):
+        await app.tasks.complete(
+            agent, task.id, TaskResult(decision="merge", proposal=elsewhere.proposal)
+        )

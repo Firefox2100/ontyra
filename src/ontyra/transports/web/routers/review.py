@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ontyra.models import RecordId
 from ontyra.models.ontology_change import ChangeRequest
-from ontyra.models.proposals import AmendRequest, ApproveRequest, ProposalRequest, RequestChanges
+from ontyra.models.proposals import ApproveRequest, OverlayRequest, RequestChanges
 from ontyra.services.errors import ServiceError
 from ontyra.services.review import depends_on
 from ontyra.transports.rest.deps import MemoryServiceDep, OntologyChangeServiceDep
@@ -144,41 +144,16 @@ async def overlay(
 ) -> RedirectResponse:
     """The same fields on every `add` and `revise` of the chosen proposals, as a human's
     amendment of each (a new version; plans/24)."""
-    patch: dict[str, object] = {}
-    if scope in ("contextual", "universal"):
-        patch["scope"] = scope
-    if expires_at.strip():
-        patch["expires_at"] = expires_at.strip()
-    for pid in ids:
-        rid = RecordId("proposal", pid)
-        p = await memory.get_proposal(caller, rid)
-        new_ops: list[dict[str, Any]] = []
-        for op in p.ops:
-            if op.get("op") in ("add", "revise"):
-                fields: dict[str, Any] = {**op.get("fields", {}), **patch}
-                if anchor.strip():
-                    anchors: list[Any] = fields.get("anchors", [])
-                    fields["anchors"] = [
-                        *anchors,
-                        {"uri": anchor.strip(), "match": "subtree"},
-                    ]
-                if about.strip():
-                    existing: list[Any] = fields.get("about", [])
-                    fields["about"] = [
-                        *existing,
-                        *(a.strip() for a in about.split(",") if a.strip()),
-                    ]
-                op = {**op, "fields": fields}
-            new_ops.append(op)
-        await memory.amend(
-            caller,
-            rid,
-            AmendRequest(
-                ops=ProposalRequest.model_validate({"ops": new_ops}).ops,
-                why="bulk edit in the console",
-                expect_version=p.version or 1,
-            ),
-        )
+    await memory.overlay(
+        caller,
+        OverlayRequest(
+            proposals=[RecordId("proposal", pid) for pid in ids],
+            scope=scope if scope in ("contextual", "universal") else None,  # type: ignore[arg-type]
+            expires_at=expires_at.strip() or None,
+            anchor=anchor.strip() or None,
+            about=[a.strip() for a in about.split(",") if a.strip()],
+        ),
+    )
     return _back()
 
 

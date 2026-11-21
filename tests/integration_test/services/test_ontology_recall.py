@@ -152,3 +152,25 @@ async def test_a_reparented_concept_no_longer_answers_for_its_old_parent(
     )
     after = await found(world, human, "when do we update the container engine")
     assert engine in after and child not in after
+
+
+async def test_a_flood_about_a_related_concept_cannot_push_out_the_mentioned_one(
+    make_app, human: Caller
+) -> None:
+    app: Application = await make_app(recall=RecallSettings(engine="legacy"))
+    await change(app, human, DefineChange(concept=ConceptDefinition(label="Vehicle")))
+    await change(app, human, DefineChange(concept=ConceptDefinition(label="Bicycle")))
+    await change(
+        app,
+        human,
+        RelateChange(relation=RelationRequest(source="bicycle", relation="is_a", target="vehicle")),
+    )
+    wanted = await memory(app, human, "the vehicle log is kept by the garage", "vehicle")
+    for i in range(6):  # newer, and only related (a kind of the mentioned concept)
+        await memory(app, human, f"bicycle number {i} has a bell", "bicycle")
+    await app.indexer.backfill()
+    ctx = await app.recall.resolve_context(RecallRequest().context)
+    lane = await app.recall.concept_lane(
+        "what about the vehicle", ctx, human.visible_owners(), [], limit=3
+    )
+    assert wanted in {d.memory for _, d, _ in lane}

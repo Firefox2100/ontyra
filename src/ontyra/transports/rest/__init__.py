@@ -10,6 +10,7 @@ from fastapi import APIRouter, FastAPI
 
 from ontyra import __version__
 from ontyra.transports.auth import AuthMiddleware
+from ontyra.transports.limits import BodyLimitMiddleware
 from ontyra.transports.rest.deps import Services
 from ontyra.transports.rest.errors import install_error_handlers
 from ontyra.transports.rest.routers import UNVERSIONED, VERSIONED
@@ -36,6 +37,7 @@ def create_app(
     ui_session_hours: int = 12,
     ui_cookie_secure: bool = False,
     ui_allowed_origins: Sequence[str] = (),
+    max_body_bytes: int = 0,
 ) -> FastAPI:
     """Build the application.
 
@@ -63,6 +65,7 @@ def create_app(
     app.state.ui_cookie_secure = ui_cookie_secure
     app.state.ui_allowed_origins = set(ui_allowed_origins)
     app.add_middleware(AuthMiddleware)
+    app.add_middleware(BodyLimitMiddleware, max_bytes=max_body_bytes)  # outermost: checked first
     install_error_handlers(app)
     for router in UNVERSIONED:
         app.include_router(router)

@@ -105,7 +105,7 @@ class Annotate(Model):
     op: Literal["annotate"] = "annotate"
     target: RecordId
     kind: Literal["comment", "tag", "flag"] = "comment"
-    text: str
+    text: Annotated[str, Field(max_length=5000)]
 
 
 Op = Annotated[
@@ -115,13 +115,13 @@ Op = Annotated[
 
 
 class ProposalRequest(Model):
-    ops: Annotated[list[Op], Field(min_length=1)]
+    ops: Annotated[list[Op], Field(min_length=1, max_length=100)]
     # Where new memories go: the caller's own memory (default) or the shared global memory,
     # which needs the `global_write` permission. Owners are never named: they come from the
     # authenticated account. With multi-user mode off there is only the global memory.
     space: Literal["own", "global"] = "own"
-    idempotency_key: str | None = None
-    note: str | None = None
+    idempotency_key: Annotated[str | None, Field(max_length=200)] = None
+    note: Annotated[str | None, Field(max_length=2000)] = None
 
 
 class LiteProposalRequest(ProposalRequest):
@@ -136,7 +136,7 @@ class LiteProposalRequest(ProposalRequest):
                 Field(discriminator="op"),
             ]
         ],
-        Field(min_length=1),
+        Field(min_length=1, max_length=100),
     ]
 
 
@@ -170,6 +170,16 @@ class AmendRequest(Model):
     expect_version: int | None = Field(
         default=None, description="The version you based this on; refused when it moved on"
     )
+
+
+class OverlayRequest(Model):
+    """The same fields on every `add` and `revise` of several waiting proposals (a bulk edit)."""
+
+    proposals: list[RecordId]
+    scope: Literal["contextual", "universal"] | None = None
+    expires_at: str | None = None
+    anchor: str | None = None  # a subtree anchor added to each
+    about: list[str] = []  # concept labels or ids added to each
 
 
 class WithdrawRequest(Model):

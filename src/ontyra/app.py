@@ -275,6 +275,7 @@ def create_rest_app(settings: Settings | None = None) -> FastAPI:
         ui_session_hours=cfg.auth.ui_session_hours,
         ui_cookie_secure=cfg.ui_cookie_secure,
         ui_allowed_origins=cfg.auth.ui_allowed_origins,
+        max_body_bytes=cfg.server.max_body_bytes,
     )
     holder["app"] = app
     return app

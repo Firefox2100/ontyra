@@ -191,22 +191,23 @@ class Ontology:
         for eq in self.equivalents(start):
             put(eq, 1.0, "mentioned" if eq == concept else "same_as/replaced")
         put(concept, 1.0, "mentioned")
-        for old in self._in.get("replaced_by", {}).get(start, ()):
-            put(old, W_REPLACED, f"{old.id} was replaced by {start.id}")
-        for old in self._in.get("split_into", {}).get(start, ()):  # what it was split from
-            put(old, W_REPLACED, f"{start.id} was split out of {old.id}")
-        for new in self._out.get("split_into", {}).get(start, ()):  # what a split became
-            put(new, W_REPLACED, f"{start.id} was split into {new.id}")
-        for d, dist in self.descendants(start).items():
-            put(d, W_DESCENDANT**dist, f"{d.id} is a kind of {start.id}")
-        for a, dist in self.ancestors(start).items():
-            put(a, W_ANCESTOR**dist, f"{start.id} is a kind of {a.id}")
-        for part in self.descendants(start, PARTWISE):
-            put(part, W_PART, f"{part.id} is part of {start.id}")
-        for alt in self._out.get("alternative_to", {}).get(start, ()):
-            put(alt, W_ALTERNATIVE, f"{alt.id} is an alternative to {start.id}")
-        for alt in self._in.get("alternative_to", {}).get(start, ()):
-            put(alt, W_ALTERNATIVE, f"{alt.id} is an alternative to {start.id}")
+        for node in self.equivalents(start):  # the same thing under another name: same reach
+            for old in self._in.get("replaced_by", {}).get(node, ()):
+                put(old, W_REPLACED, f"{old.id} was replaced by {node.id}")
+            for old in self._in.get("split_into", {}).get(node, ()):  # what it was split from
+                put(old, W_REPLACED, f"{node.id} was split out of {old.id}")
+            for new in self._out.get("split_into", {}).get(node, ()):  # what a split became
+                put(new, W_REPLACED, f"{node.id} was split into {new.id}")
+            for d, dist in self.descendants(node).items():
+                put(d, W_DESCENDANT**dist, f"{d.id} is a kind of {node.id}")
+            for a, dist in self.ancestors(node).items():
+                put(a, W_ANCESTOR**dist, f"{node.id} is a kind of {a.id}")
+            for part in self.descendants(node, PARTWISE):
+                put(part, W_PART, f"{part.id} is part of {node.id}")
+            for alt in self._out.get("alternative_to", {}).get(node, ()):
+                put(alt, W_ALTERNATIVE, f"{alt.id} is an alternative to {node.id}")
+            for alt in self._in.get("alternative_to", {}).get(node, ()):
+                put(alt, W_ALTERNATIVE, f"{alt.id} is an alternative to {node.id}")
         return out
 
     # ---- mentions -----------------------------------------------------------

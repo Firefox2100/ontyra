@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
@@ -81,10 +81,12 @@ class RecallContext(Model):
 
 class RecallRequest(Model):
     context: RecallContext = RecallContext()
-    query: str | None = None  # the user message / task text
-    hints: list[str] = []  # keywords the host agent already inferred
+    query: Annotated[str | None, Field(max_length=20_000)] = None  # the user message / task text
+    hints: Annotated[
+        list[Annotated[str, Field(max_length=200)]], Field(max_length=50)
+    ] = []  # keywords the host agent already inferred
     kinds: list[KindName] = []  # restrict to these kinds (default: all)
-    budget_tokens: int | None = None
+    budget_tokens: Annotated[int | None, Field(ge=1, le=100_000)] = None
     profile: Literal["compact", "rich"] = "rich"
     redeliver: bool = False  # ignore the ledger (e.g. after context compaction)
     decide: bool = True  # False: skip the decision model for this request even if configured
@@ -160,11 +162,11 @@ class CheckResult(Model):
 
 
 class SearchRequest(Model):
-    query: str
+    query: Annotated[str, Field(max_length=2000)]
     context: RecallContext = RecallContext()
     kinds: list[KindName] = []
     concept: str | None = None  # filter: about this concept (or anything it expands to)
-    limit: int = 20
+    limit: Annotated[int, Field(ge=1, le=200)] = 20
 
 
 class SearchHit(Model):
@@ -196,7 +198,7 @@ class AskRequest(Model):
         "explain",
     ]
     memory: RecordId | None = None
-    topic: str | None = None
+    topic: Annotated[str | None, Field(max_length=500)] = None
     since: datetime | None = None
     at: datetime | None = None  # as_of: the moment to look at
     trace: RecordId | None = None

@@ -93,6 +93,10 @@ class Store(Protocol):
         a selector)."""
         ...
 
+    async def doc_counts(self, owners: Sequence[RecordId]) -> dict[str, int]:
+        """Live-revision index rows of the owners, counted per kind (exact, no paging)."""
+        ...
+
     async def memory_edges(self, edge: str, memories: Sequence[RecordId]) -> list[dict[str, Any]]:
         """Edge rows touching any revision of the given memories, with `in_memory` and
         `out_memory` added. Links between revisions follow their memories across revisions."""

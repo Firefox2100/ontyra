@@ -76,8 +76,19 @@ class AuthService:
         user = await self._user(ADMIN)
         if user is None:
             user = await self._create_user(ADMIN, ["admin", "global_write"])
-        digest = hash_token(self.admin_token)
         assert user.id is not None
+        wanted = set(self._permissions(["admin", "global_write"]))
+        if user.disabled or not wanted <= set(user.permissions):
+            # the bootstrap account is the way back in: it cannot be locked out by an edit
+            await self.store.apply(
+                [
+                    Update(
+                        user.id,
+                        {"disabled": False, "permissions": sorted(wanted | set(user.permissions))},
+                    )
+                ]
+            )
+        digest = hash_token(self.admin_token)
         existing = [
             c
             for c in await self.store.select("credential", {"user": user.id}, limit=50)

@@ -34,6 +34,7 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_SERVER__PORT` | int | `8080` |
 | `ONTYRA_SERVER__DEPLOYMENT` | `local` \| `public` | `local` |
 | `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK` | bool | `False` |
+| `ONTYRA_SERVER__MAX_BODY_BYTES` | int | `2097152` |
 
 ## policy
 

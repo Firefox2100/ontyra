@@ -288,6 +288,7 @@
             "type": "string"
           },
           "text": {
+            "maxLength": 5000,
             "title": "Text",
             "type": "string"
           }
@@ -427,6 +428,7 @@
           "topic": {
             "anyOf": [
               {
+                "maxLength": 500,
                 "type": "string"
               },
               {
@@ -1566,6 +1568,7 @@
       "EpisodeIn": {
         "properties": {
           "content": {
+            "maxLength": 500000,
             "title": "Content",
             "type": "string"
           },
@@ -1577,11 +1580,13 @@
           },
           "role": {
             "description": "Who produced this content, e.g. `user`, `assistant`, `tool`.",
+            "maxLength": 50,
             "title": "Role",
             "type": "string"
           },
           "session": {
             "description": "Session or conversation identifier.",
+            "maxLength": 200,
             "title": "Session",
             "type": "string"
           }
@@ -3164,6 +3169,7 @@
           "idempotency_key": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -3175,6 +3181,7 @@
           "note": {
             "anyOf": [
               {
+                "maxLength": 2000,
                 "type": "string"
               },
               {
@@ -3217,6 +3224,7 @@
                 }
               ]
             },
+            "maxItems": 100,
             "minItems": 1,
             "title": "Ops",
             "type": "array"
@@ -3658,6 +3666,8 @@
           "budget_tokens": {
             "anyOf": [
               {
+                "maximum": 100000.0,
+                "minimum": 1.0,
                 "type": "integer"
               },
               {
@@ -3686,8 +3696,10 @@
           "hints": {
             "default": [],
             "items": {
+              "maxLength": 200,
               "type": "string"
             },
+            "maxItems": 50,
             "title": "Hints",
             "type": "array"
           },
@@ -3720,6 +3732,7 @@
           "query": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -4703,10 +4716,13 @@
           },
           "limit": {
             "default": 20,
+            "maximum": 200.0,
+            "minimum": 1.0,
             "title": "Limit",
             "type": "integer"
           },
           "query": {
+            "maxLength": 2000,
             "title": "Query",
             "type": "string"
           }

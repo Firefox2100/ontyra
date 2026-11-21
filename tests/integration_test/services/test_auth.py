@@ -251,3 +251,13 @@ async def test_single_user_mode_has_no_accounts() -> None:
     assert await auth.authenticate("y" * 20) is None
     with pytest.raises(errors.NotFoundError):
         await auth.list_users()
+
+
+async def test_bootstrap_repairs_a_locked_out_admin(multi: Application) -> None:
+    await multi.auth.update_user("admin", permissions=[], disabled=True)
+    assert await multi.auth.authenticate(ADMIN_TOKEN) is None  # locked out
+    await multi.auth.bootstrap()  # what a daemon start does
+    principal = await multi.auth.authenticate(ADMIN_TOKEN)
+    assert principal is not None and principal.user is not None
+    caller = await multi.auth.caller(principal, label="x", kind="human", harness=None)
+    assert caller.has("admin") and caller.has("global_write")

@@ -8,7 +8,7 @@ from datetime import datetime
 
 from ontyra.models import RecordId
 from ontyra.models.core import Actor, Owner
-from ontyra.ports import Create, Store
+from ontyra.ports import Create, Store, StoreConflictError
 from ontyra.services.context import ALL_PERMISSIONS, GLOBAL_OWNER, Caller
 
 DEFAULT_TRUST: dict[str, float] = {
@@ -43,7 +43,11 @@ class ActorService:
             GLOBAL_OWNER if (kind, name) == ("global", "global") else RecordId("owner", _slug(name))
         )
         if await self.store.get(rid) is None:
-            await self.store.apply([Create.of(rid, Owner(kind=kind, name=name))])  # type: ignore[arg-type]
+            try:
+                await self.store.apply([Create.of(rid, Owner(kind=kind, name=name))])  # type: ignore[arg-type]
+            except StoreConflictError:
+                if await self.store.get(rid) is None:  # not a concurrent create: a real conflict
+                    raise
         return rid
 
     async def ensure_actor(
@@ -67,7 +71,11 @@ class ActorService:
             harness=harness,
             trust=self.trust.get(kind, 0.5),
         )
-        await self.store.apply([Create.of(rid, actor)])
+        try:
+            await self.store.apply([Create.of(rid, actor)])
+        except StoreConflictError:  # two requests of a new client at once: the other one won
+            if not isinstance(await self.store.get(rid), Actor):
+                raise
         return actor.model_copy(update={"id": rid})
 
     async def caller(

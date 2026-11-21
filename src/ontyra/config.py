@@ -6,7 +6,7 @@ Variables use the `ONTYRA_` prefix and `__` for nesting, e.g. `ONTYRA_DB__URL`.
 from __future__ import annotations
 
 import ipaddress
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
@@ -37,6 +37,9 @@ class ServerSettings(BaseModel):
     port: int = 8080
     deployment: Literal["local", "public"] = "local"
     allow_open_non_loopback: bool = False
+    max_body_bytes: Annotated[int, Field(ge=0)] = (
+        2_097_152  # request bodies above this get 413; 0 = off
+    )
 
 
 class EmbeddingSettings(BaseModel):

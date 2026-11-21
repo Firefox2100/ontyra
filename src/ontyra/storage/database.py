@@ -71,6 +71,8 @@ def _classify(kind: str, message: str) -> errors.StorageError:
         return errors.ConflictError(message)  # our own guard failed: final
     if "write conflict" in low or "can be retried" in low:
         return errors.RetryableConflictError(message)  # the engine's optimistic commit
+    if "already exists" in low:
+        return errors.ConflictError(message)  # a create of an id that is taken: final
     if "readonly" in low or "is immutable" in low:
         return errors.ImmutableViolationError(message)
     if "already contains" in low:

@@ -118,3 +118,14 @@ def test_plurals_fold_onto_the_singular() -> None:
     assert [m.concept for m in o.mentions("which dietary preferences apply")] == [
         cid("dietary_preference")
     ]
+
+
+def test_an_equivalent_name_reaches_what_the_other_reaches() -> None:
+    o = build(
+        [
+            ("zotero_library", "same_as", "reference_manager"),
+            ("jabref", "is_a", "reference_manager"),
+        ]
+    )
+    reach = o.expand(cid("zotero_library"))
+    assert cid("jabref") in reach  # a kind of the equivalent concept
