@@ -71,4 +71,4 @@ BM25, lexical, dense, fused, reranker and decision-model probabilities, and whet
 shown), `ONTYRA_RECALL__TRACE_CANDIDATES` of them (0 turns it off). Feedback that cites the trace
 then has the features it was given for: `GET /v1/feedback/summary` counts them as `with_features`.
 Traces older than `ONTYRA_RECALL__TRACE_RETENTION_DAYS` (default 180) are deleted unless a
-feedback event cites them. Tuning the thresholds from this feedback is planned, not built.
+feedback event cites them. The [score layer](./feedback-learning.md) learns from this feedback; tuning the thresholds themselves from it is not built.

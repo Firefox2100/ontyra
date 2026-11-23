@@ -46,6 +46,7 @@ async def test_lite_profile_lists_a_handful_of_tools(app: Application) -> None:
         "ask",
         "get",
         "remember",
+        "feedback",
         "pending_proposals",
         "amend",
         "concepts",
@@ -147,7 +148,7 @@ async def test_every_tool_declares_what_it_may_do(app: Application) -> None:
         assert hints.read_only_hint is not None and hints.destructive_hint is not None
     reads = {
         "recall", "check", "briefing", "ask", "get", "concepts", "search", "overview",
-        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes", "find_duplicates", "pending_tasks",
+        "neighbors", "list_memories", "pending_proposals", "pending_ontology_changes", "find_duplicates", "feedback_outliers", "pending_tasks",
         "preview_ontology_change", "concept_history", "ontology_history", "check_ontology",
     }  # fmt: skip
     for name in reads:

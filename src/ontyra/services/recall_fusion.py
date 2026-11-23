@@ -34,6 +34,7 @@ from ontyra.services.anchors import AnchorService
 from ontyra.services.context import Caller
 from ontyra.services.ontology import OntologyService
 from ontyra.services.recall import Candidate, RecallService, Resolved
+from ontyra.services.scorelayer import FEATURES, ScoreLayer
 from ontyra.services.text import coverage
 
 log = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class Scored:
     rerank: float | None = None
     decision: float | None = None  # the decision model's probability, when it answered
     final: float = 0.0
+    base: float | None = None  # the final score before the score layer, when it changed it
 
 
 @dataclass
@@ -101,6 +103,7 @@ class FusionRecallService(RecallService):
         reranker: Reranker | None = None,
         rerank_top_n: int = 30,
         decider: Decider | None = None,
+        layer: ScoreLayer | None = None,
     ) -> None:
         super().__init__(
             store,
@@ -113,6 +116,7 @@ class FusionRecallService(RecallService):
             rerank_top_n=rerank_top_n,
         )
         self.decider = decider
+        self.layer = layer
 
     async def fuse(
         self,
@@ -186,6 +190,8 @@ class FusionRecallService(RecallService):
             judgement = await self._decide(situation, ranked, raw)
             if judgement is not None:
                 ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
+        if await self._learn(caller, ranked, raw):
+            ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
         self._describe(ranked, raw)
         margin = cfg.decision_margin if judgement is not None else cfg.fusion_margin
         best = raw[ranked[0].rev].final if ranked else 0.0
@@ -207,6 +213,29 @@ class FusionRecallService(RecallService):
             judgement.none if judgement else None,
             ranked,
         )
+
+    async def _learn(
+        self, caller: Caller, ranked: list[Candidate], raw: dict[RecordId, Scored]
+    ) -> bool:
+        """Apply the owner's score layer (their own feedback; plans/25) to the final scores.
+        True when it changed them."""
+        if self.layer is None or not ranked:
+            return False
+        items = [
+            (str(c.doc.memory) if c.doc else "", self._features(raw[c.rev]), raw[c.rev].final)
+            for c in ranked
+        ]
+        adjusted = await self.layer.rescore(caller.owner, items)
+        if adjusted is None:
+            return False
+        for c, score in zip(ranked, adjusted, strict=True):
+            raw[c.rev].base = raw[c.rev].final
+            raw[c.rev].final = score
+        return True
+
+    @staticmethod
+    def _features(s: Scored) -> tuple[float, ...]:
+        return tuple(float(getattr(s, name) or 0.0) for name in FEATURES)
 
     @staticmethod
     def _describe(ranked: list[Candidate], raw: dict[RecordId, Scored]) -> None:
@@ -250,7 +279,11 @@ class FusionRecallService(RecallService):
     ) -> None:
         assert self.reranker is not None
         top = ranked[: self.cfg.rerank_candidates]
-        scores = await self.reranker.rerank(text, [c.doc.text for c in top if c.doc])
+        try:
+            scores = await self.reranker.rerank(text, [c.doc.text for c in top if c.doc])
+        except Exception as exc:  # busy, slow, unreachable or refusing: the fused ranking stands
+            log.warning("reranker unavailable, recall uses the fused ranking: %s", exc)
+            return
         w = self.cfg.rerank_weight
         for c, s in zip(top, scores, strict=False):
             p = _probability(s)
@@ -329,6 +362,7 @@ class FusionRecallService(RecallService):
                     "rerank": s.rerank,
                     "decision": s.decision,
                     "final": round(s.final, 4),
+                    "base": round(s.base if s.base is not None else s.final, 4),
                 }
             )
         return {

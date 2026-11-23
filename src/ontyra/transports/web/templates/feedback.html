@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Feedback{% endblock %}
+{% block body %}
+<h1>Feedback examples</h1>
+<p class="muted small">What recall learns from. Review the examples most likely to be mistakes and veto them: a vetoed
+example stops counting for the score layer and for any training, and stays out if it is sent again.</p>
+{% if note %}<div class="card small">{{ note }}</div>{% endif %}
+
+<div class="card small">
+  {{ summary.active }} active of {{ summary.total }} events ({{ summary.trainable_examples }} can train, {{ summary.with_features }} with lane scores).
+  Score layer: <span class="tag {{ 'ok' if layer.status == 'active' else 'warn' }}">{{ layer.status }}</span> {{ layer.reason }}
+  {% if layer.status != 'off' %}<span class="muted">(canary {{ layer.canary_base }} → {{ layer.canary_layer }})</span>{% endif %}
+</div>
+
+<h2>Most likely to be wrong{% if everyone %} (everyone){% endif %}</h2>
+{% if admin %}<p class="small"><a href="/ui/feedback{{ '' if everyone else '?everyone=true' }}">{{ 'only mine' if everyone else 'show everyone’s' }}</a></p>{% endif %}
+{% for o in outliers %}
+<div class="card">
+  <div class="row">
+    <span class="tag {{ 'ok' if o.feedback.label in ('applied','helpful','missed') else 'warn' }}">{{ o.feedback.label }}</span>
+    {% for r in o.reasons %}<span class="tag warn">{{ r.replace('_', ' ') }}</span>{% endfor %}
+    {% if o.disagreement is not none %}<span class="muted small">model {{ '%.2f'|format(o.model_score) }}, disagreement {{ '%.2f'|format(o.disagreement) }}</span>{% endif %}
+  </div>
+  <div class="small muted" style="margin-top:6px">for “{{ o.feedback.query }}” by {{ o.feedback.source.id }} ({{ o.feedback.source_kind }}, {{ o.feedback.created_at.strftime('%Y-%m-%d') }})</div>
+  <div style="margin-top:6px"><a href="/ui/memories/{{ o.feedback.memory.id }}">{{ o.text }}</a></div>
+  <div class="row" style="margin-top:10px">
+    <form class="inline" method="post" action="/ui/feedback/{{ o.feedback.id.id }}/veto">
+      <input type="text" name="reason" placeholder="why (optional)"><button class="no">Veto</button></form>
+  </div>
+</div>
+{% else %}<div class="empty">No active feedback yet.</div>{% endfor %}
+
+{% if vetoed %}<h2>Vetoed</h2>
+<div class="card"><table>{% for v in vetoed %}
+<tr><td><span class="tag">{{ v.label }}</span></td><td>“{{ v.query }}”</td><td class="muted small">{{ v.veto_reason or '' }}</td>
+<td><form class="inline" method="post" action="/ui/feedback/{{ v.id.id }}/unveto"><button>Put back</button></form></td></tr>{% endfor %}
+</table></div>{% endif %}
+
+<h2>Kept out of learning</h2>
+<div class="card">
+  {% for e in exclusions %}<div class="row small"><span class="tag warn">{{ e.kind.replace('_', ' ') }}</span> {{ e.scope }} <code>{{ e.target }}</code>
+    <span class="muted">{{ e.reason }}</span>
+    <form class="inline" method="post" action="/ui/feedback/exclusions/{{ e.id.id }}/lift"><button>Lift</button></form></div>
+  {% else %}<div class="muted small">Nobody is excluded.</div>{% endfor %}
+  <div class="row" style="margin-top:12px">
+    <form class="inline" method="post" action="/ui/feedback/opt-out">
+      <input type="hidden" name="enabled" value="{{ 'false' if opted_out else 'true' }}">
+      <button>{{ 'Allow my feedback in training again' if opted_out else 'Keep my feedback out of training' }}</button></form>
+    <span class="muted small">Your own score layer keeps using it.</span>
+  </div>
+  {% if admin %}
+  <form class="row" method="post" action="/ui/feedback/quarantine" style="margin-top:12px">
+    <select name="scope"><option value="source">source (actor)</option><option value="owner">owner</option></select>
+    <input type="text" name="target" placeholder="actor:… or owner:…" required>
+    <input type="text" name="reason" placeholder="reason"><button class="no">Quarantine</button>
+  </form>{% endif %}
+</div>
+{% endblock %}

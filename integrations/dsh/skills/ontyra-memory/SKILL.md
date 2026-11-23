@@ -38,11 +38,12 @@ for a mechanical edit.
 
 ## When to write (`ontyra_remember`)
 
-Write only what is settled, durable and non-obvious (not speculation such as "maybe we will
-switch someday", not a passing remark, not a mechanical edit): a preference or rule ("never force-push main"), a
-decision with its reason, a fact about the environment, a lesson from a failure. Never write
-anything transient, anything already in the code or git history, or anything you just read back
-from recall. One memory per statement. When the user states something durable, write it: one
+Write without being asked. When the conversation settles something that will matter later (a
+preference or rule the user states, a correction of how you worked, a decision with its reason, a
+fact about the environment, a lesson from a failure), propose it in that turn and tell the user in
+one line what you proposed. Do not write speculation ("maybe we will switch someday"), anything
+transient, a mechanical edit, anything in the code or git history, or anything you got from
+recall. One memory per statement. When the user states something durable, write it: one
 `add` op, no `ontyra_recall` or `ontyra_check` first (`ontyra_check` is for side effects such as
 deleting or pushing). If you suspect it is already stored, one recall is enough; if it is, `revise`
 or `supersede` instead of adding it again. `add` is the only op that stores something new:
@@ -114,6 +115,17 @@ reject single ops of a proposal; the result lists the ones that were not committ
 ## Episodes and capture
 
 If the deployment records episodes, your prompts and answers are already being sent to the daemon
-as session history — do not repeat that history back into memory. If a `Memory check` message
-arrives, it means the harness thinks enough happened to be worth recording: decide honestly whether
-anything durable came out of the work, call `ontyra_remember` if so, and say plainly if nothing did.
+as session history — do not repeat that history back into memory. A short Ontyra reminder may
+accompany the injected memories; it asks you to record what was settled (and to report recall
+verdicts) as part of the same turn. If nothing qualifies, do nothing and do not mention it.
+
+## Feedback
+
+Tell the daemon how recall did, so it can improve. When a recalled memory clearly helped, call
+`ontyra_feedback` with the memory, the query it came back for, the recall `trace` shown with the injected
+memories, and the label (`applied` or `helpful`). When one was wrong, outdated or beside the
+point, use `wrong`, `outdated` or `irrelevant`; when something relevant did not come back,
+`missed`. Only for what clearly mattered or misled, a few at most per turn, never to be thorough.
+`outdated` and `wrong` also queue a maintenance task for someone to retract, revise or confirm the
+memory; feedback never changes the memory itself. If you are sure and the user agrees, also propose
+the `revise`/`supersede`/`retract` rather than silently ignoring it.

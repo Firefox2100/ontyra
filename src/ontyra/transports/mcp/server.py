@@ -14,7 +14,7 @@ from pydantic import Field
 from ontyra.models import RecordId
 from ontyra.models.consolidation import ScanReport, ScanRequest
 from ontyra.models.core import Proposal, TaskKind
-from ontyra.models.feedback import FeedbackRequest, FeedbackView
+from ontyra.models.feedback import FeedbackRequest, FeedbackView, OutlierView
 from ontyra.models.ontology import ConceptHistory, ConceptView, OntologyCheck
 from ontyra.models.ontology_change import (
     AmendChange,
@@ -63,12 +63,15 @@ names the subject. When the message stands on its own, do not recall again. Call
 an action with side effects (delete, push, deploy), not before writing memory. Pleasantries and
 small talk need no memory tool.
 
-When the user states something durable (a rule, preference, decision, fact, lesson), write it
-with `remember`: one `add` op per statement, no recall needed first. Store only settled
-statements: not speculation ("maybe", "someday", "not sure"), not a passing remark or a
-mechanical edit. A proposal is committed or held for review: tell the user it is saved only
-when the result says `committed`. Memories returned by `recall` are advice about this user and
-project: follow directives marked `must`.
+Write without being asked: when the conversation settles something that will matter later (a
+rule or preference, a correction of how you worked, a decision with its reason, a fact, a lesson),
+write it with `remember` in that turn, one `add` op per statement, no recall needed first, and
+tell the user in one line. Store only settled statements: not speculation ("maybe", "someday",
+"not sure"), not a passing remark or a mechanical edit. A proposal is committed or held for
+review: tell the user it is saved only when the result says `committed`. Memories returned by
+`recall` are advice about this user and project: follow directives marked `must`. When a
+recalled memory clearly helped, or was wrong, outdated or beside the point, say so with
+`feedback` (the memory, the query, the recall `trace`); only for what clearly mattered.
 """
 
 ACTOR_KINDS = ("human", "agent", "tool", "service", "model")
@@ -280,6 +283,18 @@ def create_mcp(
         rid = RecordId("proposal", proposal.removeprefix("proposal:"))
         return await run(lambda s, c: s.memory.amend(c, rid, request))
 
+    @mcp.tool(
+        title="Give feedback on a memory",
+        annotations=PROPOSE,
+        description="Say that a recalled memory was `helpful`, `applied`, `irrelevant`, "
+        "`missed` (it should have come back), `outdated` or `wrong`. Give the `query` it came "
+        "back for and, when shown, the recall `trace`. Side effect: the verdict "
+        "is stored. `outdated` and `wrong` also queue a maintenance task for a human or agent "
+        "to retract, revise or confirm the memory; the memory itself is not changed.",
+    )
+    async def feedback(request: FeedbackRequest) -> FeedbackView:
+        return await run(lambda s, c: s.feedback.record(c, request))
+
     if profile == "full":
 
         @mcp.tool(
@@ -402,6 +417,19 @@ def create_mcp(
             return await run(lambda s, c: s.ontology_changes.reject(c, rid, reason))
 
         @mcp.tool(
+            title="Review feedback examples",
+            annotations=READ,
+            description="Read-only: your recorded feedback ranked by how likely it is to be a "
+            "mistake (it disagrees with the ranking at recall time, a verdict flipped, or a "
+            "burst from one source). Tell the user what looks wrong; vetoing is theirs to do "
+            "(console or API).",
+        )
+        async def feedback_outliers(
+            limit: Annotated[int, Field(ge=1, le=200)] = 20,
+        ) -> list[OutlierView]:
+            return await run(lambda s, c: s.feedback_review.outliers(c, limit=limit))
+
+        @mcp.tool(
             title="Find duplicate memories",
             annotations=READ,
             description="Read-only scan for memories that say the same thing (clusters, oldest "
@@ -410,17 +438,6 @@ def create_mcp(
         )
         async def find_duplicates(request: ScanRequest) -> ScanReport:
             return await run(lambda s, c: s.consolidation.scan(c, request))
-
-        @mcp.tool(
-            title="Give feedback on a memory",
-            annotations=PROPOSE,
-            description="Say that a recalled memory was `helpful`, `applied`, `irrelevant`, "
-            "`missed` (it should have come back), `outdated` or `wrong`. Side effect: the verdict "
-            "is stored. `outdated` and `wrong` also queue a maintenance task for a human or agent "
-            "to retract, revise or confirm the memory; the memory itself is not changed.",
-        )
-        async def feedback(request: FeedbackRequest) -> FeedbackView:
-            return await run(lambda s, c: s.feedback.record(c, request))
 
         @mcp.tool(
             title="Open maintenance tasks",

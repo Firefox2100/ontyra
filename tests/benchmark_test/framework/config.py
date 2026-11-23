@@ -38,7 +38,7 @@ class Profile(BaseModel):
     document_prefix: str = ""
     class_path: str = "langchain_openai.OpenAIEmbeddings"
     kwargs: dict[str, Any] = Field(default_factory=dict)
-    # reranker: any `ONTYRA_RERANK__*` setting (provider http | cross_encoder | langchain, ...)
+    # reranker: any `ONTYRA_RERANK__*` setting (provider http | worker | langchain, ...)
     reranker: dict[str, Any] = Field(default_factory=dict)
     # decision model: any `ONTYRA_DECISION__*` setting (provider systemone | langchain, url, ...)
     decision: dict[str, Any] = Field(default_factory=dict)

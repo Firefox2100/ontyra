@@ -1653,6 +1653,126 @@
         "title": "Evidence",
         "type": "object"
       },
+      "ExclusionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "default": "quarantine",
+            "enum": [
+              "quarantine",
+              "opt_out"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "scope": {
+            "default": "source",
+            "enum": [
+              "source",
+              "owner"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "description": "A record id as `table:id`.",
+                "examples": [
+                  "memory:0194f3a1b2c3d4e5f6a7"
+                ],
+                "title": "RecordId",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "title": "ExclusionRequest",
+        "type": "object"
+      },
+      "ExclusionView": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "quarantine",
+              "opt_out"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "source",
+              "owner"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "active",
+              "lifted"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "target": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "scope",
+          "target",
+          "reason",
+          "by",
+          "created_at",
+          "state"
+        ],
+        "title": "ExclusionView",
+        "type": "object"
+      },
       "FeedbackRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1894,10 +2014,22 @@
               "active",
               "superseded",
               "expired",
-              "retracted"
+              "retracted",
+              "vetoed"
             ],
             "title": "State",
             "type": "string"
+          },
+          "veto_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Veto Reason"
           },
           "weight": {
             "title": "Weight",
@@ -2053,6 +2185,92 @@
         "title": "IssuedCredential",
         "type": "object"
       },
+      "LayerState": {
+        "additionalProperties": false,
+        "description": "What the score layer is doing for one owner, and why.",
+        "properties": {
+          "canary_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canary Base"
+          },
+          "canary_groups": {
+            "default": 0,
+            "title": "Canary Groups",
+            "type": "integer"
+          },
+          "canary_layer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canary Layer"
+          },
+          "coefficients": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Coefficients",
+            "type": "object"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "examples": {
+            "default": 0,
+            "title": "Examples",
+            "type": "integer"
+          },
+          "groups": {
+            "default": 0,
+            "title": "Groups",
+            "type": "integer"
+          },
+          "mix": {
+            "default": 0.0,
+            "title": "Mix",
+            "type": "number"
+          },
+          "priors": {
+            "default": 0,
+            "title": "Priors",
+            "type": "integer"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "off",
+              "learning",
+              "active",
+              "reverted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "status"
+        ],
+        "title": "LayerState",
+        "type": "object"
+      },
       "LinkMemories": {
         "additionalProperties": false,
         "description": "Relate two EXISTING memories (ids from recall, or `ref`s of this proposal). It stores\nnothing new: use `add` for that.",
@@ -2123,6 +2341,53 @@
           "target"
         ],
         "title": "LinkMemories",
+        "type": "object"
+      },
+      "LiveResult": {
+        "additionalProperties": false,
+        "description": "What a live head edit did: refitted from the version's own head and the examples that count,\nserved unless it ranked the trusted requests worse (`reverted`).",
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "distance": {
+            "default": 0.0,
+            "title": "Distance",
+            "type": "number"
+          },
+          "examples": {
+            "default": 0,
+            "title": "Examples",
+            "type": "integer"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Metrics",
+            "type": "object"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reverted": {
+            "default": false,
+            "title": "Reverted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "applied"
+        ],
+        "title": "LiveResult",
         "type": "object"
       },
       "Member": {
@@ -2820,6 +3085,72 @@
           "message"
         ],
         "title": "OntologyFinding",
+        "type": "object"
+      },
+      "OptOutRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "title": "OptOutRequest",
+        "type": "object"
+      },
+      "OutlierView": {
+        "additionalProperties": false,
+        "description": "One judged example, with why it deserves a look (the more reasons, the higher it ranks).",
+        "properties": {
+          "disagreement": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disagreement"
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/FeedbackView"
+          },
+          "model_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Score"
+          },
+          "rank": {
+            "default": 0.0,
+            "title": "Rank",
+            "type": "number"
+          },
+          "reasons": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "feedback",
+          "text"
+        ],
+        "title": "OutlierView",
         "type": "object"
       },
       "Overview": {
@@ -4024,6 +4355,15 @@
             ],
             "title": "Id"
           },
+          "kind": {
+            "default": "retrain",
+            "enum": [
+              "retrain",
+              "live"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
           "metrics": {
             "additionalProperties": true,
             "default": {},
@@ -4074,6 +4414,12 @@
         "properties": {
           "feedback": {
             "$ref": "#/components/schemas/FeedbackSummary"
+          },
+          "live": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Live",
+            "type": "object"
           },
           "min_examples": {
             "title": "Min Examples",
@@ -5153,7 +5499,7 @@
             "type": "boolean"
           },
           "batch_size": {
-            "default": 16,
+            "default": 8,
             "title": "Batch Size",
             "type": "integer"
           },
@@ -5162,10 +5508,20 @@
             "title": "Epochs",
             "type": "integer"
           },
+          "head_only": {
+            "default": false,
+            "title": "Head Only",
+            "type": "boolean"
+          },
           "learning_rate": {
-            "default": 2e-05,
+            "default": 0.0001,
             "title": "Learning Rate",
             "type": "number"
+          },
+          "lora_rank": {
+            "default": 8,
+            "title": "Lora Rank",
+            "type": "integer"
           },
           "min_examples": {
             "anyOf": [
@@ -5384,6 +5740,18 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VetoRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "VetoRequest",
         "type": "object"
       },
       "WithdrawRequest": {
@@ -7179,6 +7547,567 @@
         ]
       }
     },
+    "/v1/feedback/exclusions": {
+      "get": {
+        "operationId": "exclusions_v1_feedback_exclusions_get",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExclusionView"
+                  },
+                  "title": "Response Exclusions V1 Feedback Exclusions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Who is kept out of learning",
+        "tags": [
+          "feedback"
+        ]
+      },
+      "post": {
+        "description": "`quarantine` (administrator): the source's or owner's events count nowhere. `opt_out` (an owner, for themselves): their feedback and text never enter training; their own score layer still learns from it.",
+        "operationId": "exclude_v1_feedback_exclusions_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExclusionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExclusionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Quarantine a source or an owner, or opt an owner out of training",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/exclusions/{exclusion_id}/lift": {
+      "post": {
+        "operationId": "lift_v1_feedback_exclusions__exclusion_id__lift_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exclusion_id",
+            "required": true,
+            "schema": {
+              "title": "Exclusion Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExclusionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "End an exclusion",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/layer": {
+      "get": {
+        "description": "The score layer corrects recall's ranking from your own feedback (a prior per memory and a blend of the lane scores), within bounds, and only while a held-out canary says it helps. `status` is `off`, `learning` (not enough feedback yet), `active` or `reverted` (the canary got worse; the plain ranking stands).",
+        "operationId": "layer_v1_feedback_layer_get",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayerState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What the score layer does with your feedback",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/opt-out": {
+      "post": {
+        "description": "Your text and verdicts never enter a training pool. Your own score layer still uses them, since it changes only your own ranking.",
+        "operationId": "opt_out_v1_feedback_opt_out_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptOutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExclusionView"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Opt Out V1 Feedback Opt Out Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Keep your own feedback out of training (or stop)",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/outliers": {
+      "get": {
+        "description": "Your active feedback, ranked by how likely it is to be a mistake or poison: it disagrees with what the ranking believed at recall time, a verdict on the same memory and query flipped, other owners judged the shared memory the other way (`everyone`, admin only) or one source sent a burst. Veto what is wrong. Needs a human credential.",
+        "operationId": "outliers_v1_feedback_outliers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "everyone",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Everyone",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OutlierView"
+                  },
+                  "title": "Response Outliers V1 Feedback Outliers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Examples that most deserve a look",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
     "/v1/feedback/summary": {
       "get": {
         "operationId": "summary_v1_feedback_summary_get",
@@ -7347,6 +8276,199 @@
           }
         },
         "summary": "Withdraw a feedback event",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/{feedback_id}/unveto": {
+      "post": {
+        "operationId": "unveto_v1_feedback__feedback_id__unveto_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "title": "Feedback Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put a vetoed example back",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/feedback/{feedback_id}/veto": {
+      "post": {
+        "description": "The example no longer counts for the score layer or any training, and stays out if the same source sends it again; the layer is replayed without it. Your own events, or any for an administrator.",
+        "operationId": "veto_v1_feedback__feedback_id__veto_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "title": "Feedback Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VetoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Take an example out of learning",
         "tags": [
           "feedback"
         ]
@@ -10001,6 +11123,171 @@
           }
         },
         "summary": "Reranker status",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/reranker/live": {
+      "post": {
+        "description": "The reranker's one-logit head is nudged from feedback, within a cap on how far it may move from the version's own head, and only if the edit does not rank the benchmark's trusted requests worse. It is a replay: refitted from zero every time, so a vetoed example simply stops contributing. Needs `ONTYRA_RERANK__LIVE` and `POOL=all`. With live edits on this also runs by itself, batched, after feedback changes.",
+        "operationId": "live_v1_reranker_live_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refit the live head edit from the feedback that counts now",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/v1/reranker/live/reset": {
+      "post": {
+        "operationId": "live_reset_v1_reranker_live_reset_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove the live head edit",
         "tags": [
           "feedback"
         ]

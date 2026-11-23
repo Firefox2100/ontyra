@@ -42,10 +42,15 @@ Start a session in a project and ask "what do you remember about this project?".
 
 ## Letting the agent propose memories
 
-By default the agent writes only when you ask it to ("remember that we use uv"). To have it
-reflect every few prompts and propose what is durable, start Claude Code with
-`ONTYRA_CAPTURE=1` (`ONTYRA_CAPTURE_EVERY`, default 10 prompts). Nothing is stored without your
-approval unless you chose `auto_commit`; see [Review and policy](../guides/review.md).
+The agent proposes what is durable without being asked. When a prompt reads like a rule,
+preference, correction or decision, and every few prompts (`ONTYRA_CAPTURE_EVERY`, default 5),
+a one-line reminder is added to the context already sent with the prompt. It costs no extra turn
+or model call: the agent writes a proposal in the same turn, or does nothing. The same reminder asks
+for a `feedback` verdict (helpful, wrong, outdated, irrelevant) on a recalled memory that clearly
+helped or misled; the recall trace id shown with the injected memories lets the daemon learn from
+it (see [Learning from feedback](../guides/feedback-learning.md)). Turn it off with
+`ONTYRA_CAPTURE=0`. Nothing is stored without your approval unless you chose `auto_commit`; see
+[Review and policy](../guides/review.md).
 
 ## Settings
 
@@ -53,8 +58,8 @@ approval unless you chose `auto_commit`; see [Review and policy](../guides/revie
 |---|---|---|
 | `ONTYRA_URL` | `http://127.0.0.1:8787` | where the daemon is |
 | `ONTYRA_TOKEN` | unset | the token to send, when the daemon requires one |
-| `ONTYRA_CAPTURE` | off | periodic "anything worth remembering?" prompt |
-| `ONTYRA_CAPTURE_EVERY` | `10` | prompts between capture prompts |
+| `ONTYRA_CAPTURE` | `1` | reminder in the injected context to record what was settled (`0` turns it off) |
+| `ONTYRA_CAPTURE_EVERY` | `5` | prompts between periodic reminders (rule-like prompts trigger it at once) |
 | `ONTYRA_LOG_EPISODES` | `1` | log prompts and replies as episodes (what a memory's `quote` evidence is matched against; see [Evidence](../guides/evidence.md)) |
 | `ONTYRA_BUDGET_TOKENS` | daemon default | size limit for injected context |
 | `ONTYRA_PROFILE` | `compact` | `compact` renders each memory as one line with its id (a directive as its short rule; `get` gives the full text and rationale); `rich` adds the full text, anchors and scores |

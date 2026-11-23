@@ -7,6 +7,7 @@ from ontyra.services.consolidation import ConsolidationService
 from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.explore import ExplorationService
 from ontyra.services.feedback import FeedbackService, RerankTrainingService
+from ontyra.services.feedback_review import FeedbackReviewService
 from ontyra.services.indexing import IndexService
 from ontyra.services.memory import MemoryService
 from ontyra.services.ontology import OntologyService
@@ -25,6 +26,7 @@ __all__ = [
     "Caller",
     "ConsolidationService",
     "ExplorationService",
+    "FeedbackReviewService",
     "FeedbackService",
     "FusionRecallService",
     "IndexService",

@@ -4,16 +4,16 @@ LangChain (lazily, so it stays an optional extra)."""
 from ontyra.adapters.decider import LangChainDecider, SystemOneDecider
 from ontyra.adapters.embeddings import HashEmbedder, LangChainEmbedder
 from ontyra.adapters.factory import build_decider, build_embedder, build_reranker
-from ontyra.adapters.rerank import CrossEncoderReranker, HttpReranker, LangChainReranker
+from ontyra.adapters.rerank import HttpReranker, LangChainReranker, WorkerReranker
 
 __all__ = [
-    "CrossEncoderReranker",
     "HashEmbedder",
     "HttpReranker",
     "LangChainDecider",
     "LangChainEmbedder",
     "LangChainReranker",
     "SystemOneDecider",
+    "WorkerReranker",
     "build_decider",
     "build_embedder",
     "build_reranker",

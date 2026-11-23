@@ -98,19 +98,33 @@ test('prompts are counted and the latest reply is kept for the episode log', () 
   assert.equal(messageText({ content: [{ type: 'tool' }] }), null)
 })
 
-test('the capture reminder is due every N prompts and is marked as sent', () => {
+test('the capture reminder is due every N prompts or on wording that states a rule', () => {
   let state = initialState()
-  for (let i = 0; i < 10; i += 1) {
+  for (let i = 0; i < 5; i += 1) {
     state = applyEvent(state, { type: 'user/message', data: { source: { kind: 'user' } } })
   }
-  assert.equal(captureDue(state, 10), true)
-  assert.equal(captureDue(state, 0), false, 'zero disables the reminder')
-  assert.equal(captureDue(state, 11), false)
+  assert.equal(captureDue(state, 5), true)
+  assert.equal(captureDue(state, 0), false, 'zero disables the periodic reminder')
+  assert.equal(captureDue(state, 6), false)
+  assert.equal(captureDue(state, 6, 'from now on use uv, not pip'), true)
+  assert.equal(captureDue(state, 0, 'we decided to drop the cache'), true)
+  assert.equal(captureDue(state, 6, 'how do I list files'), false)
 
-  state = applyEvent(state, { type: 'user/message', data: { source: { kind: CAPTURE } } })
-  assert.equal(state.lastCapture, 10)
-  assert.equal(captureDue(state, 10), false)
-  assert.match(capturePrompt(10), /ontyra_remember/)
+  state = applyEvent(state, {
+    type: 'user/message',
+    data: { source: { kind: PLUGIN, sections: [{ name: CAPTURE, text: 'x' }] } },
+  })
+  assert.equal(state.lastCapture, 5)
+  assert.equal(captureDue(state, 5), false)
+  assert.match(capturePrompt(), /ontyra_remember/)
+})
+
+test('the reminder is plain guidance outside the reference block', () => {
+  const both = render([{ name: 'recall', text: 'a memory' }, { name: CAPTURE, text: capturePrompt() }])
+  assert.match(both, /<\/ontyra-context>\n\nOntyra: if this conversation/)
+  const alone = render([{ name: CAPTURE, text: capturePrompt() }])
+  assert.ok(!alone.includes('<ontyra-context'))
+  assert.ok(alone.startsWith('Ontyra: '))
 })
 
 test('a subagent session is recognised from its header', () => {

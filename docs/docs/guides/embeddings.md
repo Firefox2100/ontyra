@@ -32,9 +32,37 @@ qwen3-embedding-8b). If recall returns nothing, or returns noise, tune it.
 ## Reranker (optional)
 
 `ONTYRA_RERANK__PROVIDER=http` with `ONTYRA_RERANK__URL` uses a `{url}/rerank` API (LocalAI,
-Jina); `cross_encoder` runs a model in-process (`uv sync --extra rerank-local`, CPU unless
-`ONTYRA_RERANK__DEVICE` is set). The `cross_encoder` reranker can be retrained from feedback;
-hosted ones cannot.
+Jina); it is hosted and cannot be retrained. `worker` is the same API served by our own
+[reranker worker](#the-reranker-worker), which can be retrained from feedback. If the reranker is
+busy, slow (`ONTYRA_RERANK__TIMEOUT`) or down, recall uses its plain ranking for that request.
+
+### The reranker worker
+
+`ontyra worker` is a separate process that owns the GPU and serves the same standard rerank API
+(`POST /rerank` or `/v1/rerank`: `query`, `documents`, `top_n`, `return_documents`; Jina, Cohere
+and LocalAI clients work unchanged), so the daemon, or anything else, reaches it like a hosted
+reranker:
+
+```bash
+uv sync --extra worker            # after installing the torch build for your GPU
+ONTYRA_WORKER__MODEL=Qwen/Qwen3-Reranker-0.6B ontyra worker
+# daemon:
+ONTYRA_RERANK__PROVIDER=worker  ONTYRA_RERANK__URL=http://127.0.0.1:8788/v1   # or http, to only serve
+```
+
+`ONTYRA_WORKER__MODEL` is a Hugging Face id or a local directory of safetensors weights. A
+Qwen3-style reranker is converted exactly to a one-logit head (same scores, less memory); a
+sequence-classification model with one label (bge-reranker, MiniLM and other cross-encoders) is
+used as it is. Device and dtype default to `auto` (bf16 on cards that have it, fp16 on older ones,
+fp32 on CPU), work on Linux and Windows, and need only PyTorch and transformers. Install the
+PyTorch build that supports your card first: the default wheels do not cover older GPUs (a V100
+needs the cu126 build); the worker checks this at start and says so. Memory is managed by the
+worker: requests that arrive together share a forward pass, a full queue answers `503`, and idle
+weights move to host memory (`OFFLOAD_AFTER_SECONDS`) and are then dropped
+(`FREE_AFTER_SECONDS`), reloading on the next request. `GET /status` reports the device, what the
+machine can do (and why not, when it cannot) and counters. Set `ONTYRA_WORKER__TOKEN` to require a
+bearer token. Retraining is described in [Learning from feedback](./feedback-learning.md#retraining). Versions of the model live under `ONTYRA_WORKER__MODEL_DIR`; changing the configured
+model starts from that model's own baseline.
 
 ## Decision model (optional)
 

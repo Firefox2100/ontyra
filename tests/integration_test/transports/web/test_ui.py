@@ -47,7 +47,14 @@ async def propose(ui: httpx.AsyncClient) -> str:
 
 
 async def test_every_page_renders_on_an_empty_store(ui: httpx.AsyncClient) -> None:
-    for path in ["/ui/", "/ui/review", "/ui/memories", "/ui/concepts", "/ui/recall"]:
+    for path in [
+        "/ui/",
+        "/ui/review",
+        "/ui/memories",
+        "/ui/concepts",
+        "/ui/recall",
+        "/ui/feedback",
+    ]:
         r = await ui.get(path)
         assert r.status_code == 200, path
         assert "ONTYRA" in r.text
@@ -65,6 +72,62 @@ async def test_a_held_proposal_is_listed_viewed_and_approved(ui: httpx.AsyncClie
     memories = await ui.get("/ui/memories?kind=directive")
     assert "linter" in memories.text
     assert "linter" not in (await ui.get("/ui/review")).text  # no longer waiting
+
+
+async def test_feedback_is_reviewed_vetoed_and_a_user_can_opt_out(ui: httpx.AsyncClient) -> None:
+    pid = await propose(ui)
+    await ui.post(f"/ui/proposals/{pid}/approve")
+    memory = (await ui.get("/v1/memories")).json()[0]["memory"]
+    posted = await ui.post(
+        "/v1/feedback", json={"memory": memory, "query": "lint it", "label": "irrelevant"}
+    )
+    event = posted.json()["id"].split(":", 1)[1]
+    page = await ui.get("/ui/feedback")
+    assert "lint it" in page.text and "Always run the linter" in page.text
+    assert "<b>code</b>" not in page.text
+    done = await ui.post(f"/ui/feedback/{event}/veto", data={"reason": "slip"})
+    assert done.status_code == 303
+    after = await ui.get("/ui/feedback")
+    assert "Vetoed" in after.text and "slip" in after.text
+    await ui.post(f"/ui/feedback/{event}/unveto")
+    assert "Vetoed" not in (await ui.get("/ui/feedback")).text
+    await ui.post("/ui/feedback/opt-out", data={"enabled": "true"})
+    assert "Allow my feedback in training again" in (await ui.get("/ui/feedback")).text
+    cross = await ui.post("/ui/feedback/opt-out", headers={"Origin": "http://evil.example"})
+    assert cross.status_code in (400, 403)
+
+
+async def test_a_verdict_from_the_recall_page_is_recorded_with_its_trace(
+    ui: httpx.AsyncClient,
+) -> None:
+    pid = await propose(ui)
+    await ui.post(f"/ui/proposals/{pid}/approve")
+    memory = (await ui.get("/v1/memories")).json()[0]["memory"]
+    page = await ui.get("/ui/recall", params={"query": "run the linter"})
+    assert "Was it right?" in page.text
+    trace = page.text.split('name="trace" value="')[1].split('"')[0]
+    sent = await ui.post(
+        "/ui/recall/feedback",
+        data={
+            "memory": memory,
+            "query": "run the linter",
+            "label": "helpful",
+            "trace": trace,
+            "back": "/ui/recall?query=run+the+linter",
+        },
+    )
+    assert sent.status_code == 303 and sent.headers["location"].startswith("/ui/recall?query=")
+    listed = (await ui.get("/v1/feedback")).json()
+    assert [e["label"] for e in listed] == ["helpful"]
+    elsewhere = await ui.post(
+        "/ui/recall/feedback",
+        data={"memory": memory, "query": "q", "label": "wrong", "back": "https://evil.example"},
+    )
+    assert elsewhere.headers["location"] == "/ui/recall"
+    refused = await ui.post(
+        "/ui/recall/feedback", data={"memory": memory, "query": "q", "label": "nope"}
+    )
+    assert refused.status_code == 422
 
 
 async def test_a_proposal_can_be_rejected_with_a_reason(ui: httpx.AsyncClient) -> None:

@@ -100,6 +100,29 @@ async def test_a_reranker_blends_into_the_fused_score(make_app, agent: Caller, r
     assert first.memory == a
 
 
+class _Down:
+    """A reranker that is busy, slow or gone."""
+
+    async def rerank(self, query: str, texts: Sequence[str]) -> list[float]:
+        raise RuntimeError("503: the model is busy")
+
+
+async def test_an_unavailable_reranker_leaves_the_fused_ranking(
+    make_app, agent: Caller, remember
+) -> None:
+    app = await make_app(recall=RecallSettings(engine="fusion", fusion_margin=1.0))
+    a = await remember_in(app, agent, "use pytest for tests")
+    await app.indexer.backfill()
+    plain = await app.recall.recall(agent, RecallRequest(query="tests"))
+    app.recall.reranker = _Down()  # type: ignore[attr-defined]
+    pack = await app.recall.recall(agent, RecallRequest(query="tests"))
+    items = pack.must_follow + pack.applicable + pack.context + pack.how_to
+    assert a in {i.memory for i in items}
+    assert [i.score for i in items] == [
+        i.score for i in plain.must_follow + plain.applicable + plain.context + plain.how_to
+    ]
+
+
 async def remember_in(app: Application, caller: Caller, text: str) -> RecordId:
     from ontyra.models.proposals import AddMemory, ProposalRequest
 

@@ -9,12 +9,15 @@ A Claude Code plugin: memory without the agent having to ask.
 - **Episodes**: every prompt and the assistant's last message (Stop hook) are logged to
   `/v1/episodes`, the log that a memory's `quote` evidence is matched against; episodes no memory cites expire after
   14 days (`ONTYRA_LOG_EPISODES=0` to stop).
-- **Capture prompt** (opt-in, `ONTYRA_CAPTURE=1`): at most once per `ONTYRA_CAPTURE_EVERY`
-  prompts (default 10) the Stop hook keeps the agent going once, asking it to `remember` anything
-  durable it learned. Never loops (`stop_hook_active`). Proposals follow the daemon's policy
-  (default: held for review).
+- **Capture reminder** (on; `ONTYRA_CAPTURE=0` turns it off): a one-line reminder to `remember` what
+  was settled is added to the context already injected with a prompt, when the prompt reads like a
+  rule, preference, correction or decision, and every `ONTYRA_CAPTURE_EVERY` prompts (default 5).
+  It also asks for a `feedback` verdict on a recalled memory that clearly helped or misled (the recall
+  trace id is added to the injected memories so the verdict can cite it). It costs no extra turn or
+  model call: the agent acts in the same turn, or does nothing.
+  Proposals follow the daemon's policy (default: held for review).
 - **MCP** (`.mcp.json`): the `lite` tool profile (`recall`, `check`, `briefing`, `ask`, `get`,
-  `remember`) over streamable HTTP, so the agent can query and propose memories itself.
+  `remember`, `feedback`) over streamable HTTP, so the agent can query and propose memories itself.
 
 Needs the daemon running with `ONTYRA_MCP__ENABLED=true` (`uv run ontyra serve`), `curl` and
 `jq`. `ONTYRA_URL` overrides `http://127.0.0.1:8787`. Authentication is optional: set `ONTYRA_TOKEN` to the daemon's token when it requires one

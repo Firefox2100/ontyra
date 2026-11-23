@@ -8,7 +8,7 @@ from typing import Any
 
 from ontyra.adapters.decider import LangChainDecider, SystemOneDecider
 from ontyra.adapters.embeddings import HashEmbedder, LangChainEmbedder
-from ontyra.adapters.rerank import CrossEncoderReranker, HttpReranker, LangChainReranker
+from ontyra.adapters.rerank import HttpReranker, LangChainReranker, WorkerReranker
 from ontyra.config import DecisionSettings, EmbeddingSettings, RerankSettings
 from ontyra.ports.adapters import Decider, Embedder, Reranker
 
@@ -48,12 +48,18 @@ def build_reranker(settings: RerankSettings) -> Reranker | None:
     if settings.provider == "http":
         if not settings.url or not settings.model:
             raise ValueError("rerank provider http needs ONTYRA_RERANK__URL and __MODEL")
-        return HttpReranker(settings.url, settings.model, api_key=settings.api_key)
-    if settings.provider == "cross_encoder":
-        return CrossEncoderReranker(
-            settings.model or "cross-encoder/ms-marco-MiniLM-L6-v2",
-            model_dir=settings.model_dir,
-            device=settings.device,
+        return HttpReranker(
+            settings.url, settings.model, api_key=settings.api_key, timeout=settings.timeout
+        )
+    if settings.provider == "worker":
+        if not settings.url:
+            raise ValueError("rerank provider worker needs ONTYRA_RERANK__URL")
+        return WorkerReranker(
+            settings.url,
+            settings.model or "worker",
+            api_key=settings.api_key,
+            timeout=settings.timeout,
+            train_timeout=settings.train_timeout,
         )
     return LangChainReranker(_instantiate(settings.class_path, settings.kwargs))
 

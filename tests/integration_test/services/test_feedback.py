@@ -11,7 +11,10 @@ from ontyra.app import Application
 from ontyra.models import RecordId
 from ontyra.models.feedback import (
     FeedbackRequest,
+    GateCandidate,
+    GateRequest,
     GateVerdict,
+    LiveResult,
     RerankExample,
     TrainOptions,
     TrainResult,
@@ -22,13 +25,16 @@ from ontyra.services.errors import InvalidRequestError, NotFoundError
 
 
 class FakeTrainable:
-    """A reranker that records what it was trained on."""
+    """A reranker that records what it was trained on. Like the worker, training saves a version
+    and does not activate it; its metrics carry the trusted requests scored before and after."""
 
     name = "fake"
-    version = "base"
 
-    def __init__(self) -> None:
+    def __init__(self, gate_after: float = 0.95) -> None:
+        self.version = "base"
         self.trained: list[RerankExample] = []
+        self.gate_seen: list[GateRequest] = []
+        self.gate_after = gate_after
 
     async def rerank(self, query: str, texts: Sequence[str]) -> list[float]:
         return [0.0] * len(texts)
@@ -36,11 +42,23 @@ class FakeTrainable:
     def versions(self) -> list[str]:
         return ["base", "v1"]
 
-    async def train(self, examples: Sequence[RerankExample], options: TrainOptions) -> TrainResult:
+    async def refresh(self) -> None:
+        return None
+
+    async def train(
+        self,
+        examples: Sequence[RerankExample],
+        options: TrainOptions,
+        gate: Sequence[GateRequest] = (),
+    ) -> TrainResult:
         self.trained = list(examples)
-        self.version = "v1"  # like the real adapters, training activates what beats the start
+        self.gate_seen = list(gate)
+        before = {"mrr": 0.9, "pairwise": 0.9}
+        after = {"mrr": self.gate_after, "pairwise": self.gate_after}
         return TrainResult(
-            version="v1", examples=len(examples), metrics={"auc_after": 0.9}, activated=True
+            version="v1",
+            examples=len(examples),
+            metrics={"auc_after": 0.9, "gate_before": before, "gate_after": after},
         )
 
     async def activate(self, version: str) -> None:
@@ -157,7 +175,7 @@ async def test_retraining_is_human_started_and_needs_enough_two_class_feedback(
     await app.feedback.record(agent, FeedbackRequest(memory=memory_id, query="q9", label="wrong"))
     run = await app.reranking.train(human)
     assert run.activated and run.version == "v1" and run.examples == 4
-    assert len(fake.trained) == 4
+    assert fake.version == "v1" and len(fake.trained) == 4
     status = await app.reranking.status()
     assert status.trainable and status.runs and status.runs[0]["version"] == "v1"
 
@@ -191,3 +209,179 @@ async def test_a_version_the_gate_rejects_is_rolled_back(
     assert run.activated is passes and fake.version == ("v1" if passes else "base")
     assert run.gate is not None and run.gate["passed"] is passes
     assert ("promotion gate" in (run.note or "")) is (not passes)
+
+
+async def test_a_version_that_does_worse_on_the_trusted_requests_is_not_activated(
+    app: Application, agent: Caller, human: Caller, memory_id: RecordId
+) -> None:
+    fake = FakeTrainable(gate_after=0.5)
+    app.reranking.reranker = fake
+    app.reranking.min_examples = 2
+    await app.feedback.record(agent, FeedbackRequest(memory=memory_id, query="a", label="applied"))
+    await app.feedback.record(agent, FeedbackRequest(memory=memory_id, query="b", label="wrong"))
+    run = await app.reranking.train(human)
+    assert not run.activated and fake.version == "base"
+    assert run.gate is not None and run.gate["passed"] is False
+    assert run.gate["detail"]["after"]["mrr"] == 0.5
+    assert "promotion gate" in (run.note or "")
+    saved = await app.reranking.train(human, TrainOptions(activate=False))  # also kept, not used
+    assert not saved.activated and fake.version == "base"
+
+
+async def test_anchors_are_mixed_in_and_the_gate_requests_go_with_the_training(
+    app: Application, agent: Caller, human: Caller, memory_id: RecordId
+) -> None:
+    fake = FakeTrainable()
+    app.reranking.reranker = fake
+    app.reranking.min_examples = 2
+    app.reranking.cfg = app.reranking.cfg.model_copy(update={"anchor_ratio": 2.0})
+    anchors = [
+        RerankExample(query=f"x{i}", text="t", relevance=float(i % 2), source="anchor")
+        for i in range(10)
+    ]
+    gate = [GateRequest(query="g", candidates=[GateCandidate(text="a", relevant=True)])]
+    app.reranking.anchors = lambda: (anchors, gate)
+    await app.feedback.record(agent, FeedbackRequest(memory=memory_id, query="a", label="applied"))
+    await app.feedback.record(agent, FeedbackRequest(memory=memory_id, query="b", label="wrong"))
+    run = await app.reranking.train(human)
+    assert run.examples == 2 and run.metrics["anchors"] == 4  # twice the feedback, from the anchors
+    assert len(fake.trained) == 6 and sum(e.source == "anchor" for e in fake.trained) == 4
+    assert fake.gate_seen == gate
+
+
+async def test_only_humans_train_when_the_policy_says_so_and_no_source_dominates(
+    app: Application, agent: Caller, human: Caller, memory_id: RecordId
+) -> None:
+    fake = FakeTrainable()
+    app.reranking.reranker = fake
+    app.reranking.min_examples = 2
+    await app.feedback.record(human, FeedbackRequest(memory=memory_id, query="h1", label="applied"))
+    await app.feedback.record(human, FeedbackRequest(memory=memory_id, query="h2", label="wrong"))
+    for i in range(6):
+        await app.feedback.record(
+            agent, FeedbackRequest(memory=memory_id, query=f"a{i}", label="applied")
+        )
+    await app.reranking.train(human)
+    weights: dict[str, float] = {}
+    for e in fake.trained:
+        weights[e.source] = weights.get(e.source, 0.0) + e.weight
+    assert abs(weights[str(agent.actor_id)] - weights[str(human.actor_id)]) < 1e-6  # capped at half
+    app.reranking.cfg = app.reranking.cfg.model_copy(update={"train_sources": "human"})
+    await app.reranking.train(human)
+    assert {e.source for e in fake.trained} == {str(human.actor_id)}
+
+
+class FakeLive(FakeTrainable):
+    """A reranker with a live head edit: records the examples each refit was given."""
+
+    def __init__(self, revert: bool = False) -> None:
+        super().__init__()
+        self.fits: list[list[RerankExample]] = []
+        self.resets = 0
+        self.revert = revert
+        self.limits: tuple[float, float] | None = None
+
+    async def live_status(self) -> dict[str, object]:
+        return {"enabled": True, "version": self.version, "distance": 0.1}
+
+    async def live_update(
+        self,
+        examples: Sequence[RerankExample],
+        gate: Sequence[GateRequest],
+        *,
+        max_distance: float,
+        tolerance: float,
+    ) -> LiveResult:
+        self.fits.append(list(examples))
+        self.limits = (max_distance, tolerance)
+        return LiveResult(applied=not self.revert, reverted=self.revert, distance=0.1)
+
+    async def live_reset(self) -> None:
+        self.resets += 1
+
+
+@pytest.fixture
+def live_app(app: Application) -> Application:
+    app.reranking.cfg = app.reranking.cfg.model_copy(
+        update={"live": True, "pool": "all", "live_min_examples": 3, "anchor_ratio": 0.0}
+    )
+    return app
+
+
+async def _verdicts(
+    app: Application, caller: Caller, memory: RecordId, n: int = 4
+) -> list[RecordId]:
+    ids: list[RecordId] = []
+    for i in range(n):
+        event = await app.feedback.record(
+            caller,
+            FeedbackRequest(memory=memory, query=f"q{i}", label="wrong" if i % 2 else "applied"),
+        )
+        ids.append(event.id)
+    return ids
+
+
+async def test_a_live_edit_is_off_unless_configured_and_needs_a_shared_pool(
+    app: Application, human: Caller, memory_id: RecordId
+) -> None:
+    app.reranking.reranker = FakeLive()
+    with pytest.raises(InvalidRequestError, match="LIVE"):
+        await app.reranking.live_update(human)
+    app.reranking.cfg = app.reranking.cfg.model_copy(update={"live": True})  # pool is still own
+    with pytest.raises(InvalidRequestError, match="POOL=all"):
+        await app.reranking.live_update(human)
+    app.reranking.cfg = app.reranking.cfg.model_copy(update={"pool": "all"})
+    app.reranking.reranker = FakeTrainable()
+    with pytest.raises(InvalidRequestError, match="no live edit"):
+        await app.reranking.live_update(human)
+
+
+async def test_the_live_edit_is_a_replay_so_a_veto_changes_what_it_is_fitted_on(
+    live_app: Application, human: Caller, agent: Caller, memory_id: RecordId
+) -> None:
+    fake = FakeLive()
+    live_app.reranking.reranker = fake
+    events = await _verdicts(live_app, human, memory_id)
+    with pytest.raises(InvalidRequestError, match="human"):
+        await live_app.reranking.live_update(agent)
+    result = await live_app.reranking.live_update(human)
+    assert result.applied and result.examples == 4 and len(fake.fits[-1]) == 4
+    assert fake.limits == (0.25, 0.01)
+    await live_app.feedback_review.veto(human, events[0], "a slip")
+    assert live_app.reranking._stale  # pyright: ignore[reportPrivateUsage]
+    again = await live_app.reranking.live_update(human)
+    assert again.examples == 3 and len(fake.fits[-1]) == 3  # refitted without it, from scratch
+    assert not live_app.reranking._stale  # pyright: ignore[reportPrivateUsage]
+    runs = (await live_app.reranking.status()).runs
+    assert [r["kind"] for r in runs][:2] == ["live", "live"]
+
+
+async def test_too_little_evidence_removes_the_edit_and_a_reverted_fit_says_so(
+    live_app: Application, human: Caller, memory_id: RecordId
+) -> None:
+    fake = FakeLive()
+    live_app.reranking.reranker = fake
+    await _verdicts(live_app, human, memory_id, n=2)
+    thin = await live_app.reranking.live_update(human)
+    assert not thin.applied and fake.resets == 1 and "needed" in (thin.note or "")
+    await _verdicts(live_app, human, memory_id, n=4)
+    fake.revert = True
+    reverted = await live_app.reranking.live_update(human)
+    assert reverted.reverted and "worse" in (reverted.note or "")
+    removed = await live_app.reranking.live_reset(human)
+    assert not removed.applied and fake.resets == 2
+
+
+async def test_feedback_changes_schedule_one_batched_refit(
+    live_app: Application, human: Caller, memory_id: RecordId
+) -> None:
+    import asyncio
+
+    fake = FakeLive()
+    live_app.reranking.reranker = fake
+    live_app.reranking.cfg = live_app.reranking.cfg.model_copy(update={"live_every_seconds": 1.5})
+    await _verdicts(live_app, human, memory_id, n=6)  # six changes, one timer
+    assert fake.fits == []
+    await asyncio.sleep(2.0)
+    assert len(fake.fits) == 1 and len(fake.fits[0]) == 6
+    live_app.reranking.close()

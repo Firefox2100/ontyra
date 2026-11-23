@@ -23,7 +23,7 @@ ALLOWED_INTERNAL: dict[str, set[str]] = {
     "config": {"models"},
 }
 # layers that may import any internal layer (composition root, entry points)
-ROOT_LEVEL = {"app", "cli", "calibration", "__main__", "__init__", "_version"}
+ROOT_LEVEL = {"app", "cli", "calibration", "worker", "__main__", "__init__", "_version"}
 
 # third-party top-level package -> layers allowed to import it
 CONFINED_THIRD_PARTY: dict[str, set[str]] = {
@@ -31,10 +31,10 @@ CONFINED_THIRD_PARTY: dict[str, set[str]] = {
     "langchain_core": {"adapters"},
     "langchain": {"adapters"},
     "langchain_openai": {"adapters"},
-    "fastapi": {"transports", "app"},  # the composition root returns the ASGI app
-    "starlette": {"transports", "app"},
+    "fastapi": {"transports", "app", "worker"},  # the composition root returns the ASGI app
+    "starlette": {"transports", "app", "worker"},
     "fastmcp": {"transports"},
-    "uvicorn": {"transports", "app", "cli"},
+    "uvicorn": {"transports", "app", "cli", "worker"},
     "dotenv": {"config"},
 }
 # layers restricted to the standard library plus these packages

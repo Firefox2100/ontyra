@@ -6,7 +6,7 @@
 
 把 Ontyra 的长期记忆接进 DeepSeek Harness，行为与 `integrations/claude-code`、
 `integrations/codex` 一致：会话开始给 briefing、每条人类消息做 recall、记录 episode、可选的
-capture 提醒、可选的完整工具面、随插件发布的技能。
+capture 提醒（随注入上下文附带，不额外占用回合）、可选的完整工具面、随插件发布的技能。
 
 约束（用户已确认）：
 
@@ -77,8 +77,8 @@ integrations/dsh/
 | `tools` | `true` | 注册原生工具 |
 | `toolsProfile` | `lite` | `lite` 6 个；`full` 再加 2 个 |
 | `episodes` | `true` | 记录 episode |
-| `capture` | `false` | capture 提醒 |
-| `captureEvery` | `10` | 每 N 轮提醒一次 |
+| `capture` | `true` | capture 提醒（含规则/偏好/纠正类措辞即时触发；随注入上下文附带，不额外占用回合） |
+| `captureEvery` | `5` | 每 N 轮定期提醒一次 |
 | `subagents` | `false` | 子 agent 是否也注入 |
 
 ### 4.2 原生工具
@@ -130,9 +130,9 @@ silent 或 rendered 为空                        → 不注入
 
 - `assistant/message` 是持久事件，episodes 打开时发 `POST /v1/episodes`
   （`{ session, role, content, meta: { harness } }`），受 `episodes` 开关控制。
-- `agent/turn-stopping`：满足 `capture`、`captureEvery` 且本回合未提醒过时
-  `agent.steer({ content: [{ type: 'text', text: 'Memory check (Ontyra): …' }],
-  source: { kind: 'ontyra-capture' } })`，语义等同 Claude 的 `decision: "block"`。
+- capture 提醒不再用 `agent.steer`（那会多占一个回合）：满足 `capture`（规则/偏好类措辞，或每
+  `captureEvery` 轮）时，把一行提醒作为 `capture` 段附加在注入上下文里（`<ontyra-context>` 之外）。
+  模型在同一回合内自行决定是否写入或反馈，无话可写就什么也不做。
 
 ### 4.5 凭据
 

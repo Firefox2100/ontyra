@@ -9,7 +9,7 @@ What the model gets:
   applies at this location, at this time;
 - **recall** injected for the first prompt of each step, when something clears the relevance bar;
 - the **memory tools** (`ontyra_recall`, `ontyra_check`, `ontyra_briefing`, `ontyra_ask`,
-  `ontyra_get`, `ontyra_remember`, `ontyra_pending_proposals`, `ontyra_amend`, and with the `full` profile `ontyra_concepts`,
+  `ontyra_get`, `ontyra_remember`, `ontyra_feedback`, `ontyra_pending_proposals`, `ontyra_amend`, and with the `full` profile `ontyra_concepts`,
   `ontyra_propose_ontology_change`) as native harness tools, not MCP tools;
 - **episodes** (on by default; prompt and answer sent to the daemon as session history) and an optional
   capture nudge that asks the model to record what it learned.
@@ -54,8 +54,8 @@ on the next call.
 | `tools` | `true` | Register the memory tools. |
 | `toolsProfile` | `lite` | Dropdown: `lite`, or `full` to add the ontology tools. |
 | `episodes` | `true` | Record prompts and answers as session episodes (what a memory's `quote` evidence is matched against). |
-| `capture` | `false` | Ask the model to record lessons every so often. |
-| `captureEvery` | `10` | Prompts between capture reminders. |
+| `capture` | `true` | Remind the model to record what was settled (rule-like prompts, and every few prompts); a line in the injected context, no extra turn. |
+| `captureEvery` | `5` | Prompts between periodic capture reminders. |
 | `subagents` | `false` | Also inject and record inside subagent sessions. |
 
 The token itself is **not** a setting: the card writes it to the harness credential store under
@@ -77,9 +77,8 @@ able to redirect the session. The message is append-only, so the harness's promp
 and it is re-sent only after compaction.
 
 Everything the plugin sends is best-effort: an unreachable daemon, a timeout or a rejected request
-logs nothing into the transcript and never blocks a turn. Turn capture rides
-`agent/turn-stopping` and steers the same turn with a `ontyra-capture` message, so the model
-answers the nudge before the turn closes.
+logs nothing into the transcript and never blocks a turn. The capture
+reminder is a line in the context injected before a step, so it costs no extra turn.
 
 ## Layout
 
@@ -92,7 +91,7 @@ lib/tools.js          the tool surface, mapped onto REST calls
 lib/ontyra.js         REST client: headers, timeouts, error text
 lib/context.js        cwd, file URIs and project signals for a call
 lib/settings.js       defaults, and reading volatile fields as plain values
-lib/inject.js         pre-step injection and turn-stopping capture
+lib/inject.js         pre-step injection (with the capture reminder) and turn-stopping episodes
 lib/inject-core.js    the pure parts of the above (renderer, projection, counters)
 lib/skill.js          the bundled skill's frontmatter
 lib/client.js         browser half: the settings card, in eight languages

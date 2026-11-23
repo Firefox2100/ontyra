@@ -15,6 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from ontyra.models import PolicyConfig
 from ontyra.models.consolidation import ConsolidationSettings
 from ontyra.models.episodes import EpisodeSettings
+from ontyra.models.feedback import LearningSettings
 from ontyra.models.recall import RecallSettings
 from ontyra.models.tasks import TaskSettings
 
@@ -66,23 +67,80 @@ class EmbeddingSettings(BaseModel):
 class RerankSettings(BaseModel):
     """Optional reranker (`ONTYRA_RERANK__*`).
 
-    `http`: a hosted rerank API (`{url}/rerank`; cannot be retrained). `cross_encoder`: an
-    in-process sentence-transformers cross-encoder that can be fine-tuned from feedback (needs
-    the `rerank-local` extra); `model` is its base model, `model_dir` where versions are kept.
+    `http`: a hosted rerank API (`{url}/rerank`; cannot be retrained). `worker`: our reranker
+    worker (`ontyra worker`, same API plus admin routes; the only retrainable reranker).
     `langchain`: any LangChain `BaseDocumentCompressor` (not retrainable).
+
+    Retraining (`worker` only; explicit, never automatic): `pool` says whose feedback trains
+    (`own`: the caller's, `all`: everyone's, for one trust domain), `train_sources` whether agents'
+    verdicts count (`human` only, or `all`, at their lower trust), `source_cap` the largest share
+    of the weight one source may have, `anchor_ratio` how many clean benchmark pairs are mixed in
+    per feedback pair, and `gate_tolerance` how much a new version may lose on the trusted
+    benchmark requests and still be activated. `live` turns on the live head edit (worker only,
+    and only with `pool="all"`, since the head is shared): the head is refitted from the
+    feedback, at most every `live_every_seconds`, from `live_min_examples` usable pairs, and may
+    move at most `live_max_distance` of its own norm.
     """
 
-    provider: Literal["none", "langchain", "http", "cross_encoder"] = "none"
+    provider: Literal["none", "langchain", "http", "worker"] = "none"
     class_path: str | None = None  # langchain
     kwargs: dict[str, Any] = {}  # langchain
-    url: str | None = None  # http
-    model: str | None = None  # http model name, or the cross-encoder's base model
-    api_key: str | None = None  # http
-    model_dir: str | None = None  # cross_encoder: where trained versions are saved
-    device: str | None = None  # cross_encoder: cpu (default), cuda, ... (set it explicitly)
+    url: str | None = None  # http, worker
+    model: str | None = None  # http model name; the worker's name in traces
+    api_key: str | None = None  # http, worker
+    timeout: float = 10.0  # http, worker: seconds; a slower answer counts as no answer
+    train_timeout: float = 3600.0  # worker: seconds a retraining or an activation may take
     top_n: int = 30  # candidates sent to the reranker (legacy engine)
     min_examples: int = 50  # feedback pairs needed before a retrain is allowed
     feedback_ttl_days: int = 365  # feedback expires after this long unless given its own
+    pool: Literal["own", "all"] = "own"
+    train_sources: Literal["human", "all"] = "all"
+    source_cap: float = 0.5
+    anchor_ratio: float = 1.0
+    gate_tolerance: float = 0.01
+    live: bool = False  # a live head edit from feedback (worker; needs pool="all")
+    live_min_examples: int = 20
+    live_every_seconds: float = 300.0
+    live_max_distance: float = 0.25
+
+
+class WorkerSettings(BaseModel):
+    """The reranker worker (`ONTYRA_WORKER__*`), a separate process: `ontyra worker`.
+
+    It owns the GPU and serves a standard `/rerank` API (Jina/Cohere shape), so the daemon
+    reaches it like any hosted reranker (`ONTYRA_RERANK__PROVIDER=http`, `ONTYRA_RERANK__URL`).
+    Needs the `worker` extra (torch, transformers, safetensors).
+
+    `model` is a Hugging Face id or a local directory of safetensors weights: a Qwen3-style
+    reranker (a causal LM scoring "yes"/"no") is converted exactly to a one-logit head; a
+    sequence-classification model with one label or a cross-encoder is used as it is.
+    `device` and `dtype` default to `auto`. `serve` and `train` say what the operator wants;
+    `GET /status` reports what the machine can actually do.
+    """
+
+    host: str = "127.0.0.1"
+    port: int = 8788
+    token: SecretStr | None = None  # when set, requests need `Authorization: Bearer <token>`
+    model: str = "Qwen/Qwen3-Reranker-0.6B"
+    model_dir: str = "worker"  # versions, manifests and the active pointer live here
+    architecture: Literal["auto", "qwen3", "sequence"] = "auto"
+    device: str = "auto"  # auto | cpu | cuda | cuda:N | mps | xpu
+    dtype: Literal["auto", "fp32", "fp16", "bf16"] = "auto"
+    attention: str = "sdpa"
+    serve: Literal["auto", "on", "off"] = "auto"
+    train: Literal["auto", "on", "off"] = "auto"
+    live_edit: bool = True  # allow head-only updates from feedback while serving
+    max_length: int = 1024  # tokens per query + document pair
+    batch_size: int = 16  # pairs per forward pass (halves on out-of-memory)
+    batch_wait_ms: int = 5  # how long to wait for more requests to share a batch
+    queue_size: int = 64  # waiting requests; more are refused with 503
+    offload_after_seconds: float = 300.0  # idle: weights move to host memory (0 = never)
+    free_after_seconds: float = 1800.0  # idle: weights are dropped altogether (0 = never)
+    instruction: str = "Given a situation or request, find the stored memory that applies to it"
+    prompt_prefix: str | None = None  # Qwen3 template; None uses the model's own
+    prompt_suffix: str | None = None
+    yes_token: str = "yes"
+    no_token: str = "no"
 
 
 class DecisionSettings(BaseModel):
@@ -230,6 +288,8 @@ class Settings(BaseSettings):
     actor_trust: dict[str, float] = {}
     embedding: EmbeddingSettings = EmbeddingSettings()
     rerank: RerankSettings = RerankSettings()
+    worker: WorkerSettings = WorkerSettings()
+    learning: LearningSettings = LearningSettings()
     decision: DecisionSettings = DecisionSettings()
     consolidation: ConsolidationSettings = ConsolidationSettings()
     tasks: TaskSettings = TaskSettings()

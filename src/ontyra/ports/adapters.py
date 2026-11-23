@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from ontyra.models.decision import Judgement
-from ontyra.models.feedback import GateVerdict, RerankExample, TrainOptions, TrainResult
+from ontyra.models.feedback import (
+    GateRequest,
+    GateVerdict,
+    LiveResult,
+    RerankExample,
+    TrainOptions,
+    TrainResult,
+)
 
 
 class Embedder(Protocol):
@@ -69,8 +76,9 @@ class Reranker(Protocol):
 class TrainableReranker(Reranker, Protocol):
     """A reranker that can be retrained from labelled pairs (hosted rerank APIs cannot).
 
-    Training is explicit and user-triggered; versions are kept so a result can be activated or
-    rolled back. Implementations decide whether a trained version passes their own gate.
+    Training is explicit and user-triggered and never activates what it produces: the caller
+    judges the result (its metrics, including the trusted `gate` requests scored before and after)
+    and activates it, or not. Versions are kept so any can be activated again.
     """
 
     @property
@@ -81,11 +89,35 @@ class TrainableReranker(Reranker, Protocol):
 
     def versions(self) -> list[str]: ...
 
+    async def refresh(self) -> None: ...
+
     async def train(
-        self, examples: Sequence[RerankExample], options: TrainOptions
+        self,
+        examples: Sequence[RerankExample],
+        options: TrainOptions,
+        gate: Sequence[GateRequest] = (),
     ) -> TrainResult: ...
 
     async def activate(self, version: str) -> None: ...
+
+
+@runtime_checkable
+class LiveReranker(TrainableReranker, Protocol):
+    """A trainable reranker whose head can be refitted live, in small bounded steps, from the
+    examples it is given (a replay from its own head: nothing accumulates)."""
+
+    async def live_status(self) -> dict[str, Any]: ...
+
+    async def live_update(
+        self,
+        examples: Sequence[RerankExample],
+        gate: Sequence[GateRequest],
+        *,
+        max_distance: float,
+        tolerance: float,
+    ) -> LiveResult: ...
+
+    async def live_reset(self) -> None: ...
 
 
 @runtime_checkable

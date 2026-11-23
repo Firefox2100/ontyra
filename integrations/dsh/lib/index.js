@@ -42,8 +42,8 @@ const Config = z.object({
   tools: z.boolean().default(true).volatile(),
   toolsProfile: z.string().default('lite').volatile(),
   episodes: z.boolean().default(true).volatile(),
-  capture: z.boolean().default(false).volatile(),
-  captureEvery: z.natural().default(10).volatile(),
+  capture: z.boolean().default(true).volatile(),
+  captureEvery: z.natural().default(5).volatile(),
   subagents: z.boolean().default(false).volatile(),
 })
 

@@ -19,6 +19,12 @@
   <div class="small muted">score {{ '%.2f' % i.score }} · relevance {{ '%.2f' % i.relevance }}{% if i.anchor %} · anchor <code>{{ i.anchor }}</code>{% endif %}</div>
   {% for w in i.why %}<div class="small muted">{{ w }}</div>{% endfor %}
   {% for c in i.caveats %}<div class="small"><span class="tag warn">caveat</span> {{ c }}</div>{% endfor %}
+  {% if pack.trace and mode == 'recall' and query %}<form class="row small" method="post" action="/ui/recall/feedback" style="margin-top:8px">
+    <input type="hidden" name="memory" value="{{ i.memory }}"><input type="hidden" name="query" value="{{ query }}">
+    <input type="hidden" name="trace" value="{{ pack.trace }}"><input type="hidden" name="back" value="{{ back }}">
+    <span class="muted">Was it right?</span>
+    {% for l in ('helpful', 'irrelevant', 'outdated', 'wrong') %}<button name="label" value="{{ l }}">{{ l }}</button>{% endfor %}
+  </form>{% endif %}
 </div>{% endfor %}{% endif %}{% endfor %}
 {% for c in pack.cautions %}<div class="card"><span class="tag warn">caution</span> {{ c | tojson }}</div>{% endfor %}
 {% if pack.unresolved %}<div class="card small"><span class="tag warn">unknown signals</span> {{ pack.unresolved | join(', ') }} — no such concept; an agent can propose it.</div>{% endif %}

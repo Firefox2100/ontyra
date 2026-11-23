@@ -27,11 +27,12 @@ for a mechanical edit.
 
 ## When to write (`remember`)
 
-Write only what is settled, durable and non-obvious (not speculation such as "maybe we will
-switch someday", not a passing remark, not a mechanical edit): a preference or rule ("never force-push main"), a
-decision with its reason, a fact about the environment, a lesson from a failure. Do not write
-anything transient, anything already in the code or git history, or anything you already got
-from recall. One memory per statement. When the user states something durable, write it: one
+Write without being asked. When the conversation settles something that will matter later (a
+preference or rule the user states, a correction of how you worked, a decision with its reason, a
+fact about the environment, a lesson from a failure), propose it in that turn and tell the user in
+one line what you proposed. Do not write speculation ("maybe we will switch someday"), anything
+transient, a mechanical edit, anything in the code or git history, or anything you got from
+recall. One memory per statement. When the user states something durable, write it: one
 `add` op, no `recall` or `check` first (`check` is for side effects such as deleting or pushing).
 If you suspect it is already stored, one `recall` is enough; if it is, `revise` or `supersede`
 instead of adding it again. `add` is the only op that stores something new: `annotate`, `link`,
@@ -123,8 +124,11 @@ single ops of a proposal; the result lists the ones that were not committed, wit
 
 ## Feedback
 
-If a recalled memory was wrong or outdated, say so: call `feedback` with the memory, the query it
-came back for, and the label (`outdated` or `wrong`; `helpful`, `applied`, `irrelevant` or
-`missed` also help). It queues a maintenance task for someone to retract, revise or confirm it, and
-never changes the memory itself. If you are sure and the user agrees, also propose the
-`revise`/`supersede`/`retract` rather than silently ignoring it.
+Tell the daemon how recall did, so it can improve. When a recalled memory clearly helped, call
+`feedback` with the memory, the query it came back for, the recall `trace` shown with the injected
+memories, and the label (`applied` or `helpful`). When one was wrong, outdated or beside the
+point, use `wrong`, `outdated` or `irrelevant`; when something relevant did not come back,
+`missed`. Only for what clearly mattered or misled, a few at most per turn, never to be thorough.
+`outdated` and `wrong` also queue a maintenance task for someone to retract, revise or confirm the
+memory; feedback never changes the memory itself. If you are sure and the user agrees, also propose
+the `revise`/`supersede`/`retract` rather than silently ignoring it.

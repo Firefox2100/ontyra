@@ -15,6 +15,8 @@ from fastapi import APIRouter, FastAPI
 
 from ontyra.adapters import build_decider, build_embedder, build_reranker
 from ontyra.config import Settings, load_settings
+from ontyra.models import RecordId
+from ontyra.models.feedback import GateRequest, RerankExample, TrainingPolicy
 from ontyra.ports import Embedder, MessageClassifier, StatementComparer
 from ontyra.services import (
     ActorService,
@@ -22,6 +24,7 @@ from ontyra.services import (
     AuthService,
     ConsolidationService,
     ExplorationService,
+    FeedbackReviewService,
     FeedbackService,
     IndexService,
     MemoryService,
@@ -36,6 +39,7 @@ from ontyra.services.backups import BackupService
 from ontyra.services.maintenance import Maintenance
 from ontyra.services.ontology_check import OntologyChecker
 from ontyra.services.recall_fusion import FusionRecallService
+from ontyra.services.scorelayer import ScoreLayer
 from ontyra.storage import Database, SchemaManager, SurrealStore, backup
 from ontyra.transports.rest import create_app
 
@@ -64,6 +68,7 @@ class Application:
     recall: RecallService
     explore: ExplorationService
     feedback: FeedbackService
+    feedback_review: FeedbackReviewService
     consolidation: ConsolidationService
     tasks: TaskService
     maintenance: Maintenance
@@ -100,6 +105,14 @@ class Application:
                 "ONTYRA_RECALL__FILLER_GATE is on but no decision model that can classify "
                 "messages is configured (ONTYRA_DECISION__*): the gate does nothing"
             )
+        feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
+        layer: ScoreLayer | None = None
+        if settings.learning.enabled:
+            if settings.recall.engine != "fusion":
+                raise ValueError("ONTYRA_LEARNING__ENABLED needs ONTYRA_RECALL__ENGINE=fusion")
+            layer = ScoreLayer(store, feedback.active, settings.learning, now)
+            feedback.on_change = layer.invalidate
+            feedback.layer = layer
         recall: RecallService
         if settings.recall.engine == "fusion":
             recall = FusionRecallService(
@@ -112,6 +125,7 @@ class Application:
                 reranker=reranker,
                 rerank_top_n=settings.rerank.top_n,
                 decider=decider,
+                layer=layer,
             )
         elif decider is not None:
             raise ValueError("a decision model needs ONTYRA_RECALL__ENGINE=fusion")
@@ -137,10 +151,36 @@ class Application:
             ontology,
             settings.tasks.refine_cap,
         )
-        feedback = FeedbackService(store, now, settings.rerank.feedback_ttl_days)
         actors = ActorService(store, now, settings.actor_trust)
         token = settings.auth.token
         admin_token = settings.auth.admin_token
+        reranking = RerankTrainingService(
+            store,
+            feedback,
+            reranker,
+            now,
+            TrainingPolicy(
+                min_examples=settings.rerank.min_examples,
+                pool=settings.rerank.pool,
+                train_sources=settings.rerank.train_sources,
+                source_cap=settings.rerank.source_cap,
+                anchor_ratio=settings.rerank.anchor_ratio,
+                gate_tolerance=settings.rerank.gate_tolerance,
+                live=settings.rerank.live,
+                live_min_examples=settings.rerank.live_min_examples,
+                live_every_seconds=settings.rerank.live_every_seconds,
+                live_max_distance=settings.rerank.live_max_distance,
+            ),
+            _anchors if settings.rerank.provider == "worker" else None,
+        )
+        previous = feedback.on_change
+
+        def feedback_changed(owner: RecordId | None) -> None:
+            if previous is not None:
+                previous(owner)
+            reranking.mark_stale()
+
+        feedback.on_change = feedback_changed
         return cls(
             settings=settings,
             db=db,
@@ -165,15 +205,14 @@ class Application:
             recall=recall,
             explore=ExplorationService(store, memory, ontology, recall, now),
             feedback=feedback,
+            feedback_review=FeedbackReviewService(store, feedback, now),
             consolidation=consolidation,
             tasks=tasks,
             maintenance=Maintenance(
                 actors, tasks, store, settings.tasks, ontology=ontology, indexer=indexer
             ),
             backups=_backups(db, settings, now),
-            reranking=RerankTrainingService(
-                store, feedback, reranker, now, settings.rerank.min_examples
-            ),
+            reranking=reranking,
             embedder=embedder,
         )
 
@@ -184,7 +223,21 @@ class Application:
         )
 
     async def close(self) -> None:
+        self.reranking.close()
         await self.db.close()
+
+
+def _anchors() -> tuple[list[RerankExample], list[GateRequest]]:
+    """The clean benchmark pairs and the trusted requests a retrained reranker is judged on."""
+    from ontyra.calibration import anchors
+
+    return (
+        [RerankExample(source="anchor", **e) for e in anchors.anchor_examples()],
+        [
+            GateRequest.model_validate({"query": r["query"], "candidates": r["candidates"]})
+            for r in anchors.gate_requests()
+        ],
+    )
 
 
 def _backups(db: Database, settings: Settings, now: Callable[[], datetime]) -> BackupService | None:

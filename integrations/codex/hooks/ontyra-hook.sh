@@ -4,11 +4,14 @@
 #   UserPromptSubmit  -> POST /v1/recall   (the prompt is the query)
 #   UserPromptSubmit and Stop also log the prompt / the assistant's last message as episodes
 #   (the lossless interaction log that proposals cite as evidence).
-#   Stop, when ONTYRA_CAPTURE=1: every ONTYRA_CAPTURE_EVERY prompts (default 10) asks the agent
-#   once to propose memories for anything durable it learned (`remember` tool).
+#   UserPromptSubmit also adds a one-line reminder to propose what is durable (`remember` tool) when
+#   the prompt reads like a rule, preference, correction or decision, and every ONTYRA_CAPTURE_EVERY
+#   prompts (default 5), also for a `feedback` verdict on a recalled memory (the recall trace id
+#   is added to the injected text). It rides on the context already being injected: no extra turn
+#   or model call, and the agent just does nothing when there is nothing to report.
 # Fails open: if the daemon is down or slow the session continues without memory.
 # Needs curl and jq. Env: ONTYRA_URL (default http://127.0.0.1:8787), ONTYRA_BUDGET_TOKENS,
-# ONTYRA_TOKEN, ONTYRA_PROFILE (compact|rich, default compact: no scores or anchors in the text), ONTYRA_CAPTURE, ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
+# ONTYRA_TOKEN, ONTYRA_PROFILE (compact|rich, default compact: no scores or anchors in the text), ONTYRA_CAPTURE (default 1; 0 turns the reminder off), ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
 # claude-code) and ONTYRA_ACTOR (default: the harness name) say who is talking.
 set -u
 input=$(cat)
@@ -65,14 +68,6 @@ fi
 case "$event" in
   Stop)
     episode assistant "$(jq -r '.last_assistant_message // empty' <<<"$input")"
-    [ "${ONTYRA_CAPTURE:-0}" = 1 ] || exit 0
-    # `stop_hook_active` is true when this very hook already kept the agent going: never loop
-    [ "$(jq -r '.stop_hook_active // false' <<<"$input")" = "true" ] && exit 0
-    n=$(( $(cat "$state.prompts" 2>/dev/null || echo 0) ))
-    last=$(( $(cat "$state.captured" 2>/dev/null || echo 0) ))
-    [ $(( n - last )) -ge "${ONTYRA_CAPTURE_EVERY:-10}" ] || exit 0
-    echo "$n" >"$state.captured"
-    jq -n '{decision: "block", reason: "Memory check (Ontyra): if in this conversation you learned something durable and non-obvious about the user, the project or a decision that was made (a preference, a rule, a fact, a decision with its reason), record it now with the `remember` tool (a proposal; quote the evidence). Do not record anything transient or already stored. If there is nothing, just say \"nothing to record\" in one line and stop."}'
     exit 0
     ;;
   SessionStart)
@@ -88,7 +83,19 @@ case "$event" in
     redeliver=false
     query=$(jq '.prompt // null' <<<"$input")
     echo $(( $(cat "$state.prompts" 2>/dev/null || echo 0) + 1 )) >"$state.prompts"
-    episode user "$(jq -r '.prompt // empty' <<<"$input")"
+    prompt_text=$(jq -r '.prompt // empty' <<<"$input")
+    episode user "$prompt_text"
+    # Remind the agent to record what was settled: on wording that states a rule, preference,
+    # correction or decision, and otherwise every ONTYRA_CAPTURE_EVERY prompts.
+    if [ "${ONTYRA_CAPTURE:-1}" != 0 ]; then
+      n=$(cat "$state.prompts")
+      last=$(( $(cat "$state.captured" 2>/dev/null || echo 0) ))
+      cue='(from now on|going forward|always|never|remember|i prefer|prefer to|we decided|decided to|instead of|stop (doing|using)|no, (use|do|don.t))'
+      if grep -qiE "$cue" <<<"$prompt_text" || [ $(( n - last )) -ge "${ONTYRA_CAPTURE_EVERY:-5}" ]; then
+        echo "$n" >"$state.captured"
+        capture_note="Ontyra: if this conversation has settled something durable that is not stored yet (a preference, rule, correction, or a decision with its reason), record it with \`remember\` as part of this turn. Likewise report with \`feedback\` (the memory, the query, the recall trace) a recalled memory that clearly helped, or that was wrong, outdated or beside the point. Otherwise do nothing and do not mention it."
+      fi
+    fi
     ;;
   *) exit 0 ;;
 esac
@@ -105,6 +112,11 @@ reply=$(post "$path" "$body") || exit 0
 silent=$(jq -r 'if .silent == false then "false" else "true" end' <<<"$reply" 2>/dev/null) || silent=true
 rendered=$(jq -r '.rendered // ""' <<<"$reply" 2>/dev/null) || rendered=""
 [ "$silent" = "true" ] && rendered=""
+# The recall's id goes with its memories, so a verdict on one can cite it (`feedback` trace)
+if [ "$event" = UserPromptSubmit ] && [ -n "$rendered" ]; then
+  trace=$(jq -r '.trace // empty' <<<"$reply" 2>/dev/null) || trace=""
+  [ -n "$trace" ] && rendered="$rendered"$'\n'"(recall trace: $trace)"
+fi
 
 # At the start of a session: say when a reviewer sent proposals back with comments.
 note=""
@@ -117,6 +129,7 @@ if [ "$event" = SessionStart ]; then
 fi
 text="$rendered"
 [ -n "$note" ] && text="${text:+$text$'\n\n'}$note"
+[ -n "${capture_note:-}" ] && text="${text:+$text$'\n\n'}$capture_note"
 [ -n "$text" ] || exit 0
 
 jq -n --arg event "$event" --arg text "$text" \

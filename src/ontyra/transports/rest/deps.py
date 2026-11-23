@@ -13,6 +13,7 @@ from ontyra.services import (
     Caller,
     ConsolidationService,
     ExplorationService,
+    FeedbackReviewService,
     FeedbackService,
     MemoryService,
     OntologyChangeService,
@@ -59,6 +60,9 @@ class Services(Protocol):
 
     @property
     def feedback(self) -> FeedbackService: ...
+
+    @property
+    def feedback_review(self) -> FeedbackReviewService: ...
 
     @property
     def consolidation(self) -> ConsolidationService: ...
@@ -146,6 +150,13 @@ def get_feedback_service(services: ServicesDep) -> FeedbackService:
 
 
 FeedbackServiceDep = Annotated[FeedbackService, Depends(get_feedback_service)]
+
+
+def get_feedback_review_service(services: ServicesDep) -> FeedbackReviewService:
+    return services.feedback_review
+
+
+FeedbackReviewDep = Annotated[FeedbackReviewService, Depends(get_feedback_review_service)]
 
 
 def get_reranking_service(services: ServicesDep) -> RerankTrainingService:

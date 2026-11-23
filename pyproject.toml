@@ -30,8 +30,13 @@ embedded = ["surrealdb[embedded]>=3.0.0,<4"]
 langchain = [
     "langchain-core>=1.8.0",
 ]
-rerank-local = [
-    "sentence-transformers>=5",
+# The reranker worker (`ontyra worker`). Install the torch build for your GPU first (the default
+# wheels do not cover older cards, e.g. V100 needs the cu126 index), then this extra.
+worker = [
+    "torch>=2.4",
+    "transformers>=4.56",
+    "safetensors>=0.4",
+    "peft>=0.14",
 ]
 mcp = [
     "fastmcp>=3",

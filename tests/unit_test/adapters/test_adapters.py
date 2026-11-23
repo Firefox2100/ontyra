@@ -144,21 +144,75 @@ async def test_http_reranker_posts_to_rerank_and_maps_scores_by_index() -> None:
     assert rr.name == "http:m"
 
 
-def test_a_hosted_reranker_is_not_trainable_and_the_local_one_is() -> None:
-    from ontyra.adapters import CrossEncoderReranker, HttpReranker
+def test_a_hosted_reranker_is_not_trainable_and_the_worker_is() -> None:
+    from ontyra.adapters import HttpReranker, WorkerReranker
     from ontyra.ports.adapters import TrainableReranker
 
     assert not isinstance(HttpReranker("http://x", "m"), TrainableReranker)
-    assert isinstance(CrossEncoderReranker(), TrainableReranker)  # lazy: nothing is loaded
+    assert isinstance(WorkerReranker("http://x/v1", "m"), TrainableReranker)
 
 
 def test_factory_builds_each_reranker_provider() -> None:
-    from ontyra.adapters import CrossEncoderReranker, HttpReranker
+    from ontyra.adapters import HttpReranker, WorkerReranker
 
     assert build_reranker(RerankSettings(provider="none")) is None
     http = build_reranker(RerankSettings(provider="http", url="http://x/v1", model="m"))
-    assert isinstance(http, HttpReranker)
-    local = build_reranker(RerankSettings(provider="cross_encoder"))
-    assert isinstance(local, CrossEncoderReranker)
+    assert isinstance(http, HttpReranker) and not isinstance(http, WorkerReranker)
+    worker = build_reranker(RerankSettings(provider="worker", url="http://x/v1"))
+    assert isinstance(worker, WorkerReranker) and worker.name == "worker:worker"
+    with pytest.raises(ValueError, match="URL"):
+        build_reranker(RerankSettings(provider="worker"))
     with pytest.raises(ValueError, match="URL"):
         build_reranker(RerankSettings(provider="http"))
+
+
+async def test_the_worker_adapter_trains_and_activates_through_the_admin_routes() -> None:
+    import json
+
+    import httpx
+
+    from ontyra.adapters import WorkerReranker
+    from ontyra.models.feedback import GateCandidate, GateRequest, RerankExample, TrainOptions
+
+    seen: list[tuple[str, dict[str, object]]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content) if request.content else {}
+        seen.append((request.url.path, body))
+        if request.url.path == "/admin/versions":
+            versions = [{"version": "v0001"}, {"version": "v0002"}]
+            return httpx.Response(200, json={"active": "v0001", "versions": versions})
+        if request.url.path == "/admin/train":
+            return httpx.Response(
+                200, json={"version": "v0002", "metrics": {"gate_before": {"mrr": 0.9}}}
+            )
+        return httpx.Response(200, json={"version": body["version"]})
+
+    rr = WorkerReranker("http://w/v1", "m", transport=httpx.MockTransport(handler))
+    await rr.refresh()
+    assert rr.version == "v0001" and rr.versions() == ["v0001", "v0002"]
+    gate = [GateRequest(query="q", candidates=[GateCandidate(text="t", relevant=True)])]
+    result = await rr.train(
+        [RerankExample(query="q", text="t", relevance=1.0, source="actor:a")],
+        TrainOptions(head_only=True),
+        gate,
+    )
+    assert result.version == "v0002" and result.activated is False
+    sent = next(b for p, b in seen if p == "/admin/train")
+    assert sent["options"]["head_only"] is True  # type: ignore[index]
+    assert sent["gate"][0]["candidates"][0]["relevant"] is True  # type: ignore[index]
+    await rr.activate("v0002")
+    assert seen[-2][1] == {"version": "v0002"}
+
+
+async def test_the_worker_adapter_reports_a_refusal() -> None:
+    import httpx
+
+    from ontyra.adapters import WorkerReranker
+
+    def busy(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(409, json={"detail": "the model is busy"})
+
+    rr = WorkerReranker("http://w/v1", "m", transport=httpx.MockTransport(busy))
+    with pytest.raises(ValueError, match="busy"):
+        await rr.activate("v0002")

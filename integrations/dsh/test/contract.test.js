@@ -25,6 +25,7 @@ test('lite registers the daemon’s lite tools, prefixed', () => {
     'ontyra_ask',
     'ontyra_get',
     'ontyra_remember',
+    'ontyra_feedback',
     'ontyra_pending_proposals',
     'ontyra_amend',
   ])
@@ -102,6 +103,7 @@ const ROUTES = {
   ontyra_ask: ['POST', '/v1/ask'],
   ontyra_get: ['GET', /^\/v1\/memories\/[^/]+\/detail(\?.*)?$/],
   ontyra_remember: ['POST', '/v1/proposals'],
+  ontyra_feedback: ['POST', '/v1/feedback'],
   ontyra_pending_proposals: ['GET', /^\/v1\/proposals\?limit=\d+$/],
   ontyra_amend: ['POST', /^\/v1\/proposals\/[^/]+\/amend$/],
   ontyra_concepts: ['GET', /^\/v1\/concepts\?term=[^&]+$/],
@@ -116,6 +118,7 @@ test('every tool calls a route the daemon serves', () => {
     ontyra_ask: { question: 'conflicts' },
     ontyra_get: { memory: 'abc' },
     ontyra_remember: { ops: [] },
+    ontyra_feedback: { memory: 'abc', query: 'x', label: 'helpful', trace: 'def' },
     ontyra_pending_proposals: {},
     ontyra_amend: { proposal: 'abc', request: { ops: [], why: 'x' } },
     ontyra_concepts: { term: 'python' },
@@ -128,6 +131,14 @@ test('every tool calls a route the daemon serves', () => {
     if (typeof path === 'string') assert.equal(call.path, path, `${tool.name} path drifted`)
     else assert.match(call.path, path, `${tool.name} path drifted`)
   }
+})
+
+test('feedback names the memory and the recall trace as records', () => {
+  const feedback = TOOLS.find((tool) => tool.name === 'ontyra_feedback')
+  const body = feedback.request({ memory: 'abc', query: 'q', label: 'wrong', trace: 'def' }, {}).body
+  assert.equal(body.memory, 'memory:abc')
+  assert.equal(body.trace, 'recall_trace:def')
+  assert.equal(feedback.request({ memory: 'memory:abc', query: 'q', label: 'wrong', trace: 'recall_trace:x' }, {}).body.trace, 'recall_trace:x')
 })
 
 test('ask sends record ids in the bodies and bare ids in the paths', () => {

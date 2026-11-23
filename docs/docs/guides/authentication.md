@@ -120,7 +120,7 @@ whether to ask first:
 
 | Tool | Read-only | Destructive | Notes |
 |---|---|---|---|
-| `recall`, `check`, `briefing`, `ask`, `get`, `concepts`, `search`, `overview`, `neighbors`, `list_memories`, `pending_proposals`, `pending_ontology_changes`, `find_duplicates`, `pending_tasks` | yes | no | `recall` and `briefing` also note what they delivered in the session |
+| `recall`, `check`, `briefing`, `ask`, `get`, `concepts`, `search`, `overview`, `neighbors`, `list_memories`, `pending_proposals`, `pending_ontology_changes`, `find_duplicates`, `feedback_outliers`, `pending_tasks` | yes | no | `recall` and `briefing` also note what they delivered in the session |
 | `remember`, `propose_ontology_change` | no | no | records a proposal; memories change only if the policy commits it, and history is kept |
 | `detect_tasks`, `claim_task`, `complete_task`, `resolve_task` | no | no | queue and close maintenance tasks; `resolve_task` also submits a `supersede` proposal as you (it commits or waits for review under the usual policy) |
 | `reject`, `reject_ontology_change` | no | no | closes a held item, commits nothing |

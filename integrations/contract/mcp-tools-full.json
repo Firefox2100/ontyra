@@ -1668,7 +1668,7 @@
     "name": "detect_tasks"
   },
   {
-    "description": "Say that a recalled memory was `helpful`, `applied`, `irrelevant`, `missed` (it should have come back), `outdated` or `wrong`. Side effect: the verdict is stored. `outdated` and `wrong` also queue a maintenance task for a human or agent to retract, revise or confirm the memory; the memory itself is not changed.",
+    "description": "Say that a recalled memory was `helpful`, `applied`, `irrelevant`, `missed` (it should have come back), `outdated` or `wrong`. Give the `query` it came back for and, when shown, the recall `trace`. Side effect: the verdict is stored. `outdated` and `wrong` also queue a maintenance task for a human or agent to retract, revise or confirm the memory; the memory itself is not changed.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -1774,6 +1774,22 @@
       "type": "object"
     },
     "name": "feedback"
+  },
+  {
+    "description": "Read-only: your recorded feedback ranked by how likely it is to be a mistake (it disagrees with the ranking at recall time, a verdict flipped, or a burst from one source). Tell the user what looks wrong; vetoing is theirs to do (console or API).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 20,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "feedback_outliers"
   },
   {
     "description": "Read-only scan for memories that say the same thing (clusters, oldest first) and for restatements with a changed value (updates). Nothing is changed: resolve a cluster with a `supersede` or `retract` proposal via `remember`.",

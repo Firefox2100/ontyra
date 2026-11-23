@@ -269,6 +269,40 @@ export const TOOLS = [
     render: jsonText,
   },
   {
+    name: 'ontyra_feedback',
+    title: 'Give feedback on a memory',
+    description:
+      'Say that a recalled memory was `helpful`, `applied`, `irrelevant`, `missed` (it should have '
+      + 'come back), `outdated` or `wrong`. Give the `query` it came back for and, when shown, the '
+      + 'recall `trace`. Side effect: the verdict is stored. `outdated` and `wrong` also queue a '
+      + 'maintenance task for a human or agent to retract, revise or confirm the memory; the memory '
+      + 'itself is not changed.',
+    parameters: {
+      memory: { type: 'string', required: true, description: 'Memory id, with or without the `memory:` prefix' },
+      query: { type: 'string', required: true, description: 'The query the memory came back (or should have) for' },
+      label: {
+        type: 'string',
+        required: true,
+        enum: ['applied', 'helpful', 'missed', 'irrelevant', 'outdated', 'wrong'],
+        description: 'The verdict',
+      },
+      trace: { type: 'string', description: 'The recall trace shown with the injected memories' },
+      note: { type: 'string', description: 'Why, in a few words' },
+    },
+    request: (args) => ({
+      method: 'POST',
+      path: '/v1/feedback',
+      body: {
+        memory: recordRef(args.memory, 'memory'),
+        query: args.query,
+        label: args.label,
+        trace: args.trace ? recordRef(args.trace, 'recall_trace') : null,
+        note: args.note ?? null,
+      },
+    }),
+    render: jsonText,
+  },
+  {
     name: 'ontyra_pending_proposals',
     title: 'Pending proposals',
     description: "Your proposals (and, with permission, the global ones) that are still waiting: `pending`, or `changes_requested` with the reviewer's `comments`. Check it before proposing something that may already be waiting, and when the user says a proposal needs changes. Each has a `version`, its ops and findings.",

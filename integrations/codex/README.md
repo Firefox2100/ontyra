@@ -6,7 +6,7 @@ packaged for Codex (`.codex-plugin/plugin.json`).
 - **Hooks** (`hooks/ontyra-hook.sh`, curl + jq over REST): a briefing at session start (also after
   resume, clear and compaction) and recall on every prompt, injected as developer context. Fails
   open when the daemon is unreachable. Prompts and the assistant's last message are logged as
-  episodes (`ONTYRA_LOG_EPISODES=0` to stop). Opt-in capture nudge: `ONTYRA_CAPTURE=1`.
+  episodes (`ONTYRA_LOG_EPISODES=0` to stop). Capture reminder (on, `ONTYRA_CAPTURE=0` to stop): a line in the injected context, no extra turn.
 - **MCP** (`.mcp.json`): the daemon's streamable-HTTP endpoint, caller identified as `codex`.
 - **Skill** (`skills/ontyra-memory`): when and how to `remember`, scope, concepts, ontology changes.
 

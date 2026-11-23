@@ -52,7 +52,11 @@ async function rendered(client, path, body, signal, timeoutMs) {
     const reply = await client.call({ method: 'POST', path, body }, AbortSignal.any([signal, timeout]))
     if (reply?.silent === true || typeof reply?.rendered !== 'string') return undefined
     const text = reply.rendered.trim()
-    return text === '' ? undefined : text
+    if (text === '') return undefined
+    // a recall's id goes with its memories, so a verdict on one can cite it
+    return path === '/v1/recall' && typeof reply.trace === 'string'
+      ? `${text}\n(recall trace: ${reply.trace})`
+      : text
   } catch {
     return undefined
   }
@@ -192,6 +196,10 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
       if (recall !== undefined) parts.push({ name: 'recall', text: recall })
     }
 
+    if (settings.capture !== false && query !== undefined && captureDue(state, settings.captureEvery, query)) {
+      parts.push({ name: CAPTURE, text: capturePrompt() })
+    }
+
     if (parts.length === 0) return decision
     const text = render(parts)
     return {
@@ -210,10 +218,10 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     }
   })
 
-  // What the `Stop` hook does: keep the turn's reply, and remind the agent to record what lasted.
+  // What the `Stop` hook does: keep the turn's reply, and keep the turn's reply as an episode.
   ctx.on('agent/turn-stopping', async ({ agent, signal }) => {
     const settings = settingsNow()
-    if (settings.episodes !== true && settings.capture !== true) return
+    if (settings.episodes !== true) return
     const session = agent.session
     // Gate here too: a subagent's transcript belongs to its parent, so recording it would flood
     // the ledger with work the parent already reports.
@@ -221,12 +229,6 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     const state = projection.stateOf(session)
     if (state.lastAssistant !== null) {
       await episode(client, settings, session, 'assistant', state.lastAssistant, signal)
-    }
-    if (settings.capture === true && captureDue(state, settings.captureEvery)) {
-      agent.steer(createUserMessage({
-        content: [{ type: 'text', text: capturePrompt(state.prompts) }],
-        source: { kind: CAPTURE },
-      }))
     }
   })
 }

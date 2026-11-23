@@ -210,6 +210,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="instead: check the abstention threshold on your own store (read-only)",
     )
     cal.add_argument("--from", dest="source", help="analyse a saved recording: no model calls")
+    worker = sub.add_parser(
+        "worker",
+        help="start the reranker worker (a separate process that owns the GPU)",
+        description="Serves a standard /rerank API from a Hugging Face or local safetensors "
+        "model (ONTYRA_WORKER__*). Needs the `worker` extra. Point the daemon at it with "
+        "ONTYRA_RERANK__PROVIDER=http and ONTYRA_RERANK__URL.",
+    )
+    worker.add_argument("--host", help="bind address (default: ONTYRA_WORKER__HOST)")
+    worker.add_argument("--port", type=int, help="port (default: ONTYRA_WORKER__PORT)")
     args = parser.parse_args(argv)
 
     settings = load_settings()
@@ -220,6 +229,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         uvicorn.run(
             create_rest_app(settings), host=host, port=port, log_level=settings.log_level.lower()
         )
+        return 0
+    if args.command == "worker":
+        from ontyra.worker.runtime import build
+
+        host = args.host or settings.worker.host
+        port = args.port or settings.worker.port
+        uvicorn.run(build(settings), host=host, port=port, log_level=settings.log_level.lower())
         return 0
     if args.command == "calibrate" and args.own:
         return asyncio.run(_own_command(settings, yes=args.yes))

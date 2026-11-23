@@ -59,17 +59,73 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 
 | Variable | Type | Default |
 |---|---|---|
-| `ONTYRA_RERANK__PROVIDER` | `none` \| `langchain` \| `http` \| `cross_encoder` | `none` |
+| `ONTYRA_RERANK__PROVIDER` | `none` \| `langchain` \| `http` \| `worker` | `none` |
 | `ONTYRA_RERANK__CLASS_PATH` | str \| None | unset |
 | `ONTYRA_RERANK__KWARGS` | dict | `{}` |
 | `ONTYRA_RERANK__URL` | str \| None | unset |
 | `ONTYRA_RERANK__MODEL` | str \| None | unset |
 | `ONTYRA_RERANK__API_KEY` | str \| None | unset |
-| `ONTYRA_RERANK__MODEL_DIR` | str \| None | unset |
-| `ONTYRA_RERANK__DEVICE` | str \| None | unset |
+| `ONTYRA_RERANK__TIMEOUT` | float | `10.0` |
+| `ONTYRA_RERANK__TRAIN_TIMEOUT` | float | `3600.0` |
 | `ONTYRA_RERANK__TOP_N` | int | `30` |
 | `ONTYRA_RERANK__MIN_EXAMPLES` | int | `50` |
 | `ONTYRA_RERANK__FEEDBACK_TTL_DAYS` | int | `365` |
+| `ONTYRA_RERANK__POOL` | `own` \| `all` | `own` |
+| `ONTYRA_RERANK__TRAIN_SOURCES` | `human` \| `all` | `all` |
+| `ONTYRA_RERANK__SOURCE_CAP` | float | `0.5` |
+| `ONTYRA_RERANK__ANCHOR_RATIO` | float | `1.0` |
+| `ONTYRA_RERANK__GATE_TOLERANCE` | float | `0.01` |
+| `ONTYRA_RERANK__LIVE` | bool | `False` |
+| `ONTYRA_RERANK__LIVE_MIN_EXAMPLES` | int | `20` |
+| `ONTYRA_RERANK__LIVE_EVERY_SECONDS` | float | `300.0` |
+| `ONTYRA_RERANK__LIVE_MAX_DISTANCE` | float | `0.25` |
+
+## worker
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_WORKER__HOST` | str | `127.0.0.1` |
+| `ONTYRA_WORKER__PORT` | int | `8788` |
+| `ONTYRA_WORKER__TOKEN` | pydantic.types.SecretStr \| None | unset |
+| `ONTYRA_WORKER__MODEL` | str | `Qwen/Qwen3-Reranker-0.6B` |
+| `ONTYRA_WORKER__MODEL_DIR` | str | `worker` |
+| `ONTYRA_WORKER__ARCHITECTURE` | `auto` \| `qwen3` \| `sequence` | `auto` |
+| `ONTYRA_WORKER__DEVICE` | str | `auto` |
+| `ONTYRA_WORKER__DTYPE` | `auto` \| `fp32` \| `fp16` \| `bf16` | `auto` |
+| `ONTYRA_WORKER__ATTENTION` | str | `sdpa` |
+| `ONTYRA_WORKER__SERVE` | `auto` \| `on` \| `off` | `auto` |
+| `ONTYRA_WORKER__TRAIN` | `auto` \| `on` \| `off` | `auto` |
+| `ONTYRA_WORKER__LIVE_EDIT` | bool | `True` |
+| `ONTYRA_WORKER__MAX_LENGTH` | int | `1024` |
+| `ONTYRA_WORKER__BATCH_SIZE` | int | `16` |
+| `ONTYRA_WORKER__BATCH_WAIT_MS` | int | `5` |
+| `ONTYRA_WORKER__QUEUE_SIZE` | int | `64` |
+| `ONTYRA_WORKER__OFFLOAD_AFTER_SECONDS` | float | `300.0` |
+| `ONTYRA_WORKER__FREE_AFTER_SECONDS` | float | `1800.0` |
+| `ONTYRA_WORKER__INSTRUCTION` | str | `Given a situation or request, find the stored memory that applies to it` |
+| `ONTYRA_WORKER__PROMPT_PREFIX` | str \| None | unset |
+| `ONTYRA_WORKER__PROMPT_SUFFIX` | str \| None | unset |
+| `ONTYRA_WORKER__YES_TOKEN` | str | `yes` |
+| `ONTYRA_WORKER__NO_TOKEN` | str | `no` |
+
+## learning
+
+| Variable | Type | Default |
+|---|---|---|
+| `ONTYRA_LEARNING__ENABLED` | bool | `False` |
+| `ONTYRA_LEARNING__MIN_EXAMPLES` | int | `30` |
+| `ONTYRA_LEARNING__HALF_LIFE_DAYS` | float | `90.0` |
+| `ONTYRA_LEARNING__MAX_PRIOR` | float | `0.1` |
+| `ONTYRA_LEARNING__PRIOR_SCALE` | float | `2.0` |
+| `ONTYRA_LEARNING__MAX_MIX` | float | `0.5` |
+| `ONTYRA_LEARNING__MIX_HALF` | int | `100` |
+| `ONTYRA_LEARNING__MAX_SHIFT` | float | `1.0` |
+| `ONTYRA_LEARNING__L2` | float | `0.5` |
+| `ONTYRA_LEARNING__SOURCE_CAP` | float | `0.5` |
+| `ONTYRA_LEARNING__CANARY_FRACTION` | float | `0.25` |
+| `ONTYRA_LEARNING__CANARY_MIN_GROUPS` | int | `5` |
+| `ONTYRA_LEARNING__CANARY_TOLERANCE` | float | `0.0` |
+| `ONTYRA_LEARNING__CACHE_SECONDS` | float | `300.0` |
 
 ## decision
 
