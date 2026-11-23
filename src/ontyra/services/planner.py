@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from ontyra.models import Decision, RecordId, new_id
 from ontyra.models.core import Annotation, Memory, Proposal, RevState, Task
@@ -22,6 +22,8 @@ from ontyra.services.prepared import (
 )
 from ontyra.services.validation import rev_state_id
 
+Vetting = Literal["vetted", "auto"]
+
 
 def _unindex(rev: RecordId) -> list[Write]:
     """Remove a revision from the derived index (it is no longer the live one)."""
@@ -29,10 +31,19 @@ def _unindex(rev: RecordId) -> list[Write]:
 
 
 def _evidence_edges(rev: RecordId, evidence: Sequence[Any], now: datetime) -> list[Write]:
-    return [Relate("derived_from", rev, ev.episode, {"at": now}) for ev in evidence]
+    return [
+        Relate("derived_from", rev, ev.episode, {"at": now})
+        for ev in evidence
+        if ev.episode is not None  # a cited source is kept on the revision itself
+    ]
 
 
-def memory_writes(prepared: Sequence[Prepared], actor: RecordId, now: datetime) -> list[Write]:
+def memory_writes(
+    prepared: Sequence[Prepared],
+    actor: RecordId,
+    now: datetime,
+    vetting: Vetting = "vetted",
+) -> list[Write]:
     """Writes that apply the ops. Order matters inside the batch (guards first)."""
     guards: list[Write] = []
     body: list[Write] = []
@@ -46,7 +57,9 @@ def memory_writes(prepared: Sequence[Prepared], actor: RecordId, now: datetime) 
                 Create.of(p.rev, p.model),
                 Create.of(
                     rev_state_id(p.rev),
-                    RevState(rev=p.rev, state="committed", valid_from=p.valid_from),
+                    RevState(
+                        rev=p.rev, state="committed", valid_from=p.valid_from, vetting=vetting
+                    ),
                 ),
                 Create.of(
                     p.memory,
@@ -73,7 +86,7 @@ def memory_writes(prepared: Sequence[Prepared], actor: RecordId, now: datetime) 
                 Create.of(p.new_rev, p.model),
                 Create.of(
                     rev_state_id(p.new_rev),
-                    RevState(rev=p.new_rev, state="committed", valid_from=now),
+                    RevState(rev=p.new_rev, state="committed", valid_from=now, vetting=vetting),
                 ),
                 Update(rev_state_id(p.old_rev), {"lifecycle": "superseded", "valid_to": now}),
                 Update(p.memory.id, {"current": p.new_rev}),

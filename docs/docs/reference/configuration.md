@@ -187,6 +187,7 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_RECALL__CONCEPT_BOOST` | float | `0.0` |
 | `ONTYRA_RECALL__RERANK_CANDIDATES` | int | `30` |
 | `ONTYRA_RECALL__RERANK_WEIGHT` | float | `0.5` |
+| `ONTYRA_RECALL__MIN_VETTING` | `auto` \| `vetted` | `auto` |
 | `ONTYRA_RECALL__DECISION_CANDIDATES` | int | `8` |
 | `ONTYRA_RECALL__DECISION_WEIGHT` | float | `0.5` |
 | `ONTYRA_RECALL__DECISION_MARGIN` | float | `0.15` |

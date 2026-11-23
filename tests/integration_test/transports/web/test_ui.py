@@ -54,6 +54,7 @@ async def test_every_page_renders_on_an_empty_store(ui: httpx.AsyncClient) -> No
         "/ui/concepts",
         "/ui/recall",
         "/ui/feedback",
+        "/ui/knowledge",
     ]:
         r = await ui.get(path)
         assert r.status_code == 200, path
@@ -322,3 +323,52 @@ async def test_a_rebound_hostname_is_refused_without_an_allowlist(
     ) as client:  # Host and Origin agree, but the page did not come from this machine
         denied = await client.post("/ui/tasks/detect")
     assert denied.status_code == 403
+
+
+async def test_the_knowledge_page_vets_what_policy_committed_and_records_source_checks(
+    app: Application,
+) -> None:
+    from ontyra.models.proposals import AddMemory, Evidence, ProposalRequest
+    from ontyra.models.sources import SourceRef
+
+    agent = await app.actors.caller(kind="agent", name="claude", harness="claude-code")
+    uri = "file:///papers/gene-x.pdf"
+    result = await app.memory.submit(
+        agent,
+        ProposalRequest(
+            ops=[
+                AddMemory(
+                    kind="fact",
+                    ref="m",
+                    fields={
+                        "text": "Gene X acts on pathway Y",
+                        "subject": "concept:linux",
+                        "predicate": "relates_to",
+                        "object": "pathway Y",
+                        "scope": "universal",
+                    },
+                    evidence=[Evidence(source=SourceRef(uri=uri, quote="X acts on Y"))],
+                )
+            ]
+        ),
+    )
+    assert result.status == "committed"
+    transport = httpx.ASGITransport(app=create_app(app, extra_routers=ROUTERS, ui_actor="owner"))
+    origin = {"Origin": "http://127.0.0.1:8787"}
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://127.0.0.1:8787", headers=origin
+    ) as ui:
+        page = await ui.get("/ui/knowledge")
+        assert page.status_code == 200 and "Gene X acts on pathway Y" in page.text
+        assert "/papers/gene-x.pdf" in page.text
+        found = await ui.get("/ui/knowledge", params={"uri": uri})
+        assert "never checked" in found.text
+        done = await ui.post(
+            "/ui/knowledge/check", data={"uri": uri, "state": "missing", "note": "moved"}
+        )
+        assert done.status_code == 303 and "1 review task" in done.headers["location"].replace(
+            "%20", " "
+        )
+        assert "moved" in (await ui.get("/ui/knowledge")).text
+        await ui.post("/ui/knowledge/vet", data={"memory": str(result.created["m"])})
+        assert "Nothing waits for vetting" in (await ui.get("/ui/knowledge")).text

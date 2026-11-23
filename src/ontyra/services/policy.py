@@ -14,6 +14,7 @@ from ontyra.services.context import Caller
 class OpSummary:
     op: str
     kind: str | None = None  # memory kind touched, when the op has one
+    sourced: bool = False  # the op cites an external source with a literal quote
 
 
 class PolicyEngine:
@@ -40,5 +41,7 @@ class PolicyEngine:
             if rule.ops is not None and op.op not in rule.ops:
                 return False
             if rule.kinds is not None and op.kind is not None and op.kind not in rule.kinds:
+                return False
+            if rule.sourced is not None and op.sourced != rule.sourced:
                 return False
         return True

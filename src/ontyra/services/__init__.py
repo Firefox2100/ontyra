@@ -16,6 +16,7 @@ from ontyra.services.policy import PolicyEngine
 from ontyra.services.recall import RecallService
 from ontyra.services.recall_engine import RecallEngine
 from ontyra.services.recall_fusion import FusionRecallService
+from ontyra.services.sources import SourceService
 from ontyra.services.tasks import TaskService
 
 __all__ = [
@@ -38,5 +39,6 @@ __all__ = [
     "RecallEngine",
     "RecallService",
     "RerankTrainingService",
+    "SourceService",
     "TaskService",
 ]

@@ -1618,7 +1618,7 @@
       },
       "Evidence": {
         "additionalProperties": false,
-        "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+        "description": "What a memory comes from: words that were said, or an external source it cites.\n\nWords that were said: give a `quote` and the daemon looks it up among your recent episodes (it\nmust occur there literally, case and spacing aside); nothing is stored when it does not. Give an\n`episode` id as well to name the exact message; the quote must then occur in that one.\n\nA source: give `source` (a uri, and ideally a locator and a short literal quote). The daemon\nstores the reference with the memory; it does not read the source or require that it exists.",
         "properties": {
           "episode": {
             "anyOf": [
@@ -1648,6 +1648,17 @@
             ],
             "description": "Words from the conversation, copied literally (a sentence).",
             "title": "Quote"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An external source it comes from (instead of a quote)."
           }
         },
         "title": "Evidence",
@@ -3814,6 +3825,14 @@
             "title": "Score",
             "type": "number"
           },
+          "sources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SourceRef"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
           "strength": {
             "anyOf": [
               {
@@ -3840,6 +3859,15 @@
               }
             ],
             "title": "Valid From"
+          },
+          "vetting": {
+            "default": "vetted",
+            "enum": [
+              "vetted",
+              "auto"
+            ],
+            "title": "Vetting",
+            "type": "string"
           },
           "why": {
             "default": [],
@@ -5163,6 +5191,187 @@
         "title": "Signal",
         "type": "object"
       },
+      "SourceCheckRequest": {
+        "additionalProperties": false,
+        "description": "Report what you found when you went back to a source: `ok` (as cited), `changed` (the\ncited statement may no longer hold) or `missing`. `changed` and `missing` open a review task\nfor each memory that cites it.",
+        "properties": {
+          "content_hash": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Hash"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "state": {
+            "enum": [
+              "ok",
+              "changed",
+              "missing"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "uri": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri",
+          "state"
+        ],
+        "title": "SourceCheckRequest",
+        "type": "object"
+      },
+      "SourceCheckResult": {
+        "additionalProperties": false,
+        "properties": {
+          "memories": {
+            "title": "Memories",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "ok",
+              "changed",
+              "missing"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "tasks": {
+            "title": "Tasks",
+            "type": "integer"
+          },
+          "uri": {
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri",
+          "state",
+          "memories",
+          "tasks"
+        ],
+        "title": "SourceCheckResult",
+        "type": "object"
+      },
+      "SourceRef": {
+        "additionalProperties": false,
+        "description": "Where a statement comes from. Only `uri` is required; the rest makes a later check, or a\nreader without access to the source, much more useful. Give a short `quote` copied literally\nfrom the source: it stays with the memory even if the source is edited or deleted.",
+        "properties": {
+          "content_hash": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Hash of the source as read (any scheme, e.g. sha256:\u2026): lets a later check say whether it changed.",
+            "title": "Content Hash"
+          },
+          "locator": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where in it: page, section, lines, timestamp.",
+            "title": "Locator"
+          },
+          "medium": {
+            "default": "other",
+            "enum": [
+              "file",
+              "web",
+              "pdf",
+              "code",
+              "media",
+              "data",
+              "other"
+            ],
+            "title": "Medium",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "maxLength": 600,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Words from the source, copied literally.",
+            "title": "Quote"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When it was read.",
+            "title": "Retrieved At"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "uri": {
+            "description": "file:///path, https://\u2026, doi:10.\u2026, arxiv:\u2026; canonicalised by the daemon.",
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      },
       "SplitChange": {
         "additionalProperties": false,
         "description": "One concept turned out to be several: the source is deprecated (kept as a tombstone) and\npoints to what it became. `into` are existing concepts (ids, labels) or new ones to define.",
@@ -5414,6 +5623,7 @@
               "review_proposal",
               "review_stale_dependent",
               "review_feedback",
+              "review_source",
               "review_contradiction",
               "review_ontology_change",
               "review_concept_drift",
@@ -11602,6 +11812,192 @@
         ]
       }
     },
+    "/v1/sources": {
+      "get": {
+        "operationId": "citing_v1_sources_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "uri",
+            "required": true,
+            "schema": {
+              "title": "Uri",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Citing V1 Sources Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The memories that cite a source, and what was last reported about it",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/v1/sources/check": {
+      "post": {
+        "description": "The daemon never reads sources; clients tell it. `ok`: as cited. `changed` or `missing`: the statements that cite it may no longer hold, so a review task is opened for each live memory that cites it, and recall flags them. Nothing is changed in the memories.",
+        "operationId": "check_v1_sources_check_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCheckResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Report what you found when you went back to a cited source",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
     "/v1/tasks": {
       "get": {
         "description": "Work the daemon found but cannot judge: duplicate clusters, updates to confirm, memories gone stale. Each task carries a card with the choices. `status` may repeat (default: pending and claimed).",
@@ -11619,6 +12015,7 @@
                       "review_proposal",
                       "review_stale_dependent",
                       "review_feedback",
+                      "review_source",
                       "review_contradiction",
                       "review_ontology_change",
                       "review_concept_drift",
@@ -12309,6 +12706,199 @@
         "summary": "Do what the task proposes",
         "tags": [
           "tasks"
+        ]
+      }
+    },
+    "/v1/vetting/pending": {
+      "get": {
+        "description": "Agent-written memories that policy committed without review are `auto`: recall uses them (marked unvetted) unless `ONTYRA_RECALL__MIN_VETTING=vetted`. A human vets them here.",
+        "operationId": "pending_v1_vetting_pending_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Pending V1 Vetting Pending Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Memories committed by policy that no human has vetted",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/v1/vetting/{memory_id}/vet": {
+      "post": {
+        "operationId": "vet_v1_vetting__memory_id__vet_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memory_id",
+            "required": true,
+            "schema": {
+              "title": "Memory Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Vet V1 Vetting  Memory Id  Vet Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm a memory: it is vetted from now on",
+        "tags": [
+          "knowledge"
         ]
       }
     }

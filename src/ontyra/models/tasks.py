@@ -16,6 +16,7 @@ MAINTENANCE_KINDS: tuple[TaskKind, ...] = (
     "review_contradiction",
     "review_stale_dependent",
     "review_feedback",
+    "review_source",
     "expire_check",
     "review_concept_drift",
 )

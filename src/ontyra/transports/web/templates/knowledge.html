@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Knowledge{% endblock %}
+{% block body %}
+<h1>Knowledge</h1>
+<p class="muted small">Memories that cite a source. Agents write them and policy may commit them without a person
+looking: recall marks those <code>[unvetted]</code> (or leaves them out, when <code>MIN_VETTING</code> is
+<code>vetted</code>). Vet what you have confirmed, and record what you find when you go back to a source.</p>
+{% if note %}<div class="card small">{{ note }}</div>{% endif %}
+
+<h2>Waiting to be vetted ({{ pending|length }})</h2>
+{% for p in pending %}
+<div class="card">
+  <div class="row"><span class="tag">{{ p.kind }}</span>
+    <span class="muted small">by {{ p.proposed_by }}</span></div>
+  <div style="margin-top:6px"><a href="/ui/memories/{{ p.memory.split(':')[1] }}">{{ p.text }}</a></div>
+  {% for s in p.sources %}
+  <div class="small muted" style="margin-top:6px">
+    <a href="/ui/knowledge?uri={{ s.uri|urlencode }}"><code>{{ s.uri }}</code></a>{% if s.locator %} · {{ s.locator }}{% endif %}
+    {% if s.quote %}<div>“{{ s.quote }}”</div>{% endif %}</div>
+  {% endfor %}
+  <form class="inline" method="post" action="/ui/knowledge/vet" style="margin-top:10px">
+    <input type="hidden" name="memory" value="{{ p.memory }}"><button class="ok">Vet</button></form>
+</div>
+{% else %}<div class="empty">Nothing waits for vetting.</div>{% endfor %}
+
+<h2>Sources reported changed or missing</h2>
+{% for r in reported %}
+<div class="card">
+  <div class="row"><span class="tag warn">{{ r.check.state }}</span>
+    <a href="/ui/knowledge?uri={{ r.uri|urlencode }}"><code>{{ r.uri }}</code></a>
+    <span class="muted small">{{ r.check.checked_at[:10] }}{% if r.check.note %} · {{ r.check.note }}{% endif %}</span></div>
+  {% for m in r.memories %}<div class="small" style="margin-top:6px"><a href="/ui/memories/{{ m.memory.split(':')[1] }}">{{ m.text }}</a></div>{% endfor %}
+  <div class="small muted" style="margin-top:6px">The memories above have review tasks: <a href="/ui/tasks">Tasks</a>.</div>
+</div>
+{% else %}<div class="empty">No source is flagged.</div>{% endfor %}
+
+<h2>Look up a source</h2>
+<form class="row" method="get" action="/ui/knowledge">
+  <input type="text" name="uri" placeholder="file:///…, https://…, doi:…" value="{{ looked_up.uri if looked_up else '' }}" required style="min-width:340px">
+  <button>Look up</button></form>
+{% if looked_up %}
+<div class="card">
+  <div class="row"><code>{{ looked_up.uri }}</code>
+    {% if looked_up.check %}<span class="tag {{ 'ok' if looked_up.check.state == 'ok' else 'warn' }}">{{ looked_up.check.state }}</span>
+    <span class="muted small">{{ looked_up.check.checked_at[:10] }}{% if looked_up.check.note %} · {{ looked_up.check.note }}{% endif %}</span>
+    {% else %}<span class="muted small">never checked</span>{% endif %}</div>
+  {% for m in looked_up.memories %}<div class="small" style="margin-top:6px"><span class="tag">{{ m.kind }}</span>
+    <a href="/ui/memories/{{ m.memory.split(':')[1] }}">{{ m.text }}</a></div>
+  {% else %}<div class="muted small">No live memory cites it.</div>{% endfor %}
+  <form class="row" method="post" action="/ui/knowledge/check" style="margin-top:12px">
+    <input type="hidden" name="uri" value="{{ looked_up.uri }}">
+    <select name="state"><option>ok</option><option>changed</option><option>missing</option></select>
+    <input type="text" name="note" placeholder="what you found (optional)"><button>Record</button></form>
+</div>
+{% endif %}
+{% endblock %}

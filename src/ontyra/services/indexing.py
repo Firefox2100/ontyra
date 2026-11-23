@@ -67,6 +67,7 @@ def doc_for(
         owner=owner,
         text=search_text_of(rev),
         anchors=[a.uri for a in rev.anchors],
+        sources=[s.uri for s in rev.sources],
         about=list(rev.about),
         expires_at=rev.expires_at,
         created_at=now,

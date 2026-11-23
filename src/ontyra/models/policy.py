@@ -16,6 +16,9 @@ class PolicyRule(Model):
     ops: list[str] | None = None  # op types: add, revise, supersede, retract, link, annotate
     actor_kinds: list[str] | None = None
     min_trust: float = 0.0
+    # True: every op must cite an external source with a literal quote (so the claim can be
+    # audited); False: none may; unset: any
+    sourced: bool | None = None
     decision: Decision
 
 

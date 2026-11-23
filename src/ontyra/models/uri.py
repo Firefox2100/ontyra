@@ -51,6 +51,22 @@ def canonical_uri(uri: str, machine: str = "localhost") -> str:
     return f"{scheme}://{user}{host}{port}{path}"
 
 
+def canonical_source(uri: str, machine: str = "localhost") -> str:
+    """A cited source's URI in canonical form. Like `canonical_uri`, except that a web page keeps
+    its query (it names the page) and drops only the fragment and a trailing slash."""
+    text = uri.strip()
+    if text.partition(":")[0].lower() in ("http", "https"):
+        parts = urlsplit(text)
+        host = (parts.hostname or "").lower()
+        if not host:
+            raise ValueError(f"uri has no host: {uri!r}")
+        port = f":{parts.port}" if parts.port else ""
+        path = parts.path.rstrip("/")
+        query = f"?{parts.query}" if parts.query else ""
+        return f"{parts.scheme.lower()}://{host}{port}{path}{query}"
+    return canonical_uri(text, machine)
+
+
 def uri_ancestors(uri: str) -> list[str]:
     """The URI itself, then each enclosing resource, nearest first (`uri` must be canonical)."""
     scheme = uri.partition(":")[0]

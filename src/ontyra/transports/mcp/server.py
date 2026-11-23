@@ -44,6 +44,7 @@ from ontyra.models.recall import (
     SearchRequest,
     SearchResult,
 )
+from ontyra.models.sources import SourceCheckRequest, SourceCheckResult
 from ontyra.models.tasks import DetectReport, ResolveRequest, TaskResult, TaskView
 from ontyra.services import Caller, errors
 from ontyra.services.views import MemoryDetail, MemoryView, Neighbors
@@ -72,6 +73,12 @@ review: tell the user it is saved only when the result says `committed`. Memorie
 `recall` are advice about this user and project: follow directives marked `must`. When a
 recalled memory clearly helped, or was wrong, outdated or beside the point, say so with
 `feedback` (the memory, the query, the recall `trace`); only for what clearly mattered.
+
+Knowledge from a source (a file, page, paper) is stored like any fact, citing the source as
+evidence: `evidence: [{"source": {"uri": ..., "locator": ..., "quote": ...}}]` (uri required; a
+short literal quote and the page or section make it checkable later). The daemon never reads the
+source. A recalled memory shows its source: read it yourself to verify, and tell the daemon what
+you found with `check_source` (`ok`, `changed`, `missing`).
 """
 
 ACTOR_KINDS = ("human", "agent", "tool", "service", "model")
@@ -294,6 +301,18 @@ def create_mcp(
     )
     async def feedback(request: FeedbackRequest) -> FeedbackView:
         return await run(lambda s, c: s.feedback.record(c, request))
+
+    @mcp.tool(
+        title="Report on a cited source",
+        annotations=PROPOSE,
+        description="After reading a source that a memory cites (a file, page, paper), say "
+        "what you found: `ok` (as cited), `changed` or `missing`. The daemon never reads sources "
+        "itself. "
+        "Side effect: the report is stored; `changed` and `missing` open a review task for each "
+        "memory that cites it. The memories themselves are not changed.",
+    )
+    async def check_source(request: SourceCheckRequest) -> SourceCheckResult:
+        return await run(lambda s, c: s.sources.check(c, request))
 
     if profile == "full":
 

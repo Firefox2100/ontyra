@@ -14,6 +14,7 @@ from ontyra.models.kinds import RevisionBase
 from ontyra.models.proposals import (
     AmendRequest,
     ApproveRequest,
+    Evidence,
     Finding,
     OverlayRequest,
     ProposalRequest,
@@ -40,13 +41,18 @@ from ontyra.services.validation import ProposalValidator, Validation, rev_state_
 from ontyra.services.views import History, MemoryView, RevisionView, SupersessionReason
 
 
+def _sourced(evidence: Sequence[Evidence]) -> bool:
+    """Does the op cite at least one external source with a literal quote?"""
+    return any(ev.source is not None and bool(ev.source.quote) for ev in evidence)
+
+
 def _summaries(prepared: Sequence[Prepared]) -> list[OpSummary]:
     out: list[OpSummary] = []
     for p in prepared:
         if isinstance(p, PreparedAdd):
-            out.append(OpSummary("add", p.kind))
+            out.append(OpSummary("add", p.kind, _sourced(p.evidence)))
         elif isinstance(p, PreparedRevise):
-            out.append(OpSummary("revise", p.memory.kind))
+            out.append(OpSummary("revise", p.memory.kind, _sourced(p.evidence)))
         elif isinstance(p, PreparedSupersede):
             out.append(OpSummary("supersede", p.target.kind))
         elif isinstance(p, PreparedRetract):
@@ -237,7 +243,12 @@ class MemoryService:
             status = "pending"
         else:
             result = {"created": {k: str(m) for k, m in created.items()}}
-            writes = [*memory_writes(v.prepared, caller.actor_id, now), record("committed", result)]
+            # a human's own writes are vetted; what policy commits for anyone else is not (yet)
+            vetting = "vetted" if caller.actor.kind == "human" else "auto"
+            writes = [
+                *memory_writes(v.prepared, caller.actor_id, now, vetting),
+                record("committed", result),
+            ]
             await self.store.apply(writes)
             await self._committed(v.prepared)
             status = "committed"

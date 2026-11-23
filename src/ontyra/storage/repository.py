@@ -198,6 +198,7 @@ class SurrealStore:
         anchors: Sequence[str] | None = None,
         unanchored: bool = False,
         about: Sequence[RecordId] | None = None,
+        sources: Sequence[str] | None = None,
         expires_before: datetime | None = None,
         limit: int = 500,
     ) -> list[SearchDoc]:
@@ -211,6 +212,9 @@ class SurrealStore:
         if about:
             selectors.append("about CONTAINSANY $about")
             params["about"] = list(about)
+        if sources:
+            selectors.append("sources CONTAINSANY $sources")
+            params["sources"] = list(sources)
         sql = "SELECT * FROM search_doc WHERE owner IN $owners"
         if kinds:
             sql += " AND kind IN $kinds"
@@ -220,7 +224,7 @@ class SurrealStore:
             params["expires_before"] = expires_before
         if selectors:
             sql += " AND (" + " OR ".join(selectors) + ")"
-        elif anchors is not None or about is not None:
+        elif anchors is not None or about is not None or sources is not None:
             return []  # selectors were requested but all were empty: nothing can match
         sql += " ORDER BY created_at DESC LIMIT $limit"
         rows = (await self.db.query(sql, params))[0]

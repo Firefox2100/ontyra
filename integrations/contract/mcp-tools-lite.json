@@ -52,7 +52,7 @@
                         "default": [],
                         "items": {
                           "additionalProperties": false,
-                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "description": "What a memory comes from: words that were said, or an external source it cites.\n\nWords that were said: give a `quote` and the daemon looks it up among your recent episodes (it\nmust occur there literally, case and spacing aside); nothing is stored when it does not. Give an\n`episode` id as well to name the exact message; the quote must then occur in that one.\n\nA source: give `source` (a uri, and ideally a locator and a short literal quote). The daemon\nstores the reference with the memory; it does not read the source or require that it exists.",
                           "properties": {
                             "episode": {
                               "anyOf": [
@@ -81,6 +81,108 @@
                               ],
                               "default": null,
                               "description": "Words from the conversation, copied literally (a sentence)."
+                            },
+                            "source": {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "description": "Where a statement comes from. Only `uri` is required; the rest makes a later check, or a\nreader without access to the source, much more useful. Give a short `quote` copied literally\nfrom the source: it stays with the memory even if the source is edited or deleted.",
+                                  "properties": {
+                                    "content_hash": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Hash of the source as read (any scheme, e.g. sha256:\u2026): lets a later check say whether it changed."
+                                    },
+                                    "locator": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Where in it: page, section, lines, timestamp."
+                                    },
+                                    "medium": {
+                                      "default": "other",
+                                      "enum": [
+                                        "file",
+                                        "web",
+                                        "pdf",
+                                        "code",
+                                        "media",
+                                        "data",
+                                        "other"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 600,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Words from the source, copied literally."
+                                    },
+                                    "retrieved_at": {
+                                      "anyOf": [
+                                        {
+                                          "format": "date-time",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "When it was read."
+                                    },
+                                    "title": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 300,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null
+                                    },
+                                    "uri": {
+                                      "description": "file:///path, https://\u2026, doi:10.\u2026, arxiv:\u2026; canonicalised by the daemon.",
+                                      "maxLength": 2000,
+                                      "minLength": 3,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "uri"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "An external source it comes from (instead of a quote)."
                             }
                           },
                           "type": "object"
@@ -148,7 +250,7 @@
                         "default": [],
                         "items": {
                           "additionalProperties": false,
-                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "description": "What a memory comes from: words that were said, or an external source it cites.\n\nWords that were said: give a `quote` and the daemon looks it up among your recent episodes (it\nmust occur there literally, case and spacing aside); nothing is stored when it does not. Give an\n`episode` id as well to name the exact message; the quote must then occur in that one.\n\nA source: give `source` (a uri, and ideally a locator and a short literal quote). The daemon\nstores the reference with the memory; it does not read the source or require that it exists.",
                           "properties": {
                             "episode": {
                               "anyOf": [
@@ -177,6 +279,108 @@
                               ],
                               "default": null,
                               "description": "Words from the conversation, copied literally (a sentence)."
+                            },
+                            "source": {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "description": "Where a statement comes from. Only `uri` is required; the rest makes a later check, or a\nreader without access to the source, much more useful. Give a short `quote` copied literally\nfrom the source: it stays with the memory even if the source is edited or deleted.",
+                                  "properties": {
+                                    "content_hash": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Hash of the source as read (any scheme, e.g. sha256:\u2026): lets a later check say whether it changed."
+                                    },
+                                    "locator": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Where in it: page, section, lines, timestamp."
+                                    },
+                                    "medium": {
+                                      "default": "other",
+                                      "enum": [
+                                        "file",
+                                        "web",
+                                        "pdf",
+                                        "code",
+                                        "media",
+                                        "data",
+                                        "other"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 600,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Words from the source, copied literally."
+                                    },
+                                    "retrieved_at": {
+                                      "anyOf": [
+                                        {
+                                          "format": "date-time",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "When it was read."
+                                    },
+                                    "title": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 300,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null
+                                    },
+                                    "uri": {
+                                      "description": "file:///path, https://\u2026, doi:10.\u2026, arxiv:\u2026; canonicalised by the daemon.",
+                                      "maxLength": 2000,
+                                      "minLength": 3,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "uri"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "An external source it comes from (instead of a quote)."
                             }
                           },
                           "type": "object"
@@ -877,6 +1081,67 @@
       "type": "object"
     },
     "name": "check"
+  },
+  {
+    "description": "After reading a source that a memory cites (a file, page, paper), say what you found: `ok` (as cited), `changed` or `missing`. The daemon never reads sources itself. Side effect: the report is stored; `changed` and `missing` open a review task for each memory that cites it. The memories themselves are not changed.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "description": "Report what you found when you went back to a source: `ok` (as cited), `changed` (the\ncited statement may no longer hold) or `missing`. `changed` and `missing` open a review task\nfor each memory that cites it.",
+          "properties": {
+            "content_hash": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "note": {
+              "anyOf": [
+                {
+                  "maxLength": 1000,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "state": {
+              "enum": [
+                "ok",
+                "changed",
+                "missing"
+              ],
+              "type": "string"
+            },
+            "uri": {
+              "maxLength": 2000,
+              "minLength": 3,
+              "type": "string"
+            }
+          },
+          "required": [
+            "uri",
+            "state"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "check_source"
   },
   {
     "description": "Find concepts by label or alias (`python`, `ssh`) to get the ids that `about`, anchors and qualifiers refer to, with their relations. Empty: no such concept; propose one with `propose_ontology_change` rather than guessing an id.",
@@ -1677,7 +1942,7 @@
                         "default": [],
                         "items": {
                           "additionalProperties": false,
-                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "description": "What a memory comes from: words that were said, or an external source it cites.\n\nWords that were said: give a `quote` and the daemon looks it up among your recent episodes (it\nmust occur there literally, case and spacing aside); nothing is stored when it does not. Give an\n`episode` id as well to name the exact message; the quote must then occur in that one.\n\nA source: give `source` (a uri, and ideally a locator and a short literal quote). The daemon\nstores the reference with the memory; it does not read the source or require that it exists.",
                           "properties": {
                             "episode": {
                               "anyOf": [
@@ -1706,6 +1971,108 @@
                               ],
                               "default": null,
                               "description": "Words from the conversation, copied literally (a sentence)."
+                            },
+                            "source": {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "description": "Where a statement comes from. Only `uri` is required; the rest makes a later check, or a\nreader without access to the source, much more useful. Give a short `quote` copied literally\nfrom the source: it stays with the memory even if the source is edited or deleted.",
+                                  "properties": {
+                                    "content_hash": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Hash of the source as read (any scheme, e.g. sha256:\u2026): lets a later check say whether it changed."
+                                    },
+                                    "locator": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Where in it: page, section, lines, timestamp."
+                                    },
+                                    "medium": {
+                                      "default": "other",
+                                      "enum": [
+                                        "file",
+                                        "web",
+                                        "pdf",
+                                        "code",
+                                        "media",
+                                        "data",
+                                        "other"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 600,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Words from the source, copied literally."
+                                    },
+                                    "retrieved_at": {
+                                      "anyOf": [
+                                        {
+                                          "format": "date-time",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "When it was read."
+                                    },
+                                    "title": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 300,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null
+                                    },
+                                    "uri": {
+                                      "description": "file:///path, https://\u2026, doi:10.\u2026, arxiv:\u2026; canonicalised by the daemon.",
+                                      "maxLength": 2000,
+                                      "minLength": 3,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "uri"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "An external source it comes from (instead of a quote)."
                             }
                           },
                           "type": "object"
@@ -1773,7 +2140,7 @@
                         "default": [],
                         "items": {
                           "additionalProperties": false,
-                          "description": "What a memory comes from: words that were said, found in the episode log.\n\nGive a `quote` and the daemon looks it up among your recent episodes (it must occur there\nliterally, case and spacing aside); nothing is stored when it does not. Give an `episode`\nid as well to name the exact message; the quote must then occur in that one.",
+                          "description": "What a memory comes from: words that were said, or an external source it cites.\n\nWords that were said: give a `quote` and the daemon looks it up among your recent episodes (it\nmust occur there literally, case and spacing aside); nothing is stored when it does not. Give an\n`episode` id as well to name the exact message; the quote must then occur in that one.\n\nA source: give `source` (a uri, and ideally a locator and a short literal quote). The daemon\nstores the reference with the memory; it does not read the source or require that it exists.",
                           "properties": {
                             "episode": {
                               "anyOf": [
@@ -1802,6 +2169,108 @@
                               ],
                               "default": null,
                               "description": "Words from the conversation, copied literally (a sentence)."
+                            },
+                            "source": {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "description": "Where a statement comes from. Only `uri` is required; the rest makes a later check, or a\nreader without access to the source, much more useful. Give a short `quote` copied literally\nfrom the source: it stays with the memory even if the source is edited or deleted.",
+                                  "properties": {
+                                    "content_hash": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Hash of the source as read (any scheme, e.g. sha256:\u2026): lets a later check say whether it changed."
+                                    },
+                                    "locator": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 200,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Where in it: page, section, lines, timestamp."
+                                    },
+                                    "medium": {
+                                      "default": "other",
+                                      "enum": [
+                                        "file",
+                                        "web",
+                                        "pdf",
+                                        "code",
+                                        "media",
+                                        "data",
+                                        "other"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "quote": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 600,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "Words from the source, copied literally."
+                                    },
+                                    "retrieved_at": {
+                                      "anyOf": [
+                                        {
+                                          "format": "date-time",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null,
+                                      "description": "When it was read."
+                                    },
+                                    "title": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 300,
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "default": null
+                                    },
+                                    "uri": {
+                                      "description": "file:///path, https://\u2026, doi:10.\u2026, arxiv:\u2026; canonicalised by the daemon.",
+                                      "maxLength": 2000,
+                                      "minLength": 3,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "uri"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null,
+                              "description": "An external source it comes from (instead of a quote)."
                             }
                           },
                           "type": "object"

@@ -31,6 +31,7 @@ async def tasks(
         "review_contradiction",
         "review_stale_dependent",
         "review_feedback",
+        "review_source",
         "expire_check",
     )
     return templates.TemplateResponse(

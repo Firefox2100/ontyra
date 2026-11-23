@@ -102,6 +102,9 @@ class RevState(Record):
     valid_to: datetime | None = None
     retracted_at: datetime | None = None
     retract_reason: str | None = None
+    # `vetted`: a human wrote it or approved it. `auto`: committed by policy without a human
+    # having looked (which levels recall uses is configured: `ONTYRA_RECALL__MIN_VETTING`).
+    vetting: Literal["vetted", "auto"] = "vetted"
     stale: bool = False  # a source it was derived from was retracted
     stale_reason: str | None = None
 
@@ -217,6 +220,7 @@ TaskKind = Literal[
     "review_proposal",
     "review_stale_dependent",
     "review_feedback",
+    "review_source",
     "review_contradiction",
     "review_ontology_change",
     "review_concept_drift",

@@ -10,6 +10,7 @@ from pydantic import Field
 from ontyra.models.anchors import Scalar
 from ontyra.models.base import Model, RecordId
 from ontyra.models.kinds import KindName
+from ontyra.models.sources import SourceRef
 
 
 class RecallSettings(Model):
@@ -29,6 +30,9 @@ class RecallSettings(Model):
     concept_boost: float = 0.0  # added to the fused score, times the concept lane weight
     rerank_candidates: int = 30  # how many top candidates the reranker sees
     rerank_weight: float = 0.5  # share of the reranker probability in the final score
+    # which vetting levels recall may use: `auto` (default: what policy committed without a human
+    # looking is used, marked "unvetted") or `vetted` (only what a human wrote or approved)
+    min_vetting: Literal["auto", "vetted"] = "auto"
     # --- decision model (optional; ONTYRA_DECISION__* selects it, plans/21) ---
     decision_candidates: int = 8  # top candidates the decision model is asked about
     decision_weight: float = 0.5  # share of its probability in the final score
@@ -111,6 +115,8 @@ class RecallItem(Model):
     confidence: float = 1.0
     valid_from: datetime | None = None
     detail: dict[str, Any] = {}  # the kind's own fields worth showing (rule, steps, due…)
+    sources: list[SourceRef] = []  # external sources it cites (read them yourself to check)
+    vetting: Literal["vetted", "auto"] = "vetted"  # `auto`: committed without a human looking
 
 
 class More(Model):

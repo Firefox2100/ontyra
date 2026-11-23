@@ -46,16 +46,24 @@ def render_item(item: RecallItem, profile: Literal["compact", "rich"]) -> str:
         and not head.lower().startswith(("do not", "don't", "never", "avoid"))
     ):
         head = f"Avoid: {head}"
+    cited = ""
+    if item.sources:
+        first = item.sources[0]
+        extra = f" +{len(item.sources) - 1} more" if len(item.sources) > 1 else ""
+        cited = f" (source: {first.uri}{' ' + first.locator if first.locator else ''}{extra})"
     if profile == "compact":
         tail = f" ({'; '.join(item.caveats)})" if item.caveats else ""
-        return f"- {head}{tail} [{item.memory}]"
+        unvetted = " [unvetted]" if item.vetting == "auto" else ""
+        return f"- {head}{tail}{cited}{unvetted} [{item.memory}]"
     meta = [str(item.memory)]
     if item.anchor:
         meta.append(f"anchor {item.anchor}")
     meta.extend(item.why[:2])
+    if item.vetting == "auto":
+        meta.append("unvetted")
     if item.flags:
         meta.append("flags: " + ", ".join(item.flags))
-    lines = [f"- {head}  ({' · '.join(meta)})"]
+    lines = [f"- {head}{cited}  ({' · '.join(meta)})"]
     lines += [f"  ! {c}" for c in item.caveats]
     return "\n".join(lines)
 

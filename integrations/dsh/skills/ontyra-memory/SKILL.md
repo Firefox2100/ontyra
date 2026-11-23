@@ -83,6 +83,20 @@ finds the message in the session log, so you need no id; a quote it cannot find 
 `committed` or `pending`; **pending means a human must approve it**, so never tell the user a
 memory is saved until the status says `committed`.
 
+## Knowledge from sources
+
+When you read a file, page or paper and reach a conclusion worth keeping, store the conclusion as
+a `fact` (one statement each, in `text`, with what it is `about`) and cite where it came from:
+`evidence: [{"source": {"uri": "...", "locator": "...", "quote": "..."}}]`. Only `uri` is required
+(`file:///path`, `https://...`, `doi:...`); add where in it (`locator`: page, section, lines) and a
+short `quote` copied literally from the source, which stays with the fact even if the source later
+changes or disappears. The daemon never reads the source and does not need it to exist.
+
+A recalled fact shows `(source: ...)`. To verify one, read the source yourself, then report what you
+found with `ontyra_check_source` (`ok`, `changed` or `missing`); `changed` and `missing` open a review.
+`[unvetted]` means it was committed without a human looking: use it, but do not present it as
+certain.
+
 ## Concepts and the ontology
 
 `about` and qualifiers use concept ids. Look a term up with `ontyra_concepts` (label or alias)

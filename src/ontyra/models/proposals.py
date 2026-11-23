@@ -10,6 +10,7 @@ from pydantic import Field, model_validator
 from ontyra.models.base import EpisodeRef, MemoryRef, Model, RecordId
 from ontyra.models.kinds import KindName, fields_guide
 from ontyra.models.policy import Decision
+from ontyra.models.sources import SourceRef
 
 ReasonCode = Literal[
     "corrected", "outdated", "refined", "merged", "resolved_contradiction", "source_retracted"
@@ -17,11 +18,14 @@ ReasonCode = Literal[
 
 
 class Evidence(Model):
-    """What a memory comes from: words that were said, found in the episode log.
+    """What a memory comes from: words that were said, or an external source it cites.
 
-    Give a `quote` and the daemon looks it up among your recent episodes (it must occur there
-    literally, case and spacing aside); nothing is stored when it does not. Give an `episode`
-    id as well to name the exact message; the quote must then occur in that one.
+    Words that were said: give a `quote` and the daemon looks it up among your recent episodes (it
+    must occur there literally, case and spacing aside); nothing is stored when it does not. Give an
+    `episode` id as well to name the exact message; the quote must then occur in that one.
+
+    A source: give `source` (a uri, and ideally a locator and a short literal quote). The daemon
+    stores the reference with the memory; it does not read the source or require that it exists.
     """
 
     quote: str | None = Field(
@@ -30,11 +34,17 @@ class Evidence(Model):
     episode: EpisodeRef | None = Field(
         default=None, description="Optional: the episode id, when you know it."
     )
+    source: SourceRef | None = Field(
+        default=None, description="An external source it comes from (instead of a quote)."
+    )
 
     @model_validator(mode="after")
     def _something_to_go_on(self) -> Evidence:
-        if self.episode is None and not (self.quote and self.quote.strip()):
-            raise ValueError("evidence needs a quote or an episode")
+        said = self.episode is not None or bool(self.quote and self.quote.strip())
+        if self.source is not None and said:
+            raise ValueError("evidence is either words that were said or a source, not both")
+        if self.source is None and not said:
+            raise ValueError("evidence needs a quote, an episode or a source")
         return self
 
 

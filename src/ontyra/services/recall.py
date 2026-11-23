@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Literal
 
-from ontyra.models import RecordId, new_id
+from ontyra.models import Record, RecordId, new_id
 from ontyra.models.core import Memory, RevState, Usage
 from ontyra.models.kinds import DirectiveRev, EventRev, RevisionBase, TaskRev
 from ontyra.models.recall import (
@@ -29,6 +29,7 @@ from ontyra.models.recall import (
     RecallSettings,
 )
 from ontyra.models.search import Delivery, RecallTrace, SearchDoc
+from ontyra.models.sources import SourceCheck, source_check_id
 from ontyra.ports import Create, Delete, Embedder, Hit, Reranker, Store, Update, Upsert
 from ontyra.services.anchors import AnchorService, Chain
 from ontyra.services.context import Caller
@@ -94,6 +95,7 @@ class Candidate:
     revision: RevisionBase | None = None
     state: RevState | None = None
     assessment: Assessment | None = None
+    source_state: dict[str, str] = field(default_factory=lambda: {})  # cited uri -> check state
     relevance: float = 0.0
     score: float = 0.0
 
@@ -320,6 +322,7 @@ class RecallService:
         revs = await self.store.get_many(list(cands))
         states = await self.store.get_many([rev_state_id(r) for r in cands])
         docs = await self.store.get_many([doc_id(r) for r in cands])
+        checks = await self._source_checks(revs)
         now = self.now()
         out: list[Candidate] = []
         for rid, c in cands.items():
@@ -327,6 +330,8 @@ class RecallService:
             if not isinstance(rev, RevisionBase) or not isinstance(state, RevState):
                 continue
             if state.state != "committed" or state.lifecycle != "active":
+                continue
+            if state.vetting == "auto" and self.cfg.min_vetting == "vetted":
                 continue
             if state.valid_from > now or (state.valid_to is not None and state.valid_to <= now):
                 continue
@@ -337,10 +342,26 @@ class RecallService:
             if query and c.doc is not None and "lexical" in c.lanes:
                 c.lanes["lexical"] *= coverage(query, c.doc.text)
             c.revision, c.state = rev, state
+            c.source_state = {
+                s.uri: checks[source_check_id(s.uri)].state
+                for s in rev.sources
+                if source_check_id(s.uri) in checks
+            }
             c.assessment = assess(rev, ctx)
             if c.assessment.include or not only_applicable:
                 out.append(c)
         return out
+
+    async def _source_checks(self, revs: dict[RecordId, Record]) -> dict[RecordId, SourceCheck]:
+        """What clients last reported about the sources the candidates cite (one read)."""
+        ids = {
+            source_check_id(s.uri)
+            for rev in revs.values()
+            if isinstance(rev, RevisionBase)
+            for s in rev.sources
+        }
+        found = await self.store.get_many(list(ids)) if ids else {}
+        return {k: v for k, v in found.items() if isinstance(v, SourceCheck)}
 
     # ---- stage 5: ranking -------------------------------------------------------------------
 
@@ -522,6 +543,11 @@ class RecallService:
             flags.append("stale")
         if rev.confidence < 0.6:
             flags.append("low_confidence")
+        caveats = list(a.caveats)
+        for uri, found in c.source_state.items():
+            if found != "ok":
+                flags.append(f"source_{found}")
+                caveats.append(f"its source was reported {found}: {uri}")
         return RecallItem(
             memory=rev.memory,
             revision=c.rev,
@@ -534,12 +560,14 @@ class RecallService:
             anchor=a.anchor,
             anchor_distance=a.distance,
             why=why,
-            caveats=list(a.caveats),
+            caveats=caveats,
             checks=list(a.outcome.checks),
             flags=flags,
             confidence=rev.confidence,
             valid_from=c.state.valid_from,
             detail={**_detail(rev), "seq": rev.seq},
+            sources=list(rev.sources),
+            vetting=c.state.vetting,
         )
 
     async def _record(

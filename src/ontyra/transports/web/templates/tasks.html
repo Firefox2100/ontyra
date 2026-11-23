@@ -19,6 +19,7 @@
     {% if t.card.finding == 'duplicates' %}<b>These {{ t.card.members|length }} memories say the same thing</b>
     {% elif t.card.finding == 'update' %}<b>The same statement with a different value</b>
     {% elif t.card.finding == 'feedback' %}<b>A memory was reported {{ t.card.reports[-1].label }}</b>
+    {% elif t.card.finding == 'source' %}<b>A source this memory cites was reported {{ t.card.reported.state }}</b>
     {% elif t.card.finding == 'expiry' %}<b>A memory {{ 'has expired' if t.card.state == 'expired' else 'expires soon' }}</b>
     {% else %}<b>{{ t.kind }}</b>{% endif %}
     {% if t.result.awaiting_review %}<span class="tag warn">merge held for review</span>{% endif %}</div>
@@ -33,6 +34,10 @@
     <div style="margin-top:8px">{{ memory(t.card) }}</div>
     {% for r in t.card.reports[-3:] %}<div class="small muted">{{ r.label }} by {{ r.by }} for “{{ r.query }}”{% if r.note %}: {{ r.note }}{% endif %}</div>{% endfor %}
     {% if t.card.count > 1 %}<div class="small muted">{{ t.card.count }} reports in all</div>{% endif %}
+  {% elif t.card.finding == 'source' %}
+    <div style="margin-top:8px">{{ memory(t.card) }}</div>
+    <div class="small muted">source <code>{{ t.card.source }}</code>{% if t.card.reported.note %}: {{ t.card.reported.note }}{% endif %}</div>
+    {% for c in t.card.cited %}{% if c.quote %}<div class="small">cited: “{{ c.quote }}”{% if c.locator %} ({{ c.locator }}){% endif %}</div>{% endif %}{% endfor %}
   {% elif t.card.finding == 'expiry' %}
     <div style="margin-top:8px">{{ memory(t.card) }}</div>
     <div class="small muted">expires {{ t.card.expires_at[:10] }}</div>
@@ -42,7 +47,7 @@
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="merge"><button class="go">Merge into the oldest</button></form>
     {% elif t.kind == 'review_contradiction' %}
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="supersede"><button class="go">The newer replaces the older</button></form>
-    {% elif t.kind in ('review_feedback', 'expire_check', 'review_stale_dependent') %}
+    {% elif t.kind in ('review_feedback', 'review_source', 'expire_check', 'review_stale_dependent') %}
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="retract"><button class="no">Retract it</button></form>
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="keep">
       <input type="text" name="note" placeholder="why it stands (optional)"><button>It stands</button></form>

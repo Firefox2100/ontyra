@@ -83,14 +83,15 @@ class Store(Protocol):
         anchors: Sequence[str] | None = None,
         unanchored: bool = False,
         about: Sequence[RecordId] | None = None,
+        sources: Sequence[str] | None = None,
         expires_before: datetime | None = None,
         limit: int = 500,
     ) -> list[SearchDoc]:
         """Live-revision index rows for the owners. A row is returned if it matches any given
-        selector: anchored on one of `anchors`, unanchored (when `unanchored`), or about one of
-        `about`. With no selector given, every row of the owners/kinds (paged by `limit`).
-        `expires_before` keeps only rows whose revision expires before that time (a filter, not
-        a selector)."""
+        selector: anchored on one of `anchors`, unanchored (when `unanchored`), about one of
+        `about`, or citing one of `sources`. With no selector given, every row of the
+        owners/kinds (paged by `limit`). `expires_before` keeps only rows whose revision expires
+        before that time (a filter, not a selector)."""
         ...
 
     async def doc_counts(self, owners: Sequence[RecordId]) -> dict[str, int]:

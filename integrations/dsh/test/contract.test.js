@@ -26,6 +26,7 @@ test('lite registers the daemon’s lite tools, prefixed', () => {
     'ontyra_get',
     'ontyra_remember',
     'ontyra_feedback',
+    'ontyra_check_source',
     'ontyra_pending_proposals',
     'ontyra_amend',
   ])
@@ -104,6 +105,7 @@ const ROUTES = {
   ontyra_get: ['GET', /^\/v1\/memories\/[^/]+\/detail(\?.*)?$/],
   ontyra_remember: ['POST', '/v1/proposals'],
   ontyra_feedback: ['POST', '/v1/feedback'],
+  ontyra_check_source: ['POST', '/v1/sources/check'],
   ontyra_pending_proposals: ['GET', /^\/v1\/proposals\?limit=\d+$/],
   ontyra_amend: ['POST', /^\/v1\/proposals\/[^/]+\/amend$/],
   ontyra_concepts: ['GET', /^\/v1\/concepts\?term=[^&]+$/],
@@ -119,6 +121,7 @@ test('every tool calls a route the daemon serves', () => {
     ontyra_get: { memory: 'abc' },
     ontyra_remember: { ops: [] },
     ontyra_feedback: { memory: 'abc', query: 'x', label: 'helpful', trace: 'def' },
+    ontyra_check_source: { uri: 'file:///a', state: 'changed' },
     ontyra_pending_proposals: {},
     ontyra_amend: { proposal: 'abc', request: { ops: [], why: 'x' } },
     ontyra_concepts: { term: 'python' },

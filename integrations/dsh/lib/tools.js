@@ -303,6 +303,37 @@ export const TOOLS = [
     render: jsonText,
   },
   {
+    name: 'ontyra_check_source',
+    title: 'Report on a cited source',
+    description:
+      'After reading a source that a memory cites (a file, page, paper), say what you found: '
+      + '`ok` (as cited), `changed` or `missing`. The daemon never reads sources itself. Side '
+      + 'effect: the report is stored; `changed` and `missing` open a review task for each memory '
+      + 'that cites it. The memories themselves are not changed.',
+    parameters: {
+      uri: { type: 'string', required: true, description: 'The source as cited (file path URI, URL, doi:…)' },
+      state: {
+        type: 'string',
+        required: true,
+        enum: ['ok', 'changed', 'missing'],
+        description: 'What you found',
+      },
+      content_hash: { type: 'string', description: 'Hash of the source as you read it' },
+      note: { type: 'string', description: 'What changed, in a few words' },
+    },
+    request: (args) => ({
+      method: 'POST',
+      path: '/v1/sources/check',
+      body: {
+        uri: args.uri,
+        state: args.state,
+        content_hash: args.content_hash ?? null,
+        note: args.note ?? null,
+      },
+    }),
+    render: jsonText,
+  },
+  {
     name: 'ontyra_pending_proposals',
     title: 'Pending proposals',
     description: "Your proposals (and, with permission, the global ones) that are still waiting: `pending`, or `changes_requested` with the reviewer's `comments`. Check it before proposing something that may already be waiting, and when the user says a proposal needs changes. Each has a `version`, its ops and findings.",

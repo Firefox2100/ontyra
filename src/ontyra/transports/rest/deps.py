@@ -20,6 +20,7 @@ from ontyra.services import (
     OntologyService,
     RecallService,
     RerankTrainingService,
+    SourceService,
     TaskService,
     errors,
 )
@@ -63,6 +64,9 @@ class Services(Protocol):
 
     @property
     def feedback_review(self) -> FeedbackReviewService: ...
+
+    @property
+    def sources(self) -> SourceService: ...
 
     @property
     def consolidation(self) -> ConsolidationService: ...
@@ -157,6 +161,13 @@ def get_feedback_review_service(services: ServicesDep) -> FeedbackReviewService:
 
 
 FeedbackReviewDep = Annotated[FeedbackReviewService, Depends(get_feedback_review_service)]
+
+
+def get_source_service(services: ServicesDep) -> SourceService:
+    return services.sources
+
+
+SourceServiceDep = Annotated[SourceService, Depends(get_source_service)]
 
 
 def get_reranking_service(services: ServicesDep) -> RerankTrainingService:

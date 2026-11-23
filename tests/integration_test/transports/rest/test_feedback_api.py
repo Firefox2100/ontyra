@@ -70,3 +70,47 @@ async def test_review_endpoints_over_rest(client: httpx.AsyncClient) -> None:
     agent = {"X-Ontyra-Actor": "claude", "X-Ontyra-Actor-Kind": "agent"}
     denied = await client.post(f"/v1/feedback/{event}/veto", json={}, headers=agent)
     assert denied.status_code == 403
+
+
+async def test_sources_and_vetting_over_rest(client: httpx.AsyncClient) -> None:
+    agent = {"X-Ontyra-Actor": "claude", "X-Ontyra-Actor-Kind": "agent"}
+    body = {
+        "ops": [
+            {
+                "op": "add",
+                "kind": "fact",
+                "ref": "m",
+                "fields": {
+                    "text": "Gene X acts on pathway Y",
+                    "subject": "concept:linux",
+                    "predicate": "acts_on",
+                    "object": "pathway Y",
+                },
+                "evidence": [
+                    {"source": {"uri": "https://example.org/p", "locator": "p4", "quote": "X acts"}}
+                ],
+            }
+        ]
+    }
+    made = await client.post("/v1/proposals", json=body, headers=agent)
+    assert made.status_code == 201
+    memory = made.json()["created"]["m"]
+    pending = (await client.get("/v1/vetting/pending", headers=HUMAN)).json()
+    assert [p["memory"] for p in pending] == [memory]
+    assert (await client.get("/v1/vetting/pending", headers=agent)).status_code == 403
+    checked = await client.post(
+        "/v1/sources/check",
+        json={"uri": "https://example.org/p", "state": "changed"},
+        headers=agent,
+    )
+    assert checked.json() == {
+        "uri": "https://example.org/p",
+        "state": "changed",
+        "memories": 1,
+        "tasks": 1,
+    }
+    cited = (await client.get("/v1/sources", params={"uri": "https://example.org/p/"})).json()
+    assert cited["check"]["state"] == "changed" and len(cited["memories"]) == 1
+    vetted = await client.post(f"/v1/vetting/{RecordId.parse(memory).id}/vet", headers=HUMAN)
+    assert vetted.json()["vetting"] == "vetted"
+    assert (await client.get("/v1/vetting/pending", headers=HUMAN)).json() == []

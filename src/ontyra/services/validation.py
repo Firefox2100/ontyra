@@ -30,6 +30,7 @@ from ontyra.models.proposals import (
     ReviseMemory,
     SupersedeMemory,
 )
+from ontyra.models.uri import canonical_source
 from ontyra.ports import Store
 from ontyra.services import errors
 from ontyra.services.anchors import AnchorService
@@ -303,6 +304,18 @@ class _Ctx:
         Problems are recorded as errors; the proposal is then rejected anyway."""
         resolved: list[Evidence] = []
         for ev in evidence:
+            if (
+                ev.source is not None
+            ):  # a cited source: only its form is checked, never its existence
+                try:
+                    uri = canonical_source(ev.source.uri, self.o.anchors.machine)
+                except ValueError as exc:
+                    self.error(i, "bad_source", str(exc), uri=ev.source.uri[:200])
+                    continue
+                resolved.append(
+                    ev.model_copy(update={"source": ev.source.model_copy(update={"uri": uri})})
+                )
+                continue
             if ev.episode is not None:
                 ep = await self.o.store.get(ev.episode)
                 if not isinstance(ep, Episode) or ep.owner not in (self.v.owner, self.caller.owner):
@@ -387,9 +400,16 @@ class _Ctx:
         if reserved:
             self.error(i, "reserved_field", f"fields set by the service: {sorted(reserved)}")
             return
+        if "sources" in op.fields:
+            self.error(i, "reserved_field", "cite sources as evidence, not in `fields`")
+            return
         spec = registry.kinds[op.kind]
+        evidence = await self._check_evidence(i, op.evidence)
+        cited = [ev.source for ev in evidence if ev.source is not None]
         try:
-            model = spec.model.model_validate({**op.fields, **self._bookkeeping(mem, 1)})
+            model = spec.model.model_validate(
+                {**op.fields, **self._bookkeeping(mem, 1), "sources": cited}
+            )
         except ValidationError as exc:
             self._schema_errors(i, exc, op.kind)
             return
@@ -397,7 +417,6 @@ class _Ctx:
         if links is None:
             return
         model = links
-        evidence = await self._check_evidence(i, op.evidence)
         sources: list[RecordId] = []
         for token in op.derived_from:
             src = await self._resolve(i, token)
@@ -508,8 +527,23 @@ class _Ctx:
         if reserved:
             self.error(i, "reserved_field", f"fields set by the service: {sorted(reserved)}")
             return
+        if "sources" in op.fields:
+            self.error(i, "reserved_field", "cite sources as evidence, not in `fields`")
+            return
+        evidence = await self._check_evidence(i, op.evidence)
         base = old.model_dump(mode="python", exclude={"id"})
-        merged = {**base, **op.fields, **self._bookkeeping(old.memory, old.seq + 1)}
+        known = {(s.uri, s.locator) for s in old.sources}
+        added = [
+            ev.source.model_dump(mode="python")
+            for ev in evidence
+            if ev.source is not None and (ev.source.uri, ev.source.locator) not in known
+        ]
+        merged = {
+            **base,
+            **op.fields,
+            **self._bookkeeping(old.memory, old.seq + 1),
+            "sources": [*base.get("sources", []), *added],
+        }
         if {k: v for k, v in merged.items() if k not in RESERVED_FIELDS} == {
             k: v for k, v in base.items() if k not in RESERVED_FIELDS
         }:
@@ -525,7 +559,6 @@ class _Ctx:
         if links is None:
             return
         model = links
-        evidence = await self._check_evidence(i, op.evidence)
         new_rev = RecordId(spec.table, new_id())
         self.v.prepared.append(
             PreparedRevise(i, mem, old.id, new_rev, model, op.reason_code, op.reason, evidence)

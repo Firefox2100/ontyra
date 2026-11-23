@@ -33,6 +33,7 @@ from ontyra.services import (
     PolicyEngine,
     RecallService,
     RerankTrainingService,
+    SourceService,
     TaskService,
 )
 from ontyra.services.backups import BackupService
@@ -69,6 +70,7 @@ class Application:
     explore: ExplorationService
     feedback: FeedbackService
     feedback_review: FeedbackReviewService
+    sources: SourceService
     consolidation: ConsolidationService
     tasks: TaskService
     maintenance: Maintenance
@@ -206,6 +208,7 @@ class Application:
             explore=ExplorationService(store, memory, ontology, recall, now),
             feedback=feedback,
             feedback_review=FeedbackReviewService(store, feedback, now),
+            sources=SourceService(store, now, settings.recall.machine),
             consolidation=consolidation,
             tasks=tasks,
             maintenance=Maintenance(

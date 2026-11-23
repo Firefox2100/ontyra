@@ -13,6 +13,7 @@ from fastapi import APIRouter
 from ontyra.transports.web.routers import (
     feedback,
     home,
+    knowledge,
     memories,
     ontology,
     recall,
@@ -26,6 +27,7 @@ ROUTERS: list[APIRouter] = [
     review.router,
     tasks.router,
     feedback.router,
+    knowledge.router,
     memories.router,
     ontology.router,
     recall.router,

@@ -36,6 +36,7 @@ class SearchDoc(Record):
     owner: Annotated[OwnerRef, Indexed()]
     text: str  # full-text indexed (see storage.schema EXTRA_DDL)
     anchors: list[str] = []  # canonical anchor URIs; empty = unanchored
+    sources: list[str] = []  # canonical URIs of the sources it cites
     about: list[ConceptRef] = []
     expires_at: datetime | None = None  # the revision's expiry (expiry checks use it)
     created_at: datetime

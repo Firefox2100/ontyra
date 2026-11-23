@@ -24,6 +24,7 @@ from ontyra.models.recall import (
 )
 from ontyra.models.registry import registry
 from ontyra.models.search import RecallTrace
+from ontyra.models.sources import SourceCheck, source_check_id
 from ontyra.ports import Store
 from ontyra.services import errors
 from ontyra.services.context import Caller
@@ -171,6 +172,20 @@ class ExplorationService:
             elif isinstance(src, RevisionBase):
                 item |= {"text": src.text}
             out.append(item)
+        revision = await self.store.get(rev)
+        if isinstance(revision, RevisionBase) and revision.sources:
+            checks = await self.store.get_many([source_check_id(s.uri) for s in revision.sources])
+            for s in revision.sources:  # cited, not stored: the daemon never reads them
+                found = checks.get(source_check_id(s.uri))
+                out.append(
+                    {"source": s.uri}
+                    | s.model_dump(mode="json", exclude={"uri"}, exclude_none=True)
+                    | (
+                        {"checked": found.state, "checked_at": found.checked_at.isoformat()}
+                        if isinstance(found, SourceCheck)
+                        else {}
+                    )
+                )
         return out
 
     async def _applies(self, rev_id: RecordId, context: RecallContext) -> dict[str, Any]:

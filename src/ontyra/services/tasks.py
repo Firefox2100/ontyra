@@ -42,6 +42,7 @@ CHOICES: dict[TaskKind, list[str]] = {
     "review_contradiction": ["supersede", "distinct", "defer"],
     "review_stale_dependent": ["keep", "retract", "revise", "defer"],
     "review_feedback": ["retract", "revise", "keep", "defer"],
+    "review_source": ["retract", "revise", "keep", "defer"],
     "expire_check": ["retract", "revise", "keep", "defer"],
     "review_concept_drift": ["revise", "keep", "retract", "defer"],
 }
@@ -459,6 +460,7 @@ class TaskService:
         elif decision == "retract" and task.kind in (
             "expire_check",
             "review_feedback",
+            "review_source",
             "review_stale_dependent",
             "review_concept_drift",
         ):
