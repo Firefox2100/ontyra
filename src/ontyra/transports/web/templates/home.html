@@ -1,16 +1,20 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Overview</h1>
-{% if calibration %}<div class="card"><span class="tag warn">calibration</span> {{ calibration }}</div>{% endif %}
-<div class="card row">
-  <div><a href="/ui/review"><b>{{ pending }}</b> proposal{{ '' if pending == 1 else 's' }} waiting</a></div>
-  <div><a href="/ui/review"><b>{{ held }}</b> ontology change{{ '' if held == 1 else 's' }} waiting</a></div>
+<h1>Memory stewardship</h1>
+{% if calibration %}<div class="card"><span class="tag warn">Calibration</span> {{ calibration }}</div>{% endif %}
+<div class="workbench">
+  <aside class="workbench-panel" aria-labelledby="attention-title"><div class="panel-head"><h2 id="attention-title">Attention queue</h2><p>Human decisions before maintenance</p></div>
+    <a class="queue-link" href="/ui/review"><span class="queue-meta"><span>Memory proposals</span><span>{{ pending }} open</span></span><strong>{{ pending }} proposal{{ '' if pending == 1 else 's' }} waiting for review</strong><span class="muted small">Inspect operations, evidence, and validation findings.</span></a>
+    <a class="queue-link" href="/ui/review"><span class="queue-meta"><span>Ontology</span><span>{{ held }} open</span></span><strong>{{ held }} ontology change{{ '' if held == 1 else 's' }} waiting</strong><span class="muted small">Preview structural effects before approval.</span></a>
+    <a class="queue-link" href="/ui/tasks"><span class="queue-meta"><span>Maintenance</span><span>Inspect</span></span><strong>Resolve memory condition work</strong><span class="muted small">Duplicates, contradictions, stale sources, and expiry checks.</span></a>
+  </aside>
+  <section class="workbench-panel" aria-labelledby="bench-title"><div class="panel-head"><h2 id="bench-title">Operator bench</h2><p>Review first; inspect and test when the queue is settled</p></div><div class="bench-sheet">
+    {% if pending or held %}<p class="bench-statement" data-thesis="conservation-bench">{{ pending + held }} change{{ '' if pending + held == 1 else 's' }} need human judgment before they can become part of the memory system.</p><div class="row small">{% if pending %}<span class="tag warn">{{ pending }} memory</span>{% endif %}{% if held %}<span class="tag warn">{{ held }} ontology</span>{% endif %}<span class="muted">Approval re-validates against current state and records the decision.</span></div>
+    {% else %}<p class="bench-statement" data-thesis="conservation-bench">The review bench is clear. No memory or ontology proposals are waiting for a human decision.</p><p class="muted small">Continue with maintenance, browse active memory, or test what recall would deliver in a specific context.</p>{% endif %}
+    <div class="bench-actions"><a href="/ui/memories">Browse memories</a><a class="button-link" href="/ui/recall">Test recall</a>{% if pending or held %}<a class="button-link" href="/ui/review">Open review queue</a>{% endif %}</div>
+    <h2>Active memory census</h2><div class="census">{% for kind, n in kinds.items() %}<a href="/ui/memories?kind={{ kind }}"><span>{{ kind }}</span><b>{{ n }}</b></a>{% endfor %}</div>
+  </div></section>
+  <aside class="workbench-panel" aria-labelledby="custody-title"><div class="panel-head"><h2 id="custody-title">Chain of custody</h2><p>What happens before memory is trusted</p></div><ol class="custody"><li><strong>Proposed</strong>Agents submit typed operations with evidence.</li><li><strong>Validated</strong>Schema, grounding, ownership, and applicability are checked.</li><li><strong>Decided</strong>Policy commits, rejects, or routes work to a human.</li><li><strong>Maintained</strong>History, sources, feedback, and tasks keep it reviewable.</li></ol></aside>
 </div>
-<h2>Active memories</h2>
-<div class="card">
-<table>{% for kind, n in kinds.items() %}
-<tr><td><a href="/ui/memories?kind={{ kind }}">{{ kind }}</a></td><td>{{ n }}</td></tr>
-{% endfor %}</table>
-</div>
-<p class="muted small">This console acts as a human caller and has no login: keep the daemon on localhost.</p>
+<p class="muted small">This console acts through the configured human caller. In open mode, keep the daemon on localhost.</p>
 {% endblock %}

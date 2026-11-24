@@ -29,6 +29,9 @@ tests/decision_test/results/*
 .uv-cache/
 pytest-of-*/
 .tmp-probe/
+**/.impeccable/
+DESIGN.md
+PRODUCT.md
 
 # deployment state and exports (all memories): never commit
 /data/
