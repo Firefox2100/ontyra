@@ -69,7 +69,7 @@ class RecallSettings(Model):
     sufficient_boost: float = 1.15
     demote_factor: float = 0.8
     event_half_life_days: float = 30.0
-    # --- knowledge from sources (plans/26) ---
+    # --- knowledge from sources ---
     # tokens for memories that cite a source, on top of the main budget (they do not crowd out
     # directives); 0 gives them no room of their own
     knowledge_budget_tokens: int = 600

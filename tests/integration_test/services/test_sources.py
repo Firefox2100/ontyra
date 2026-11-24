@@ -1,4 +1,4 @@
-"""Knowledge from sources: evidence that cites a source, vetting, source checks, recall (plans/26)."""
+"""Knowledge from sources: evidence that cites a source, vetting, source checks, recall."""
 
 from __future__ import annotations
 

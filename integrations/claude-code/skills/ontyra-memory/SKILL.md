@@ -74,6 +74,8 @@ a `fact` (one statement each, in `text`, with what it is `about`) and cite where
 (`file:///path`, `https://...`, `doi:...`); add where in it (`locator`: page, section, lines) and a
 short `quote` copied literally from the source, which stays with the fact even if the source later
 changes or disappears. The daemon never reads the source and does not need it to exist.
+If a similar fact is already stored, `revise` it with the new source in `evidence` instead of adding a
+copy: a second independent source corroborates it.
 
 A recalled fact shows `(source: ...)`. To verify one, read the source yourself, then report what you
 found with `check_source` (`ok`, `changed` or `missing`); `changed` and `missing` open a review.

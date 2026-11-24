@@ -1,0 +1,285 @@
+{
+ "concepts": [
+  "iron limitation",
+  "kelp",
+  "mangroves",
+  "ocean acidification",
+  "coral bleaching",
+  "nitrogen fixation",
+  "sediment carbon"
+ ],
+ "sources": {
+  "iron": {
+   "uri": "doi:10.5555/iron.2019",
+   "medium": "paper"
+  },
+  "fert": {
+   "uri": "doi:10.5555/fertilisation.2021",
+   "medium": "paper"
+  },
+  "kelp": {
+   "uri": "doi:10.5555/kelp.2020",
+   "medium": "paper"
+  },
+  "mangrove": {
+   "uri": "doi:10.5555/mangrove.2018",
+   "medium": "paper"
+  },
+  "bluecarbon": {
+   "uri": "https://example.org/reports/blue-carbon.pdf",
+   "medium": "report"
+  },
+  "acid": {
+   "uri": "doi:10.5555/acidification.2017",
+   "medium": "paper"
+  },
+  "forum": {
+   "uri": "https://forum.example.net/threads/corals-fine",
+   "medium": "forum"
+  },
+  "bleach": {
+   "uri": "doi:10.5555/bleaching.2022",
+   "medium": "paper"
+  },
+  "nfix": {
+   "uri": "doi:10.5555/nitrogen-fixation.2016",
+   "medium": "paper"
+  },
+  "burial": {
+   "uri": "doi:10.5555/burial.2015",
+   "medium": "paper"
+  },
+  "seagrass": {
+   "uri": "doi:10.5555/seagrass.2020",
+   "medium": "paper"
+  },
+  "circ": {
+   "uri": "file:///library/textbooks/ocean-circulation.pdf",
+   "medium": "book"
+  },
+  "oldreport": {
+   "uri": "https://example.org/reports/mangrove-area-2009.pdf",
+   "medium": "report"
+  }
+ },
+ "facts": [
+  {
+   "key": "k1",
+   "text": "Iron limitation caps diatom blooms in the open Southern Ocean",
+   "subject": "iron_limitation",
+   "object": "Ocean",
+   "sources": [
+    {
+     "src": "iron",
+     "locator": "p. 3",
+     "quote": "iron supply sets the ceiling on diatom growth"
+    }
+   ]
+  },
+  {
+   "key": "k2",
+   "text": "Adding dissolved iron raised chlorophyll within two weeks in the fertilisation experiments",
+   "subject": "iron_limitation",
+   "object": "experiments",
+   "sources": [
+    {
+     "src": "fert",
+     "locator": "p. 5",
+     "quote": "chlorophyll rose within fourteen days"
+    },
+    {
+     "src": "iron",
+     "locator": "p. 7",
+     "quote": "fertilised patches greened"
+    }
+   ]
+  },
+  {
+   "key": "k3",
+   "text": "Kelp forests export about a fifth of their production as detritus to deep sediments",
+   "subject": "kelp",
+   "object": "sediments",
+   "sources": [
+    {
+     "src": "kelp",
+     "locator": "p. 9",
+     "quote": "roughly twenty percent of net production is exported"
+    }
+   ]
+  },
+  {
+   "key": "k4",
+   "text": "Mangrove sediments store several times more carbon per hectare than upland forest soils",
+   "subject": "mangroves",
+   "object": "soils",
+   "sources": [
+    {
+     "src": "mangrove",
+     "locator": "p. 4",
+     "quote": "several times the carbon density of upland soils"
+    },
+    {
+     "src": "bluecarbon",
+     "locator": "p. 12",
+     "quote": "mangrove soils are the densest carbon stores"
+    }
+   ]
+  },
+  {
+   "key": "k5",
+   "text": "Ocean acidification lowers calcification rates in reef-building corals",
+   "subject": "ocean_acidification",
+   "object": "corals",
+   "sources": [
+    {
+     "src": "acid",
+     "locator": "p. 6",
+     "quote": "calcification declined as aragonite saturation fell"
+    }
+   ]
+  },
+  {
+   "key": "k13",
+   "text": "Coral calcification is unaffected by seawater acidification",
+   "subject": "ocean_acidification",
+   "object": "acidification",
+   "sources": [
+    {
+     "src": "forum",
+     "locator": "post 4",
+     "quote": "corals will be fine"
+    }
+   ]
+  },
+  {
+   "key": "k6",
+   "text": "Coral bleaching begins when heat stress exceeds the local summer maximum for several weeks",
+   "subject": "coral_bleaching",
+   "object": "weeks",
+   "sources": [
+    {
+     "src": "bleach",
+     "locator": "p. 2",
+     "quote": "bleaching follows weeks above the summer maximum"
+    }
+   ]
+  },
+  {
+   "key": "k7",
+   "text": "Cyanobacteria fix nitrogen in the nutrient-poor subtropical gyres",
+   "subject": "nitrogen_fixation",
+   "object": "gyres",
+   "sources": [
+    {
+     "src": "nfix",
+     "locator": "p. 3",
+     "quote": "diazotrophic cyanobacteria dominate gyre fixation"
+    }
+   ]
+  },
+  {
+   "key": "k8",
+   "text": "Nitrogen fixation in the gyres is co-limited by phosphorus and iron",
+   "subject": "nitrogen_fixation",
+   "object": "iron",
+   "sources": [
+    {
+     "src": "nfix",
+     "locator": "p. 8",
+     "quote": "phosphorus and iron co-limit fixation"
+    }
+   ]
+  },
+  {
+   "key": "k9",
+   "text": "Sediment organic carbon burial is highest on continental margins",
+   "subject": "sediment_carbon",
+   "object": "margins",
+   "sources": [
+    {
+     "src": "burial",
+     "locator": "p. 5",
+     "quote": "margins account for most organic carbon burial"
+    }
+   ]
+  },
+  {
+   "key": "k10",
+   "text": "Diatom silica shells dissolve slowly in cold deep water",
+   "subject": "iron_limitation",
+   "object": "water",
+   "sources": [
+    {
+     "src": "iron",
+     "locator": "p. 11",
+     "quote": "frustule dissolution is slow below four degrees"
+    }
+   ]
+  },
+  {
+   "key": "k11",
+   "text": "Seagrass meadows trap fine sediment and reduce turbidity downstream",
+   "subject": "sediment_carbon",
+   "object": "downstream",
+   "sources": [
+    {
+     "src": "seagrass",
+     "locator": "p. 3",
+     "quote": "meadows retain fine particles"
+    }
+   ]
+  },
+  {
+   "key": "k12",
+   "text": "Upwelling brings nutrient-rich deep water to the surface along eastern boundaries",
+   "subject": "nitrogen_fixation",
+   "object": "boundaries",
+   "sources": [
+    {
+     "src": "circ",
+     "locator": "ch. 6",
+     "quote": "eastern boundary upwelling supplies nutrients"
+    }
+   ]
+  },
+  {
+   "key": "k14",
+   "text": "Mangrove area is lost at roughly one percent per year",
+   "subject": "mangroves",
+   "object": "year",
+   "sources": [
+    {
+     "src": "oldreport",
+     "locator": "p. 2",
+     "quote": "about one percent of mangrove area is lost each year"
+    }
+   ]
+  }
+ ],
+ "directives": [
+  {
+   "key": "p1",
+   "text": "Cite the DOI of every paper in the lab notebook entry",
+   "rule": "cite the DOI in notebook entries"
+  }
+ ],
+ "checks": [
+  {
+   "src": "oldreport",
+   "state": "changed",
+   "note": "the agency published a newer estimate"
+  }
+ ],
+ "tiers": [
+  {
+   "match": "doi:10.",
+   "tier": "journal",
+   "weight": 1.1
+  },
+  {
+   "match": "https://forum.",
+   "tier": "forum",
+   "weight": 0.5
+  }
+ ]
+}

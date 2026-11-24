@@ -200,3 +200,15 @@ async def test_wipe_removes_all_registered_tables(
     assert set(registry.tables).isdisjoint((await database.info_db())["tables"])
     await schema.apply()  # and the schema can be recreated from scratch
     assert set(registry.tables) <= set((await database.info_db())["tables"])
+
+
+async def test_a_field_added_to_a_table_with_rows_migrates_them(
+    database: Database, schema: SchemaManager, seeded: RecordId
+) -> None:
+    await database.query("REMOVE FIELD trust ON actor")
+    await database.query("REMOVE FIELD meta ON actor")
+    assert (await database.query("SELECT * FROM actor"))[0]
+    await schema.apply()
+    row = (await database.query("SELECT * FROM actor"))[0][0]
+    assert row["trust"] is not None and "meta" in row
+    await schema.apply()

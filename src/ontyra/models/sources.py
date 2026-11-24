@@ -1,4 +1,4 @@
-"""External sources a memory cites (plans/26): a pointer, never a copy.
+"""External sources a memory cites: a pointer, never a copy.
 
 A source is anything that can be named: a file, a web page, a paper, a recording. The daemon does
 not read it, store it or require that it exists; it keeps the reference with the memory (write-once,

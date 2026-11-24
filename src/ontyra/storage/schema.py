@@ -38,6 +38,26 @@ def _lit(v: Any) -> str:
     return "'" + v.replace("\\", "\\\\").replace("'", "\\'") + "'" if isinstance(v, str) else str(v)
 
 
+def _ident(path: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in path)
+
+
+def _empty_value(surreal_type: str) -> str | None:
+    """A neutral value of a required type, for rows written before the field existed."""
+    if surreal_type.startswith("array<"):
+        return "[]"
+    if surreal_type.startswith("'"):  # a union of literals: the first
+        return surreal_type.split(" | ")[0]
+    return {
+        "string": "''",
+        "int": "0",
+        "float": "0.0",
+        "bool": "false",
+        "datetime": "d'1970-01-01T00:00:00Z'",
+        "object": "{}",
+    }.get(surreal_type)
+
+
 def _default_literal(default: Any) -> str | None:
     if default is PydanticUndefined or default is None:
         return None
@@ -146,6 +166,42 @@ class SchemaGenerator:
 
     # ---- statements ---------------------------------------------------
 
+    @staticmethod
+    def field_ddl(spec: TableSpec, f: FieldDef, migrate_with: str | None = None) -> str:
+        """One field definition; `migrate_with` says what rows that already exist hold."""
+        flex = " FLEXIBLE" if f.flexible else ""
+        dflt = f" DEFAULT {f.default}" if f.default is not None else ""
+        migrate = (
+            f" MIGRATE EXISTING ROWS AS m_{_ident(f.path)} USING {migrate_with}"
+            if migrate_with is not None
+            else ""
+        )
+        ro = " READONLY" if spec.immutable else ""
+        return (
+            f"DEFINE FIELD OVERWRITE {f.path} ON {spec.name} TYPE {f.type}{flex}{dflt}{migrate}{ro}"
+        )
+
+    def plan_migrations(self, table_infos: dict[str, dict[str, Any]]) -> list[str]:
+        """Definitions for fields a table in the database does not have yet, each saying what
+        existing rows hold (the field's default, or an empty value of its type). A field whose
+        type accepts no value that can be invented here is an error: write the migration by hand."""
+        stmts: list[tuple[int, str, str]] = []
+        for name, spec in self.registry.tables.items():
+            info = table_infos.get(name)
+            if info is None:
+                continue
+            have = set(info.get("fields", {}))
+            fields, _ = self.collect_fields(spec.model)
+            for f in fields:
+                path = f.path.replace("[*]", ".*")
+                if path in have or f.type.startswith("option<"):
+                    continue
+                value = f.default if f.default is not None else _empty_value(f.type)
+                if value is None:
+                    raise ValueError(f"cannot migrate {name}.{f.path}: no value for type {f.type}")
+                stmts.append((f.path.count("[*]"), f.path, self.field_ddl(spec, f, value)))
+        return [ddl for _, _, ddl in sorted(stmts)]
+
     def table_ddl(self, spec: TableSpec) -> list[str]:
         if spec.edge:
             ins = "|".join(self.registry.expand(spec.edge[0]))
@@ -157,13 +213,7 @@ class SchemaGenerator:
         else:
             stmts = [f"DEFINE TABLE OVERWRITE {spec.name} SCHEMAFULL"]
         fields, indexes = self.collect_fields(spec.model)
-        for f in fields:
-            flex = " FLEXIBLE" if f.flexible else ""
-            dflt = f" DEFAULT {f.default}" if f.default is not None else ""
-            ro = " READONLY" if spec.immutable else ""
-            stmts.append(
-                f"DEFINE FIELD OVERWRITE {f.path} ON {spec.name} TYPE {f.type}{flex}{dflt}{ro}"
-            )
+        stmts += [self.field_ddl(spec, f) for f in fields]
         for path, unique in indexes:
             idx = f"{spec.name}_{path.replace('.', '_').replace('[*]', '')}_idx"
             stmts.append(
@@ -246,7 +296,14 @@ class SchemaManager:
         self.embedding_dim = embedding_dim
 
     async def apply(self) -> None:
-        """Create/update every registered table (atomic, idempotent, keeps data)."""
+        """Create/update every registered table (atomic, idempotent, keeps data). Fields the
+        database lacks are added first, one by one, saying what existing rows hold; the rest of
+        the definitions then apply in one transaction (an index cannot be defined in the
+        transaction that migrates its rows)."""
+        info = await self.db.info_db()
+        tables = {t: await self.db.info_table(t) for t in info.get("tables", {})}
+        for statement in self.generator.plan_migrations(tables):
+            await self.db.run_atomic([statement])
         await self.db.run_atomic([*self.generator.ddl(), *search_ddl(self.embedding_dim)])
 
     async def drift(self) -> list[str]:

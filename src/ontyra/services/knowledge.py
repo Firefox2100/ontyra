@@ -1,4 +1,4 @@
-"""How a cited source changes a memory's standing in recall (plans/26): the tier of its best
+"""How a cited source changes a memory's standing in recall: the tier of its best
 source (a deployment's judgement of a URI, never the agent's claim), corroboration by several
 distinct sources, and the age of what was read. Pure functions."""
 

@@ -1,0 +1,249 @@
+[
+ {
+  "id": "direct-iron",
+  "query": "what limits diatom blooms in the Southern Ocean",
+  "tags": [
+   "direct"
+  ],
+  "include": [
+   "k1"
+  ],
+  "exclude": [],
+  "allow": [
+   "k2",
+   "k10"
+  ],
+  "silent": false,
+  "top": 1
+ },
+ {
+  "id": "direct-fertilise",
+  "query": "do iron additions increase phytoplankton growth",
+  "tags": [
+   "direct"
+  ],
+  "include": [
+   "k2"
+  ],
+  "exclude": [],
+  "allow": [
+   "k1"
+  ],
+  "silent": false
+ },
+ {
+  "id": "direct-kelp",
+  "query": "how much of kelp production ends up in the deep sea",
+  "tags": [
+   "direct"
+  ],
+  "include": [
+   "k3"
+  ],
+  "exclude": [],
+  "allow": [
+   "k9"
+  ],
+  "silent": false
+ },
+ {
+  "id": "direct-mangrove",
+  "query": "carbon storage in mangrove sediment compared with forests",
+  "tags": [
+   "direct",
+   "corroborated"
+  ],
+  "include": [
+   "k4"
+  ],
+  "exclude": [],
+  "allow": [
+   "k9",
+   "k14"
+  ],
+  "silent": false,
+  "top": 1
+ },
+ {
+  "id": "para-bleach",
+  "query": "why do reefs lose their colour during marine heatwaves",
+  "tags": [
+   "paraphrase"
+  ],
+  "include": [
+   "k6"
+  ],
+  "exclude": [],
+  "allow": [
+   "k5"
+  ],
+  "silent": false
+ },
+ {
+  "id": "para-nfix",
+  "query": "can tiny microbes supply fixed nitrogen in barren open ocean water",
+  "tags": [
+   "paraphrase"
+  ],
+  "include": [
+   "k7"
+  ],
+  "exclude": [],
+  "allow": [
+   "k8",
+   "k12"
+  ],
+  "silent": false
+ },
+ {
+  "id": "para-burial",
+  "query": "where on the seafloor is organic matter most buried",
+  "tags": [
+   "paraphrase"
+  ],
+  "include": [
+   "k9"
+  ],
+  "exclude": [],
+  "allow": [
+   "k3",
+   "k4",
+   "k11"
+  ],
+  "silent": false
+ },
+ {
+  "id": "tier-acid",
+  "query": "does seawater acidification slow reef coral skeleton growth",
+  "tags": [
+   "tier"
+  ],
+  "include": [
+   "k5"
+  ],
+  "exclude": [],
+  "allow": [
+   "k13"
+  ],
+  "silent": false,
+  "top": 1
+ },
+ {
+  "id": "tier-acid-2",
+  "query": "is coral calcification affected by lower seawater pH",
+  "tags": [
+   "tier"
+  ],
+  "include": [
+   "k5"
+  ],
+  "exclude": [
+   "k13"
+  ],
+  "allow": [],
+  "silent": false,
+  "top": 1
+ },
+ {
+  "id": "stale-mangrove",
+  "query": "how fast are mangroves disappearing",
+  "tags": [
+   "stale"
+  ],
+  "include": [
+   "k14"
+  ],
+  "exclude": [],
+  "allow": [
+   "k4"
+  ],
+  "silent": false,
+  "caveats": {
+   "k14": [
+    "changed"
+   ]
+  }
+ },
+ {
+  "id": "excl-silica",
+  "query": "how quickly do diatom shells dissolve in deep water",
+  "tags": [
+   "direct"
+  ],
+  "include": [
+   "k10"
+  ],
+  "exclude": [
+   "k13"
+  ],
+  "allow": [
+   "k1"
+  ],
+  "silent": false
+ },
+ {
+  "id": "silent-bread",
+  "query": "best way to proof a sourdough starter",
+  "tags": [
+   "silent"
+  ],
+  "include": [],
+  "exclude": [],
+  "allow": [],
+  "silent": true
+ },
+ {
+  "id": "silent-invoice",
+  "query": "quarterly invoice approval workflow",
+  "tags": [
+   "silent"
+  ],
+  "include": [],
+  "exclude": [],
+  "allow": [],
+  "silent": true
+ },
+ {
+  "id": "silent-code",
+  "query": "python asyncio gather exception handling",
+  "tags": [
+   "silent"
+  ],
+  "include": [],
+  "exclude": [],
+  "allow": [],
+  "silent": true
+ },
+ {
+  "id": "lane-directive",
+  "query": "cite the DOI of the kelp detritus paper in my lab notebook",
+  "tags": [
+   "lane"
+  ],
+  "include": [
+   "k3",
+   "p1"
+  ],
+  "exclude": [],
+  "allow": [
+   "k9"
+  ],
+  "silent": false
+ },
+ {
+  "id": "lane-directive-2",
+  "query": "put the DOI of the nitrogen fixation paper in the notebook entry",
+  "tags": [
+   "lane"
+  ],
+  "include": [
+   "p1"
+  ],
+  "exclude": [],
+  "allow": [
+   "k7",
+   "k8"
+  ],
+  "silent": false
+ }
+]

@@ -56,6 +56,8 @@ Settings that change the pipeline are the production ones (`ONTYRA_RECALL__*`), 
 - `results/<suite>-<label>-<profile>.json` (git-ignored): configuration, git rev, per-tag and
   per-split cells, every case with what came back, ranks, scores and `why`. Never overwritten.
 
+`test_knowledge.py` (small separate world of facts that cite sources, `data/knowledge/`): recall of cited knowledge beside a directive, tiers, stale sources and silence, run under three variants (default, no tiers, no own knowledge budget) and written to `results/knowledge-<label>.json`; it measures, and asserts only that its data is consistent.
+
 Test files: `test_data.py` (data is consistent and covers the matrix), `test_framework.py`
 (scorer, results, config), `test_recall.py` (the suite, ~1 minute). Add a world part or case by
 editing JSON only; run `test_data.py` first.

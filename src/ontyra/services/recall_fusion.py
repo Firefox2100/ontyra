@@ -192,15 +192,19 @@ class FusionRecallService(RecallService):
                 ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
         if await self._learn(caller, ranked, raw):
             ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
-        if self._weigh_sources(ranked, raw):
+        factors = self._weigh_sources(ranked, raw)
+        if factors:
             ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
         self._describe(ranked, raw)
         margin = cfg.decision_margin if judgement is not None else cfg.fusion_margin
-        best = raw[ranked[0].rev].final if ranked else 0.0
+        # a source can lower a memory's standing enough to drop it, but a good one never raises
+        # the bar the others must clear
+        standing = {c.rev: raw[c.rev].final / max(factors.get(c.rev, 1.0), 1.0) for c in ranked}
+        best = max(standing.values(), default=0.0)
         keep: list[Candidate] = []
         dropped: list[dict[str, Any]] = []
         for c in ranked:
-            if raw[c.rev].final >= best - margin and raw[c.rev].final > 0:
+            if standing[c.rev] >= best - margin and raw[c.rev].final > 0:
                 keep.append(c)
             else:
                 dropped.append(
@@ -216,17 +220,20 @@ class FusionRecallService(RecallService):
             ranked,
         )
 
-    def _weigh_sources(self, ranked: list[Candidate], raw: dict[RecordId, Scored]) -> bool:
-        """Scale the final score by the standing of the cited sources (tier, corroboration)."""
-        changed = False
+    def _weigh_sources(
+        self, ranked: list[Candidate], raw: dict[RecordId, Scored]
+    ) -> dict[RecordId, float]:
+        """Scale the final score by the standing of the cited sources (tier, corroboration);
+        returns the factor of each memory it changed."""
+        factors: dict[RecordId, float] = {}
         for c in ranked:
             if c.revision is None or not c.revision.sources:
                 continue
             factor = self._source_factor(c.revision)
             if factor != 1.0:
                 raw[c.rev].final *= factor
-                changed = True
-        return changed
+                factors[c.rev] = factor
+        return factors
 
     async def _learn(
         self, caller: Caller, ranked: list[Candidate], raw: dict[RecordId, Scored]

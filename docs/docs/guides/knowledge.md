@@ -58,11 +58,13 @@ default still holds all agent writes for review.
 - **Its own section and budget.** A memory that cites a source (other than a directive, procedure,
   lesson or task) comes back under **Knowledge**, packed within `ONTYRA_RECALL__KNOWLEDGE_BUDGET_TOKENS`
   (default 600) on top of the main budget, so it neither crowds out directives nor is crowded out.
-  `0` makes it share the main budget. The default is untuned: there is no documents benchmark yet.
+  `0` makes it share the main budget.
 - **Source tiers.** `ONTYRA_RECALL__SOURCE_TIERS` is your judgement of where sources come from, a JSON
   list of `{"match": "<uri prefix>", "tier": "<name>", "weight": 1.2}`. The first prefix that matches
   a cited source sets the tier, the best source of a memory counts, and the weight multiplies its
-  score. The agent cannot claim a tier: it comes from the URI and your configuration.
+  score. A weight below 1 can push a memory out of recall (a forum post that contradicts a paper); a
+  weight above 1 only ranks it higher and never makes other memories clear a higher bar. The agent
+  cannot claim a tier: it comes from the URI and your configuration.
 - **Corroboration.** A memory citing several distinct sources gets `ONTYRA_RECALL__CORROBORATION_BOOST`
   (default 0.05) per extra source, for up to three, and recall says "N independent sources".
 - **Age.** When the most recent reading of a source (`retrieved_at`) is older than

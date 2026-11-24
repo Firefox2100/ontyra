@@ -1,4 +1,4 @@
-"""Cited sources and vetting (plans/26).
+"""Cited sources and vetting.
 
 The daemon never reads a source. It keeps what clients report about one (`SourceCheck`) and, when
 a source is reported `changed` or `missing`, opens a review task for each live memory that cites
