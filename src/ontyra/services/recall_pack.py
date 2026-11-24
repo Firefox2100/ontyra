@@ -8,11 +8,19 @@ from typing import Literal
 
 from ontyra.models.recall import Caution, More, RecallItem, RecallPack, Section
 
-SECTIONS: tuple[Section, ...] = ("must_follow", "applicable", "context", "how_to", "open_tasks")
+SECTIONS: tuple[Section, ...] = (
+    "must_follow",
+    "applicable",
+    "context",
+    "knowledge",
+    "how_to",
+    "open_tasks",
+)
 TITLES: dict[str, str] = {
     "must_follow": "Must follow",
     "applicable": "Applies here",
     "context": "Context",
+    "knowledge": "Knowledge",
     "how_to": "How to",
     "open_tasks": "Open tasks",
 }
@@ -26,6 +34,8 @@ def section_of(item: RecallItem) -> Section:
         return "how_to"
     if item.kind == "task":
         return "open_tasks"
+    if item.sources:
+        return "knowledge"
     return "context"
 
 
@@ -94,13 +104,17 @@ def build_pack(
     budget_tokens: int,
     profile: Literal["compact", "rich"],
     cautions: Sequence[Caution] = (),
+    knowledge_budget_tokens: int = 0,
 ) -> RecallPack:
-    """Fill sections in priority order within the budget; count what did not fit."""
+    """Fill sections in priority order within the budget; count what did not fit. Knowledge
+    (what cites a source) is packed within its own budget, so it neither crowds out the rest nor
+    is crowded out; with none, it shares the main one."""
     pack = RecallPack(path=path, silent=not ranked, cautions=list(cautions))
     grouped: dict[Section, list[RecallItem]] = {s: [] for s in SECTIONS}
     for item in ranked:
         grouped[section_of(item)].append(item)
     used = 0
+    used_knowledge = 0
     skipped: dict[str, int] = {}
     for section in SECTIONS:
         taken: list[RecallItem] = []
@@ -108,11 +122,18 @@ def build_pack(
             cost = estimate_tokens(render_item(item, profile))
             if not taken:
                 cost += OVERHEAD_PER_SECTION
-            if used + cost > budget_tokens and (taken or used > 0):
+            own = section == "knowledge" and knowledge_budget_tokens > 0
+            spent, limit = (
+                (used_knowledge, knowledge_budget_tokens) if own else (used, budget_tokens)
+            )
+            if spent + cost > limit and (taken or spent > 0):
                 skipped[section] = len(grouped[section]) - n
                 break
             taken.append(item)
-            used += cost
+            if own:
+                used_knowledge += cost
+            else:
+                used += cost
         setattr(pack, section, taken)
     pack.more = [
         More(

@@ -204,6 +204,10 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_RECALL__SUFFICIENT_BOOST` | float | `1.15` |
 | `ONTYRA_RECALL__DEMOTE_FACTOR` | float | `0.8` |
 | `ONTYRA_RECALL__EVENT_HALF_LIFE_DAYS` | float | `30.0` |
+| `ONTYRA_RECALL__KNOWLEDGE_BUDGET_TOKENS` | int | `600` |
+| `ONTYRA_RECALL__SOURCE_TIERS` | list | `[]` |
+| `ONTYRA_RECALL__CORROBORATION_BOOST` | float | `0.05` |
+| `ONTYRA_RECALL__SOURCE_STALE_DAYS` | int | `365` |
 | `ONTYRA_RECALL__DEFAULT_BUDGET_TOKENS` | int | `1200` |
 | `ONTYRA_RECALL__BRIEFING_BUDGET_TOKENS` | int | `2000` |
 

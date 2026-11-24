@@ -192,6 +192,8 @@ class FusionRecallService(RecallService):
                 ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
         if await self._learn(caller, ranked, raw):
             ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
+        if self._weigh_sources(ranked, raw):
+            ranked.sort(key=lambda c: (-raw[c.rev].final, str(c.rev)))
         self._describe(ranked, raw)
         margin = cfg.decision_margin if judgement is not None else cfg.fusion_margin
         best = raw[ranked[0].rev].final if ranked else 0.0
@@ -213,6 +215,18 @@ class FusionRecallService(RecallService):
             judgement.none if judgement else None,
             ranked,
         )
+
+    def _weigh_sources(self, ranked: list[Candidate], raw: dict[RecordId, Scored]) -> bool:
+        """Scale the final score by the standing of the cited sources (tier, corroboration)."""
+        changed = False
+        for c in ranked:
+            if c.revision is None or not c.revision.sources:
+                continue
+            factor = self._source_factor(c.revision)
+            if factor != 1.0:
+                raw[c.rev].final *= factor
+                changed = True
+        return changed
 
     async def _learn(
         self, caller: Caller, ranked: list[Candidate], raw: dict[RecordId, Scored]

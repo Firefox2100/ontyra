@@ -3932,6 +3932,14 @@
             "title": "How To",
             "type": "array"
           },
+          "knowledge": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecallItem"
+            },
+            "title": "Knowledge",
+            "type": "array"
+          },
           "more": {
             "default": [],
             "items": {

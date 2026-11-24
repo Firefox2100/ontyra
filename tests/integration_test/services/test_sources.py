@@ -120,7 +120,7 @@ async def test_recall_shows_the_source_and_marks_what_no_human_vetted(
     pack = await app.recall.recall(
         human, RecallRequest(query="gene X pathway Y", profile="compact")
     )
-    item = next(i for i in pack.applicable + pack.context + pack.must_follow if "Gene X" in i.text)
+    item = next(i for i in pack.items() if "Gene X" in i.text)
     assert item.sources[0].uri == CANON and item.vetting == "auto"
     assert f"(source: {CANON} section 3)" in (pack.rendered or "")
     assert "[unvetted]" in (pack.rendered or "")
@@ -152,7 +152,7 @@ async def test_recall_can_be_told_to_use_only_vetted_memories(
     await app.indexer.backfill()
 
     def ids(pack):  # type: ignore[no-untyped-def]
-        return {i.memory for i in pack.applicable + pack.context + pack.must_follow}
+        return {i.memory for i in pack.items()}
 
     assert unvetted not in ids(
         await app.recall.recall(human, RecallRequest(query="gene X pathway Y"))
@@ -181,9 +181,7 @@ async def test_a_changed_source_opens_one_review_per_memory_and_recall_says_so(
     card = tasks[0].card
     assert card["finding"] == "source" and card["source"] == CANON and card["cited"][0]["quote"]
     pack = await app.recall.recall(human, RecallRequest(query="gene X pathway Y"))
-    flagged = next(
-        i for i in pack.applicable + pack.context + pack.must_follow if i.memory == first
-    )
+    flagged = next(i for i in pack.items() if i.memory == first)
     assert "source_missing" in flagged.flags and any(
         "reported missing" in c for c in flagged.caveats
     )
@@ -205,3 +203,38 @@ async def test_a_policy_rule_can_auto_commit_only_what_cites_a_quoted_source(
     assert no_quote.status == "pending"
     bare = await knowledge(app, agent, [], text="No source at all")
     assert bare.status == "pending"
+
+
+async def test_tiers_and_corroboration_lift_a_memory_and_an_old_reading_is_flagged(
+    make_app, agent: Caller, human: Caller
+) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from ontyra.models.recall import SourceTier
+
+    app = await make_app(
+        PolicyConfig(default="auto_commit"),
+        recall=RecallSettings(
+            source_tiers=[SourceTier(match="doi:10.", tier="journal", weight=1.2)],
+            source_stale_days=30,
+        ),
+    )
+    agent = await app.actors.caller(kind="agent", name="claude")
+    long_ago = datetime.now(UTC) - timedelta(days=90)
+    await knowledge(
+        app,
+        agent,
+        [cite("doi:10.1000/a", retrieved_at=long_ago), cite("file:///x/b.md")],
+        text="Gene X drives pathway Y in tissue Q",
+    )
+    await knowledge(app, agent, [cite("file:///x/c.md")], text="Gene X drives pathway Y in cells")
+    await app.indexer.backfill()
+    pack = await app.recall.recall(
+        agent, RecallRequest(query="gene X drives pathway Y", profile="rich")
+    )
+    texts = [i.text for i in pack.knowledge]
+    assert texts[0] == "Gene X drives pathway Y in tissue Q" and len(texts) == 2
+    top = pack.knowledge[0]
+    assert "source tier journal" in top.why and "2 independent sources" in top.why
+    assert any("days ago" in c for c in top.caveats), (top.caveats, top.sources)
+    assert not pack.context and "Knowledge:" in pack.rendered

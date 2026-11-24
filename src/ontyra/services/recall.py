@@ -34,6 +34,7 @@ from ontyra.ports import Create, Delete, Embedder, Hit, Reranker, Store, Update,
 from ontyra.services.anchors import AnchorService, Chain
 from ontyra.services.context import Caller
 from ontyra.services.indexing import doc_id
+from ontyra.services.knowledge import corroboration, read_age_days, source_factor
 from ontyra.services.ontology import OntologyService
 from ontyra.services.qualifiers import Observation, QualifierOutcome, apply_roles
 from ontyra.services.reasoner import Ontology
@@ -365,6 +366,9 @@ class RecallService:
 
     # ---- stage 5: ranking -------------------------------------------------------------------
 
+    def _source_factor(self, rev: RevisionBase) -> float:
+        return source_factor(rev.sources, self.cfg.source_tiers, self.cfg.corroboration_boost)[0]
+
     def _usage_factor(self, usage: Usage | None) -> float:
         return 1.0 + (0.05 * math.log1p(usage.recalls) if usage else 0.0)
 
@@ -398,6 +402,7 @@ class RecallService:
                 mult *= max(0.2, 0.5 ** (age / self.cfg.event_half_life_days))
             usage = usages.get(RecordId("usage", c.revision.memory.id))
             mult *= self._usage_factor(usage if isinstance(usage, Usage) else None)
+            mult *= self._source_factor(c.revision)
             c.score = base * mult
         if self.reranker is not None and query and ranked_by_text and cands:
             await self._rerank(cands, query)
@@ -544,6 +549,15 @@ class RecallService:
         if rev.confidence < 0.6:
             flags.append("low_confidence")
         caveats = list(a.caveats)
+        if rev.sources:
+            _, tier = source_factor(rev.sources, self.cfg.source_tiers, 0.0)
+            if tier:
+                why.append(f"source tier {tier}")
+            if (n := corroboration(rev.sources)) > 1:
+                why.append(f"{n} independent sources")
+            age = read_age_days(rev.sources, self.now())
+            if self.cfg.source_stale_days and age is not None and age > self.cfg.source_stale_days:
+                caveats.append(f"its source was last read {age} days ago")
         for uri, found in c.source_state.items():
             if found != "ok":
                 flags.append(f"source_{found}")
@@ -829,7 +843,12 @@ class RecallService:
             if "stale" in i.flags
         ]
         pack = build_pack(
-            path, items, budget_tokens=budget, profile=request.profile, cautions=cautions
+            path,
+            items,
+            budget_tokens=budget,
+            profile=request.profile,
+            cautions=cautions,
+            knowledge_budget_tokens=self.cfg.knowledge_budget_tokens,
         )
         pack.notices = notices
         pack.unresolved = ctx.unresolved

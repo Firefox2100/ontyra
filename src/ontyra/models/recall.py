@@ -13,6 +13,15 @@ from ontyra.models.kinds import KindName
 from ontyra.models.sources import SourceRef
 
 
+class SourceTier(Model):
+    """How far a kind of source is trusted: URIs starting with `match` (canonical form, e.g.
+    `https://arxiv.org/` or `file://host/docs/`) are of this tier, scored by `weight`."""
+
+    match: str = Field(min_length=3)
+    tier: str = Field(min_length=1, max_length=40)
+    weight: float = Field(default=1.0, ge=0.0, le=2.0)
+
+
 class RecallSettings(Model):
     """Recall tuning (`ONTYRA_RECALL__*`). Defaults are hand-set starting points; the benchmark
     suite is where they get tuned."""
@@ -60,11 +69,19 @@ class RecallSettings(Model):
     sufficient_boost: float = 1.15
     demote_factor: float = 0.8
     event_half_life_days: float = 30.0
+    # --- knowledge from sources (plans/26) ---
+    # tokens for memories that cite a source, on top of the main budget (they do not crowd out
+    # directives); 0 gives them no room of their own
+    knowledge_budget_tokens: int = 600
+    # deployment's judgement of sources, first prefix match wins: `weight` multiplies the score
+    source_tiers: list[SourceTier] = []
+    corroboration_boost: float = 0.05  # per extra distinct source (up to 3)
+    source_stale_days: int = 365  # a caveat when the source was last read longer ago (0: never)
     default_budget_tokens: int = 1200
     briefing_budget_tokens: int = 2000
 
 
-Section = Literal["must_follow", "applicable", "context", "how_to", "open_tasks"]
+Section = Literal["must_follow", "applicable", "context", "knowledge", "how_to", "open_tasks"]
 
 
 class Signal(Model):
@@ -142,6 +159,7 @@ class RecallPack(Model):
     must_follow: list[RecallItem] = []
     applicable: list[RecallItem] = []
     context: list[RecallItem] = []
+    knowledge: list[RecallItem] = []  # what cites a source (own token budget)
     how_to: list[RecallItem] = []
     open_tasks: list[RecallItem] = []
     cautions: list[Caution] = []
@@ -155,7 +173,14 @@ class RecallPack(Model):
     trace: RecordId | None = None
 
     def items(self) -> list[RecallItem]:
-        return [*self.must_follow, *self.applicable, *self.context, *self.how_to, *self.open_tasks]
+        return [
+            *self.must_follow,
+            *self.applicable,
+            *self.context,
+            *self.knowledge,
+            *self.how_to,
+            *self.open_tasks,
+        ]
 
 
 class CheckResult(Model):

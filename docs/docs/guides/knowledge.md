@@ -53,6 +53,21 @@ ONTYRA_POLICY__RULES='[
 `sourced: true` matches when every op cites a source with a `quote` (`false`: none may). The shipped
 default still holds all agent writes for review.
 
+## How recall treats cited knowledge
+
+- **Its own section and budget.** A memory that cites a source (other than a directive, procedure,
+  lesson or task) comes back under **Knowledge**, packed within `ONTYRA_RECALL__KNOWLEDGE_BUDGET_TOKENS`
+  (default 600) on top of the main budget, so it neither crowds out directives nor is crowded out.
+  `0` makes it share the main budget. The default is untuned: there is no documents benchmark yet.
+- **Source tiers.** `ONTYRA_RECALL__SOURCE_TIERS` is your judgement of where sources come from, a JSON
+  list of `{"match": "<uri prefix>", "tier": "<name>", "weight": 1.2}`. The first prefix that matches
+  a cited source sets the tier, the best source of a memory counts, and the weight multiplies its
+  score. The agent cannot claim a tier: it comes from the URI and your configuration.
+- **Corroboration.** A memory citing several distinct sources gets `ONTYRA_RECALL__CORROBORATION_BOOST`
+  (default 0.05) per extra source, for up to three, and recall says "N independent sources".
+- **Age.** When the most recent reading of a source (`retrieved_at`) is older than
+  `ONTYRA_RECALL__SOURCE_STALE_DAYS` (default 365, `0` off) recall adds a caveat.
+
 ## Bulk ingestion
 
 Reading thousands of papers is a job for a separate client (an agent, or a tool using a local
