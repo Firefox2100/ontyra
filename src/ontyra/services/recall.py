@@ -1,5 +1,5 @@
-"""Recall: the shared pipeline behind recall (path B), briefing (C) and check (E)
-(plans/03). Deterministic; no model is called except the optional embedder/reranker ports.
+"""Recall: the shared pipeline behind recall (path B), briefing (C) and check (E).
+Deterministic; no model is called except the optional embedder/reranker ports.
 
 Stages: 1 resolve context → 2 candidates (lanes) → 3 visibility → 4 qualifier roles →
 5 rank → 6 precedence/conflicts → 7 collapse + ledger → 8 pack → 9 render + trace.
@@ -188,7 +188,7 @@ class RecallService:
 
     def calibration_note(self) -> str | None:
         """A sentence for the operator when the fusion thresholds were tuned for another embedder
-        (or none), else None. The thresholds are set by `ontyra calibrate` (plans/22)."""
+        (or none), else None. The thresholds are set by `ontyra calibrate`."""
         if self.embedder is None or self.cfg.engine != "fusion":
             return None
         name = self.embedder.name

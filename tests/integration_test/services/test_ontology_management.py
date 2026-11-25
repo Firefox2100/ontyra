@@ -1,4 +1,4 @@
-"""Ontology management (plans/23): versions, ended edges, tombstones, split, restore, preview."""
+"""Ontology management: versions, ended edges, tombstones, split, restore, preview."""
 
 from __future__ import annotations
 

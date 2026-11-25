@@ -1,4 +1,4 @@
-"""Recall after the ontology changed (plans/23): memories written against the old shape are still
+"""Recall after the ontology changed: memories written against the old shape are still
 found for the new one, and nothing about the wrong sibling comes back."""
 
 from __future__ import annotations

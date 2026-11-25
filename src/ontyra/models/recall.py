@@ -1,4 +1,4 @@
-"""Request and response vocabulary of recall and exploration (plans/03)."""
+"""Request and response vocabulary of recall and exploration."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class RecallSettings(Model):
     engine: Literal["legacy", "fusion"] = "legacy"  # which recall engine serves `recall`
     machine: str = "localhost"  # host id for `file:` URIs without one
     candidates: int = 40  # per lane (legacy engine)
-    # --- fusion engine (plans/21) ---
+    # --- fusion engine ---
     overfetch: int = 150  # per lane, before applicability filtering
     fusion_alpha: float = 0.2  # weight of the lexical score; 1 - alpha goes to the dense score
     fusion_baseline: Literal["mean", "min"] = "mean"  # dense score = (cos - base) / (top - base)
@@ -42,7 +42,7 @@ class RecallSettings(Model):
     # which vetting levels recall may use: `auto` (default: what policy committed without a human
     # looking is used, marked "unvetted") or `vetted` (only what a human wrote or approved)
     min_vetting: Literal["auto", "vetted"] = "auto"
-    # --- decision model (optional; ONTYRA_DECISION__* selects it, plans/21) ---
+    # --- decision model (optional; ONTYRA_DECISION__* selects it) ---
     decision_candidates: int = 8  # top candidates the decision model is asked about
     decision_weight: float = 0.5  # share of its probability in the final score
     decision_margin: float = 0.15  # keep candidates within this of the best blended score

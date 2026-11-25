@@ -1,5 +1,5 @@
 """Resources and context resolution: from the URIs a caller observes to the chain of
-resources that count as "here" (plans/01 "Context resolution", plans/12).
+resources that count as "here".
 """
 
 from __future__ import annotations

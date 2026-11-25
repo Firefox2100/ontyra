@@ -1,4 +1,4 @@
-"""Where and under which circumstances a memory applies: anchors and qualifiers (plans/01, 12).
+"""Where and under which circumstances a memory applies: anchors and qualifiers.
 
 Both are embedded in the (immutable) revision, so a revision's applicability is versioned with
 its text and written atomically with it.

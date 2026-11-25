@@ -1,5 +1,4 @@
-"""Packing and rendering a recall pack: sections, token budget, `more` counts (plans/03,
-pipeline stages 8-9). Pure functions."""
+"""Packing and rendering a recall pack: sections, token budget, `more` counts. Pure functions."""
 
 from __future__ import annotations
 

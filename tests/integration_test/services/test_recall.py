@@ -1,4 +1,4 @@
-"""Recall scenarios (plans/13 exit criteria): currency, completeness, absence, precedence,
+"""Recall scenarios: currency, completeness, absence, precedence,
 qualifier semantics, the session ledger, determinism. Run through the real pipeline against
 SurrealDB (embedded and server mode)."""
 
@@ -215,7 +215,7 @@ async def test_anchor_distance_is_reported_nearest_first(
     assert by_distance == {PROJECT: 2, "file://m/home/x": 3}
 
 
-# ---- qualifiers (the plan 12 reference examples) ----------------------------------------
+# ---- qualifiers (reference examples) ----------------------------------------
 
 
 async def _gcc(remember, concepts):  # type: ignore[no-untyped-def]

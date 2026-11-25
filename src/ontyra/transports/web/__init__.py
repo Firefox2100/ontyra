@@ -1,4 +1,4 @@
-"""Operator console: server-rendered pages over the same services as REST (plans/19).
+"""Operator console: server-rendered pages over the same services as REST.
 
 Opt-in (`ONTYRA_UI__ENABLED`). With no credential required it acts as a human caller with no
 login, so keep the daemon on localhost; otherwise it signs in with a human credential or the

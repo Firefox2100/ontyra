@@ -10,10 +10,10 @@
   <br><code>{{ m.memory }}</code>
 </div>
 <h2>Fields</h2><div class="card"><pre>{{ m.content | tojson(indent=2) }}</pre></div>
-{% if d.history %}<h2>History</h2><div class="card"><table>
+{% if d.history %}<h2>History</h2><div class="card"><table><thead><tr><th>Revision</th><th>Text</th><th>State and reasons</th></tr></thead><tbody>
 {% for r in d.history.revisions %}<tr><td>#{{ r.seq }}</td><td>{{ r.text }}</td>
 <td class="muted small">{{ r.state }}{% for x in r.reasons %} · {{ x.reason_code }}{% if x.reason %}: {{ x.reason }}{% endif %}{% endfor %}</td></tr>{% endfor %}
-</table></div>{% endif %}
+</tbody></table></div>{% endif %}
 {% if d.links %}<h2>Links</h2><div class="card"><pre>{{ d.links | tojson(indent=2) }}</pre></div>{% endif %}
 {% if d.evidence %}<h2>Evidence</h2><div class="card"><pre>{{ d.evidence | tojson(indent=2) }}</pre></div>{% endif %}
 {% endblock %}

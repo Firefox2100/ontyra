@@ -1,4 +1,4 @@
-"""Canonical resource URIs and their containment chain (plans/01 "Anchoring").
+"""Canonical resource URIs and their containment chain.
 
 Pure string logic, no I/O. Schemes with a hierarchical path (`file`, `ssh`, `http(s)`,
 `git+*`) nest by path segment; opaque schemes (`host:`, `harness:`, `ontyra:`) nest by `/`.

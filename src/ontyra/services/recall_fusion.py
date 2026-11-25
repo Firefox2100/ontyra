@@ -1,4 +1,4 @@
-"""The `fusion` recall engine (plans/21): over-retrieve, filter by applicability first, one fused
+"""The `fusion` recall engine: over-retrieve, filter by applicability first, one fused
 score, a relative cut-off, an optional reranker.
 
 1. Each lane (BM25, dense cosine, concept) is over-fetched (`overfetch`).
@@ -230,7 +230,7 @@ class FusionRecallService(RecallService):
             if c.revision is None or not c.revision.sources:
                 continue
             factor = self._source_factor(c.revision)
-            if factor != 1.0:
+            if not math.isclose(factor, 1.0):
                 raw[c.rev].final *= factor
                 factors[c.rev] = factor
         return factors
@@ -238,7 +238,7 @@ class FusionRecallService(RecallService):
     async def _learn(
         self, caller: Caller, ranked: list[Candidate], raw: dict[RecordId, Scored]
     ) -> bool:
-        """Apply the owner's score layer (their own feedback; plans/25) to the final scores.
+        """Apply the owner's score layer (their own feedback) to the final scores.
         True when it changed them."""
         if self.layer is None or not ranked:
             return False

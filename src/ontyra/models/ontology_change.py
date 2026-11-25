@@ -1,4 +1,4 @@
-"""Ontology change proposals: how concepts are added, merged and retired by agents (plans/11).
+"""Ontology change proposals: how concepts are added, merged and retired by agents.
 
 A change is a typed request plus a rationale. A human's change applies at once; an agent's waits
 for review unless its op is listed in `ONTYRA_ONTOLOGY__AUTO_APPLY`. Applied changes are kept
@@ -125,11 +125,11 @@ class OntologyChange(Record):
     decided_at: datetime | None = None
     reason: str | None = None
     advice: list[str] = []
-    # plans/23: the concepts it touched, and the changes that undo it (applied in order, as one
+    # The concepts it touched, and the changes that undo it (applied in order, as one
     # batch, by a revert). Nullable so changes stored before them still validate.
     touched: list[RecordId] | None = None
     undo: list[dict[str, Any]] | None = None
-    # review workflow (plans/24); nullable so changes stored before it still validate
+    # review workflow; nullable so changes stored before it still validate
     version: int | None = None
     history: list[dict[str, Any]] | None = None  # older versions: {version, change, by, at, why}
     comments: list[dict[str, Any]] | None = None  # {version, text, by, at}

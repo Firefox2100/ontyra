@@ -3277,7 +3277,7 @@
       },
       "Proposal": {
         "additionalProperties": false,
-        "description": "An atomic batch of operations submitted by one actor (see plans/01, plans/10).",
+        "description": "An atomic batch of operations submitted by one actor.",
         "properties": {
           "actor": {
             "description": "A record id as `table:id`.",
@@ -4529,7 +4529,7 @@
       },
       "Resource": {
         "additionalProperties": false,
-        "description": "A registered anchor. Containment is mostly syntactic (path segments); this record adds\nexplicit containment (`parents`) and equivalence (`same_as`) on top (plans/01).",
+        "description": "A registered anchor. Containment is mostly syntactic (path segments); this record adds\nexplicit containment (`parents`) and equivalence (`same_as`) on top.",
         "properties": {
           "created_at": {
             "format": "date-time",

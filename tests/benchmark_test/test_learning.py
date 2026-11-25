@@ -1,4 +1,4 @@
-"""The score layer's learning curve on simulated feedback (plans/25, phase 1).
+"""The score layer's learning curve on simulated feedback.
 
 Every recall case of the bundled worlds becomes a judged recall: the labels the benchmark already
 has stand in for a user's verdicts on what was shown (the best candidates by plain score).
@@ -8,7 +8,7 @@ how much feedback it takes, the poisoned rows what happens when a share of the v
 
 A measurement, with one sanity assertion: the layer must not make clean feedback worse. The canary
 is drawn from the same stream, so it catches noise, not consistent poisoning: that needs a trusted
-canary (plans/25, phase 3's gate).
+canary.
 """
 
 from __future__ import annotations

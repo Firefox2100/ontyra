@@ -1,4 +1,4 @@
-"""The score layer (plans/25, phase 1): bounded, replayable corrections to recall's final score
+"""The score layer: bounded, replayable corrections to recall's final score
 from one owner's own feedback. No model weights are touched, so it works with any reranker, a
 hosted one, or none.
 

@@ -1,4 +1,4 @@
-"""Memory kinds: one immutable revision table per kind (see plans/01)."""
+"""Memory kinds: one immutable revision table per kind."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ class RevisionBase(Record):
     expires_at: datetime | None = None
     about: list[ConceptRef] = []  # concepts this is about (ontology links)
     anchors: list[Anchor] = []  # where it applies; empty = everywhere the owner is active
-    qualifiers: list[Qualifier] = []  # under which circumstances (roles: plans/01)
+    qualifiers: list[Qualifier] = []  # under which circumstances (with roles)
     sources: list[SourceRef] = []  # external sources it cites (write-once)
     # `universal`: holds whatever the context (a standing preference, a global prohibition) and
     # is always part of a briefing or check. `contextual` (default): holds where its anchors,

@@ -1,4 +1,4 @@
-"""Feedback on recalled memories, and the reranker runs trained from it (plans/21).
+"""Feedback on recalled memories, and the reranker runs trained from it.
 
 Feedback is kept, not folded into weights: every event is stored with its source and time, a
 conflict resolver decides which events still count, and expiry retires old ones. A trainable
@@ -212,7 +212,7 @@ class RerankerStatus(Model):
     live: dict[str, Any] = {}  # the live head edit: enabled, distance, stale
 
 
-# ---- reviewing examples (plans/25, phase 2) --------------------------------------------------
+# ---- reviewing examples --------------------------------------------------
 
 
 class VetoRequest(Model):
@@ -252,7 +252,7 @@ class OptOutRequest(Model):
     enabled: bool = True
 
 
-# ---- the score layer (plans/25, phase 1) ----------------------------------------------------
+# ---- the score layer ----------------------------------------------------
 
 
 class LearningSettings(Model):

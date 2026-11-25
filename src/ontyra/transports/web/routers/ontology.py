@@ -1,5 +1,5 @@
 """Ontology pages: concepts, one concept with its history, edit forms with a preview step, the
-change history (with revert) and the health report (plans/23)."""
+change history (with revert) and the health report."""
 
 from __future__ import annotations
 

@@ -1,6 +1,5 @@
-"""Qualifier evaluation: three-valued matching of a memory's conditions against the context
-(plans/01 "Environment qualifiers"). Pure functions; the ontology supplies entailment.
-"""
+"""Qualifier evaluation: three-valued matching of a memory's conditions against the context.
+Pure functions; the ontology supplies entailment."""
 
 from __future__ import annotations
 

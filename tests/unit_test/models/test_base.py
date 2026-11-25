@@ -34,7 +34,9 @@ class TestRecordId:
             RecordId.parse(bad)
 
     def test_equality_and_hash(self) -> None:
-        assert RecordId("a", "1") == RecordId("a", "1")
+        first = RecordId("a", "1")
+        same_value = RecordId.parse("a:1")
+        assert first == same_value
         assert RecordId("a", "1") != RecordId("a", "2")
         assert len({RecordId("a", "1"), RecordId("a", "1")}) == 1
 

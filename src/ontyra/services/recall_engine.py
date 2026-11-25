@@ -1,4 +1,4 @@
-"""What a recall engine is: the three operations transports call (plans/21).
+"""What a recall engine is: the three operations transports call.
 
 The pipeline's retrieval and ranking are replaceable: `RecallService` (the first engine,
 `legacy`) and `FusionRecallService` (`fusion`) both satisfy this protocol, and

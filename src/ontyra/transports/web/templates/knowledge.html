@@ -36,7 +36,7 @@ looking: recall marks those <code>[unvetted]</code> (or leaves them out, when <c
 
 <h2>Look up a source</h2>
 <form class="row" method="get" action="/ui/knowledge">
-  <input type="text" name="uri" placeholder="file:///…, https://…, doi:…" value="{{ looked_up.uri if looked_up else '' }}" required style="min-width:340px">
+  <label>Source URI <input type="text" name="uri" placeholder="file:///…, https://…, doi:…" value="{{ looked_up.uri if looked_up else '' }}" required style="min-width:340px"></label>
   <button>Look up</button></form>
 {% if looked_up %}
 <div class="card">
@@ -49,8 +49,8 @@ looking: recall marks those <code>[unvetted]</code> (or leaves them out, when <c
   {% else %}<div class="muted small">No live memory cites it.</div>{% endfor %}
   <form class="row" method="post" action="/ui/knowledge/check" style="margin-top:12px">
     <input type="hidden" name="uri" value="{{ looked_up.uri }}">
-    <select name="state"><option>ok</option><option>changed</option><option>missing</option></select>
-    <input type="text" name="note" placeholder="what you found (optional)"><button>Record</button></form>
+    <label>State <select name="state"><option>ok</option><option>changed</option><option>missing</option></select></label>
+    <label>Note <input type="text" name="note" placeholder="what you found (optional)"></label><button>Record</button></form>
 </div>
 {% endif %}
 {% endblock %}

@@ -195,7 +195,7 @@ class McpSettings(BaseModel):
 
 
 class UiSettings(BaseModel):
-    """Operator console (`ONTYRA_UI__*`) served at `/ui` by the daemon (plans/19).
+    """Operator console (`ONTYRA_UI__*`) served at `/ui` by the daemon.
 
     In open mode it acts as the configured human `actor`; authenticated modes use a human
     credential. State-changing requests require an allowed browser origin.

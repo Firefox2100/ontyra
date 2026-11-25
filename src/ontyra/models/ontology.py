@@ -60,7 +60,7 @@ class Concept(Record):
     replaced_by: ConceptRef | None = None
     created_at: datetime
     updated_at: datetime | None = None
-    # plans/23. Nullable so concepts stored before versions still validate: `version` is the
+    # Nullable so concepts stored before versions still validate: `version` is the
     # sequence number of the latest `concept_rev` (None: none written yet), `reason` why it was
     # deprecated.
     version: int | None = None
@@ -92,7 +92,7 @@ class Related(Record):
     relation: RelationName
     by: ActorRef
     at: datetime
-    # An ended edge is history: the reasoner and every read ignore it (plans/23).
+    # An ended edge is history: the reasoner and every read ignore it.
     ended_at: datetime | None = None
     ended_by: ActorRef | None = None
     ended_by_change: RecordId | None = None
@@ -106,7 +106,7 @@ ResourceKind = Literal[
 @registry.table("resource")
 class Resource(Record):
     """A registered anchor. Containment is mostly syntactic (path segments); this record adds
-    explicit containment (`parents`) and equivalence (`same_as`) on top (plans/01)."""
+    explicit containment (`parents`) and equivalence (`same_as`) on top."""
 
     uri: Annotated[str, Indexed(unique=True)]
     kind: ResourceKind = "other"

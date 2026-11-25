@@ -33,6 +33,7 @@ test('the manifest carries the fields the Plugins page reads', () => {
     'the reader resolves every dictionary through the exports map',
   )
   assert.ok(manifest.files.includes('locale'), 'the dictionaries ship with the package')
+  assert.ok(manifest.files.includes('assets'), 'the icon ships with the package')
   assert.ok(manifest.keywords.includes('dsh-plugin'), 'the gallery can find it')
 })
 

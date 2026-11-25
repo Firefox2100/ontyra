@@ -72,6 +72,6 @@ default still holds all agent writes for review.
 
 ## Bulk ingestion
 
-Reading thousands of papers is a job for a separate client (an agent, or a tool using a local
-model) that writes facts through the same proposal API as any actor. The daemon has no ingestion
-pipeline; it stores what is proposed, with its sources.
+Reading thousands of papers is a job for a separate client that writes facts through the same
+proposal API as any actor. The daemon has no ingestion pipeline; it stores what is proposed, with
+its sources. The monorepo ships one: [`ontyra-ingest`](./ingestion.md).

@@ -72,4 +72,4 @@ class TaskSettings(Model):
     expiry_warn_days: int = 14  # a memory that expires within this many days is checked
     detect_every_hours: float = 24.0  # the daemon runs detection this often (0: only on request)
     detect_first_after_minutes: float = 10.0  # ... and for the first time this long after start
-    refine_cap: int = 200  # refinement tasks queued per split concept per pass (plans/23)
+    refine_cap: int = 200  # refinement tasks queued per split concept per pass

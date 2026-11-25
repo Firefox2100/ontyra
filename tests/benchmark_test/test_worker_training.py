@@ -1,4 +1,4 @@
-"""Retraining the reranker on simulated feedback (plans/25, phase 3), off the production system.
+"""Retraining the reranker on simulated feedback, off the production system.
 
 The bundled worlds' labels stand in for a user's verdicts: pairs from the `tune` requests are the
 feedback (clean, or with a share of the requests' verdicts flipped), and the `holdout` requests

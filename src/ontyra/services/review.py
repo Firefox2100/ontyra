@@ -1,4 +1,4 @@
-"""Review helpers (plans/24): which ops depend on which, and what an op subset needs.
+"""Review helpers: which ops depend on which, and what an op subset needs.
 
 An op depends on another when it names the `ref` the other gives to a new memory (`supersede.new`,
 `link.source|target`, `derived_from`). Approving an op therefore needs the ops it depends on, and

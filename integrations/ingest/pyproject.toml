@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ontyra-ingest"
+version = "0.1.0"
+description = "Bulk-ingestion client for Ontyra: reads documents, extracts sourced knowledge, proposes it over REST."
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15",
+    "httpx>=0.28",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "pypdf>=5",
+]
+
+[project.scripts]
+ontyra-ingest = "ontyra_ingest.cli:main"
+
+[project.entry-points."ontyra_ingest.parsers"]
+# Third-party parsers register here: name = "package.module:factory" (a `ParserFactory`).
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.8", "pyright>=1.1.390"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ontyra_ingest"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM", "RUF"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+strict = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501", "ASYNC240"]

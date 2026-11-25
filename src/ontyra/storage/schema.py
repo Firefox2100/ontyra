@@ -1,6 +1,6 @@
 """Generate SurrealQL DDL from the model registry; apply it; detect and fix drift.
 
-Reference implementation: spikes/schema_gen (spike 2, plans/10).
+Reference implementation: spikes/schema_gen.
 """
 
 from __future__ import annotations

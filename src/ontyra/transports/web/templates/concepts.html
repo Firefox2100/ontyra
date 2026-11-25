@@ -3,7 +3,7 @@
 {% block body %}
 <h1>Concepts</h1>
 <form class="row" method="get" action="/ui/concepts" style="margin-bottom:14px">
-  <input type="text" name="term" value="{{ term }}" placeholder="label or alias"><button>Look up</button>
+  <label>Label or alias <input type="text" name="term" value="{{ term }}" placeholder="label or alias"></label><button>Look up</button>
   <label class="small"><input type="checkbox" name="deprecated" value="true" {{ 'checked' if deprecated }}> show deprecated</label>
   <span class="muted small">{{ rows|length }} shown</span>
   <a class="small" href="/ui/ontology/new?op=define">new concept</a> ·

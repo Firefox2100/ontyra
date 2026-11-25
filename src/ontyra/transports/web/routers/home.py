@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from ontyra.transports.rest.deps import (
     MemoryServiceDep,
@@ -11,11 +13,17 @@ from ontyra.transports.rest.deps import (
 from ontyra.transports.web.deps import UiCallerDep, templates
 
 router = APIRouter(prefix="/ui", tags=["ui"], include_in_schema=False)
+_LOGO = Path(__file__).parents[1] / "assets" / "ontyra-mark.svg"
 
 
 @router.get("")
 async def root() -> RedirectResponse:
     return RedirectResponse("/ui/")
+
+
+@router.get("/assets/ontyra-mark.svg", response_class=FileResponse)
+async def logo() -> FileResponse:
+    return FileResponse(_LOGO, media_type="image/svg+xml")
 
 
 @router.get("/", response_class=HTMLResponse)

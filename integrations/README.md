@@ -10,6 +10,7 @@ import `ontyra` (a unit test enforces it): the only coupling is the contract.
 | `claude-code/` | Claude Code plugin: hooks over REST, MCP config | shell, JSON |
 | `codex/` | Codex plugin: hooks over REST, MCP config, skill (marketplace at `.agents/plugins/`) | shell, JSON |
 | `dsh/` | DeepSeek Harness plugin | TypeScript |
+| `ingest/` | `ontyra-ingest`: bulk-ingestion CLI (documents → sourced facts over REST) | Python (typer) |
 
 Rules: talk to the daemon over REST or MCP only; fail open (a dead daemon must never block the
 harness); keep prompts and task cards in the daemon (served as MCP prompts/resources), not

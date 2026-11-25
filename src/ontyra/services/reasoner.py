@@ -1,4 +1,4 @@
-"""Deterministic ontology reasoning over an in-memory snapshot (plans/11, "Reasoner v1").
+"""Deterministic ontology reasoning over an in-memory snapshot.
 
 Pure: no I/O. Built from concepts and typed relations; answers entailment, disjointness,
 replacement and recall-expansion questions. All traversals are cycle-safe. The interface is

@@ -1,4 +1,4 @@
-"""Scheduled exports of the whole database (plans/24 follow-up; docs: Deployment, Backups).
+"""Scheduled exports of the whole database.
 
 The daemon asks the database for its own export (a SurrealQL file, injected as `export` so this
 layer stays free of storage details), writes it readable by its owner only into a directory and

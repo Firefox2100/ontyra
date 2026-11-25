@@ -1,4 +1,4 @@
-"""A read-only health report on the ontology (plans/23). Nothing is fixed automatically."""
+"""A read-only health report on the ontology. Nothing is fixed automatically."""
 
 from __future__ import annotations
 

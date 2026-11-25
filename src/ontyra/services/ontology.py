@@ -1,4 +1,4 @@
-"""Concept management and the cached reasoner snapshot (plans/11).
+"""Concept management and the cached reasoner snapshot.
 
 Prototype scope: concepts are created and related directly by a caller (curator); versioned
 concept revisions and ontology-change proposals come later. The snapshot cache assumes a
@@ -43,7 +43,7 @@ class OntologyService:
         self._snapshot: Ontology | None = None
         self._generation = 0  # bumped by every invalidation: a snapshot read before it is stale
         # One writer at a time: a change plans from the snapshot and then commits one batch, so
-        # two changes must not interleave (the daemon is one process; plans/23).
+        # two changes must not interleave (the daemon is one process).
         self.lock = asyncio.Lock()
 
     # ---- snapshot -------------------------------------------------------------
@@ -266,7 +266,7 @@ class OntologyService:
         return [r["id"] for r in rows if r.get("relation") == relation and not r.get("ended_at")]
 
     async def canonicalise_index(self, caller: Caller, limit: int = 1000) -> int:
-        """The opportunistic update (plans/23): index rows (`search_doc.about`, derived data) that
+        """The opportunistic update: index rows (`search_doc.about`, derived data) that
         still carry a concept replaced one-to-one are rewritten to the live concept. Recall is
         correct without it (the reasoner follows replacements); this keeps the index tidy and
         the lane fast. Memory revisions are never touched. Returns the rows changed."""

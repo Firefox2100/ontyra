@@ -44,7 +44,7 @@ stays off (`reverted`). Until there is enough feedback (`MIN_EXAMPLES` judged ca
 
 Because the canary comes from the same feedback stream, it catches noise and drift, not a
 consistent campaign of wrong verdicts. That is what example review is for, and a trusted
-evaluation set is planned for retraining (plan 25).
+evaluation set is planned for retraining.
 
 ## Reviewing the examples
 

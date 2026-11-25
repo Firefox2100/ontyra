@@ -1,4 +1,4 @@
-"""Three-valued qualifier evaluation and the role x result table (plans/01)."""
+"""Three-valued qualifier evaluation and the role x result table."""
 
 from datetime import UTC, datetime
 from typing import Any

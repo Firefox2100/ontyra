@@ -50,18 +50,18 @@
     {% elif t.kind in ('review_feedback', 'review_source', 'expire_check', 'review_stale_dependent') %}
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/resolve"><input type="hidden" name="decision" value="retract"><button class="no">Retract it</button></form>
     <form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="keep">
-      <input type="text" name="note" placeholder="why it stands (optional)"><button>It stands</button></form>
+      <label>Reason <input type="text" name="note" placeholder="why it stands (optional)"></label><button>It stands</button></form>
     <a class="small" href="/ui/memories/{{ t.target.id }}">open it to revise</a>
     {% endif %}
     {% if t.kind in ('consolidate', 'review_contradiction') %}<form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="distinct">
-      <input type="text" name="note" placeholder="why they differ (optional)"><button>They differ</button></form>{% endif %}
+      <label>Reason <input type="text" name="note" placeholder="why they differ (optional)"></label><button>They differ</button></form>{% endif %}
     {% if t.status != 'parked' %}<form class="inline" method="post" action="/ui/tasks/{{ t.id.id }}/complete"><input type="hidden" name="decision" value="defer"><button>Later</button></form>{% endif %}
   </div>
 </div>
 {% else %}<div class="empty">No open maintenance work. Use “Look for new work” to scan.</div>{% endfor %}
 
 {% if recent %}<h2>Recently closed</h2>
-<div class="card"><table>{% for t in recent %}
+<div class="card"><table><thead><tr><th>Decision</th><th>Task</th><th>Note</th></tr></thead><tbody>{% for t in recent %}
 <tr><td><span class="tag ok">{{ t.result.decision or t.result.outcome or t.status }}</span></td><td>{{ t.kind }}</td>
-<td class="small">{{ t.result.note or '' }}</td></tr>{% endfor %}</table></div>{% endif %}
+<td class="small">{{ t.result.note or '' }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
 {% endblock %}

@@ -261,7 +261,7 @@ class MemoryService:
             created=created if status == "committed" else {},
         )
 
-    # ---- review: approve, reject, amend, withdraw, request changes (plans/24) -------
+    # ---- review: approve, reject, amend, withdraw, request changes -------
 
     @staticmethod
     def _version(p: Proposal) -> int:

@@ -1,4 +1,4 @@
-"""Reviewing the examples learning uses (plans/25, phase 2): which ones look wrong, vetoing them,
+"""Reviewing the examples learning uses: which ones look wrong, vetoing them,
 and keeping a source, an owner or oneself out of learning, durably.
 
 Nothing here edits a model. A veto changes an event's state and an exclusion is a row; the score

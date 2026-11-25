@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Ontyra</title>
+  <desc id="desc">An open memory ring joined by a two-point chain of custody.</desc>
+  <circle cx="32" cy="32" r="30" fill="#172126"/>
+  <path d="M45.5 14.5A22 22 0 1 0 49.5 43" fill="none" stroke="#edf2f3" stroke-width="6" stroke-linecap="round"/>
+  <path d="M47.5 17.5v29" fill="none" stroke="#8fb9ca" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="47.5" cy="17.5" r="4.5" fill="#8fb9ca" stroke="#172126" stroke-width="2"/>
+  <circle cx="47.5" cy="46.5" r="4.5" fill="#8fb9ca" stroke="#172126" stroke-width="2"/>
+</svg>

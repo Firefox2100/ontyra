@@ -3,7 +3,7 @@
 {% block body %}
 <h1>Ontology change history</h1>
 <form class="row" method="get" action="/ui/ontology/history" style="margin-bottom:14px">
-  <input type="text" name="concept" value="{{ concept }}" placeholder="concept id"><input type="text" name="op" value="{{ op }}" placeholder="op"><button>Filter</button>
+  <label>Concept <input type="text" name="concept" value="{{ concept }}" placeholder="concept id"></label><label>Operation <input type="text" name="op" value="{{ op }}" placeholder="op"></label><button>Filter</button>
 </form>
 {% for c in rows %}
 <div class="card">
@@ -14,7 +14,7 @@
   <div class="small muted">{% for t in c.touched or [] %}<a href="/ui/concepts/{{ t.id }}">{{ t }}</a> {% endfor %}</div>
   {% if c.status == 'applied' and c.undo and not c.reverted_by %}
   <form class="inline" method="post" action="/ui/ontology/changes/{{ c.id.id }}/revert" style="margin-top:6px">
-    <input type="text" name="reason" placeholder="why revert"><button class="no">Revert</button></form>{% endif %}
+    <label>Reason <input type="text" name="reason" placeholder="why revert"></label><button class="no">Revert</button></form>{% endif %}
 </div>
 {% else %}<div class="empty">No changes.</div>{% endfor %}
 {% endblock %}

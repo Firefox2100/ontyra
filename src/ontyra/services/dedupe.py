@@ -31,7 +31,7 @@ _MONTH_NAMES = (
     "january february march april may june july august september october november december"
 )
 _MONTHS = {name: i for i, name in enumerate(_MONTH_NAMES.split(), 1)}
-_TOKEN = re.compile(r"[a-z]+|\d+(?:\.\d+)?|[a-z]*\d[a-z0-9.\-]*")
+_TOKEN = re.compile(r"(?>[a-z]+)|(?>\d+)(?:\.\d+)?|(?>[a-z]+)\d[a-z0-9.\-]*")
 
 
 def values(text: str) -> set[str]:
@@ -39,8 +39,8 @@ def values(text: str) -> set[str]:
     (`450k` = `450,000`, `3rd` = `3`, `three` = `3`, `March` = `m3`)."""
     t = text.lower()
     t = re.sub(r"(?<=\d),(?=\d{3}\b)", "", t)
-    t = re.sub(r"(\d+)k\b", lambda m: str(int(m.group(1)) * 1000), t)
-    t = re.sub(r"(\d+)(st|nd|rd|th)\b", r"\1", t)
+    t = re.sub(r"((?>\d+))k\b", lambda m: str(int(m.group(1)) * 1000), t)
+    t = re.sub(r"((?>\d+))(?:st|nd|rd|th)\b", r"\1", t)
     out: set[str] = set()
     for word in _TOKEN.findall(t):
         if word in _NUMBER_WORDS:

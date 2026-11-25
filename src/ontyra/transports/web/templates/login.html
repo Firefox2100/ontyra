@@ -6,7 +6,7 @@
 <p>Paste a human credential's token (or the single-user token).</p>
 {% if error %}<p><b>{{ error }}</b></p>{% endif %}
 <form method="post" action="/ui/login">
-  <input type="password" name="token" autocomplete="off" required style="width:100%;max-width:32em" autofocus>
+  <label>Credential token <input type="password" name="token" autocomplete="off" required style="width:100%;max-width:32em"></label>
   <button type="submit">Sign in</button>
 </form>
 {% endif %}

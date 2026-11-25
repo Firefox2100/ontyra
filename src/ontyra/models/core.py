@@ -169,7 +169,7 @@ class PromotedTo(Record):
 
 @registry.table("proposal")
 class Proposal(Record):
-    """An atomic batch of operations submitted by one actor (see plans/01, plans/10)."""
+    """An atomic batch of operations submitted by one actor."""
 
     actor: ActorRef
     owner: OwnerRef  # the submitter's own memory
@@ -186,7 +186,7 @@ class Proposal(Record):
     ops: list[dict[str, Any]]  # the latest version's ops
     findings: list[dict[str, Any]] = []
     result: dict[str, Any] = {}
-    # review workflow (plans/24). Nullable so proposals stored before it still validate; None
+    # review workflow. Nullable so proposals stored before it still validate; None
     # means version 1 and nothing recorded yet.
     version: int | None = None
     history: list[dict[str, Any]] | None = None  # older versions: {version, ops, by, at, why}

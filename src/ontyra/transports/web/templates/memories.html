@@ -3,8 +3,8 @@
 {% block body %}
 <h1>Memories</h1>
 <form class="row" method="get" action="/ui/memories" style="margin-bottom:14px">
-  <select name="kind"><option value="">all kinds</option>{% for k in kinds %}<option {{ 'selected' if k == kind }}>{{ k }}</option>{% endfor %}</select>
-  <select name="status">{% for s in statuses %}<option {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}</select>
+  <label>Kind <select name="kind"><option value="">all kinds</option>{% for k in kinds %}<option {{ 'selected' if k == kind }}>{{ k }}</option>{% endfor %}</select></label>
+  <label>Status <select name="status">{% for s in statuses %}<option {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}</select></label>
   <button>Filter</button><span class="muted small">{{ rows|length }} shown</span>
 </form>
 <div class="card"><table>

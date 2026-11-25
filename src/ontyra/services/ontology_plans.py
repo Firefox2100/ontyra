@@ -1,4 +1,4 @@
-"""Plans for ontology changes (plans/23): what a change writes, as one batch, and how to undo it.
+"""Plans for ontology changes: what a change writes, as one batch, and how to undo it.
 
 A *mutation* (edit, alias, relation changes) keeps the concept and writes a new version of it;
 relations are ended, never deleted. A *structural* change (merge, split, deprecate) leaves the old

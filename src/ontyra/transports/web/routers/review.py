@@ -143,7 +143,7 @@ async def overlay(
     about: Annotated[str, Form()] = "",
 ) -> RedirectResponse:
     """The same fields on every `add` and `revise` of the chosen proposals, as a human's
-    amendment of each (a new version; plans/24)."""
+    amendment of each (a new version)."""
     await memory.overlay(
         caller,
         OverlayRequest(

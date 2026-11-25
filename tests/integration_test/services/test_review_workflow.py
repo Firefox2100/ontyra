@@ -1,4 +1,4 @@
-"""The review workflow (plans/24): amend, withdraw, request changes, per-op decisions, and
+"""The review workflow: amend, withdraw, request changes, per-op decisions, and
 waiting proposals seen by new writes."""
 
 from __future__ import annotations

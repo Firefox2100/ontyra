@@ -58,7 +58,14 @@ async def test_every_page_renders_on_an_empty_store(ui: httpx.AsyncClient) -> No
     ]:
         r = await ui.get(path)
         assert r.status_code == 200, path
-        assert "ONTYRA" in r.text
+        assert "Ontyra" in r.text
+
+    home = await ui.get("/ui/")
+    assert 'rel="icon" href="/ui/assets/ontyra-mark.svg"' in home.text
+    logo = await ui.get("/ui/assets/ontyra-mark.svg")
+    assert logo.status_code == 200
+    assert logo.headers["content-type"].startswith("image/svg+xml")
+    assert "An open memory ring" in logo.text
 
 
 async def test_a_held_proposal_is_listed_viewed_and_approved(ui: httpx.AsyncClient) -> None:

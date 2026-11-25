@@ -1,7 +1,7 @@
 # Benchmark suite
 
 Measures recall quality on labelled scenarios, with the embedder (and later reranker and
-proposing LLM) as a parameter of the run. Design: `plans/18-benchmark.md` (local). Modelled on
+proposing LLM) as a parameter of the run. Modelled on
 the labelled-case approach of `dsh-agentic-roleplay`: planted ground truth, precision and
 recall, per-cell reporting, immutable result files.
 

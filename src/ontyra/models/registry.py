@@ -15,7 +15,7 @@ R = TypeVar("R", bound=Record)
 
 @dataclass(frozen=True)
 class LifecyclePolicy:
-    """Persistence semantics of a memory kind (see plans/01)."""
+    """Persistence semantics of a memory kind."""
 
     supersedes_by_edge: bool = True
     relevance_decay: bool = False

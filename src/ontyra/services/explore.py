@@ -1,6 +1,6 @@
 """Path A: exploration verbs (search with facets, get with expansions, neighbors, structural
 questions, overview). Composed from the same recall machinery, so visibility and qualifier
-rules are identical everywhere (plans/03).
+rules are identical everywhere.
 """
 
 from __future__ import annotations
