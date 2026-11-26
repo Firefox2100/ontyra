@@ -9,7 +9,8 @@ import httpx
 import pytest
 from fastapi import APIRouter
 
-from ontyra.models.proposals import Finding
+from ontyra.models import RecordId
+from ontyra.models.proposals import Finding, ProposalResult
 from ontyra.services import errors
 from ontyra.transports.rest import create_app, routers
 
@@ -99,3 +100,80 @@ async def test_invalid_proposal_error_carries_the_findings() -> None:
         r = await client.get("/v1/proposals/abc")
     assert r.status_code == 422
     assert r.json()["findings"][0]["code"] == "invalid_field"
+
+
+class _RecordingMemory:
+    """Accepts every call and remembers the record id it was handed."""
+
+    def __init__(self) -> None:
+        self.seen: list[Any] = []
+
+    async def get_proposal(self, _caller: Any, proposal_id: Any) -> None:
+        self.seen.append(proposal_id)
+        raise errors.NotFoundError(str(proposal_id))
+
+
+async def test_a_proposal_id_may_carry_the_prefix_clients_were_shown() -> None:
+    memory = _RecordingMemory()
+    services = SimpleNamespace(actors=_Actors(), auth=_Auth(), memory=memory)
+    app = create_app(services)  # type: ignore[arg-type]
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        prefixed = await client.get("/v1/proposals/proposal:abc")
+        bare = await client.get("/v1/proposals/abc")
+    assert prefixed.status_code == 404 and bare.status_code == 404
+    # `proposal:proposal:abc` used to be looked up, and never found, for a proposal that exists.
+    assert [str(record) for record in memory.seen] == ["proposal:abc", "proposal:abc"]
+
+
+class _CapturingMemory:
+    """Accepts a proposal and keeps the body it was handed."""
+
+    def __init__(self) -> None:
+        self.bodies: list[Any] = []
+
+    async def submit(self, _caller: Any, body: Any) -> Any:
+        self.bodies.append(body)
+        return ProposalResult(
+            proposal=RecordId("proposal", "01a"),
+            status="committed",
+            decision="auto_commit",
+        )
+
+
+async def test_a_declared_machine_owns_every_path_anchor() -> None:
+    """The client says which machine it is; the daemon records its path anchors against it.
+
+    A host typed into an anchor (a Tailscale device name, another box's name) would otherwise be
+    stored verbatim and never match a context — the memory would be written but unreachable.
+    """
+    memory = _CapturingMemory()
+    services = SimpleNamespace(actors=_Actors(), auth=_Auth(), memory=memory)
+    app = create_app(services)  # type: ignore[arg-type]
+    body = {
+        "ops": [
+            {
+                "op": "add",
+                "kind": "lesson",
+                "fields": {
+                    "text": "x",
+                    "anchors": [
+                        {"uri": "file://ai-pc/home/x/workspace", "match": "subtree"},
+                        {"uri": "https://example.com/doc", "match": "exact"},
+                    ],
+                },
+            }
+        ]
+    }
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        await client.post("/v1/proposals", json=body, headers={"X-Ontyra-Machine": "x-x99"})
+        await client.post("/v1/proposals", json=body)
+    qualified = memory.bodies[0].ops[0].fields["anchors"]
+    untouched = memory.bodies[1]
+    assert [str(anchor.uri) for anchor in qualified] == [
+        "file://x-x99/home/x/workspace",
+        "https://example.com/doc",
+    ]
+    # Without the header the daemon keeps what it was given: it has nothing better to offer.
+    assert untouched.ops[0].fields["anchors"][0]["uri"] == "file://ai-pc/home/x/workspace"

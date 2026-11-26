@@ -16,6 +16,7 @@ export const DEFAULTS = Object.freeze({
   recall: true,
   budgetTokens: 1200,
   timeoutMs: 1500,
+  toolTimeoutMs: 20000,
   tools: true,
   toolsProfile: 'lite',
   episodes: true,

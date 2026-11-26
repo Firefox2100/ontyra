@@ -20,7 +20,7 @@ window.__ModuleLoader__.load({
     const NS = 'settings.ontyra'
     /** Loader entry id of the Host half; also the settings namespace it registers. */
     const ENTRY = 'ontyra'
-    /** Key of this card in the keyed `plugins.bundle.config` slot: the package name. */
+    /** Id of this card in the `settings.section` list: the package name. */
     const CARD = 'dsh-ontyra-memory'
 
     /** English copy. */
@@ -49,6 +49,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'Token budget for each rendered pack.',
       timeoutMs: 'Timeout (ms)',
       timeoutMsHint: 'How long one daemon call may take before the plugin gives up quietly.',
+      toolTimeoutMs: 'Tool timeout (ms)',
+      toolTimeoutMsHint: 'How long a tool call may take; a daemon on another host needs more than the default.',
       tools: 'Memory tools',
       toolsHint: 'Expose recall, check, briefing, ask, get and remember to the model.',
       toolsProfile: 'Tool profile',
@@ -100,6 +102,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: '每次渲染包的 token 预算。',
       timeoutMs: '超时（毫秒）',
       timeoutMsHint: '单次调用允许的时长，超时静默放弃。',
+      toolTimeoutMs: '工具超时（毫秒）',
+      toolTimeoutMsHint: '一次工具调用的上限；远端服务需要比默认更长的等待。',
       tools: '记忆工具',
       toolsHint: '向模型暴露 recall、check、briefing、ask、get 与 remember。',
       toolsProfile: '工具集',
@@ -151,6 +155,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'レンダリングされたパックあたりのトークン予算。',
       timeoutMs: 'タイムアウト（ミリ秒）',
       timeoutMsHint: '1 回のデーモン呼び出しの上限。超えると静かに諦めます。',
+      toolTimeoutMs: 'ツールのタイムアウト（ミリ秒）',
+      toolTimeoutMsHint: 'ツール呼び出しの上限。別ホストのデーモンには既定より長い時間が要ります。',
       tools: '記憶ツール',
       toolsHint: 'recall、check、briefing、ask、get、remember をモデルに公開します。',
       toolsProfile: 'ツールセット',
@@ -202,6 +208,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'Presupuesto de tokens por paquete renderizado.',
       timeoutMs: 'Tiempo límite (ms)',
       timeoutMsHint: 'Cuánto puede tardar una llamada al demonio antes de rendirse en silencio.',
+      toolTimeoutMs: 'Tiempo límite de herramientas (ms)',
+      toolTimeoutMsHint: 'Cuánto puede tardar una llamada de herramienta; un demonio en otro host necesita más.',
       tools: 'Herramientas de memoria',
       toolsHint: 'Expone recall, check, briefing, ask, get y remember al modelo.',
       toolsProfile: 'Conjunto de herramientas',
@@ -253,6 +261,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'Budget de jetons par paquet rendu.',
       timeoutMs: 'Délai (ms)',
       timeoutMsHint: 'Durée maximale d’un appel au démon avant d’abandonner discrètement.',
+      toolTimeoutMs: 'Délai des outils (ms)',
+      toolTimeoutMsHint: 'Durée maximale d’un appel d’outil ; un démon sur un autre hôte demande davantage.',
       tools: 'Outils de mémoire',
       toolsHint: 'Expose recall, check, briefing, ask, get et remember au modèle.',
       toolsProfile: 'Jeu d’outils',
@@ -304,6 +314,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'Token-Budget je gerendertem Paket.',
       timeoutMs: 'Zeitlimit (ms)',
       timeoutMsHint: 'Wie lange ein Daemon-Aufruf dauern darf, bevor das Plugin still aufgibt.',
+      toolTimeoutMs: 'Werkzeug-Zeitlimit (ms)',
+      toolTimeoutMsHint: 'Wie lange ein Werkzeugaufruf dauern darf; ein Daemon auf einem anderen Host braucht mehr.',
       tools: 'Gedächtniswerkzeuge',
       toolsHint: 'Stellt recall, check, briefing, ask, get und remember für das Modell bereit.',
       toolsProfile: 'Werkzeugsatz',
@@ -355,6 +367,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'Бюджет токенов на каждый собранный пакет.',
       timeoutMs: 'Таймаут (мс)',
       timeoutMsHint: 'Сколько может длиться вызов демона, прежде чем плагин тихо откажется.',
+      toolTimeoutMs: 'Таймаут инструментов (мс)',
+      toolTimeoutMsHint: 'Сколько может длиться вызов инструмента; демону на другом хосте нужно больше.',
       tools: 'Инструменты памяти',
       toolsHint: 'Даёт модели recall, check, briefing, ask, get и remember.',
       toolsProfile: 'Набор инструментов',
@@ -406,6 +420,8 @@ window.__ModuleLoader__.load({
       budgetTokensHint: 'Orçamento de tokens por pacote renderizado.',
       timeoutMs: 'Tempo limite (ms)',
       timeoutMsHint: 'Quanto pode durar uma chamada ao daemon antes de o plugin desistir em silêncio.',
+      toolTimeoutMs: 'Tempo limite das ferramentas (ms)',
+      toolTimeoutMsHint: 'Quanto pode durar uma chamada de ferramenta; um daemon noutro host precisa de mais.',
       tools: 'Ferramentas de memória',
       toolsHint: 'Expõe recall, check, briefing, ask, get e remember ao modelo.',
       toolsProfile: 'Conjunto de ferramentas',
@@ -446,6 +462,7 @@ window.__ModuleLoader__.load({
       { key: 'recall', kind: 'boolean', group: 'behaviour', label: 'recall', hint: 'recallHint' },
       { key: 'budgetTokens', kind: 'number', group: 'behaviour', label: 'budgetTokens', hint: 'budgetTokensHint' },
       { key: 'timeoutMs', kind: 'number', group: 'behaviour', label: 'timeoutMs', hint: 'timeoutMsHint' },
+      { key: 'toolTimeoutMs', kind: 'number', group: 'behaviour', label: 'toolTimeoutMs', hint: 'toolTimeoutMsHint' },
       { key: 'tools', kind: 'boolean', group: 'behaviour', label: 'tools', hint: 'toolsHint' },
       { key: 'toolsProfile', kind: 'select', group: 'behaviour', label: 'toolsProfile', hint: 'toolsProfileHint', choices: ['lite', 'full'] },
       { key: 'episodes', kind: 'boolean', group: 'behaviour', label: 'episodes', hint: 'episodesHint' },

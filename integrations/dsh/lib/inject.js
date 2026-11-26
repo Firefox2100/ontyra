@@ -107,6 +107,26 @@ async function episode(client, settings, session, role, content, signal) {
 }
 
 /**
+ * The proposals still waiting, as `needsChangesNote` reads them.
+ * @param {{ call(call: any, signal: AbortSignal): Promise<any> }} client - daemon client.
+ * @param {AbortSignal} signal - the step's signal.
+ * @param {number} timeoutMs - the configured budget for this call.
+ * @returns {Promise<unknown>} the reply, or undefined when the daemon did not answer.
+ */
+async function waitingProposals(client, signal, timeoutMs) {
+  try {
+    const timeout = AbortSignal.timeout(Math.max(1, Math.trunc(Number(timeoutMs)) || 1500))
+    return await client.call(
+      { method: 'GET', path: '/v1/proposals?limit=50' },
+      AbortSignal.any([signal, timeout]),
+    )
+  } catch {
+    // The note is a courtesy: a slow or absent daemon costs nothing.
+    return undefined
+  }
+}
+
+/**
  * Register the pre-step listener for the lifetime of `ctx`.
  * @param {import('@deepseek-ai/cordis').Context} ctx - the plugin context.
  * @param {object} deps - the plugin's collaborators.
@@ -141,7 +161,11 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     if (decision.kind === 'reject' || signal.aborted) return decision
 
     const settings = settingsNow()
-    if (settings.briefing !== true && settings.recall !== true) return decision
+    // The three deliveries are independent: a user who turns the briefing and the recall off
+    // still asked for capture reminders, and a user who turns everything but episodes off still
+    // wants the ledger kept.
+    const delivering = settings.briefing === true || settings.recall === true || settings.capture !== false
+    if (!delivering && settings.episodes !== true) return decision
 
     const session = agent.session
     const sessionId = String(session.id)
@@ -157,25 +181,21 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     attempted.set(sessionId, cycles)
     if (settings.briefing === true && state.needsBrief === true && !cycles.has(cycle)) {
       cycles.add(cycle)
-      const briefing = await rendered(client, '/v1/briefing', {
-        context,
-        query: null,
-        redeliver: state.briefings > 0,
-        budget_tokens: budget,
-        profile: 'compact',
-      }, signal, settings.timeoutMs)
+      // Both asks are about the same step and neither needs the other's answer, so a slow daemon
+      // should cost one round trip, not two.
+      const [briefing, waiting] = await Promise.all([
+        rendered(client, '/v1/briefing', {
+          context,
+          query: null,
+          redeliver: state.briefings > 0,
+          budget_tokens: budget,
+          profile: 'compact',
+        }, signal, settings.timeoutMs),
+        waitingProposals(client, signal, settings.timeoutMs),
+      ])
       if (briefing !== undefined) parts.push({ name: 'briefing', text: briefing })
-      try {
-        const timeout = AbortSignal.timeout(Math.max(1, Math.trunc(Number(settings.timeoutMs)) || 1500))
-        const waiting = await client.call(
-          { method: 'GET', path: '/v1/proposals?limit=50' },
-          AbortSignal.any([signal, timeout]),
-        )
-        const note = needsChangesNote(waiting)
-        if (note !== undefined) parts.push({ name: 'proposals', text: note })
-      } catch {
-        // The note is a courtesy: a slow or absent daemon costs nothing.
-      }
+      const note = needsChangesNote(waiting)
+      if (note !== undefined) parts.push({ name: 'proposals', text: note })
     }
 
     // A step's batch carries a human prompt only when one just arrived — the opening of a turn, or
@@ -183,7 +203,8 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     const query = unclaimedTurn(recalledTurn, sessionId, turn) ? humanPrompt(decision.messages) : undefined
     if (query !== undefined) claimTurn(recalledTurn, sessionId, turn)
     if (query !== undefined) {
-      await episode(client, settings, session, 'user', query, signal)
+      // The episode log is history, not a precondition: the recall below must not wait on it.
+      void episode(client, settings, session, 'user', query, signal)
     }
     if (settings.recall === true && query !== undefined) {
       const recall = await rendered(client, '/v1/recall', {
@@ -228,7 +249,8 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     if (isSubagent(session.header) && settings.subagents !== true) return
     const state = projection.stateOf(session)
     if (state.lastAssistant !== null) {
-      await episode(client, settings, session, 'assistant', state.lastAssistant, signal)
+      // The turn is closing: record the reply without making the close wait on the daemon.
+      void episode(client, settings, session, 'assistant', state.lastAssistant, signal)
     }
   })
 }

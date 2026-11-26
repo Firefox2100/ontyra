@@ -8,7 +8,8 @@ description: How to read and write Ontyra long-term memory (recall, remember, co
 Ontyra is a local memory daemon (REST + MCP, default `http://127.0.0.1:8787`). Memories reach
 you in two ways: injected context (a briefing at session start, recall on each prompt, when a
 plugin or hook is installed) and the `ontyra` MCP tools (`recall`, `check`, `briefing`, `ask`,
-`get`, `remember`, `pending_proposals`, `amend`, `concepts`, `propose_ontology_change`). If you have no MCP tools, the same
+`get`, `remember`, `consult`, `check_source`, `feedback`, `pending_proposals`, `amend`, `concepts`,
+`propose_ontology_change`). If you have no MCP tools, the same
 operations are REST calls under `/v1` (`POST /v1/recall`, `/v1/check`, `/v1/proposals`, …; send
 headers `X-Ontyra-Actor: <your name>` and `X-Ontyra-Harness: <harness>`; the schema is at
 `/openapi.json`). If the daemon is unreachable, carry on without memory and tell the user once. Treat injected memories as advice about this user and
@@ -58,7 +59,13 @@ Pick the kind by what the statement is: `fact` a standing statement about the wo
 
 Say **where it applies** or it will not be found by context: `scope: "universal"` for a standing
 preference that holds everywhere; otherwise `anchors` (`{"uri": "file://host/path", "match":
-"subtree"}`), `about` (concept ids) and `qualifiers`. A directive with none of these gets an
+"subtree"}`), `about` (concept ids) and `qualifiers`. Write a path anchor **without a host** —
+`file:///D:/path` or `D:/path`. The hook that runs on this machine declares which machine it is to
+the daemon, and the daemon records every path anchor of a proposal against it, so the host is
+decided by code, not by you; the injected context shows the settled form
+(`file://legion5/D:/repo`). Do not type a host name: a guessed one (a Tailscale device name, a
+hostname seen in some other text) is replaced, and typing it only makes the anchor harder to read.
+A directive with none of these gets an
 `unscoped_directive` warning: it is already saved, so `revise` it rather than adding it again. To change an existing memory use `revise` or `supersede`
 (read the findings: a duplicate warning usually means supersede). Cite what the user said as
 `evidence: [{"quote": "their words, copied literally"}]`: the daemon finds the message in the

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Header, Query, Response
 
 from ontyra.models import RecordId
 from ontyra.models.core import Proposal
@@ -15,6 +15,7 @@ from ontyra.models.proposals import (
     RequestChanges,
     WithdrawRequest,
 )
+from ontyra.services.anchors import anchored_to
 from ontyra.transports.rest.deps import CallerDep, MemoryServiceDep
 
 router = APIRouter(prefix="/proposals", tags=["proposals"])
@@ -23,7 +24,13 @@ _STATUS_CODE = {"committed": 201, "pending": 202, "rejected": 422}  # submit onl
 
 
 def _id(proposal_id: str) -> RecordId:
-    return RecordId("proposal", proposal_id)
+    """The record a path id names, whether or not it still carries the `proposal:` prefix.
+
+    Proposal ids are shown to clients as `proposal:abc`; pasting one back into a path used to build
+    `proposal:proposal:abc` and answer 404 for a proposal that exists.
+    """
+    table, sep, ident = proposal_id.partition(":")
+    return RecordId("proposal", ident if sep and table == "proposal" else proposal_id)
 
 
 @router.post(
@@ -41,8 +48,21 @@ def _id(proposal_id: str) -> RecordId:
                422: {"model": ProposalResult}},
 )  # fmt: skip
 async def submit(
-    body: ProposalRequest, caller: CallerDep, memory: MemoryServiceDep, response: Response
+    body: ProposalRequest,
+    caller: CallerDep,
+    memory: MemoryServiceDep,
+    response: Response,
+    x_ontyra_machine: Annotated[
+        str | None,
+        Header(
+            description="The machine the caller runs on (its hostname). Every `file:` anchor in "
+            "the proposal is recorded against it, so a path anchor copied from elsewhere cannot "
+            "make the memory quietly unmatchable."
+        ),
+    ] = None,
 ) -> ProposalResult:
+    if x_ontyra_machine:
+        body = anchored_to(body, x_ontyra_machine)
     result = await memory.submit(caller, body)
     response.status_code = _STATUS_CODE[result.status]
     return result

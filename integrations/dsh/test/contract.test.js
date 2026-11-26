@@ -8,7 +8,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-import { contextArg, TOOLS, toolsFor } from '../lib/tools.js'
+import { contextArg, TOOLS, toolVisible, toolsFor } from '../lib/tools.js'
 
 const contract = JSON.parse(
   readFileSync(new URL('../../contract/mcp-tools-lite.json', import.meta.url), 'utf8'),
@@ -35,6 +35,15 @@ test('lite registers the daemon’s lite tools, prefixed', () => {
 
 test('full adds the ontology tools', () => {
   assert.deepEqual(toolsFor('full').map((tool) => tool.name), [...LITE, 'ontyra_concepts', 'ontyra_propose_ontology_change'])
+})
+
+test('the live settings decide each step’s tool surface', () => {
+  // The plugin registers every tool once; these predicates are what a settings change reaches.
+  assert.equal(toolVisible({ tools: true, toolsProfile: 'lite' }, 'ontyra_recall'), true)
+  assert.equal(toolVisible({ tools: true, toolsProfile: 'lite' }, 'ontyra_concepts'), false)
+  assert.equal(toolVisible({ tools: true, toolsProfile: 'full' }, 'ontyra_concepts'), true)
+  assert.equal(toolVisible({ tools: false, toolsProfile: 'full' }, 'ontyra_recall'), false)
+  assert.equal(toolVisible({ tools: true }, 'ontyra_concepts'), false)
 })
 
 test('every tool’s description is the daemon’s own', () => {
@@ -153,7 +162,7 @@ test('ask sends record ids in the bodies and bare ids in the paths', () => {
     ask.request({ question: 'applies_here', memory: 'abc', trace: 'def' }, {})
   ).body
   assert.equal(body.memory, 'memory:abc')
-  assert.equal(body.trace, 'trace:def')
+  assert.equal(body.trace, 'recall_trace:def')
   const given = /** @type {{ body: { memory: string } }} */ (
     ask.request({ question: 'applies_here', memory: 'memory:abc' }, {})
   ).body
@@ -162,6 +171,25 @@ test('ask sends record ids in the bodies and bare ids in the paths', () => {
   const get = TOOLS.find((tool) => tool.name === 'ontyra_get')
   const call = get.request({ memory: 'memory:abc' }, {})
   assert.equal(call.path, '/v1/memories/abc/detail')
+})
+
+test('a table prefix the model copied is replaced, never doubled', () => {
+  const ask = TOOLS.find((tool) => tool.name === 'ontyra_ask')
+  const trace = (value) => /** @type {{ body: { trace: string } }} */ (
+    ask.request({ question: 'explain', trace: value }, {})
+  ).body.trace
+  // `ontyra_recall` shows the trace as `recall_trace:abc`; `ontyra_feedback` calls it `trace`, so
+  // both forms, and the wrong one, have to end up naming the table the daemon can look up.
+  assert.equal(trace('recall_trace:01a'), 'recall_trace:01a')
+  assert.equal(trace('trace:01a'), 'recall_trace:01a')
+  assert.equal(trace('01a'), 'recall_trace:01a')
+
+  const get = TOOLS.find((tool) => tool.name === 'ontyra_get')
+  assert.equal(get.request({ memory: 'memory:01a' }, {}).path, '/v1/memories/01a/detail')
+
+  const amend = TOOLS.find((tool) => tool.name === 'ontyra_amend')
+  const call = amend.request({ proposal: 'proposal:01a', request: { ops: [], why: 'x' } }, {})
+  assert.equal(call.path, '/v1/proposals/01a/amend')
 })
 
 test('the remember ops list the daemon’s per-kind fields', () => {

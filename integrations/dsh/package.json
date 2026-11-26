@@ -1,9 +1,16 @@
 {
   "name": "dsh-ontyra-memory",
   "version": "0.1.0",
-  "description": "Ontyra long-term memory for DeepSeek Harness: a session briefing, recall on every prompt, the lite tool surface, and opt-in episodes.",
+  "description": "Long-term memory for DeepSeek Harness: a session briefing, recall on each prompt, the ontyra_* tools, and a ledger of episodes.",
   "icon": "assets/ontyra-mark.svg",
   "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Firefox2100/ontyra.git",
+    "directory": "integrations/dsh"
+  },
+  "homepage": "https://github.com/Firefox2100/ontyra/tree/main/integrations/dsh#readme",
+  "bugs": "https://github.com/Firefox2100/ontyra/issues",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

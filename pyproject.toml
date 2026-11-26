@@ -90,6 +90,8 @@ select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM", "RUF"]
 "src/ontyra/models/*" = ["RUF012"]
 "src/ontyra/services/views.py" = ["RUF012"]
 "tests/**" = ["RUF012", "E501"]
+# Its Chinese documentation text uses fullwidth punctuation, which RUF001 calls ambiguous.
+"scripts/export_settings_docs.py" = ["RUF001"]
 
 [tool.pyright]
 include = ["src", "tests"]

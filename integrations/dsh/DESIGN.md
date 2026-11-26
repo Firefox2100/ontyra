@@ -1,6 +1,6 @@
 # Ontyra × DeepSeek Harness（DSH）原生插件整合
 
-状态：设计已定稿，进入实现。本文件只在本地保存，不加入版本控制。
+状态：已实现并交付（M1–M6），本文档只记录设计与已知边界。本文件只在本地保存，不加入版本控制。
 
 ## 1. 目标与约束
 
@@ -11,10 +11,12 @@ capture 提醒（随注入上下文附带，不额外占用回合）、可选的
 约束（用户已确认）：
 
 - **原生插件**，不通过 MCP 配置行暴露工具；用户不需要在 DSH 里手工配置 MCP。
-- **不做任何 ontyra 服务端改动**：现有 REST 已覆盖全部能力。
+- **插件不改 ontyra 的对外约定**：现有 REST 已覆盖全部能力。审查后只修了两个服务端**健壮性**
+  缺陷（`proposal:` 前缀被重复拼接、`ask explain` 对错表名报 500），没有新增能力、没有改 schema。
 - 设置页面**必须存在**：基础配置（Ontyra 地址、凭据）与行为配置分开。
 - 凭据**不写进 Cordis patch**：只保存引用，值进 `$DSH_HOME/.credentials.yaml`。
-- `capture`、`subagents` 两项**默认关闭**，放进 DSH 配置供用户打开；`episodes` **默认开启**（记忆证据 `quote` 要在 episode 账本里匹配，与 Claude/Codex 插件一致）。
+- `capture`、`episodes` 现已**默认开启**（`captureEvery` 默认 5；早期版本默认关闭，交付前按用户反馈
+  改开：记忆证据 `quote` 要在 episode 账本里匹配，与 Claude/Codex 插件一致），`subagents` 仍**默认关闭**。
 - 以后更强的整合（例如由插件托管 daemon、记忆面板）继续以原生方式加进这个插件。
 
 ## 2. 为什么是 bundle + 客户端卡
@@ -33,21 +35,27 @@ DSH 的 Claude/Codex 桥接包（`@deepseek-ai/dsh-hooks-claude-code`、`dsh-hoo
 
 设置页的落点：`plugins.item` 被官方设置页占位，bundle 自己的配置槽是
 `plugins.bundle.config`（key = 包名）与 `plugins.row.config`（key = `<包名>#<row>`）。
-第三方注册没有闸门（`dsh-client-modules/src/index.ts:905` 只看 `dsh.client.platform`），
+**但这两个槽都没有表单**（`PluginManagerPage.tsx:822` 只传 `{ view: 'page' }`），用户最初反馈「只有
+介绍、没有输入框」。最终实现按用户指出的参考插件 `../dsh-ai-providers` 注册到通用设置的
+`settings.section`（`whileServed(['ontyra'])` + `order: 45`），卡片自己读 `configForms.describe()`
+的镜像渲染。第三方注册没有闸门（`dsh-client-modules/src/index.ts:905` 只看 `dsh.client.platform`），
 但表单**不会**自动生成，必须自带客户端半。
 
 ## 3. 包结构
 
 ```
 integrations/dsh/
-  package.json          # dsh.bundle.patch + dsh.client{platform:'web'} + exports{'.','./client'}
+  package.json          # dsh.bundle.patch + dsh.client{platform:'web'} + exports{'.','./client','./locale/*.json'}
   cordis.patch.yml      # 插入 Host 插件 entry，id = "ontyra"（即设置命名空间）
+  locale/<lang>.json    # 插件行的标题与描述，八种语言（经 exports 暴露）
+  assets/ontyra-mark.svg# 插件行的图标（package.json 的 icon）
   lib/index.js          # Host 插件（ESM，手写，无构建）
   lib/client.js         # 设置卡（lazy-CJS 工厂 bundle，手写，无构建）
-  lib/tools.js          # 8 个原生工具：描述/参数/渲染手写，路由由契约测试钉住
+  lib/tools.js          # 13 个原生工具的映射面（lite 暴露 11 个）：描述/参数/渲染手写，路由由契约测试钉住
   lib/{context,ontyra,settings,inject,inject-core,skill}.js
   skills/ontyra-memory/SKILL.md # DSH 版技能（工具名带 ontyra_ 前缀，语言随 DSH 走）
-  test/*.test.js        # node --test：契约、注入、卡片、技能
+  scripts/doctor.mjs    # 只读自查：daemon 存活、Host 是否在发客户端半
+  test/*.test.js        # node --test：契约、注入、卡片、技能、元数据
   README.md
   DESIGN.md             # 本文件
 ```
@@ -73,9 +81,10 @@ integrations/dsh/
 | `briefing` | `true` | 会话开始/压缩后注入 briefing |
 | `recall` | `true` | 每条人类消息做 recall |
 | `budgetTokens` | `1200` | 传给 recall/briefing |
-| `timeoutMs` | `1500` | 单次 HTTP 超时，失败静默 |
-| `tools` | `true` | 注册原生工具 |
-| `toolsProfile` | `lite` | `lite` 6 个；`full` 再加 2 个 |
+| `timeoutMs` | `1500` | 注入（briefing/recall）的单次 HTTP 预算，超时静默放弃 |
+| `toolTimeoutMs` | `20000` | 工具调用预算，每次调用现读；远端 daemon 的 recall 约 2 s，1500 会把它掐断 |
+| `tools` | `true` | 暴露原生工具（按步过滤，改了下一步生效） |
+| `toolsProfile` | `lite` | 下拉：`lite` 暴露 11 个；`full` 再加 `ontyra_concepts`、`ontyra_propose_ontology_change` |
 | `episodes` | `true` | 记录 episode |
 | `capture` | `true` | capture 提醒（含规则/偏好/纠正类措辞即时触发；随注入上下文附带，不额外占用回合） |
 | `captureEvery` | `5` | 每 N 轮定期提醒一次 |
@@ -84,14 +93,22 @@ integrations/dsh/
 ### 4.2 原生工具
 
 `ontyra_recall`、`ontyra_check`、`ontyra_briefing`、`ontyra_ask`、`ontyra_get`、`ontyra_remember`、
-`ontyra_concepts`、`ontyra_propose_ontology_change`（后两个仅 `full`）。
+`ontyra_feedback`、`ontyra_consult`、`ontyra_check_source`、`ontyra_pending_proposals`、`ontyra_amend`；
+`ontyra_concepts` 与 `ontyra_propose_ontology_change` 仅 `full`。
 
 - 名称、描述、参数与路由写死在 `lib/tools.js`，由 `test/contract.test.js` 对着 MCP 契约逐条断言
   （见 §6）；不生成代码，也不引入构建步骤。
+- 全部 13 个工具**都注册**，可见性由 `defineTool` 的 `when: () => toolVisible(settingsNow(), name)`
+  每步判定。注册期就筛掉子集会让 `tools`/`toolsProfile` 改动要等重载，而设置卡承诺下一步生效。
+- id 映射：模型给的 `table:id` 前缀一律**替换**（`idOf()` 剥任意前缀，`recordRef()` 补回正确的表），
+  所以 `proposal:abc` 贴进 amend 路径得到 `/v1/proposals/abc/amend`，`trace:abc` 变成
+  `recall_trace:abc`。这两个曾是真机 404/500 的 bug。
 - 执行：`client.call({ method, path, body }, signal)` 打 REST；`context` 由 `lib/context.js` 从会话的
   cwd/工程文件观测得到，模型显式传入时覆盖观测值（裸字符串 signal 会被包成 `{concept}`）。
 - `output.render`：recall/briefing 返回 daemon 的 `rendered` 文本，其余 JSON 文本。
-- 超时：`ToolDefinition.timeoutMs`（注册时固定）+ `exec.signal`（每次调用实际生效）。
+- 超时：注入用 `timeoutMs`（挡住每一步，必须短）；工具调用用 `toolTimeoutMs`（每次调用现读，
+  默认 20000）。`ToolDefinition.timeoutMs` 只是注册期的 120 s 兜底，真正每次生效的是
+  `client.call(..., settingsNow().toolTimeoutMs)`——跨主机 daemon 的 recall 约 1.8 s，1500 会误判「不可达」。
 
 ### 4.3 注入（`agent/pre-step`，prepend）
 
@@ -99,11 +116,16 @@ integrations/dsh/
 await next()
 decision.kind === 'reject' || signal.aborted  → 原样返回
 subagents=false 且当前 agent 是子 agent        → 原样返回
-需要 briefing（首次 / compaction/end 之后）    → POST /v1/briefing
-否则存在 source.kind === 'user' 的新 prompt    → POST /v1/recall
+briefing 与 proposals 并发取（首次 / compaction/end 之后）
+否则存在本 turn 未 recall 过的人类 prompt      → POST /v1/recall
 silent 或 rendered 为空                        → 不注入
 注入文本用 <ontyra-context trust="reference-only"> 包装
 ```
+
+早退条件只看「三种投递是否全关」：`delivering = briefing || recall || capture`，只有
+`!delivering && !episodes` 才直接返回——关掉 briefing/recall 不该连带关掉 capture 与 episode。
+用户 episode 与 assistant episode 都是 `void episode(...)`：历史不是前置条件，回合关闭不该等 daemon
+（审查前这里是 `await`，daemon 慢时每条人类消息最多多耗一个 `timeoutMs`）。
 
 注入永远是持久 user-role 消息 + 自定义 `MessageSource`
 （`{ kind: 'ontyra', form: 'snapshot', sections: [{ name, text }] }`），append-only、KV 友好，
@@ -120,11 +142,29 @@ silent 或 rendered 为空                        → 不注入
 
 `context` 组装：
 
-- `uris`：`file://` + 工作目录 + git 根（存在 `.git` 时）。
+- `uris`：`file://<本机 host>` + 工作目录 + git 根（存在 `.git` 时）——**锚点带机器名**，见下。
 - `signals`：`process.platform`；工程文件探测
   `pyproject.toml`/`requirements.txt`→python、`package.json`→nodejs、`Cargo.toml`→rust、
   `go.mod`→go、`compose.yaml`→docker；存在 `.git`→git。
+- **锚点来源统一**：工具执行和注入都用 `workingDirectory.get(session)`（realpath 规范化后的 cwd），
+  不再让工具读 `session.header.cwd`——否则同一会话两处 `file://` URI 可能不同，写下的记忆召回不到。
 - `session`：`agent.session.id`（ledger 去重与更正通知依赖它）。
+
+**锚点必须带机器名（多设备 / 共享 daemon），且由代码决定。** daemon 对无 host 的 `file:` URI 用
+**它自己**的 `recall.machine` 补 host，所以插件若发 `file:///D:/work`，两台设备的同路径会折叠成同一个
+`file://localhost/D:/work`，记忆互相串台。两层实现：① 客户端声明自己是谁——插件每个请求带
+`X-Ontyra-Machine: <折叠后的 hostname>`（`lib/ontyra.js`），钩子也带；② daemon 侧
+`services/anchors.py: qualify()` + `anchored_to()` 把该请求里**所有** `file:` 锚点的 host 改写成声明的
+机器（REST 在 `POST /v1/proposals`，MCP 在 `remember`，读同一个头）。因此模型手写或从别处抄来的 host
+会被覆盖，而不是存成一个永远匹配不上的锚点。插件自身还会重写（`hostOf`/`fileUri`/`qualifyFileUri`，
+含 `file://D:/repo` 这种盘符被当 host 的两斜杠写法；`qualifyOps()` 克隆 op 不改调用方对象），
+所以对着旧 daemon 行为也一样。
+
+旧数据（host 为 `localhost`、为空，或写着这台机器以前的 hostname）一次性迁移：`GET /v1/memories`
+读 `content.anchors` → 每个需要改的记忆发一个 `revise` 提案（只覆盖 `anchors`，`reason_code:
+refined`）。选择 `revise` 而非 `POST /v1/resources` + `same_as`，因为前者只动数据、不需要
+global-write 权限，也不会给每个旧锚点留一个等价链。这是一次性数据修复，仓库不留脚本：2026-11-26
+已对共享 daemon 上的 17 条记忆跑过（`localhost` / `ai-pc` → `x-x99`，全部 committed）。
 
 ### 4.4 episode 与 capture
 
@@ -164,7 +204,7 @@ name, description, content }))`；部署没有技能服务、或文件读不到�
 - **连接**：`baseUrl` 文本框；token 密码框（只写，显示已设置/未设置，保存走
   `ctx.remote.credentials.set`，清空走 `unset`）；`tokenRef` 是引用名，值从不进 Cordis patch。
 - **行为**：`briefing`、`recall`、`tools`、`episodes`、`capture`、`subagents` 复选框 +
-  `captureEvery`、`budgetTokens`、`timeoutMs` 数字框 + `toolsProfile` 下拉（`lite` / `full`，
+  `captureEvery`、`budgetTokens`、`timeoutMs`、`toolTimeoutMs` 数字框 + `toolsProfile` 下拉（`lite` / `full`，
   选项文字随界面语言；非法值在 `coerce()` 里被拒，不会写进 patch）。
 - 卡片文案随界面语言切换：`ctx.locale.register` 注册 en/zh/ja/es/fr/de/ru/pt 八套字典，
   键集必须与 `en` 完全相同（`test/client.test.js` 断言），缺键回落键名而非留白。
@@ -207,12 +247,13 @@ name, description, content }))`；部署没有技能服务、或文件读不到�
 
 | # | 内容 | 状态 |
 |---|---|---|
-| M1 | 包骨架、8 个原生工具 | 完成：真机 8 个工具逐个调通；`ontyra_remember` 落库 `committed`，`ontyra_recall` 取回真实记忆，`ontyra_propose_ontology_change` 产出 `pending` 变更 |
+| M1 | 包骨架、原生工具 | 完成：真机逐工具调通（现有 11 个 lite 工具 + full 的 2 个）；`ontyra_remember` 落库 `committed`，`ontyra_recall` 取回真实记忆，`ontyra_propose_ontology_change` 产出 `pending` 变更 |
 | M2 | projection + pre-step 注入 | 完成：真机收到 `<ontyra-context>` briefing；锚点不匹配时静默 abstain |
-| M3 | episodes 与 capture | 代码完成 + 单测；capture 默认关，开启后 `agent/steer` 续命 |
+| M3 | episodes 与 capture | 完成：capture 提醒改为注入上下文里的一行（不再 `agent/steer` 多占回合），默认开启 |
 | M4 | 设置卡 + 凭据 | 完成：真机确认三个分区与 14 个控件、保存与令牌写入均可用；卡片改读 `describe` 镜像后才稳定渲染 |
 | M5 | 收口 | 完成：技能注册已在真机挂上（本会话技能目录出现 `ontyra-memory`）；DESIGN/README/AGENTS 同步；JS 侧 35 个用例全绿 |
-| M6 | 打磨（用户 m02724） | 完成：`toolsProfile` 改下拉、八语言卡片文案、`locale/` 元数据（八份 `meta.title`/`meta.description`，经 exports 解析实测通过） |
+| M6 | 打磨（用户 m02724） | 完成：`toolsProfile` 改下拉、八语言卡片文案、`locale/` 元数据（八份 `meta.title`/`meta.description`，经 exports 解析实测通过）、图标由维护者补上（`assets/ontyra-mark.svg`） |
+| M7 | 交付前审查修复 | 完成：`ontyra_amend` 的前缀重复、`ontyra_ask` 的 trace 表名（两个真机 bug）、episode 串行阻塞、capture 独立性、工具按步过滤、锚点同源、doctor 默认端口、README/DESIGN/SKILL 过期描述、`package.json` 分发字段；服务端同步修 `_id()` 前缀容错与 `_explain` 错表 → not found |
 
 ## 8. 安装与验证
 
@@ -234,11 +275,13 @@ GET http://127.0.0.1:<gui-port>/plugins/??dsh-ontyra-memory/client.js&rev=…
 
 2026-11-18 实测：图里有 `dsh-ontyra-memory`（94 个条目中的第三方之一），产物 200、
 `text/javascript`、41266 字节（磁盘 CRLF → 服务端 LF），正文含 `settings.section`、`toolsProfile`
-的下拉与八套字典。
+的下拉与八套字典；2026-11-26 复查（DSH 0.2.2-rc.5）产物与工作树 `lib/client.js` 逐字相同，仅多
+末尾 `;` 与 `//# sourceMappingURL=`。
 
-以上探针已固化为只读脚本 `node integrations/dsh/scripts/doctor.mjs`（`--gui` / `--daemon` 可改，
-默认 `http://127.0.0.1:49180` 与 `http://127.0.0.1:8787`，失败退出码非 0）：它依次查 daemon
-`/health`、一次空 recall、模块图里有没有本包、以及产物能否取到并含 `settings.section`。SSE 的第一帧
+以上探针已固化为只读脚本 `node integrations/dsh/scripts/doctor.mjs`：daemon 默认
+`http://127.0.0.1:8787`（`--daemon` / `ONTYRA_URL`），**GUI 没有默认端口**——桌面端每次启动都换端口，
+所以 `--gui` / `DSH_GUI_URL` 未给时两项 Host 检查打印 `skip` 而不是猜。它依次查 daemon `/health`、
+一次空 recall、模块图里有没有本包、以及产物能否取到并含 `settings.section`。SSE 的第一帧
 是注释帧（`:connected`），解析时必须跳过没有 `data:` 的帧——脚本第一版就在这里失败过。
 
 ## 9. 待确认
@@ -247,8 +290,8 @@ GET http://127.0.0.1:<gui-port>/plugins/??dsh-ontyra-memory/client.js&rev=…
   ready 状态（`loading` / `unavailable` / 只读）都渲染可见文本，渲染异常由错误边界显示为
   `Ontyra settings failed to render: …`，所以「空白」不应再出现。
 - 元数据（用户 m02724）：八份 `locale/<lang>.json` 已写入并用 `createRequire` 从 profile 侧按
-  `<pkg>/locale/<lang>.json` 逐份解析通过（这正是 Host `readPluginMeta()` 的取法）；图标留给用户，
-  `package.json` 尚未声明 `icon`——一旦写上，`test/meta.test.js` 会检查文件存在且 ≤256 KiB。
+  `<pkg>/locale/<lang>.json` 逐份解析通过（这正是 Host `readPluginMeta()` 的取法）；图标已由维护者补上
+  （`assets/ontyra-mark.svg`，676 B），`test/meta.test.js` 会检查文件存在、扩展名合法且 ≤256 KiB。
 - 子 agent 判定已实现为 `isSubagent(header)`（`origin === 'subagent'` 或 `delegationDepth > 0`），
   命中且 `subagents` 未开时**两个入口**（`agent/pre-step` 与 `agent/turn-stopping`）都直接返回：
   不注入、不记 episode、不提醒 capture。已经过真机验证（一次只读探测子 agent 反馈

@@ -10726,6 +10726,24 @@
         "operationId": "submit_v1_proposals_post",
         "parameters": [
           {
+            "description": "The machine the caller runs on (its hostname). Every `file:` anchor in the proposal is recorded against it, so a path anchor copied from elsewhere cannot make the memory quietly unmatchable.",
+            "in": "header",
+            "name": "x-ontyra-machine",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The machine the caller runs on (its hostname). Every `file:` anchor in the proposal is recorded against it, so a path anchor copied from elsewhere cannot make the memory quietly unmatchable.",
+              "title": "X-Ontyra-Machine"
+            }
+          },
+          {
             "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",

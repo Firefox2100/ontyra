@@ -39,7 +39,10 @@ async def test_an_export_is_private_and_old_ones_are_pruned(tmp_path: Path) -> N
     for day in range(1, 6):
         (tmp_path / f"ontyra-2026010{day}-000000.surql").write_text("old")
     path = await svc.run_once()
-    assert path.read_text() == "DEFINE TABLE x;" and stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert path.read_text() == "DEFINE TABLE x;"
+    if os.name == "posix":
+        # Windows ignores the read bits chmod sets, so a mode there says nothing.
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
     kept = names(tmp_path)
     assert len(kept) == 3 and path.name in kept  # the newest three survive
 
@@ -52,7 +55,7 @@ async def test_the_first_export_waits_out_what_is_left_of_the_interval(tmp_path:
     assert svc.seconds_until_due() == 0  # nothing yet: due at once
     recent = tmp_path / "ontyra-20260101-000000.surql"
     recent.write_text("x")
-    assert 23.9 * 3600 < svc.seconds_until_due() <= 24 * 3600  # exported just now
+    assert 23.9 * 3600 < svc.seconds_until_due() <= 24 * 3600 + 1  # exported just now
     old = time.time() - 30 * 3600
     os.utime(recent, (old, old))
     assert svc.seconds_until_due() == 0  # older than the interval

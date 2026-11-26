@@ -5,9 +5,14 @@ packaged for Codex (`.codex-plugin/plugin.json`).
 
 - **Hooks** (`hooks/ontyra-hook.sh`, curl + jq over REST): a briefing at session start (also after
   resume, clear and compaction) and recall on every prompt, injected as developer context. Fails
-  open when the daemon is unreachable. Prompts and the assistant's last message are logged as
-  episodes (`ONTYRA_LOG_EPISODES=0` to stop). Capture reminder (on, `ONTYRA_CAPTURE=0` to stop): a line in the injected context, no extra turn.
-- **MCP** (`.mcp.json`): the daemon's streamable-HTTP endpoint, caller identified as `codex`.
+  open when the daemon is unreachable. The working directory and the git root are anchored as
+  `file://<machine>/<path>`, with the machine folding the same way the DeepSeek Harness plugin
+  does, so all harnesses on one machine see each other's path memories. Prompts and the
+  assistant's last message are logged as episodes (`ONTYRA_LOG_EPISODES=0` to stop). Capture
+  reminder (on; `ONTYRA_CAPTURE=0` to stop): a line in the injected context, no extra turn.
+- **MCP** (`.mcp.json`): the daemon's streamable-HTTP endpoint, caller identified as `codex`, with
+  the `lite` tool profile (`recall`, `check`, `briefing`, `ask`, `get`, `remember`, `consult`,
+  `check_source`, `feedback`, `pending_proposals`, `amend`).
 - **Skill** (`skills/ontyra-memory`): when and how to `remember`, scope, concepts, ontology changes.
 
 ## Requirements
@@ -15,7 +20,8 @@ packaged for Codex (`.codex-plugin/plugin.json`).
 A running Ontyra daemon with MCP on (`ONTYRA_MCP__ENABLED=true`), by default at
 `http://127.0.0.1:8787`; `curl` and `jq` on the PATH. When the daemon requires a token, export it as `ONTYRA_TOKEN` (an account's agent credential,
 or the single-user token): the hooks and the MCP server send it as a bearer token.
-Another address: edit `url` in `.mcp.json` and export `ONTYRA_URL` for the hooks.
+Another address: edit `url` in `.mcp.json` and export `ONTYRA_URL` for the hooks (a daemon on
+another machine costs the round trip — recall there takes a couple of seconds).
 
 ## Install
 

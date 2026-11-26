@@ -4,18 +4,68 @@ resources that count as "here".
 
 from __future__ import annotations
 
+import re
 from collections import deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
+from urllib.parse import urlsplit
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.anchors import Anchor
 from ontyra.models.ontology import Resource, ResourceRequest
-from ontyra.models.uri import canonical_uri, uri_ancestors
+from ontyra.models.proposals import ProposalRequest
+from ontyra.models.uri import _clean_path, canonical_uri, uri_ancestors
 from ontyra.ports import Create, Store
 from ontyra.services import errors
 from ontyra.services.ontology import OntologyService
+
+# `file://D:/repo`: what a Windows path looks like when its drive letter lands in the host slot.
+_DRIVE_AS_HOST = re.compile(r"^file://([A-Za-z]):(/.*)?$", re.IGNORECASE)
+
+
+def qualify(uri: str, machine: str) -> str:
+    """Give a `file:` URI the host of the machine that wrote it.
+
+    A path anchor only means something relative to one machine, and only the caller knows which
+    one it is. So a caller that says "I am `x-x99`" gets every path anchor recorded against it: a
+    host copied from elsewhere (a Tailscale device name, another box's name) is replaced instead
+    of stored, where it would never match a context and the memory would quietly go missing.
+    """
+    text = uri.strip()
+    if text.partition(":")[0].lower() != "file":
+        return uri
+    host = machine.strip().lower() or "localhost"
+    drive = _DRIVE_AS_HOST.match(text)
+    if drive is not None:
+        path = _clean_path(drive.group(2) or "/")
+        return f"file://{host}/{drive.group(1).upper()}:{path if path else ''}"
+    return f"file://{host}{_clean_path(urlsplit(text).path)}"
+
+
+def anchored_to(body: ProposalRequest, machine: str) -> ProposalRequest:
+    """The same proposal with every path anchor recorded against `machine`.
+
+    Applied where a client declares which machine it runs on (an `X-Ontyra-Machine` header), so
+    the host of a path anchor is decided by code rather than by whoever typed the URI.
+    """
+    ops: list[Any] = []
+    for op in body.ops:
+        fields = getattr(op, "fields", None)
+        anchors = fields.get("anchors") if isinstance(fields, dict) else None
+        if not isinstance(anchors, list) or not anchors:
+            ops.append(op)
+            continue
+        rewritten = [
+            Anchor(
+                uri=qualify(str(a.get("uri", "") if isinstance(a, dict) else a.uri), machine),
+                match=a.get("match", "subtree") if isinstance(a, dict) else a.match,
+            )
+            for a in anchors
+        ]
+        ops.append(op.model_copy(update={"fields": {**fields, "anchors": rewritten}}))
+    return body.model_copy(update={"ops": ops})
 
 
 @dataclass(frozen=True)

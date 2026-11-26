@@ -519,6 +519,11 @@ class ExplorationService:
     async def _explain(self, caller: Caller, request: AskRequest) -> AskResult:
         if request.trace is None:
             raise errors.InvalidRequestError("explain needs a recall `trace` id")
+        if request.trace.table != "recall_trace":
+            # A trace id is shown next to the memories it delivered, so a wrong table is a copy
+            # slip. Reject it as "not found": asking the store for a table this database has never
+            # heard of would answer with a storage error, i.e. a 500 for a plain bad id.
+            raise errors.NotFoundError(f"{request.trace} does not exist")
         trace = await self.store.get(request.trace)
         if not isinstance(trace, RecallTrace) or trace.owner != caller.owner:
             raise errors.NotFoundError(f"{request.trace} does not exist")

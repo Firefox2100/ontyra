@@ -14,16 +14,54 @@
 # ONTYRA_TOKEN, ONTYRA_PROFILE (compact|rich, default compact: no scores or anchors in the text), ONTYRA_CAPTURE (default 1; 0 turns the reminder off), ONTYRA_CAPTURE_EVERY, ONTYRA_LOG_EPISODES (default 1), ONTYRA_HARNESS (default
 # claude-code) and ONTYRA_ACTOR (default: the harness name) say who is talking.
 set -u
+# Everything below needs jq; without it the hook would fail open silently and the user would think
+# memory is on. Say it once instead.
+command -v jq >/dev/null 2>&1 || {
+  echo "ontyra: the memory hook needs jq (https://jqlang.github.io/jq/); continuing without memory" >&2
+  exit 0
+}
 input=$(cat)
 url="${ONTYRA_URL:-http://127.0.0.1:8787}"
 event=$(jq -r '.hook_event_name // empty' <<<"$input") || exit 0
 cwd=$(jq -r '.cwd // empty' <<<"$input")
 session=$(jq -r '.session_id // empty' <<<"$input")
 source_kind=$(jq -r '.source // "startup"' <<<"$input")
+# The machine name goes into every path anchor, so all harnesses on one machine must fold it the
+# same way: the DSH plugin lowercases `os.hostname()` and turns anything a URI host cannot hold
+# into `-`. Do exactly that here, or a memory written under one harness is invisible to another.
 host=$(hostname 2>/dev/null || echo localhost)
+host=$(printf '%s' "$host" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9.-]/-/g' -e 's/^-\{1,\}//' -e 's/-\{1,\}$//')
+[ -n "$host" ] || host=localhost
 harness="${ONTYRA_HARNESS:-claude-code}"
 actor="${ONTYRA_ACTOR:-${harness%%-*}}"
 state="${TMPDIR:-/tmp}/ontyra-$harness-${session:-none}"
+
+# A path as the daemon should read it whichever shell this hook runs under: forward slashes, a
+# drive letter on Windows (git-bash hands us `/d/repo` and `D:\repo` for the same place), and no
+# trailing slash. Without this the same directory would anchor differently per harness.
+case "$(uname -s 2>/dev/null)" in
+  MINGW* | MSYS* | CYGWIN*) mingw=1 ;;
+  *) mingw=0 ;;
+esac
+uri_path() {
+  p=$1
+  if [ "$mingw" = 1 ]; then
+    case "$p" in
+      /[A-Za-z]/*)
+        drive=$(printf '%s' "$p" | cut -c2 | tr '[:lower:]' '[:upper:]')
+        p="$drive:$(printf '%s' "$p" | cut -c3-)"
+        ;;
+    esac
+  fi
+  case "$p" in
+    [A-Za-z]:[\\/]*)
+      drive=$(printf '%s' "$p" | cut -c1 | tr '[:lower:]' '[:upper:]')
+      p="$drive:$(printf '%s' "$p" | cut -c3- | tr '\\' '/')"
+      ;;
+  esac
+  [ "$p" != "/" ] && p=$(printf '%s' "$p" | sed -e 's|/\{1,\}$||')
+  printf '%s' "$p"
+}
 
 # ONTYRA_TOKEN: the credential when the daemon requires one (a single-user token, or the token
 # of an account's credential). Unset: no Authorization header is sent.
@@ -32,7 +70,7 @@ auth=()
 
 post() { # post PATH JSON: fire at the daemon, print the reply
   curl -sS --max-time 8 -X POST "$url/v1/$1" -H 'content-type: application/json' "${auth[@]}" \
-    -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" -d "$2"
+    -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" -H "X-Ontyra-Machine: $host" -d "$2"
 }
 
 episode() { # episode ROLE TEXT
@@ -42,10 +80,17 @@ episode() { # episode ROLE TEXT
     '{session: $s, role: $r, content: $c, meta: {harness: $h}}')" >/dev/null 2>&1 || true
 }
 
-# Where we are: the working directory and the git root (anchors; the daemon knows the containment)
+# Where we are: the working directory and the git root (anchors; the daemon knows the containment).
+# Both are sent as `file://<machine>/<absolute path>`: the DSH plugin writes the same form, so a
+# memory anchored under one harness is found by the others.
 root=$(git -C "${cwd:-.}" rev-parse --show-toplevel 2>/dev/null || true)
-uris=$(jq -n --arg cwd "$cwd" --arg root "$root" --arg host "$host" \
-  '[$cwd, $root] | map(select(. != "")) | unique | map("file://\($host)\(.)")')
+uris='[]'
+add_uri() {
+  [ -n "$1" ] || return 0
+  uris=$(jq -c --arg u "file://$host$(uri_path "$1")" '. + [$u] | unique' <<<"$uris")
+}
+add_uri "$cwd"
+add_uri "$root"
 
 # What is here: OS, shell, and the languages/tools the project files show. Labels the daemon
 # does not know are ignored quietly (they come back in `unresolved`), so over-reporting is safe.
@@ -122,7 +167,7 @@ fi
 note=""
 if [ "$event" = SessionStart ]; then
   waiting=$(curl -sS --max-time 4 "$url/v1/proposals?limit=50" "${auth[@]}" \
-    -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" 2>/dev/null) || waiting='[]'
+    -H "X-Ontyra-Actor: $actor" -H "X-Ontyra-Harness: $harness" -H "X-Ontyra-Machine: $host" 2>/dev/null) || waiting='[]'
   note=$(jq -r '[.[]? | select(.status == "changes_requested")] | if length == 0 then "" else
     "Ontyra: \(length) proposal(s) need changes before review (" + (map(.proposal // .id) | join(", ")) +
     "). Call pending_proposals to read the comments, then amend them." end' <<<"$waiting" 2>/dev/null) || note=""

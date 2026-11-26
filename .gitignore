@@ -32,6 +32,7 @@ pytest-of-*/
 **/.impeccable/
 DESIGN.md
 PRODUCT.md
+AGENTS.md
 
 # deployment state and exports (all memories): never commit
 /data/

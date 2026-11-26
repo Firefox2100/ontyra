@@ -6,6 +6,8 @@
  * absent daemon must cost a call, not a session.
  */
 
+import { hostOf } from './context.js'
+
 /** A failed daemon call, carrying what the model should read. */
 export class OntyraError extends Error {
   /**
@@ -56,11 +58,11 @@ export function joinUrl(baseUrl, path) {
  *   settings: () => { baseUrl: string, harness: string, timeoutMs: number },
  *   resolveToken: () => Promise<{ value: string } | undefined>,
  * }} options - configuration and credential accessors.
- * @returns {{ call(call: { method: string, path: string, body?: unknown }, signal: AbortSignal): Promise<unknown> }} the client.
+ * @returns {{ call(call: { method: string, path: string, body?: unknown }, signal: AbortSignal, timeoutMs?: number): Promise<unknown> }} the client.
  */
 export function createClient({ settings, resolveToken }) {
   return {
-    async call(call, signal) {
+    async call(call, signal, timeoutMs) {
       const config = settings()
       const token = await resolveToken()
       /** @type {Record<string, string>} */
@@ -69,12 +71,18 @@ export function createClient({ settings, resolveToken }) {
         'x-ontyra-actor': config.harness,
         'x-ontyra-actor-kind': 'agent',
         'x-ontyra-harness': config.harness,
+        // Which machine this is: the daemon records every path anchor of a proposal against it,
+        // so a host that was typed or copied into an anchor cannot survive.
+        'x-ontyra-machine': hostOf(),
       }
       if (call.body !== undefined) headers['content-type'] = 'application/json'
       if (token !== undefined && token.value.length > 0) {
         headers.authorization = `Bearer ${token.value}`
       }
-      const timeout = AbortSignal.timeout(Math.max(1, config.timeoutMs))
+      // Injection must not stall a step and a tool call is worth waiting for, so the caller may
+      // name its own budget; without one, the settings' `timeoutMs` stands.
+      const budget = timeoutMs === undefined ? config.timeoutMs : timeoutMs
+      const timeout = AbortSignal.timeout(Math.max(1, Number(budget) || 1))
       /** @type {Response} */
       let response
       try {

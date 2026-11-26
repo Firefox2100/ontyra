@@ -7,6 +7,8 @@
  * performs it. That keeps the shapes testable with `node --test` alone.
  */
 
+import { qualifyOps } from './context.js'
+
 /**
  * Where the agent is working, as `/v1/recall` wants it: the URIs that anchor it, the concepts
  * the environment shows, and the session the daemon keeps its delivery ledger under.
@@ -18,21 +20,31 @@
  * @typedef {{ method: 'GET' | 'POST', path: string, body?: unknown }} Call
  */
 
-/** Strip the `memory:` table prefix a model may copy from an id it was shown. */
+/**
+ * The bare id the daemon's URL paths want: a model copies `memory:abc` or `proposal:abc` from
+ * what it was shown, and the path holds only `abc`. Any table prefix is stripped, not just the
+ * one the tool happened to expect — a wrong prefix is more likely a copy slip than a mistake
+ * worth passing through into a doubled `proposal:proposal:abc`.
+ * @param {unknown} value - the id as the model gave it.
+ * @returns {string} the id with no `table:` prefix.
+ */
 function idOf(value) {
-  return String(value ?? '').replace(/^memory:/, '')
+  const text = String(value ?? '').trim()
+  const cut = text.indexOf(':')
+  return cut === -1 ? text : text.slice(cut + 1)
 }
 
 /**
- * A record reference as the daemon's request bodies want it: `table:id`, with the table supplied
- * when the model gave only the id. URL paths instead take the bare id (see `idOf`).
+ * A record reference as the daemon's request bodies want it: `table:id`, named by this tool
+ * rather than by whatever prefix the model typed. A body field means one table (`memory`,
+ * `recall_trace`), so the tool's table always wins: a recalled trace id pasted as `trace:abc`,
+ * or as `abc`, becomes `recall_trace:abc`, which is the only id the daemon can look up.
  * @param {unknown} value - the id as the model gave it.
- * @param {string} table - the table to name when the value carries none.
+ * @param {string} table - the table this field holds.
  * @returns {string} `table:id`.
  */
 function recordRef(value, table) {
-  const text = String(value ?? '')
-  return text.includes(':') ? text : `${table}:${text}`
+  return `${table}:${idOf(value)}`
 }
 
 /**
@@ -177,7 +189,7 @@ export const TOOLS = [
       topic: { type: 'string', description: 'Concept label, anchor or kind; used by absence' },
       since: { type: 'string', description: 'ISO instant; used by changes_since' },
       at: { type: 'string', description: 'ISO instant; used by as_of' },
-      trace: { type: 'string', description: 'Recall trace id; used by explain' },
+      trace: { type: 'string', description: 'Recall trace id, `recall_trace:abc` or `abc`; used by explain' },
       context: { type: 'json', description: 'Where the agent is working; omit to use the observed environment' },
     },
     request: (args, context) => ({
@@ -189,7 +201,7 @@ export const TOOLS = [
         topic: args.topic ?? null,
         since: args.since ?? null,
         at: args.at ?? null,
-        trace: args.trace === undefined ? null : recordRef(args.trace, 'trace'),
+        trace: args.trace === undefined ? null : recordRef(args.trace, 'recall_trace'),
         context: withContext(args, context),
       },
     }),
@@ -260,7 +272,7 @@ export const TOOLS = [
       method: 'POST',
       path: '/v1/proposals',
       body: {
-        ops: args.ops,
+        ops: qualifyOps(args.ops),
         note: args.note ?? null,
         space: args.space ?? 'own',
         idempotency_key: args.idempotency_key ?? null,
@@ -286,7 +298,7 @@ export const TOOLS = [
         enum: ['applied', 'helpful', 'missed', 'irrelevant', 'outdated', 'wrong'],
         description: 'The verdict',
       },
-      trace: { type: 'string', description: 'The recall trace shown with the injected memories' },
+      trace: { type: 'string', description: 'The recall trace shown with the injected memories, `recall_trace:abc` or `abc`' },
       note: { type: 'string', description: 'Why, in a few words' },
     },
     request: (args) => ({
@@ -428,6 +440,19 @@ export const TOOLS = [
 
 /** Tools only the `full` profile exposes (they reach the shared ontology). */
 export const FULL_ONLY = new Set(['ontyra_concepts', 'ontyra_propose_ontology_change'])
+
+/**
+ * Whether this step should offer a tool, given the live settings. The plugin registers every tool
+ * once and asks this per step: registering a subset would freeze the `tools` switch and the
+ * profile picker until the next reload, and the settings card promises otherwise.
+ * @param {{ tools?: boolean, toolsProfile?: string }} settings - the live settings.
+ * @param {string} name - the tool's registered name.
+ * @returns {boolean} whether the tool participates in the step.
+ */
+export function toolVisible(settings, name) {
+  if (settings.tools !== true) return false
+  return settings.toolsProfile === 'full' || !FULL_ONLY.has(name)
+}
 
 /**
  * The tools one profile registers.

@@ -49,6 +49,7 @@ from ontyra.models.recall import (
 from ontyra.models.sources import SourceCheckRequest, SourceCheckResult
 from ontyra.models.tasks import DetectReport, ResolveRequest, TaskResult, TaskView
 from ontyra.services import Caller, errors
+from ontyra.services.anchors import anchored_to
 from ontyra.services.views import MemoryDetail, MemoryView, Neighbors
 from ontyra.transports.auth import resolve_caller
 from ontyra.transports.rest.deps import Services
@@ -135,6 +136,18 @@ async def caller_for_request(services: Services) -> Caller:
         raise ToolError(str(exc)) from exc
 
 
+def declared_machine() -> str:
+    """The machine the client says it runs on, if it says (`X-Ontyra-Machine`), else `""`.
+
+    Path anchors are recorded against it, so a host typed or copied into a URI cannot make a
+    memory unmatchable; see `ontyra.services.anchors.anchored_to`.
+    """
+    try:
+        return get_http_request().headers.get("x-ontyra-machine", "")
+    except RuntimeError:  # in-process call: nothing declared
+        return ""
+
+
 def _message(exc: Exception) -> str:
     if isinstance(exc, errors.InvalidProposalError):
         return f"{exc}; findings: " + "; ".join(f"{f.code}: {f.message}" for f in exc.findings)
@@ -217,6 +230,9 @@ def create_mcp(
         return await run(lambda s, c: s.explore.get(c, rid, expand or [], context))
 
     async def remember(proposal: Any) -> ProposalResult:
+        machine = declared_machine()
+        if machine:
+            proposal = anchored_to(proposal, machine)
         return await run(lambda s, c: s.memory.submit(c, proposal))
 
     # the profile decides which ops the schema offers (annotations are strings here)

@@ -8,6 +8,11 @@
  *
  *   node integrations/dsh/scripts/doctor.mjs
  *   node integrations/dsh/scripts/doctor.mjs --gui http://127.0.0.1:49200 --daemon http://127.0.0.1:8787
+ *   DSH_GUI_URL=http://127.0.0.1:49200 node integrations/dsh/scripts/doctor.mjs
+ *   node integrations/dsh/scripts/doctor.mjs --daemon http://100.86.189.45:8787 --token "$ONTYRA_TOKEN"
+ *
+ * The GUI port changes on every launch, so it has no default: the browser-half checks are skipped
+ * unless `--gui` or `DSH_GUI_URL` names one.
  *
  * Exits 0 when every check passes, 1 otherwise.
  */
@@ -30,9 +35,12 @@ function options(argv) {
       parsed.set(token.slice(2), 'true')
     }
   }
+  const gui = parsed.get('gui') ?? process.env.DSH_GUI_URL
+  const token = parsed.get('token') ?? process.env.ONTYRA_TOKEN
   return {
-    gui: noTrailingSlash(parsed.get('gui') ?? process.env.DSH_GUI_URL ?? 'http://127.0.0.1:49180'),
+    gui: gui === undefined || gui === 'true' ? undefined : noTrailingSlash(gui),
     daemon: noTrailingSlash(parsed.get('daemon') ?? process.env.ONTYRA_URL ?? 'http://127.0.0.1:8787'),
+    token: token === undefined || token === 'true' ? undefined : token,
     timeout: Number(parsed.get('timeout') ?? 5000),
   }
 }
@@ -110,12 +118,13 @@ function report(results) {
 }
 
 async function main() {
-  const { gui, daemon, timeout } = options(process.argv.slice(2))
+  const { gui, daemon, token, timeout } = options(process.argv.slice(2))
   const results = []
   const say = report(results)
+  const authorization = token === undefined ? {} : { authorization: `Bearer ${token}` }
 
   try {
-    const health = await request(`${daemon}/health`, { timeout })
+    const health = await request(`${daemon}/health`, { timeout, headers: authorization })
     const body = await health.json().catch(() => ({}))
     say(health.ok, 'daemon health', health.ok ? `${daemon} ${body.version ?? ''}`.trim() : `answered ${health.status}`)
   } catch (error) {
@@ -126,29 +135,34 @@ async function main() {
     const recall = await request(`${daemon}/v1/recall`, {
       timeout,
       method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      headers: { ...authorization, 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({ query: 'doctor probe', context: { uris: ['file:///doctor'], signals: [] } }),
     })
-    say(recall.ok, 'daemon recall', recall.ok ? `answered ${recall.status}` : `answered ${recall.status}`)
+    const hint = recall.status === 401 ? ' — the daemon wants a token: pass --token or set ONTYRA_TOKEN' : ''
+    say(recall.ok, 'daemon recall', `answered ${recall.status}${hint}`)
   } catch (error) {
     say(false, 'daemon recall', error.message)
   }
 
   let entry
-  try {
-    const payload = await firstFrame(`${gui}/plugins/events`, timeout)
-    const graph = JSON.parse(payload)
-    const entries = graph.graph?.entries ?? []
-    entry = entries.find((candidate) => candidate.id === PACKAGE)
-    say(
-      entry !== undefined,
-      'Host module graph',
-      entry === undefined
-        ? `${PACKAGE} is not in ${entries.length} entries; the bundle is not installed or not enabled`
-        : `${PACKAGE} at rev ${entry.rev}`,
-    )
-  } catch (error) {
-    say(false, 'Host module graph', `${gui}/plugins/events: ${error.message}`)
+  if (gui === undefined) {
+    console.log('skip  Host module graph  —  pass --gui <url> or set DSH_GUI_URL to check the browser half')
+  } else {
+    try {
+      const payload = await firstFrame(`${gui}/plugins/events`, timeout)
+      const graph = JSON.parse(payload)
+      const entries = graph.graph?.entries ?? []
+      entry = entries.find((candidate) => candidate.id === PACKAGE)
+      say(
+        entry !== undefined,
+        'Host module graph',
+        entry === undefined
+          ? `${PACKAGE} is not in ${entries.length} entries; the bundle is not installed or not enabled`
+          : `${PACKAGE} at rev ${entry.rev}`,
+      )
+    } catch (error) {
+      say(false, 'Host module graph', `${gui}/plugins/events: ${error.message}`)
+    }
   }
 
   if (entry !== undefined) {

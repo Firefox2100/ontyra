@@ -22,13 +22,17 @@ import { registerInjection } from './inject.js'
 import { createClient } from './ontyra.js'
 import { DEFAULTS, settingsOf } from './settings.js'
 import { parseSkill } from './skill.js'
-import { toolsFor } from './tools.js'
+import { TOOLS, toolVisible } from './tools.js'
 
 /** The Loader entry id; also the settings namespace the plugin's card edits. */
 export const name = 'ontyra'
 
-/** Services this plugin cannot work without. */
-export const inject = ['tools', 'sessionProjections']
+/**
+ * The one service this plugin cannot work without. Injection rides on `sessionProjections`,
+ * `credentials` and `workingDirectory`, but each of those is reached through `ctx.inject` or a
+ * guarded read, so a deployment that composes fewer services still gets the tools.
+ */
+export const inject = ['tools']
 
 /** The plugin's settings; the namespace is the Loader entry id (`ontyra`). */
 const Config = z.object({
@@ -38,7 +42,10 @@ const Config = z.object({
   briefing: z.boolean().default(true).volatile(),
   recall: z.boolean().default(true).volatile(),
   budgetTokens: z.natural().default(1200).volatile(),
+  // Two budgets: a briefing or recall holds up a step, so it is cut short; a tool call is the
+  // model waiting for an answer, and a daemon on another host needs room for its decider.
   timeoutMs: z.natural().default(1500).volatile(),
+  toolTimeoutMs: z.natural().default(20000).volatile(),
   tools: z.boolean().default(true).volatile(),
   toolsProfile: z.string().default('lite').volatile(),
   episodes: z.boolean().default(true).volatile(),
@@ -50,30 +57,50 @@ const Config = z.object({
 export { Config }
 
 /**
- * Register the daemon's tools for this profile.
+ * Register the daemon's tool surface.
+ *
+ * Every tool is registered once, and its `when` condition decides step by step whether it is
+ * offered: that is what makes the `tools` switch and the `toolsProfile` picker take effect on
+ * the next step instead of on the next reload. The registry takes its own timeout at
+ * registration, so that one is a generous backstop; `toolTimeoutMs` is read live and bounds each
+ * call, which is what lets a daemon on another host work without a reload.
  * @param {import('@deepseek-ai/cordis').Context} ctx - the plugin context.
- * @param {() => typeof DEFAULTS} settingsNow - the settings, read once at registration.
+ * @param {() => typeof DEFAULTS} settingsNow - the live settings.
  * @param {{ call(call: any, signal: AbortSignal): Promise<unknown> }} client - daemon client.
+ * @param {(session: any) => string | undefined} cwdOf - the session's working directory.
  */
-function registerTools(ctx, settingsNow, client) {
-  const settings = settingsNow()
-  const toolTimeoutMs = Math.max(1, Number(settings.timeoutMs) || 1500) + 500
-  for (const tool of toolsFor(settings.toolsProfile)) {
+function registerTools(ctx, settingsNow, client, cwdOf) {
+  // A backstop only: the live budget below cuts every call first, and it is the settings value,
+  // not this number, that a deployment tunes.
+  const backstopMs = 120_000
+  for (const tool of TOOLS) {
+    const when = () => {
+      try {
+        return toolVisible(settingsNow(), tool.name)
+      } catch {
+        // A settings read that failed must not look like "this tool was removed".
+        return true
+      }
+    }
     ctx.effect(() => ctx.tools.register(defineTool({
       name: tool.name,
       description: tool.description,
       parameters: tool.parameters,
-      timeoutMs: toolTimeoutMs,
+      timeoutMs: backstopMs,
       output: {
         schema: { type: 'json' },
         render: (_args, value) => [{ type: 'text', text: tool.render(value) }],
       },
       execute: async (args, exec) => {
         const session = exec.agent?.session
-        const context = recallContext({ cwd: session?.header?.cwd, session: session?.id })
-        return await client.call(tool.request(args, context), exec.signal)
+        const context = recallContext({ cwd: cwdOf(session), session: session?.id })
+        return await client.call(
+          tool.request(args, context),
+          exec.signal,
+          settingsNow().toolTimeoutMs,
+        )
       },
-    })), `ontyra: tool ${tool.name}`)
+    }), { when }), `ontyra: tool ${tool.name}`)
   }
 }
 
@@ -139,8 +166,9 @@ export async function apply(ctx, rawConfig) {
 
   const client = createClient({ settings: settingsNow, resolveToken: () => resolveToken() })
   registerSkill(ctx)
-  if (settingsNow().tools) registerTools(ctx, settingsNow, client)
-  if (settingsNow().briefing || settingsNow().recall) {
+  registerTools(ctx, settingsNow, client, cwdOf)
+  const wanted = settingsNow()
+  if (wanted.briefing || wanted.recall || wanted.capture !== false || wanted.episodes) {
     // Injection rides on services the deployment may not compose; losing it must not cost the
     // tools, so a failure here is logged and the rest of the plugin stays mounted.
     try {
