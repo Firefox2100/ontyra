@@ -19,7 +19,7 @@ from ontyra_ingest.grounding import find_quote
 from ontyra_ingest.llm import Llm, LlmError
 from ontyra_ingest.models import Candidate, Chunk, Grounded, ParsedDocument, Rejected
 from ontyra_ingest.parsers import choose
-from ontyra_ingest.profiles import Profile, all_profiles
+from ontyra_ingest.profiles import Profile, all_profiles, prompt
 from ontyra_ingest.state import RunState, Store, file_hash, short
 
 MEDIUM = {".pdf": "pdf", ".html": "web", ".htm": "web"}
@@ -38,6 +38,8 @@ class Report:
     refused: int = 0
     failed: int = 0
     skipped: int = 0  # already submitted by an earlier run
+    topic: str = ""
+    overview: str = ""  # what became of the document's overview: committed, held, …
     changed_tasks: int = 0
     errors: list[str] = field(default_factory=list[str])
 
@@ -139,6 +141,58 @@ class Pipeline:
         run.save()
         return parsed
 
+    async def _summary(
+        self, parsed: ParsedDocument, title: str, topic: str, run: RunState
+    ) -> str | None:
+        """Two or three sentences on what the document covers, written once from its outline."""
+        cached = run.data.get("summary")
+        if isinstance(cached, str):
+            return cached
+        outline = "\n".join(f"{'  ' * (b.level - 1)}- {b.text}" for b in parsed.blocks if b.level)
+        opening = "\n".join(b.text for b in parsed.blocks if b.level == 0)[:1500]
+        try:
+            card = await self.llm.json(
+                prompt("overview"),
+                f"Title: {title}\nSubject: {topic}\n\nOutline:\n{outline[:3000]}"
+                f"\n\nOpening:\n{opening}",
+            )
+        except LlmError:
+            return None
+        row: dict[str, Any] = card if isinstance(card, dict) else {}  # pyright: ignore[reportUnknownVariableType]
+        summary = str(row.get("summary") or "").strip()
+        if summary:
+            run.data["summary"] = summary
+            run.save()
+        return summary or None
+
+    async def _topic(
+        self, parsed: ParsedDocument, title: str, run: RunState
+    ) -> tuple[str, list[str]]:
+        """What the document is about and what it is called: given, or named by the model once."""
+        s = self.settings
+        if s.topic:
+            return s.topic, list(s.aliases)
+        cached: dict[str, Any] | None = run.data.get("topic")
+        if cached is None:
+            opening = "\n".join(b.text for b in parsed.blocks if b.level == 0)[:1500]
+            try:
+                card = await self.llm.json(
+                    prompt("topic"), f"Title: {title}\n\nOpening:\n{opening}"
+                )
+                label = str(card.get("topic") or "").strip()
+                raw = card.get("aliases")
+                names: list[Any] = raw if isinstance(raw, list) else []  # pyright: ignore[reportUnknownVariableType]
+                cached = {
+                    "topic": label or title,
+                    "aliases": [str(a).strip() for a in names[:8]],
+                }
+            except (LlmError, AttributeError):
+                cached = {"topic": title, "aliases": []}
+            run.data["topic"] = cached
+            run.save()
+        known: list[str] = cached["aliases"]
+        return str(cached["topic"]), [a for a in known if a] + list(s.aliases)
+
     # ---- one document ----------------------------------------------------------
 
     async def ingest(self, path: Path, *, dry_run: bool = False) -> Report:
@@ -163,7 +217,13 @@ class Pipeline:
         title = parsed.title or path.stem
         chunks = make_chunks(parsed.blocks, max_chars=s.chunk_chars, overlap=s.overlap_chars)
         report.chunks = len(chunks)
+        skip = [re.compile(p, re.I) for p in s.skip_sections]
+        chunks = [
+            c for c in chunks if not any(r.search(h.strip()) for h in c.section for r in skip)
+        ]
 
+        topic, aliases = await self._topic(parsed, title, run)
+        report.topic = topic
         gate = asyncio.Semaphore(max(1, s.concurrency))
         await asyncio.gather(
             *(self._chunk(p, c, title, run, report, gate) for c in chunks for p in self.profiles)
@@ -172,7 +232,10 @@ class Pipeline:
         grounded: list[Grounded] = []
         seen: set[str] = set()
         rejected: list[Rejected] = []
-        for entry in run.chunks.values():
+        kept = {f"{p.name}:{c.index}" for c in chunks for p in self.profiles}
+        for key, entry in run.chunks.items():
+            if key not in kept:
+                continue
             report.extracted += int(entry["extracted"])
             rejected += [Rejected.model_validate(r) for r in entry["rejected"]]
             for raw in entry["ok"]:
@@ -187,7 +250,8 @@ class Pipeline:
             return report
 
         await self._flag_change(report, content_hash)
-        await self._submit(path, title, content_hash, grounded, run, report)
+        await self._submit(path, title, content_hash, grounded, run, report, topic, aliases)
+        await self._overview(parsed, title, content_hash, topic, len(grounded), run, report)
         if not report.errors and report.failed == 0:
             self.store.remember_hash(report.uri, content_hash)
         return report
@@ -227,15 +291,19 @@ class Pipeline:
         assert self.concepts is not None
         cand = g.candidate
         subject = await self.concepts.subject(cand.subject, cand.parents, fallback)
+        fields: dict[str, Any] = {
+            "text": cand.text,
+            "subject": subject,
+            "predicate": cand.predicate,
+            "object": cand.object,
+            "about": [fallback],
+        }
+        if self.settings.scope:
+            fields["scope"] = self.settings.scope
         return {
             "op": "add",
             "kind": cand.kind,
-            "fields": {
-                "text": cand.text,
-                "subject": subject,
-                "predicate": cand.predicate,
-                "object": cand.object,
-            },
+            "fields": fields,
             "evidence": [
                 {
                     "source": {
@@ -259,6 +327,8 @@ class Pipeline:
         grounded: list[Grounded],
         run: RunState,
         report: Report,
+        topic: str,
+        aliases: list[str],
     ) -> None:
         assert self.daemon is not None and self.concepts is not None
         medium = MEDIUM.get(path.suffix.lower(), "file")
@@ -271,9 +341,9 @@ class Pipeline:
         if not todo:
             return
         try:
-            fallback = await self.concepts.ensure(title, [])
+            about = await self.concepts.ensure(topic, [], aliases=aliases)
             built = [
-                (key, await self._op(g, report.uri, title, medium, content_hash, fallback))
+                (key, await self._op(g, report.uri, title, medium, content_hash, about))
                 for key, g in todo
             ]
         except ApiError as exc:
@@ -287,6 +357,57 @@ class Pipeline:
             for (key, _), outcome in zip(batch, outcomes, strict=True):
                 self._tally(report, run, key, outcome)
             run.save()
+
+    async def _overview(
+        self,
+        parsed: ParsedDocument,
+        title: str,
+        content_hash: str,
+        topic: str,
+        entries: int,
+        run: RunState,
+        report: Report,
+    ) -> None:
+        """One topical memory per document that says the material exists, so an agent working on
+        the topic knows to look it up. The detailed entries themselves are never delivered."""
+        assert self.daemon is not None and self.concepts is not None
+        key = short(report.uri, "overview", content_hash)
+        if key in run.submitted or not parsed.blocks or entries == 0:
+            return
+        summary = await self._summary(parsed, title, topic, run)
+        if summary is None:
+            report.errors.append("overview: the model gave no summary")
+            return
+        quote = " ".join(parsed.blocks[0].text.split())[:200]
+        text = (
+            f'There are notes on {topic} from "{title}": {summary} {entries} detailed entries '
+            f"can be looked up with `consult` (topic: {topic})."
+        )
+        try:
+            concept = await self.concepts.ensure(topic, [])
+        except ApiError as exc:
+            report.errors.append(f"overview: {exc}")
+            return
+        grounded = Grounded(
+            candidate=Candidate(
+                text=text, subject=topic, predicate="is documented in", object=title, quote=quote
+            ),
+            quote=quote,
+            chunk=0,
+            locator=f"p. {parsed.blocks[0].page}" if parsed.blocks[0].page else "",
+        )
+        op = await self._op(
+            grounded, report.uri, title, MEDIUM.get(Path(report.path).suffix.lower(), "file"),
+            content_hash, concept,
+        )  # fmt: skip
+        op["fields"]["scope"] = "topical"
+        outcome = (await self._send([(key, op)], report.uri))[0]
+        report.overview = outcome.status
+        if outcome.status in ("committed", "held"):
+            run.submitted[key] = outcome.proposal or outcome.status
+            run.save()
+        else:
+            report.errors.append(f"overview {outcome.status}: {outcome.detail}")
 
     async def _send(self, batch: list[tuple[str, dict[str, Any]]], uri: str) -> list[Outcome]:
         assert self.daemon is not None

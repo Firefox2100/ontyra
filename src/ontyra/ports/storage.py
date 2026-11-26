@@ -59,9 +59,16 @@ class Store(Protocol):
         ...
 
     async def search_text(
-        self, query: str, owners: Sequence[RecordId], *, kinds: Sequence[str] = (), limit: int = 50
+        self,
+        query: str,
+        owners: Sequence[RecordId],
+        *,
+        kinds: Sequence[str] = (),
+        reference: bool | None = False,
+        limit: int = 50,
     ) -> list[Hit]:
-        """Full-text (BM25, any-term) hits over live revisions, best first."""
+        """Full-text (BM25, any-term) hits over live revisions, best first. `reference`: False
+        leaves out reference material (what recall wants), True keeps only it, None both."""
         ...
 
     async def search_vector(
@@ -70,6 +77,7 @@ class Store(Protocol):
         owners: Sequence[RecordId],
         *,
         kinds: Sequence[str] = (),
+        reference: bool | None = False,
         limit: int = 50,
     ) -> list[Hit]:
         """Nearest live revisions by cosine similarity (`score` in [-1, 1]), best first."""
@@ -85,13 +93,15 @@ class Store(Protocol):
         about: Sequence[RecordId] | None = None,
         sources: Sequence[str] | None = None,
         expires_before: datetime | None = None,
+        reference: bool | None = None,
         limit: int = 500,
     ) -> list[SearchDoc]:
         """Live-revision index rows for the owners. A row is returned if it matches any given
         selector: anchored on one of `anchors`, unanchored (when `unanchored`), about one of
         `about`, or citing one of `sources`. With no selector given, every row of the
         owners/kinds (paged by `limit`). `expires_before` keeps only rows whose revision expires
-        before that time (a filter, not a selector)."""
+        before that time (a filter, not a selector). `reference` filters by reference material
+        as in `search_text`; the default (None) is every row."""
         ...
 
     async def doc_counts(self, owners: Sequence[RecordId]) -> dict[str, int]:

@@ -40,10 +40,41 @@ run resumes and a finished one costs nothing. Statements that fail the quote che
 5. **Ground**: the quote must occur in the chunk, word for word (whitespace aside). A statement
    that fails gets one rework round, then is dropped. The stored quote is the document's own text.
 6. **Propose**: one `add` op per statement, evidence = the source (uri, locator, quote, title,
-   content hash). Concepts for subjects are resolved first (below).
+   content hash), then the overview. Concepts for subjects are resolved first (below).
 
 When a file whose URI was ingested before has a different hash, the client reports the old source
 as `changed` (`/v1/sources/check`), so the facts cited from the old reading get review tasks.
+
+## Reference material, and a pointer to it
+
+A datasheet's hundreds of entries are documentation, not memory. A fact that cites a source is
+therefore **reference material** (`scope: reference`): recall, briefing and check never deliver it,
+so it cannot crowd out what you told the agent. It is looked up on demand:
+
+```bash
+curl -X POST $ONTYRA_URL/v1/consult -H "Authorization: Bearer $ONTYRA_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"query": "light sleep current", "topic": "esp32-s3-wroom-1"}'
+```
+
+(the `consult` tool of the MCP server and the plugins). Hits carry their source, locator and quote.
+
+For each document the client also writes one short **overview** memory, `topical` and `about` the
+document's *topic* (a concept, named by the model from the title and opening, or given with
+`--topic` and `--alias`; aliases are what a message can name it by). It says what the document
+covers and that its entries can be looked up. It is delivered only when the work ties to the topic:
+
+- the message names the topic (or an alias): "what current does the ESP32-S3-WROOM-1 draw in sleep";
+- the work happens in a place registered as using it:
+
+```bash
+curl -X POST $ONTYRA_URL/v1/resources -H "Authorization: Bearer $ONTYRA_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"uri": "file://myhost/home/me/firmware", "instance_of": ["esp32-s3-wroom-1"]}'
+```
+
+Elsewhere neither the overview nor the entries appear. `--scope contextual` makes the entries
+recallable by their text again, which is rarely what you want for documentation.
 
 ## Choices
 

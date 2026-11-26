@@ -114,3 +114,51 @@ def test_identity_prefers_doi_then_arxiv() -> None:
     assert ids == {"doi": "10.1234/Abc.5", "arxiv": "2401.01234"}
     assert identity.uri_for(ids, "file:///x") == "doi:10.1234/abc.5"
     assert identity.uri_for({}, "file:///x") == "file:///x"
+
+
+def test_mineru_table_rows_are_self_describing() -> None:
+    html = (
+        "<table><tr><td>Name</td><td>No.</td><td>Function</td></tr>"
+        "<tr><td>GND</td><td>1</td><td>Ground</td></tr>"
+        "<tr><td>EN</td><td>3</td><td></td></tr></table>"
+    )
+    blocks = blocks_from([{"type": "table", "table_body": html, "page_idx": 4}])
+    assert [b.text for b in blocks] == [
+        "Name: GND; No.: 1; Function: Ground",
+        "Name: EN; No.: 3",
+    ]
+    assert blocks[0].page == 5
+
+
+def test_parse_json_repairs_stray_backslashes() -> None:
+    assert parse_json(r'{"a": "VDD\_SPI and \alpha", "b": "tab\there"}') == {
+        "a": r"VDD\_SPI and \alpha",
+        "b": "tab\there",
+    }
+
+
+def test_quote_tolerates_spacing_and_case_and_returns_the_documents_words() -> None:
+    text = "The module   draws 240 µA in\nLight-sleep mode."
+    assert find_quote("the module draws 240 µa in light-sleep mode.", text) == (
+        "The module draws 240 µA in Light-sleep mode."
+    )
+    assert find_quote("the module draws 250 µA in light-sleep mode.", text) is None
+
+
+def test_mineru_formulas_become_plain_text() -> None:
+    from ontyra_ingest.parsers.mineru import plain_math
+
+    assert plain_math(r"Min: $0 . 7 5 \times \mathsf { V D D } ^ { 1 }$") == "Min: 0.75×VDD^1"
+    assert plain_math(r"$\mathsf { V } _ { I H }$") == "V_IH"
+    assert plain_math("no formula") == "no formula"
+
+
+def test_label_headings_do_not_open_sections() -> None:
+    items = [
+        {"type": "text", "text": "4.1 Limits", "text_level": 1, "page_idx": 0},
+        {"type": "text", "text": "Note:", "text_level": 1, "page_idx": 0},
+        {"type": "text", "text": "Mind the limit.", "page_idx": 0},
+    ]
+    assert [(b.text, b.level) for b in blocks_from(items)] == [
+        ("4.1 Limits", 1), ("Note:", 0), ("Mind the limit.", 0),
+    ]  # fmt: skip

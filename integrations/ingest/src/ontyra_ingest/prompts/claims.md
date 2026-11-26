@@ -20,9 +20,11 @@ The smallest statement that is complete and true on its own.
 - `subject`: the thing the claim is about, as a short noun phrase (1-4 words).
 - `predicate`: what is said of it, a short verb phrase.
 - `object`: the rest: a value, a thing, or a short phrase.
+- A table row is written `Column: value; Column: value`: a claim about a row quotes that one row.
 - `text`: the whole claim as one self-contained sentence.
 - `quote`: words copied character for character from the excerpt that support the claim, one or
-  two sentences at most. Never paraphrase, correct or reformat a quote. If you cannot quote it,
+  two sentences at most, one unbroken passage (never words joined from places that are not next
+  to each other). Never paraphrase, correct or reformat a quote. If you cannot quote it,
   leave the claim out.
 
 # Output

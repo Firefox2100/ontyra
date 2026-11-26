@@ -191,7 +191,7 @@
                       },
                       "fields": {
                         "additionalProperties": true,
-                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
+                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal|topical|reference), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
                         "type": "object"
                       },
                       "kind": {
@@ -1922,6 +1922,125 @@
       "type": "object"
     },
     "name": "concepts"
+  },
+  {
+    "description": "Look something up in documentation and notes taken from sources (datasheets, manuals, papers). Recall never delivers these by itself: when a memory says there is material on a topic and you need details, call this with a specific `query` and the `topic`. Every hit names its source and quote.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "description": "Look something up in the reference material (documentation and notes taken from sources),\nwhich recall never delivers by itself.",
+          "properties": {
+            "context": {
+              "additionalProperties": false,
+              "default": {
+                "session": null,
+                "signals": [],
+                "uris": []
+              },
+              "description": "Where and in what circumstances the agent is working. All parts are optional.",
+              "properties": {
+                "session": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "signals": {
+                  "default": [],
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "An observation about the environment, by concept id or label (\"python\", 3.12).",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "value": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "concept"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "uris": {
+                  "default": [],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "limit": {
+              "default": 8,
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "query": {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            "topic": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "consult"
   },
   {
     "description": "Scan for duplicates and updates and queue each finding once as a task. Side effect: task records are created (and tasks whose memories changed are closed); no memory is changed.",
@@ -3999,7 +4118,7 @@
                       },
                       "fields": {
                         "additionalProperties": true,
-                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
+                        "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal|topical|reference), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
                         "type": "object"
                       },
                       "kind": {

@@ -45,4 +45,5 @@ asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["E501", "ASYNC240"]
+"tests/**" = ["E501", "ASYNC240", "RUF001"]
+"src/ontyra_ingest/parsers/mineru.py" = ["RUF001"]

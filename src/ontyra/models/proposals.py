@@ -8,7 +8,7 @@ from typing import Annotated, Any, Literal
 from pydantic import Field, model_validator
 
 from ontyra.models.base import EpisodeRef, MemoryRef, Model, RecordId
-from ontyra.models.kinds import KindName, fields_guide
+from ontyra.models.kinds import KindName, Scope, fields_guide
 from ontyra.models.policy import Decision
 from ontyra.models.sources import SourceRef
 
@@ -60,8 +60,9 @@ class AddMemory(Model):
         description="`text` (the whole statement, in one sentence) plus the kind's own fields, "
         "required first, optional in brackets:\n"
         + fields_guide()
-        + "\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), "
-        "qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`."
+        + "\nEvery kind also takes: scope (contextual|universal|topical|reference), anchors, "
+        "about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside "
+        "`fields`."
     )
     valid_from: datetime | None = None
     evidence: list[Evidence] = []
@@ -186,7 +187,7 @@ class OverlayRequest(Model):
     """The same fields on every `add` and `revise` of several waiting proposals (a bulk edit)."""
 
     proposals: list[RecordId]
-    scope: Literal["contextual", "universal"] | None = None
+    scope: Scope | None = None
     expires_at: str | None = None
     anchor: str | None = None  # a subtree anchor added to each
     about: list[str] = []  # concept labels or ids added to each

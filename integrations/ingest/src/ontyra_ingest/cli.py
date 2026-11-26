@@ -59,6 +59,14 @@ def run(
     ] = None,
     model: Annotated[str | None, typer.Option(help="Extraction model name.")] = None,
     llm_url: Annotated[str | None, typer.Option(help="OpenAI-compatible base URL.")] = None,
+    topic: Annotated[
+        str | None, typer.Option(help="What the documents are about (else the model names it).")
+    ] = None,
+    alias: Annotated[list[str] | None, typer.Option(help="Other names of the topic.")] = None,
+    scope: Annotated[
+        str | None,
+        typer.Option(help="Scope of the detailed entries; unset: the daemon's (reference)."),
+    ] = None,
     concepts: Annotated[
         str | None, typer.Option(help="existing: reuse concepts; create: define new subjects.")
     ] = None,
@@ -73,7 +81,8 @@ def run(
     """Ingest documents. Safe to repeat: finished work is not redone or resent."""
     settings = _settings(
         profiles=profile, parser=parser, mineru_url=mineru_url, identity=identity_finder,
-        llm_model=model, llm_url=llm_url, concepts=concepts, url=url, concurrency=concurrency,
+        llm_model=model, llm_url=llm_url, concepts=concepts, topic=topic, aliases=alias,
+        scope=scope, url=url, concurrency=concurrency,
         chunk_chars=chunk_chars, min_usefulness=min_usefulness, state_dir=state_dir,
     )  # fmt: skip
     files = _files(paths)

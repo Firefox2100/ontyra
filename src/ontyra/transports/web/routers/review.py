@@ -148,7 +148,7 @@ async def overlay(
         caller,
         OverlayRequest(
             proposals=[RecordId("proposal", pid) for pid in ids],
-            scope=scope if scope in ("contextual", "universal") else None,  # type: ignore[arg-type]
+            scope=scope if scope in ("contextual", "universal", "topical", "reference") else None,  # type: ignore[arg-type]
             expires_at=expires_at.strip() or None,
             anchor=anchor.strip() or None,
             about=[a.strip() for a in about.split(",") if a.strip()],

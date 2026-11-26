@@ -63,8 +63,12 @@ class Daemon:
         found = response.json()
         return str(found[0]["id"]) if len(found) == 1 else None
 
-    async def define_concept(self, label: str, is_a: list[str], definition: str | None) -> str:
+    async def define_concept(
+        self, label: str, is_a: list[str], definition: str | None, aliases: list[str] | None = None
+    ) -> str:
         body: dict[str, Any] = {"label": label, "is_a": is_a, "value_type": "bool"}
+        if aliases:
+            body["aliases"] = aliases
         if definition:
             body["definition"] = definition
         response = await self._call("POST", "/v1/concepts", json=body)

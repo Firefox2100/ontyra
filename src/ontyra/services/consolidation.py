@@ -105,7 +105,11 @@ class ConsolidationService:
             if vector is None:
                 continue
             hits = await self.store.search_vector(
-                vector, [doc.owner], kinds=[doc.kind], limit=self.settings.neighbours + 1
+                vector,
+                [doc.owner],
+                kinds=[doc.kind],
+                reference=None,
+                limit=self.settings.neighbours + 1,
             )
             for hit in hits:
                 other = by_rev.get(hit.rev)

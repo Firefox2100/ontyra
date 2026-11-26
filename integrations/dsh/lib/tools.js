@@ -303,6 +303,32 @@ export const TOOLS = [
     render: jsonText,
   },
   {
+    name: 'ontyra_consult',
+    title: 'Consult reference material',
+    description:
+      'Look something up in documentation and notes taken from sources (datasheets, manuals, '
+      + 'papers). Recall never delivers these by itself: when a memory says there is material on a '
+      + 'topic and you need details, call this with a specific `query` and the `topic`. Every hit '
+      + 'names its source and quote.',
+    parameters: {
+      query: { type: 'string', required: true, description: 'What to look up, specific' },
+      topic: { type: 'string', description: 'A concept (label, alias or id); else what the context ties to' },
+      limit: { type: 'integer', description: 'Most hits to return (default 8)' },
+      context: { type: 'json', description: 'Where the agent is working; omit to use the observed environment' },
+    },
+    request: (args, context) => ({
+      method: 'POST',
+      path: '/v1/consult',
+      body: {
+        query: args.query,
+        topic: args.topic ?? null,
+        context: withContext(args, context),
+        limit: args.limit ?? 8,
+      },
+    }),
+    render: jsonText,
+  },
+  {
     name: 'ontyra_check_source',
     title: 'Report on a cited source',
     description:

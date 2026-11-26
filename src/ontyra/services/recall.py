@@ -136,6 +136,8 @@ def in_scope(rev: RevisionBase, assessment: Assessment, ctx: Resolved, topics: s
     the intent (`topics`). A directive with no tie at all is unscoped and is reached by recall
     of its text only; other kinds without a subject keep the older, permissive behaviour.
     """
+    if rev.scope == "reference":
+        return False  # looked up on demand, never delivered
     if rev.scope == "universal":
         return True
     if assessment.distance is not None or assessment.outcome.matched:
@@ -248,6 +250,7 @@ class RecallService:
         owners: Sequence[RecordId],
         kinds: Sequence[str],
         limit: int,
+        reference: bool | None = False,
     ) -> list[tuple[float, SearchDoc, str]]:
         """Concept lane: mentions, ontology expansion, memories about those concepts
         (best weight first, as `(weight, doc, why)`)."""
@@ -269,7 +272,9 @@ class RecallService:
         seen: set[RecordId] = set()
         for tier in sorted({w for w, _ in weights.values()}, reverse=True):
             about = [c for c, (w, _) in weights.items() if w == tier]
-            for d in await self.store.docs(owners, kinds=kinds, about=about, limit=limit):
+            for d in await self.store.docs(
+                owners, kinds=kinds, about=about, reference=reference, limit=limit
+            ):
                 if d.rev in seen:
                     continue
                 seen.add(d.rev)
@@ -281,26 +286,36 @@ class RecallService:
         return ranked[:limit]
 
     async def query_candidates(
-        self, caller: Caller, text: str, ctx: Resolved, kinds: Sequence[str]
+        self,
+        caller: Caller,
+        text: str,
+        ctx: Resolved,
+        kinds: Sequence[str],
+        reference: bool | None = False,
+        pool: int | None = None,
     ) -> dict[RecordId, Candidate]:
         owners = caller.visible_owners()
-        n = self.cfg.candidates
+        n = pool or self.cfg.candidates
         cands: dict[RecordId, Candidate] = {}
         # BM25 magnitudes depend on corpus statistics, so the lane keeps only the *relative*
         # score here; `hydrate` scales it by how much of the query the text actually covers.
-        lexical = await self.store.search_text(text, owners, kinds=kinds, limit=n)
+        lexical = await self.store.search_text(
+            text, owners, kinds=kinds, reference=reference, limit=n
+        )
         top = max((h.score for h in lexical), default=0.0)
         self._add(cands, lexical, "lexical", lambda s: s / top if top > 0 else 0.0)
         if self.embedder is not None:
             vec = await self.embedder.embed_query(text)
             self._add(
                 cands,
-                await self.store.search_vector(vec, owners, kinds=kinds, limit=n),
+                await self.store.search_vector(
+                    vec, owners, kinds=kinds, reference=reference, limit=n
+                ),
                 "vector",
                 self._vector_score,
             )
         for rank, (w, d, why) in enumerate(
-            await self.concept_lane(text, ctx, owners, kinds, n * 2), start=1
+            await self.concept_lane(text, ctx, owners, kinds, n * 2, reference), start=1
         ):
             c = cands.setdefault(d.rev, Candidate(d.rev))
             c.doc = d
@@ -319,6 +334,7 @@ class RecallService:
         *,
         only_applicable: bool = True,
         query: str | None = None,
+        topics: str = "",
     ) -> list[Candidate]:
         revs = await self.store.get_many(list(cands))
         states = await self.store.get_many([rev_state_id(r) for r in cands])
@@ -349,6 +365,11 @@ class RecallService:
                 if source_check_id(s.uri) in checks
             }
             c.assessment = assess(rev, ctx)
+            if only_applicable and (
+                rev.scope == "reference"
+                or (rev.scope == "topical" and not in_scope(rev, c.assessment, ctx, topics))
+            ):
+                continue
             if c.assessment.include or not only_applicable:
                 out.append(c)
         return out
@@ -692,7 +713,7 @@ class RecallService:
         if not text:
             return await self._finish(caller, request, "recall", [], [], ctx, dropped)
         cands = await self.query_candidates(caller, text, ctx, request.kinds)
-        visible = await self.hydrate(cands, ctx, query=text)
+        visible = await self.hydrate(cands, ctx, query=text, topics=text)
         ranked = await self.rank(visible, query=text, ranked_by_text=True)
         relevant: list[Candidate] = []
         for c in ranked:
@@ -736,6 +757,7 @@ class RecallService:
             kinds=request.kinds,
             anchors=list(ctx.chain.distance),
             unanchored=True,
+            reference=False,
             limit=5000,
         )
         cands = {d.rev: Candidate(d.rev, doc=d) for d in docs}
@@ -749,6 +771,7 @@ class RecallService:
                 continue
             if (
                 c.doc.kind == "directive"
+                or c.revision.scope == "topical"  # in scope: the work is about its subject
                 or a.outcome.triggered
                 or (
                     anchored_here

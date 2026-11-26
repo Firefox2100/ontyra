@@ -24,21 +24,32 @@ class Concepts:
             self._cache[key] = await self._daemon.find_concept(label)
         return self._cache[key]
 
-    async def ensure(self, label: str, parents: list[str], definition: str | None = None) -> str:
-        """The concept for a label, defined when missing."""
+    async def ensure(
+        self,
+        label: str,
+        parents: list[str],
+        definition: str | None = None,
+        aliases: list[str] | None = None,
+    ) -> str:
+        """The concept for a label, defined when missing. An alias another concept already
+        carries is left out rather than failing the concept."""
         if (found := await self._lookup(label)) is not None:
             return found
         is_a = [await self.ensure(p, []) for p in parents]
+        names = [a for a in dict.fromkeys(aliases or []) if a.casefold() != label.casefold()]
+        names = [a for a in names if await self._lookup(a) is None]
         try:
-            created = await self._daemon.define_concept(label, is_a, definition)
+            created = await self._daemon.define_concept(label, is_a, definition, names)
         except ApiError as exc:
             if exc.status not in (409, 422):
                 raise
             self._cache.pop(label.casefold().strip(), None)
             again = await self._lookup(label)
-            if again is None:
+            if again is not None:
+                return again
+            if not names:
                 raise
-            return again
+            created = await self._daemon.define_concept(label, is_a, definition, [])
         self._cache[label.casefold().strip()] = created
         return created
 

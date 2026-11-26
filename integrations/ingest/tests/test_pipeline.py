@@ -34,6 +34,10 @@ def doc(tmp_path: Path) -> Path:
 def answer(calls: list[str]) -> Callable[[str, str], Any]:
     def respond(system: str, user: str) -> Any:
         calls.append(user)
+        if '"summary"' in system:
+            return {"summary": "A short guide to widgets and their limits."}
+        if '"topic"' in system:
+            return {"topic": "Widget", "aliases": ["Widgets line", "WGT-1"]}
         if '"claims"' in system:
             if "80 degrees" in user:
                 return {
@@ -93,7 +97,8 @@ async def test_ingest_grounds_submits_and_resumes(
     # the invented quote is refused after one rework round; the weak dataset is dropped
     assert (report.grounded, report.rejected) == (2, 1)
     assert report.committed == 2
-    ops = [op for p in fake_daemon.proposals for op in p["ops"]]
+    every = [op for p in fake_daemon.proposals for op in p["ops"]]
+    ops = [op for op in every if op["fields"].get("scope") != "topical"]
     texts = {op["fields"]["text"] for op in ops}
     assert texts == {
         "A widget must not be used above 80 degrees Celsius.",
@@ -105,11 +110,23 @@ async def test_ingest_grounds_submits_and_resumes(
     assert source["quote"] == "must not be used above 80 degrees Celsius"
     assert source["locator"] == "Widgets > Limits"
     assert source["content_hash"].startswith("sha256:")
-    # an unknown subject falls back to the document's concept; a dataset gets its own
-    assert claim["fields"]["subject"] == "concept:widgets"
+    # an unknown subject falls back to the document's topic; a dataset gets its own
+    assert claim["fields"]["subject"] == "concept:widget"
+    assert claim["fields"]["about"] == ["concept:widget"]
+    assert "scope" not in claim["fields"]  # the daemon makes a sourced fact reference material
     dataset = next(op for op in ops if "WidgetBench" in op["fields"]["text"])
     assert dataset["fields"]["subject"] == "concept:widgetbench"
     assert "concept:dataset" in fake_daemon.concepts.values()
+
+    # one topical overview points to the detail
+    (overview,) = [op for op in every if op["fields"].get("scope") == "topical"]
+    assert overview["fields"]["about"] == ["concept:widget"]
+    assert (
+        "2 detailed entries" in overview["fields"]["text"]
+        and "consult" in overview["fields"]["text"]
+    )
+    assert overview["evidence"][0]["source"]["quote"] == "Widgets"
+    assert report.overview == "committed"
 
     first_calls, first_proposals = len(calls), len(fake_daemon.proposals)
     again = await Pipeline(settings, make_llm(answer(calls)), daemon).ingest(doc)
@@ -205,3 +222,24 @@ async def test_a_dead_model_is_reported_and_retried_next_time(
     assert report.errors and report.committed == 0
     ok = await Pipeline(settings, live, daemon).ingest(doc)
     assert ok.committed == 2
+
+
+async def test_the_topic_is_defined_once_with_its_aliases_and_can_be_given(
+    settings: Settings,
+    daemon: Daemon,
+    fake_daemon: FakeDaemon,
+    make_llm: Callable[[Callable[[str, str], Any]], Llm],
+    doc: Path,
+) -> None:
+    given = settings.model_copy(
+        update={"topic": "Gizmo", "aliases": ["GZ-9"], "scope": "contextual"}
+    )
+    report = await Pipeline(given, make_llm(answer([])), daemon).ingest(doc)
+    assert report.topic == "Gizmo"
+    assert "concept:gizmo" in fake_daemon.concepts.values()
+    claim = next(
+        op for p in fake_daemon.proposals for op in p["ops"] if "80 degrees" in op["fields"]["text"]
+    )
+    assert claim["fields"]["about"] == ["concept:gizmo"]
+    assert claim["fields"]["scope"] == "contextual"  # an explicit choice is passed on
+    assert fake_daemon.aliases["concept:gizmo"] == ["GZ-9"]

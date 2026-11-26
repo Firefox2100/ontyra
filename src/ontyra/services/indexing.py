@@ -69,6 +69,7 @@ def doc_for(
         anchors=[a.uri for a in rev.anchors],
         sources=[s.uri for s in rev.sources],
         about=list(rev.about),
+        scope=rev.scope,
         expires_at=rev.expires_at,
         created_at=now,
     )
@@ -115,6 +116,7 @@ class IndexService:
                         rev=d.rev,
                         owner=d.owner,
                         kind=d.kind,
+                        scope=d.scope,
                         model=self.embedder.name,
                         vector=v,
                         created_at=now,

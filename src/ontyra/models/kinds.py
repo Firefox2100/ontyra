@@ -19,6 +19,10 @@ from ontyra.models.registry import LifecyclePolicy, registry
 from ontyra.models.sources import SourceRef
 
 KindName = Literal["fact", "directive", "decision", "event", "procedure", "task", "lesson"]
+Scope = Literal["contextual", "universal", "topical", "reference"]
+# What a memory that cites an external source is by default: reference material, looked up on
+# demand and never delivered unasked. Rules, procedures and lessons keep the ordinary default.
+REFERENCE_KINDS: tuple[KindName, ...] = ("fact", "decision", "event")
 
 
 class RevisionBase(Record):
@@ -38,8 +42,13 @@ class RevisionBase(Record):
     # `universal`: holds whatever the context (a standing preference, a global prohibition) and
     # is always part of a briefing or check. `contextual` (default): holds where its anchors,
     # qualifiers or subject (`about`) tie it to the context; with none of those it is unscoped
-    # (flagged when written) and reaches an agent only through recall of its text.
-    scope: Literal["contextual", "universal"] = "contextual"
+    # (flagged when written) and reaches an agent only through recall of its text. `topical`:
+    # reaches an agent only when the context ties to it (an anchor, or an `about` concept the
+    # work, the place or the message is about), whatever its text matches: knowledge of one
+    # module or project that should not surface elsewhere. `reference`: never delivered by recall,
+    # briefing or check; found only by looking it up (`consult`, `search`): documentation and
+    # notes taken from sources, which is what a sourced fact is unless it says otherwise.
+    scope: Scope = "contextual"
 
 
 @registry.kind("fact", LifecyclePolicy(supersedes_by_edge=True))

@@ -16,6 +16,10 @@ from ontyra.models.kinds import RevisionBase
 from ontyra.models.recall import (
     AskRequest,
     AskResult,
+    ConsultHit,
+    ConsultRequest,
+    ConsultResult,
+    ConsultSource,
     Overview,
     RecallContext,
     SearchHit,
@@ -67,7 +71,9 @@ class ExplorationService:
 
     async def search(self, caller: Caller, request: SearchRequest) -> SearchResult:
         ctx = await self.recall.resolve_context(request.context)
-        cands = await self.recall.query_candidates(caller, request.query, ctx, request.kinds)
+        cands = await self.recall.query_candidates(
+            caller, request.query, ctx, request.kinds, reference=None
+        )
         if request.concept:
             cid = await self.ontology.resolve(request.concept)
             allowed = set(ctx.ontology.expand(cid))
@@ -121,6 +127,70 @@ class ExplorationService:
             out.affordances.append(f"{len(ranked) - len(hits)} more matches: narrow by a facet")
         if hits:
             out.affordances.append("get(<memory id>, expand=...) for detail")
+        return out
+
+    # ---- consult -----------------------------------------------------------------------
+
+    CONSULT_POOL = 400
+
+    async def consult(self, caller: Caller, request: ConsultRequest) -> ConsultResult:
+        """Look something up in the reference material, optionally limited to a topic."""
+        ctx = await self.recall.resolve_context(request.context)
+        if request.topic:
+            seeds = [await self.ontology.resolve(request.topic)]
+        else:
+            seeds = [o.concept for o in ctx.observations]
+        allowed: set[RecordId] = set()
+        for seed in seeds:
+            allowed |= set(ctx.ontology.expand(seed))
+        cands = await self.recall.query_candidates(
+            caller, request.query, ctx, [], reference=True, pool=self.CONSULT_POOL
+        )
+        if allowed:
+            docs = await self.store.get_many([_doc(r) for r in cands])
+            cands = {
+                r: c
+                for r, c in cands.items()
+                if (d := docs.get(_doc(r))) is not None and allowed & set(getattr(d, "about", []))
+            }
+        visible = await self.recall.hydrate(cands, ctx, only_applicable=False, query=request.query)
+        ranked = await self.recall.rank(visible, query=request.query, ranked_by_text=True)
+        hits: list[ConsultHit] = []
+        for c in ranked[: request.limit]:
+            assert c.revision is not None
+            rev = c.revision
+            caveats = [
+                f"source {uri} was reported {state}"
+                for uri, state in c.source_state.items()
+                if state != "ok"
+            ]
+            hits.append(
+                ConsultHit(
+                    memory=rev.memory,
+                    text=rev.text,
+                    score=round(c.score, 4),
+                    about=[
+                        ctx.ontology.concepts[a].label if a in ctx.ontology.concepts else str(a)
+                        for a in rev.about
+                    ],
+                    sources=[
+                        ConsultSource(uri=s.uri, locator=s.locator, quote=s.quote, title=s.title)
+                        for s in rev.sources
+                    ],
+                    caveats=caveats,
+                )
+            )
+        out = ConsultResult(
+            query=request.query,
+            topics=sorted(
+                ctx.ontology.concepts[a].label for a in set(seeds) if a in ctx.ontology.concepts
+            ),
+            hits=hits,
+        )
+        if len(ranked) > len(hits):
+            out.affordances.append(f"{len(ranked) - len(hits)} more: make the query more specific")
+        if not hits:
+            out.affordances.append("nothing in the reference material matches")
         return out
 
     # ---- get ---------------------------------------------------------------------------

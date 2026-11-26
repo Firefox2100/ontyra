@@ -35,7 +35,7 @@
           },
           "fields": {
             "additionalProperties": true,
-            "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
+            "description": "`text` (the whole statement, in one sentence) plus the kind's own fields, required first, optional in brackets:\nfact (a standing statement about the world or the setup): text, subject (concept id, e.g. concept:python), predicate, object (text or a concept id)\ndirective (a rule for how you should behave; say where it applies: `scope: universal`, or anchors / about): text, strength (must|should|prefer), rule [polarity (do|avoid), rationale]\ndecision (a choice that was made, with what it was chosen over): text, chosen, rationale, decided_at (ISO datetime) [alternatives (list of str)]\nevent (something that happened at a particular time): text, occurred_at (ISO datetime) [participants (list of str), outcome]\nprocedure (ordered steps to follow: ONE memory for the whole procedure): text, trigger, steps (list of {text, optional}) [preconditions (list of str)]\ntask (something to do later (a reminder)): text [due (ISO datetime), state (open|done|cancelled)]\nlesson (what a failure taught, to apply next time): text, situation, insight [do_instead]\nEvery kind also takes: scope (contextual|universal|topical|reference), anchors, about (concept ids), qualifiers, expires_at, confidence. Do not repeat `kind` inside `fields`.",
             "title": "Fields",
             "type": "object"
           },
@@ -1138,6 +1138,184 @@
           "replaced_by"
         ],
         "title": "ConceptView",
+        "type": "object"
+      },
+      "ConsultHit": {
+        "additionalProperties": false,
+        "properties": {
+          "about": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "About",
+            "type": "array"
+          },
+          "caveats": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "memory": {
+            "description": "A record id as `table:id`.",
+            "examples": [
+              "memory:0194f3a1b2c3d4e5f6a7"
+            ],
+            "title": "RecordId",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "sources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ConsultSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memory",
+          "text",
+          "score"
+        ],
+        "title": "ConsultHit",
+        "type": "object"
+      },
+      "ConsultRequest": {
+        "additionalProperties": false,
+        "description": "Look something up in the reference material (documentation and notes taken from sources),\nwhich recall never delivers by itself.",
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/RecallContext",
+            "default": {
+              "signals": [],
+              "uris": []
+            }
+          },
+          "limit": {
+            "default": 8,
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "maxLength": 2000,
+            "title": "Query",
+            "type": "string"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "ConsultRequest",
+        "type": "object"
+      },
+      "ConsultResult": {
+        "additionalProperties": false,
+        "properties": {
+          "affordances": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Affordances",
+            "type": "array"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/ConsultHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "query",
+          "topics",
+          "hits"
+        ],
+        "title": "ConsultResult",
+        "type": "object"
+      },
+      "ConsultSource": {
+        "additionalProperties": false,
+        "properties": {
+          "locator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locator"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "uri": {
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri"
+        ],
+        "title": "ConsultSource",
         "type": "object"
       },
       "CredentialCreate": {
@@ -7460,6 +7638,99 @@
         "summary": "Find duplicate memories",
         "tags": [
           "consolidation"
+        ]
+      }
+    },
+    "/v1/consult": {
+      "post": {
+        "description": "Documentation and notes taken from sources are never delivered by recall: they are looked up. Limit it to a `topic` (a concept, label or alias), or leave it out to use what the context ties to. Hits carry their sources and quotes.",
+        "operationId": "consult_v1_consult_post",
+        "parameters": [
+          {
+            "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+            "in": "header",
+            "name": "x-ontyra-actor",
+            "required": false,
+            "schema": {
+              "default": "anonymous",
+              "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
+              "title": "X-Ontyra-Actor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Declared kind. Single-user mode only; accounts set it.",
+            "in": "header",
+            "name": "x-ontyra-actor-kind",
+            "required": false,
+            "schema": {
+              "default": "agent",
+              "description": "Declared kind. Single-user mode only; accounts set it.",
+              "enum": [
+                "human",
+                "agent",
+                "tool",
+                "service",
+                "model"
+              ],
+              "title": "X-Ontyra-Actor-Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Harness the actor runs in, e.g. `claude-code`.",
+            "in": "header",
+            "name": "x-ontyra-harness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Harness the actor runs in, e.g. `claude-code`.",
+              "title": "X-Ontyra-Harness"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsultRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsultResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Look something up in the reference material",
+        "tags": [
+          "explore"
         ]
       }
     },

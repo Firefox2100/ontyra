@@ -37,6 +37,8 @@ from ontyra.models.recall import (
     AskRequest,
     AskResult,
     CheckResult,
+    ConsultRequest,
+    ConsultResult,
     Overview,
     RecallContext,
     RecallPack,
@@ -78,7 +80,9 @@ Knowledge from a source (a file, page, paper) is stored like any fact, citing th
 evidence: `evidence: [{"source": {"uri": ..., "locator": ..., "quote": ...}}]` (uri required; a
 short literal quote and the page or section make it checkable later). The daemon never reads the
 source. A recalled memory shows its source: read it yourself to verify, and tell the daemon what
-you found with `check_source` (`ok`, `changed`, `missing`).
+you found with `check_source` (`ok`, `changed`, `missing`). A fact that cites a source is
+reference material: recall never delivers it. A memory saying there is material on a topic is
+your cue: look the detail up with `consult` (a specific `query` and the `topic`).
 """
 
 ACTOR_KINDS = ("human", "agent", "tool", "service", "model")
@@ -301,6 +305,17 @@ def create_mcp(
     )
     async def feedback(request: FeedbackRequest) -> FeedbackView:
         return await run(lambda s, c: s.feedback.record(c, request))
+
+    @mcp.tool(
+        title="Consult reference material",
+        annotations=READ,
+        description="Look something up in documentation and notes taken from sources (datasheets, "
+        "manuals, papers). Recall never delivers these by itself: when a memory says there is "
+        "material on a topic and you need details, call this with a specific `query` and the "
+        "`topic`. Every hit names its source and quote.",
+    )
+    async def consult(request: ConsultRequest) -> ConsultResult:
+        return await run(lambda s, c: s.explore.consult(c, request))
 
     @mcp.tool(
         title="Report on a cited source",

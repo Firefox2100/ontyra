@@ -18,7 +18,7 @@ from ontyra.models.base import (
     Record,
     RevRef,
 )
-from ontyra.models.kinds import KindName
+from ontyra.models.kinds import KindName, Scope
 from ontyra.models.registry import registry
 
 
@@ -38,6 +38,7 @@ class SearchDoc(Record):
     anchors: list[str] = []  # canonical anchor URIs; empty = unanchored
     sources: list[str] = []  # canonical URIs of the sources it cites
     about: list[ConceptRef] = []
+    scope: Scope = "contextual"  # the revision's scope; reference rows stay out of recall lanes
     expires_at: datetime | None = None  # the revision's expiry (expiry checks use it)
     created_at: datetime
 
@@ -49,6 +50,7 @@ class Embedding(Record):
     rev: Annotated[RevRef, Indexed(unique=True)]
     owner: OwnerRef
     kind: KindName
+    scope: Scope = "contextual"
     model: str
     vector: list[float]
     created_at: datetime

@@ -22,6 +22,7 @@ class FakeDaemon:
         self.checks: list[dict[str, Any]] = []
         self.decision = 201
         self.reject_containing: str | None = None
+        self.aliases: dict[str, list[str]] = {}
 
     def handle(self, request: httpx.Request) -> httpx.Response:
         path, method = request.url.path, request.method
@@ -32,8 +33,12 @@ class FakeDaemon:
             hit = self.concepts.get(term)
             return httpx.Response(200, json=[{"id": hit}] if hit else [])
         if path == "/v1/concepts" and method == "POST":
-            label = json.loads(request.content)["label"]
+            body = json.loads(request.content)
+            label = body["label"]
             cid = "concept:" + "_".join(label.casefold().split())
+            self.aliases[cid] = body.get("aliases", [])
+            for alias in body.get("aliases", []):
+                self.concepts[alias.casefold()] = cid
             self.concepts[label.casefold()] = cid
             return httpx.Response(200, json={"id": cid})
         if path == "/v1/proposals":

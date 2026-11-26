@@ -2,23 +2,31 @@
 
 from __future__ import annotations
 
-import re
-
 MIN_QUOTE = 12
 MAX_QUOTE = 600
 
 
 def find_quote(quote: str, text: str) -> str | None:
-    """The quote as it occurs in `text` (whitespace aside), or None. The returned words are the
-    document's own, so what is stored is literal even when the model changed the spacing."""
-    words = quote.split()
-    if not words:
+    """The quote as it occurs in `text`, or None. Spacing and letter case are not held against the
+    model; the words are. What is returned is the document's own text for that span, so what is
+    stored is literal even when the model changed the spacing or case."""
+    wanted = "".join(quote.split()).casefold()
+    if not wanted:
         return None
-    pattern = r"\s+".join(re.escape(w) for w in words)
-    hit = re.search(pattern, text)
-    if hit is None:
+    kept: list[str] = []
+    where: list[int] = []
+    for i, ch in enumerate(text):
+        if not ch.isspace():
+            kept.append(ch.casefold())
+            where.append(i)
+    flat = "".join(kept)
+    at = flat.find(wanted)
+    if at < 0:
         return None
-    found = re.sub(r"\s+", " ", hit.group(0))
+    # casefold can change a character's length: map by the original characters, not by offsets
+    start = where[at]
+    end = where[min(at + len(wanted), len(where)) - 1] + 1
+    found = " ".join(text[start:end].split())
     if not MIN_QUOTE <= len(found) <= MAX_QUOTE:
         return None
     return found

@@ -8,6 +8,8 @@ from ontyra.models import RecordId
 from ontyra.models.recall import (
     AskRequest,
     AskResult,
+    ConsultRequest,
+    ConsultResult,
     Overview,
     RecallContext,
     SearchRequest,
@@ -29,6 +31,19 @@ async def search(
     request: SearchRequest, caller: CallerDep, service: ExplorationServiceDep
 ) -> SearchResult:
     return await service.search(caller, request)
+
+
+@router.post(
+    "/consult",
+    summary="Look something up in the reference material",
+    description="Documentation and notes taken from sources are never delivered by recall: they "
+    "are looked up. Limit it to a `topic` (a concept, label or alias), or leave it out to use "
+    "what the context ties to. Hits carry their sources and quotes.",
+)
+async def consult(
+    request: ConsultRequest, caller: CallerDep, service: ExplorationServiceDep
+) -> ConsultResult:
+    return await service.consult(caller, request)
 
 
 @router.post("/ask", summary="Structural questions answered exactly")

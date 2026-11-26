@@ -217,6 +217,39 @@ class SearchResult(Model):
     affordances: list[str] = []
 
 
+class ConsultRequest(Model):
+    """Look something up in the reference material (documentation and notes taken from sources),
+    which recall never delivers by itself."""
+
+    query: Annotated[str, Field(max_length=2000)]
+    topic: str | None = None  # a concept (label, alias or id); else what the context ties to
+    context: RecallContext = RecallContext()
+    limit: Annotated[int, Field(ge=1, le=50)] = 8
+
+
+class ConsultSource(Model):
+    uri: str
+    locator: str | None = None
+    quote: str | None = None
+    title: str | None = None
+
+
+class ConsultHit(Model):
+    memory: RecordId
+    text: str
+    score: float
+    about: list[str] = []  # concept labels
+    sources: list[ConsultSource] = []
+    caveats: list[str] = []
+
+
+class ConsultResult(Model):
+    query: str
+    topics: list[str]  # the concepts the lookup was limited to; empty: all reference material
+    hits: list[ConsultHit]
+    affordances: list[str] = []
+
+
 class AskRequest(Model):
     question: Literal[
         "applies_here",

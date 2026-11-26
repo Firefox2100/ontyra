@@ -18,7 +18,7 @@ from ontyra.models import Record, RecordId, new_id, registry
 from ontyra.models.anchors import Anchor
 from ontyra.models.core import Episode, Memory, Proposal, RevState
 from ontyra.models.episodes import EpisodeSettings
-from ontyra.models.kinds import DirectiveRev, RevisionBase, fields_guide
+from ontyra.models.kinds import REFERENCE_KINDS, DirectiveRev, RevisionBase, fields_guide
 from ontyra.models.proposals import (
     AddMemory,
     Annotate,
@@ -374,6 +374,16 @@ class _Ctx:
 
     # ---- ops -----------------------------------------------------------------
 
+    def _topical(self, i: int, model: Any) -> None:
+        """A topical memory is delivered only through a tie to the context: it needs one."""
+        if getattr(model, "scope", None) == "topical" and not (model.anchors or model.about):
+            self.error(
+                i,
+                "topical_needs_subject",
+                "`scope: topical` needs `about` (concepts) or `anchors`: it is delivered only when "
+                "the context ties to them",
+            )
+
     def _unscoped(self, i: int, model: Any, memory: RecordId | None = None) -> None:
         """A directive tied to nothing is neither universal nor contextual: say so when written."""
         if (
@@ -406,9 +416,12 @@ class _Ctx:
         spec = registry.kinds[op.kind]
         evidence = await self._check_evidence(i, op.evidence)
         cited = [ev.source for ev in evidence if ev.source is not None]
+        fields = dict(op.fields)
+        if cited and "scope" not in fields and op.kind in REFERENCE_KINDS:
+            fields["scope"] = "reference"  # a sourced statement is reference material by default
         try:
             model = spec.model.model_validate(
-                {**op.fields, **self._bookkeeping(mem, 1), "sources": cited}
+                {**fields, **self._bookkeeping(mem, 1), "sources": cited}
             )
         except ValidationError as exc:
             self._schema_errors(i, exc, op.kind)
@@ -428,6 +441,7 @@ class _Ctx:
                         continue
                 sources.append(src[1])
         self._unscoped(i, model, mem)
+        self._topical(i, model)
         await self._similar(i, op.kind, model)
         self.v.prepared.append(
             PreparedAdd(

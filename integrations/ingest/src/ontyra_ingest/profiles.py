@@ -12,7 +12,7 @@ from ontyra_ingest.config import Settings
 from ontyra_ingest.models import Candidate, Chunk
 
 
-def _prompt(name: str) -> str:
+def prompt(name: str) -> str:
     return files("ontyra_ingest").joinpath("prompts", f"{name}.md").read_text(encoding="utf-8")
 
 
@@ -100,6 +100,6 @@ class Profile:
 
 def all_profiles() -> dict[str, Profile]:
     return {
-        "claims": Profile("claims", _prompt("claims"), claims),
-        "datasets": Profile("datasets", _prompt("datasets"), datasets),
+        "claims": Profile("claims", prompt("claims"), claims),
+        "datasets": Profile("datasets", prompt("datasets"), datasets),
     }

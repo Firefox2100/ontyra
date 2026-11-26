@@ -140,18 +140,22 @@ class FusionRecallService(RecallService):
             cands.setdefault(rev, Candidate(rev))
             return raw.setdefault(rev, Scored())
 
-        for hit in await self.store.search_text(text, owners, kinds=kinds, limit=n):
+        for hit in await self.store.search_text(
+            text, owners, kinds=kinds, reference=False, limit=n
+        ):
             entry(hit.rev).bm25 = hit.score
         if self.embedder is not None:
             vector = await self.embedder.embed_query(text)
-            for hit in await self.store.search_vector(vector, owners, kinds=kinds, limit=n):
+            for hit in await self.store.search_vector(
+                vector, owners, kinds=kinds, reference=False, limit=n
+            ):
                 entry(hit.rev).cosine = hit.score
         for w, doc, why in await self.concept_lane(text, ctx, owners, kinds, n):
             entry(doc.rev).concept = w
             cands[doc.rev].doc = doc
             cands[doc.rev].why.append(why)
 
-        visible = await self.hydrate(cands, ctx)  # applicability before ranking
+        visible = await self.hydrate(cands, ctx, topics=text)  # applicability before ranking
         pool = {c.rev: c for c in visible}
         top_bm25 = max((raw[r].bm25 or 0.0 for r in pool), default=0.0)
         cosines: list[float] = [c for r in pool if (c := raw[r].cosine) is not None]

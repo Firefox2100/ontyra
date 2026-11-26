@@ -67,6 +67,12 @@ def compile_writes(writes: Sequence[Write]) -> tuple[list[str], dict[str, Any]]:
     return stmts, params
 
 
+def _reference_clause(reference: bool | None) -> str:
+    if reference is None:
+        return ""
+    return " AND scope = 'reference'" if reference else " AND scope != 'reference'"
+
+
 class SurrealStore:
     def __init__(self, db: Database) -> None:
         self.db = db
@@ -155,11 +161,17 @@ class SurrealStore:
         return {RecordId.parse(r["id"]): _parse(r) for r in rows}
 
     async def search_text(
-        self, query: str, owners: Sequence[RecordId], *, kinds: Sequence[str] = (), limit: int = 50
+        self,
+        query: str,
+        owners: Sequence[RecordId],
+        *,
+        kinds: Sequence[str] = (),
+        reference: bool | None = False,
+        limit: int = 50,
     ) -> list[Hit]:
         if not query.strip():
             return []
-        kind_clause = " AND kind IN $kinds" if kinds else ""
+        kind_clause = (" AND kind IN $kinds" if kinds else "") + _reference_clause(reference)
         rows = (
             await self.db.query(
                 "SELECT rev, search::score(0) AS score FROM search_doc "
@@ -176,10 +188,11 @@ class SurrealStore:
         owners: Sequence[RecordId],
         *,
         kinds: Sequence[str] = (),
+        reference: bool | None = False,
         limit: int = 50,
     ) -> list[Hit]:
         k, ef = int(limit), max(int(limit) * 3, 100)
-        kind_clause = " AND kind IN $kinds" if kinds else ""
+        kind_clause = (" AND kind IN $kinds" if kinds else "") + _reference_clause(reference)
         rows = (
             await self.db.query(
                 "SELECT rev, vector::distance::knn() AS dist FROM embedding "
@@ -200,6 +213,7 @@ class SurrealStore:
         about: Sequence[RecordId] | None = None,
         sources: Sequence[str] | None = None,
         expires_before: datetime | None = None,
+        reference: bool | None = None,
         limit: int = 500,
     ) -> list[SearchDoc]:
         params: dict[str, Any] = {"owners": list(owners), "limit": limit}
@@ -219,6 +233,7 @@ class SurrealStore:
         if kinds:
             sql += " AND kind IN $kinds"
             params["kinds"] = list(kinds)
+        sql += _reference_clause(reference)
         if expires_before is not None:
             sql += " AND expires_at != NONE AND expires_at < $expires_before"
             params["expires_before"] = expires_before

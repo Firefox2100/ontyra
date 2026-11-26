@@ -77,6 +77,12 @@ changes or disappears. The daemon never reads the source and does not need it to
 If a similar fact is already stored, `revise` it with the new source in `evidence` instead of adding a
 copy: a second independent source corroborates it.
 
+A fact that cites a source is **reference material**: recall and briefings never deliver it, so a
+datasheet's hundreds of entries cannot crowd out memory. A delivered memory such as "notes on X: ...
+look it up with `consult`" tells you there is material on a topic. When you need the detail, call
+`consult` with a specific `query` and the `topic`; each hit shows its source and quote. Add
+`scope: "contextual"` to a sourced fact that must be delivered unasked.
+
 A recalled fact shows `(source: ...)`. To verify one, read the source yourself, then report what you
 found with `check_source` (`ok`, `changed` or `missing`); `changed` and `missing` open a review.
 `[unvetted]` means it was committed without a human looking: use it, but do not present it as

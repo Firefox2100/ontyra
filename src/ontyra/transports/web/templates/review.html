@@ -5,7 +5,7 @@
 <h2>Proposals ({{ proposals|length }})</h2>
 {% if proposals|length > 1 %}<form method="post" action="/ui/proposals/overlay" id="bulk" class="card small">
   <b>Bulk edit</b> the checked proposals (their add/revise ops get the same fields, as a new version each):
-  <label>Scope <select name="scope"><option value="">unchanged</option><option>contextual</option><option>universal</option></select></label>
+  <label>Scope <select name="scope"><option value="">unchanged</option><option>contextual</option><option>universal</option><option>topical</option><option>reference</option></select></label>
   <label>Expires at <input type="text" name="expires_at" placeholder="ISO date/time"></label>
   <label>Anchor <input type="text" name="anchor" placeholder="add anchor URI"></label>
   <label>About <input type="text" name="about" placeholder="concept ids"></label>

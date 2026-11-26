@@ -19,18 +19,29 @@ class LlmError(Exception):
     pass
 
 
+_BAD_ESCAPE = re.compile(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})')
+
+
+def _loads(text: str) -> Any:
+    """`json.loads`, retried with stray backslashes (LaTeX, `\\_`) escaped."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return json.loads(_BAD_ESCAPE.sub(r"\\\\", text))
+
+
 def parse_json(content: str) -> Any:
     """The JSON in a model's answer, tolerating reasoning blocks and code fences."""
     text = _FENCE.sub("", _THINK.sub("", content).strip()).strip()
     try:
-        return json.loads(text)
+        return _loads(text)
     except json.JSONDecodeError:
         start = min((i for i in (text.find("{"), text.find("[")) if i >= 0), default=-1)
         end = max(text.rfind("}"), text.rfind("]"))
         if start < 0 or end <= start:
             raise LlmError("the model's answer holds no JSON") from None
         try:
-            return json.loads(text[start : end + 1])
+            return _loads(text[start : end + 1])
         except json.JSONDecodeError as exc:
             raise LlmError(f"the model's answer is not valid JSON: {exc}") from exc
 

@@ -5,6 +5,7 @@
 <h1><span class="tag">{{ m.kind }}</span> {{ m.text }}</h1>
 <div class="card small">
   <span class="tag {{ 'ok' if m.status == 'active' else 'warn' }}">{{ m.status }}</span>
+  {% if m.content.scope in ('topical', 'reference') %}<span class="tag">{{ m.content.scope }}</span>{% endif %}
   revision {{ m.seq }} · confidence {{ m.confidence }} · lifecycle {{ m.lifecycle }}
   {% if m.valid_to %}· valid until {{ m.valid_to.strftime('%Y-%m-%d') }}{% endif %}
   <br><code>{{ m.memory }}</code>

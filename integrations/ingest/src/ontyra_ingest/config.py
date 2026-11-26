@@ -50,6 +50,23 @@ class Settings(BaseSettings):
 
     # What to extract.
     profiles: list[str] = Field(default_factory=lambda: ["claims", "datasets"])
+    # Sections that hold no knowledge: a chunk whose heading chain matches any of these (a
+    # case-insensitive regex on a heading) is not sent to the model.
+    skip_sections: list[str] = Field(
+        default_factory=lambda: [
+            r"^(table of )?contents$",
+            r"^list of (tables|figures)$",
+            r"^revision history$",
+            r"^(disclaimer|copyright)\b",
+            r"^(related )?(documentation|resources)\b",
+            r"^(references|bibliography|acknowledge?ments?)$",
+        ]
+    )
+    topic: str | None = None  # the subject of every document of the run; else the model names it
+    aliases: list[str] = Field(default_factory=list)
+    # Scope of the detailed entries. Unset, the daemon decides (a sourced fact is reference
+    # material: looked up, never delivered); `contextual` makes them recallable by text.
+    scope: str | None = None
     rework_rounds: int = 1
     min_usefulness: int = 3  # datasets profile: lowest 0-5 score that is kept
     concepts: str = "existing"  # existing | create

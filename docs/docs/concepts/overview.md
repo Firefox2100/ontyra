@@ -37,7 +37,14 @@ Facts are superseded, not decayed. History stays available.
 - **Scope**: `universal` memories hold everywhere and are always part of a briefing. `contextual`
   ones (the default) reach the agent only with evidence they apply here: a matching anchor, a
   satisfied qualifier, or a concept the current situation touches. A rule that is neither universal
-  nor tied to anything is *unscoped*, and the daemon warns when you write one.
+  nor tied to anything is *unscoped*, and the daemon warns when you write one. `topical` memories
+  (knowledge of one module or project) reach the agent *only* through a tie to what the work is
+  about, however well their text matches: an anchor, a concept of a [registered
+  resource](../guides/ontology.md) the work happens in, or a concept (or alias) the message names.
+  A topical memory must say what it is `about`. `reference` memories are never delivered by recall,
+  briefing or check at all: they are documentation and notes taken from sources, looked up with
+  `consult` (or `search`). A memory that cites a source is `reference` unless it says otherwise;
+  a short topical overview memory ("there are notes on X: look them up") tells the agent they exist.
 - **Qualifiers** are conditions ("only when python is 3.12 or newer") and can be necessary,
   sufficient, a prerequisite, an exclusion, or a trigger.
 

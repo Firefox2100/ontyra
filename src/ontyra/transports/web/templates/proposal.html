@@ -20,7 +20,7 @@
   <div class="row">{% if waiting %}<input type="checkbox" name="ops" value="{{ loop.index0 }}" aria-label="op {{ loop.index0 }}">{% endif %}
     <span class="muted small">op {{ loop.index0 }}</span><span class="tag">{{ op.op }}</span>{% if op.kind %}<span class="tag">{{ op.kind }}</span>{% endif %}
     {% if op.fields and op.fields.strength %}<span class="tag {{ 'must' if op.fields.strength == 'must' }}">{{ op.fields.strength }}</span>{% endif %}
-    {% if op.fields and op.fields.scope == 'universal' %}<span class="tag">universal</span>{% endif %}
+    {% if op.fields and op.fields.scope in ('universal', 'topical', 'reference') %}<span class="tag">{{ op.fields.scope }}</span>{% endif %}
     {% if deps.get(loop.index0) %}<span class="small muted">needs op {{ deps[loop.index0] | join(', ') }}</span>{% endif %}</div>
   {% if op.fields and op.fields.text %}<div style="margin-top:6px">{{ op.fields.text }}</div>{% endif %}
   {% if op.fields and op.fields.anchors %}<div class="small muted">anchors: {% for a in op.fields.anchors %}<code>{{ a.uri }}</code> {% endfor %}</div>{% endif %}
