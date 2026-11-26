@@ -32,9 +32,9 @@ Facts are superseded, not decayed. History stays available.
 
 ## Where a memory applies
 
-- **Anchors** tie a memory to a place: a URI such as `file://host/path/to/repo`, `ssh://user@host`,
+- Anchors tie a memory to a place: a URI such as `file://host/path/to/repo`, `ssh://user@host`,
   or a repository. A path covers everything beneath it (`subtree`) or only itself (`exact`).
-- **Scope**: `universal` memories hold everywhere and are always part of a briefing. `contextual`
+- Scope: `universal` memories hold everywhere and are always part of a briefing. `contextual`
   ones (the default) reach the agent only with evidence they apply here: a matching anchor, a
   satisfied qualifier, or a concept the current situation touches. A rule that is neither universal
   nor tied to anything is *unscoped*, and the daemon warns when you write one. `topical` memories
@@ -45,7 +45,7 @@ Facts are superseded, not decayed. History stays available.
   briefing or check at all: they are documentation and notes taken from sources, looked up with
   `consult` (or `search`). A memory that cites a source is `reference` unless it says otherwise;
   a short topical overview memory ("there are notes on X: look them up") tells the agent they exist.
-- **Qualifiers** are conditions ("only when python is 3.12 or newer") and can be necessary,
+- Qualifiers are conditions ("only when python is 3.12 or newer") and can be necessary,
   sufficient, a prerequisite, an exclusion, or a trigger.
 
 ## Ontology
@@ -58,12 +58,12 @@ for automatic approval. See [The ontology](../guides/ontology.md).
 
 ## Recall
 
-- **Briefing**: at session start, the complete set of rules that apply here, plus facts and
+- Briefing: at session start, the complete set of rules that apply here, plus facts and
   decisions anchored here and anything due.
-- **Recall**: on each message, memories relevant to the text and the context. Lexical and
+- Recall: on each message, memories relevant to the text and the context. Lexical and
   embedding search find candidates; applicability filters them; scores decide; the result is
   trimmed to a token budget. If the best match is not close enough, nothing is returned.
-- **Check**: before an action with side effects, what must be known first.
+- Check: before an action with side effects, what must be known first.
 - A **session ledger** stops the same memory being delivered twice in a session, and sends a
   one-time correction if a delivered memory was later revised or retracted.
 

@@ -100,6 +100,8 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_WORKER__BATCH_SIZE` | int | `16` |
 | `ONTYRA_WORKER__BATCH_WAIT_MS` | int | `5` |
 | `ONTYRA_WORKER__QUEUE_SIZE` | int | `64` |
+| `ONTYRA_WORKER__LOAD_RETRIES` | int | `2` |
+| `ONTYRA_WORKER__LOAD_RETRY_SECONDS` | float | `3.0` |
 | `ONTYRA_WORKER__OFFLOAD_AFTER_SECONDS` | float | `300.0` |
 | `ONTYRA_WORKER__FREE_AFTER_SECONDS` | float | `1800.0` |
 | `ONTYRA_WORKER__INSTRUCTION` | str | `Given a situation or request, find the stored memory that applies to it` |

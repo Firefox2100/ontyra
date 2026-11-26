@@ -6,7 +6,7 @@ The Claude Code plugin adds three things to every session:
 
 - a **briefing** at session start (and after resume or compaction): the rules that apply where
   you are working;
-- **recall on each prompt**: memories relevant to your message, injected as context;
+- recall on each prompt: memories relevant to your message, injected as context;
 - the **memory tools** (`recall`, `check`, `briefing`, `ask`, `get`, `remember`, `concepts`,
   `propose_ontology_change`) and a skill that tells the agent when to use them.
 

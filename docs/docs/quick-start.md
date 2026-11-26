@@ -71,4 +71,5 @@ Agents get the briefing and recall automatically through a plugin, and can write
 
 - [Claude Code](./agents/claude-code.md)
 - [Codex](./agents/codex.md)
+- [DSH](./agents/dsh.md)
 - [Anything else](./agents/other.md)

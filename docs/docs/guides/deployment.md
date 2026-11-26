@@ -16,8 +16,8 @@ curl -s localhost:8787/health
 ```
 
 The image itself listens on loopback by default. For bridge networking, explicitly set
-`ONTYRA_SERVER__HOST=0.0.0.0`, publish the host port on `127.0.0.1`, and—only when running without
-authentication—set `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true`. For an internet-facing reverse
+`ONTYRA_SERVER__HOST=0.0.0.0` and publish the host port on `127.0.0.1`. When running without
+authentication, also set `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true`. For an internet-facing reverse
 proxy deployment, use `ONTYRA_SERVER__DEPLOYMENT=public` and the multi-user settings described in
 [Authentication and accounts](./authentication.md).
 

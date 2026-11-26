@@ -61,8 +61,9 @@ worker: requests that arrive together share a forward pass, a full queue answers
 weights move to host memory (`OFFLOAD_AFTER_SECONDS`) and are then dropped
 (`FREE_AFTER_SECONDS`), reloading on the next request. `GET /status` reports the device, what the
 machine can do (and why not, when it cannot) and counters. Set `ONTYRA_WORKER__TOKEN` to require a
-bearer token. Retraining is described in [Learning from feedback](./feedback-learning.md#retraining). Versions of the model live under `ONTYRA_WORKER__MODEL_DIR`; changing the configured
-model starts from that model's own baseline.
+bearer token. Retraining is described in
+[Learning from feedback](./feedback-learning.md#retraining-the-reranker). Versions of the model live
+under `ONTYRA_WORKER__MODEL_DIR`; changing the configured model starts from that model's own baseline.
 
 ## Decision model (optional)
 

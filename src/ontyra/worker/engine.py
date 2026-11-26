@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 
 from ontyra.config import WorkerSettings
-from ontyra.worker.model import Scorer, Scores
+from ontyra.worker.model import MemoryShortage, Scorer, Scores
 
 
 class Busy(Exception):
@@ -181,6 +181,12 @@ class Engine:
             scores = await self._run(lambda: self.scorer.score(pairs))
             if was != "loaded":
                 self.counters.loads += 1
+        except MemoryShortage as error:  # a moment's shortage, not a fault: callers rank without us
+            self.counters.refused += len(jobs)
+            for job in jobs:
+                if not job.future.done():
+                    job.future.set_exception(Busy(str(error)))
+            return
         except Exception as error:
             self.counters.failed += len(jobs)
             for job in jobs:

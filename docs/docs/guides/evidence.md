@@ -2,8 +2,11 @@
 title: Evidence and episodes
 ---
 
-A memory can say where it came from. The source is an **episode**: one raw message of a
-conversation, stored word for word and never changed. The Claude Code, Codex and DSH plugins log
+A memory can cite either a conversation episode or an external source. This page covers episodes:
+one raw message of a conversation, stored word for word and never changed. For documents, web
+pages and other external material, see [Knowledge from sources](./knowledge.md).
+
+The Claude Code, Codex and DSH plugins log
 every prompt and reply to `POST /v1/episodes` for you (`ONTYRA_LOG_EPISODES=0`, or the `episodes`
 setting in DSH, turns that off).
 

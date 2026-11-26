@@ -44,15 +44,17 @@ To require a token (at least 32 characters):
 export ONTYRA_AUTH__TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 ```
 
-Give clients the same value as `ONTYRA_TOKEN` (the Claude Code and Codex plugins send it when
-it is set). There is exactly one token, and it opens everything. Its actor kind is fixed by
+Give clients the same value as `ONTYRA_TOKEN` (the Claude Code and Codex plugins read it directly;
+the DSH plugin reads the credential named by `tokenRef`). There is exactly one token, and it opens
+everything. Its actor kind is fixed by
 `ONTYRA_AUTH__SINGLE_USER_KIND=human|agent` (default `human`); request headers cannot elevate it.
 
 ## Multi-user mode
 
 Each person has an **account**, which owns a private memory. An account holds any number of
 **credentials**, one per thing that acts for them: themselves in the console, their Codex, their
-Claude Code, a script. Each credential has its own token, its own name and a kind:
+Claude Code, their DSH profile, or a script. Each credential has its own token, its own name and a
+kind:
 
 - `human`: the person. May review proposals, and commits at once if your policy lets humans.
 - `agent`: an agent acting for the person. Its writes follow the policy for agents (by default,

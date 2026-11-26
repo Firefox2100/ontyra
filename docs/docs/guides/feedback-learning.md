@@ -16,10 +16,10 @@ ONTYRA_LEARNING__ENABLED=true
 Two corrections, both bounded, both recomputed from the feedback that still counts (nothing is
 stored, so retracting or expiring an event changes the next result):
 
-- **A prior per memory**: its verdicts, weighted by the trust of their source and halved every
+- A prior per memory: its verdicts, weighted by the trust of their source and halved every
   `HALF_LIFE_DAYS`, squashed and capped at `MAX_PRIOR`. A memory that keeps being judged
   irrelevant drifts down; one that keeps being applied drifts up.
-- **A blend of the lane scores**: a logistic fit of "was it relevant?" over the scores the recall
+- A blend of the lane scores: a logistic fit of "was it relevant?" over the scores the recall
   traces kept (lexical, dense, concept, reranker, decision model), starting from the plain
   ranking, kept within `MAX_SHIFT` of it and mixed in with a weight that grows with the amount of
   feedback up to `MAX_MIX`. No single source (actor) may weigh more than `SOURCE_CAP` of the fit.
@@ -52,12 +52,12 @@ Feedback is only as good as its verdicts. The console page **Feedback** (`/ui/fe
 `GET /v1/feedback/outliers` (MCP `feedback_outliers`, full profile), rank your active examples by
 how likely each is to be a mistake or poison:
 
-- **disagrees**: the verdict is the opposite of what the ranking believed when it recalled the
+- disagrees: the verdict is the opposite of what the ranking believed when it recalled the
   memory (the reranker's probability, or the final score without one);
-- **flipped**: the same memory and query was judged both ways;
-- **others disagree**: other owners judged the same shared memory the other way (an administrator's
+- flipped: the same memory and query was judged both ways;
+- others disagree: other owners judged the same shared memory the other way (an administrator's
   view, `everyone=true`);
-- **burst**: one source sent a great many verdicts in a few minutes.
+- burst: one source sent a great many verdicts in a few minutes.
 
 A **veto** (`POST /v1/feedback/{id}/veto`, with an optional reason; your own events, or anyone's for
 an administrator) takes an example out of learning for good: the score layer is recomputed without
@@ -101,20 +101,20 @@ Between retrainings the worker's one-logit head can follow feedback in small ste
 (`ONTYRA_RERANK__LIVE=true`; it needs `ONTYRA_RERANK__POOL=all`, because the head is shared by every
 user: per-owner learning is the score layer above). It is built to be undone:
 
-- **A replay, not an accumulation.** The served head is the version's own head plus an edit, and the
+- A replay, not an accumulation. The served head is the version's own head plus an edit, and the
   edit is refitted from zero on the examples that count now, every time. A veto, a retraction or an
   exclusion therefore simply gives a fit without that example; there is nothing to subtract.
-- **Bounded.** The edit may be at most `ONTYRA_RERANK__LIVE_MAX_DISTANCE` (default 25%) of the
+- Bounded. The edit may be at most `ONTYRA_RERANK__LIVE_MAX_DISTANCE` (default 25%) of the
   head's own norm, and is pulled towards zero. The backbone is never touched, so the judged texts'
   hidden states are computed once and refits take a fraction of a second.
-- **Gated.** After each fit the trusted benchmark requests are scored with and without the edit;
+- Gated. After each fit the trusted benchmark requests are scored with and without the edit;
   if it ranks them worse than `GATE_TOLERANCE` allows, it is not applied (`reverted`) and the head
   serves unedited.
-- **Batched and explicit.** Feedback changes schedule one refit, at most every `LIVE_EVERY_SECONDS`
+- Batched and explicit. Feedback changes schedule one refit, at most every `LIVE_EVERY_SECONDS`
   (default 5 minutes), once `LIVE_MIN_EXAMPLES` usable pairs of both classes exist; below that the
   edit is removed. `POST /v1/reranker/live` refits now, `POST /v1/reranker/live/reset` drops the
   edit, `GET /v1/reranker` shows its distance and whether feedback has changed since.
-- **Replaced by retraining.** A retraining starts from the base and its new version has no edit.
+- Replaced by retraining. A retraining starts from the base and its new version has no edit.
 
 ## Looking at it
 

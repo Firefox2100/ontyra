@@ -18,10 +18,11 @@ Authenticate with `Authorization: Bearer <token>` when the daemon requires one (
 
 Two tool profiles, chosen with `ONTYRA_MCP__PROFILE`:
 
-- `lite` (default): `recall`, `check`, `briefing`, `ask`, `get`, `remember`, `concepts`,
-  `propose_ontology_change`.
-- `full`: adds `search`, `overview`, `neighbors`, `list_memories`, and the review tools
-  (`pending_proposals`, `approve`, `reject`, and the ontology equivalents).
+- `lite` (default): `recall`, `check`, `briefing`, `ask`, `consult`, `get`, `remember`, `feedback`,
+  `check_source`, `concepts`, `propose_ontology_change`, `pending_proposals` and `amend`.
+- `full`: adds search and browsing, duplicate detection, maintenance tasks, feedback review,
+  ontology history, and the human review tools. The generated
+  `integrations/contract/mcp-tools-full.json` file is the exact list for the current source tree.
 
 Give the agent the `ontyra-memory` skill (`integrations/skills/ontyra-memory/SKILL.md`
 in the repository; `integrations/skills/install.sh` copies it to `~/.agents/skills`) so it knows when to
@@ -29,9 +30,9 @@ recall, how to scope what it writes, and to check before side effects.
 
 ## REST
 
-The same operations: `POST /v1/recall`, `/v1/briefing`, `/v1/check`, `/v1/search`, `/v1/ask`,
-`/v1/proposals`, `/v1/episodes`, `/v1/feedback`, and `GET /v1/memories`. Run the daemon and open
-`/docs` for the interactive reference, or `/openapi.json` for the schema (a generated copy is kept
-in `integrations/contract/`).
+The REST API also exposes `consult`, source checks, ontology management, maintenance tasks,
+feedback review, reranker administration and account administration. Run the daemon and open
+`/docs` for the interactive reference, or `/openapi.json` for the schema. The repository keeps a
+generated copy at `integrations/contract/openapi.json` and tests it for drift.
 
 Write status codes: `201` committed, `202` held for review, `422` rejected (the body lists why).

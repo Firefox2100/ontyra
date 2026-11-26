@@ -14,10 +14,10 @@ curl -s localhost:8787/v1/consolidation/scan -H 'content-type: application/json'
 
 ## What it reports
 
-- **`duplicates`**: clusters of memories of the same kind that say the same thing, oldest first.
+- `duplicates`: clusters of memories of the same kind that say the same thing, oldest first.
   `keep` is the oldest; supersede or retract the others (or merge their wording into it) with a
   `supersede` or `retract` proposal.
-- **`updates`**: a pair that is the same statement with a changed value (PostgreSQL 14 and 16, a
+- `updates`: a pair that is the same statement with a changed value (PostgreSQL 14 and 16, a
   300 EUR limit and a 500 EUR one). That is not a duplicate: the newer one probably supersedes the
   older, and merging would lose the change. The two are told apart by the numbers, versions and
   dates they contain.

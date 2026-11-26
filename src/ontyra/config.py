@@ -134,6 +134,8 @@ class WorkerSettings(BaseModel):
     batch_size: int = 16  # pairs per forward pass (halves on out-of-memory)
     batch_wait_ms: int = 5  # how long to wait for more requests to share a batch
     queue_size: int = 64  # waiting requests; more are refused with 503
+    load_retries: int = 2  # tries again when the device has no room for the weights
+    load_retry_seconds: float = 3.0  # wait between them
     offload_after_seconds: float = 300.0  # idle: weights move to host memory (0 = never)
     free_after_seconds: float = 1800.0  # idle: weights are dropped altogether (0 = never)
     instruction: str = "Given a situation or request, find the stored memory that applies to it"

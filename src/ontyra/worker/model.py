@@ -13,6 +13,8 @@ Two architectures, one result (a logit per query/document pair; sigmoid of it is
 from __future__ import annotations
 
 import importlib
+import logging
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -85,6 +87,13 @@ def is_out_of_memory(error: BaseException) -> bool:
     return "out of memory" in str(error).lower() or type(error).__name__ == "OutOfMemoryError"
 
 
+log = logging.getLogger(__name__)
+
+
+class MemoryShortage(Exception):
+    """The device has no room for the weights right now (another process holds the memory)."""
+
+
 class TorchScorer:
     """A version's weights on the chosen device; offloaded to host memory or dropped when idle."""
 
@@ -121,7 +130,7 @@ class TorchScorer:
         if self._state == "loaded":
             return
         if self._state == "offloaded":
-            self._to(self.hw.device)
+            self._place()
             self._state = "loaded"
             return
         torch = self._torch
@@ -161,8 +170,42 @@ class TorchScorer:
             self._tok.pad_token = self._tok.eos_token
         self._model.eval()
         self._state = "offloaded"
-        self._to(self.hw.device)
+        self._place()
         self._state = "loaded"
+
+    def _place(self) -> None:
+        """Move the weights onto the device. When the card is full for a moment the move stops
+        half way: put everything back on the host, wait, and try again; after that, say so. The
+        weights stay on the host (`offloaded`), so the next request starts the load afresh."""
+        for attempt in range(1 + max(0, self.cfg.load_retries)):
+            try:
+                self._to(self.hw.device)
+                return
+            except RuntimeError as error:
+                if not is_out_of_memory(error):
+                    raise
+                log.warning(
+                    "no device memory to load the model (attempt %d of %d): %s",
+                    attempt + 1,
+                    1 + max(0, self.cfg.load_retries),
+                    self._device_note(),
+                )
+                self._to("cpu")
+                self._empty_cache()
+                if attempt < self.cfg.load_retries:
+                    time.sleep(self.cfg.load_retry_seconds)
+        raise MemoryShortage(
+            f"not enough free device memory to load the model ({self._device_note()})"
+        )
+
+    def _device_note(self) -> str:
+        """How much of the device is free, for the log."""
+        backend = getattr(self._torch, self.hw.kind, None)
+        try:
+            free, total = backend.mem_get_info()  # type: ignore[union-attr]
+        except Exception:
+            return "free memory unknown"
+        return f"{free / 2**20:.0f} MiB free of {total / 2**20:.0f} MiB"
 
     def _apply_head_file(self) -> None:
         if not self.manifest.head:

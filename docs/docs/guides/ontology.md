@@ -57,7 +57,7 @@ concepts: revert those first. A revert can itself be reverted.
 
 ## Health check
 
-`GET /v1/ontology/changes/check` (MCP `check_ontology`, console **Concepts → health check**) is a
+`GET /v1/ontology/changes/check` (MCP `check_ontology`, console **Concepts**, then **Health check**) is a
 read-only report: loops in `is_a`/`part_of`, links to missing concepts, replacement loops, names used
 by two concepts, deprecated concepts that live memories still use, unused concepts. Each finding names
 the change that most likely caused it. Nothing is repaired automatically.

@@ -5,11 +5,6 @@ title: Codex
 The Codex plugin does the same as the [Claude Code](./claude-code.md) one: a briefing at session
 start, recall on each prompt, and the memory tools over MCP, plus the skill.
 
-:::note Status
-Built to the Codex plugin and hook documentation (CLI 0.164) and the hook script was tested by
-hand, but it has had little time in live sessions. Please report what breaks.
-:::
-
 ## Requirements
 
 A running daemon with MCP enabled ([Quick start](../quick-start.md)), `curl` and `jq`, Codex CLI.

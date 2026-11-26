@@ -27,35 +27,37 @@ it anyone who can reach the port can claim it, so keep the daemon on loopback.
 
 With `ONTYRA_UI__ENABLED=true`, open `http://127.0.0.1:8787/ui/`:
 
-- **Overview**: counts of waiting proposals and ontology changes, and active memories per kind.
-- **Review**: each held proposal with its operations, findings and raw JSON, and approve and reject
+- Overview: counts of waiting proposals and ontology changes, and active memories per kind.
+- Review: each held proposal with its operations, findings and raw JSON, and approve and reject
   buttons. The same for ontology changes.
-- **Memories**: browse by kind and status; open one for its fields, revision history, links and
+- Memories: browse by kind and status; open one for its fields, revision history, links and
   evidence.
-- **Concepts**: look up a concept with its aliases and relations.
-- **Recall playground**: try a recall or briefing with a query, locations and signals, and see why
+- Concepts: look up a concept with its aliases and relations.
+- Recall playground: try a recall or briefing with a query, locations and signals, and see why
   each memory was returned.
 
-The console acts as a human named `ONTYRA_UI__ACTOR` (default `owner`) and has no login unless a
-token is required (then `/ui/login`). It
-refuses form posts that come from another website, but it is meant for loopback only.
+In open mode, the console acts as a human named `ONTYRA_UI__ACTOR` (default `owner`). When a token
+is required, `/ui/login` exchanges a human credential for an in-memory cookie session. Form posts
+must come from an allowed origin. Keep open and single-token deployments on loopback; a public
+console requires multi-user mode, HTTPS at the edge and the exact external origin in
+`ONTYRA_AUTH__UI_ALLOWED_ORIGINS`.
 
 ## Changing what is waiting
 
 A proposal that is held for review is not frozen:
 
-- **Amend**: its submitter (or a human reviewer) replaces its operations with a corrected list and
+- Amend: its submitter (or a human reviewer) replaces its operations with a corrected list and
   says why. That is a new **version**; the older versions stay in the proposal's `history`, and
   approval names the version the reviewer saw, so an approval of a stale version is refused.
-- **Withdraw**: its submitter or a reviewer takes it back (final).
-- **Request changes**: a reviewer sends it back with a comment (and optional comments on single
+- Withdraw: its submitter or a reviewer takes it back (final).
+- Request changes: a reviewer sends it back with a comment (and optional comments on single
   operations). It leaves the approve queue (`changes_requested`) until it is amended; the submitter
   sees the comments when it lists its pending proposals.
-- **Per-operation decisions**: a reviewer may approve only some operations (the ones they need are
+- Per-operation decisions: a reviewer may approve only some operations (the ones they need are
   included, and the rest are rejected with a reason) or reject some (and the operations that depend
   on them) while the rest keeps waiting as a new version. Operations depend on each other when one
   names the `ref` of another, for example a `supersede` of a memory added in the same proposal.
-- **Waiting proposals are visible to new writes**: when an agent proposes something that nearly
+- Waiting proposals are visible to new writes: when an agent proposes something that nearly
   duplicates a waiting proposal, or changes a memory another waiting proposal also changes, the
   result carries a `pending_similar` or `pending_conflict` finding naming that proposal ("amend it
   instead"). Waiting proposals never affect recall.

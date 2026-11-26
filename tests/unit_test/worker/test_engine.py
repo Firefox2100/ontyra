@@ -135,3 +135,18 @@ async def test_stopping_refuses_what_is_waiting_and_releases_the_model(make_scor
     assert s.state == "free"
     with pytest.raises(Busy):
         await e.score("q", ["a"])
+
+
+async def test_a_momentary_memory_shortage_is_busy_not_a_failure(make_scorer: Any) -> None:
+    from ontyra.worker.model import MemoryShortage
+
+    s = make_scorer()
+    e = engine(s)
+    await e.start()
+    try:
+        s.score = lambda pairs: (_ for _ in ()).throw(MemoryShortage("no room"))
+        with pytest.raises(Busy, match="no room"):
+            await e.score("q", ["a"])
+        assert e.counters.refused == 1 and e.counters.failed == 0
+    finally:
+        await e.stop()
