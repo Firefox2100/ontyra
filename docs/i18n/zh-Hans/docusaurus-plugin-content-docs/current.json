@@ -1,0 +1,22 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.agents": {
+    "message": "接入智能体",
+    "description": "The label for category 'agents' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.concepts": {
+    "message": "概念",
+    "description": "The label for category 'concepts' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.guides": {
+    "message": "指南",
+    "description": "The label for category 'guides' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.reference": {
+    "message": "参考",
+    "description": "The label for category 'reference' in sidebar 'docsSidebar'"
+  }
+}

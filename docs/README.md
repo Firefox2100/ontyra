@@ -26,6 +26,22 @@ npm run build
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
+## Translations
+
+English is the default; Simplified Chinese (`zh-Hans`) uses Docusaurus' own i18n. A translated page is
+the same file path under `i18n/zh-Hans/docusaurus-plugin-content-docs/current/` (front matter and
+prose translated; code, commands, setting names and links unchanged). A page with no translation
+there is not built for that locale, so add the file or links to it break the build. Explicit heading
+ids (`## Title {/* #id */}`) keep anchors that other pages link to stable across languages.
+
+```bash
+pnpm start --locale zh-Hans             # preview the translation
+pnpm write-translations --locale zh-Hans   # refresh navbar, footer and sidebar strings
+pnpm build                              # builds every locale
+```
+
+`reference/configuration.md` is generated in both languages: `uv run python scripts/export_settings_docs.py`.
+
 ## Deployment
 
 Using SSH:

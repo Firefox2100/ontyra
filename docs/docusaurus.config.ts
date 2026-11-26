@@ -24,7 +24,11 @@ const config: Config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'zh-Hans'],
+    localeConfigs: {
+      en: {label: 'English', htmlLang: 'en'},
+      'zh-Hans': {label: '简体中文', htmlLang: 'zh-Hans'},
+    },
   },
 
   presets: [
@@ -59,6 +63,10 @@ const config: Config = {
           sidebarId: 'docsSidebar',
           position: 'left',
           label: 'Docs',
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right',
         },
       ],
     },
