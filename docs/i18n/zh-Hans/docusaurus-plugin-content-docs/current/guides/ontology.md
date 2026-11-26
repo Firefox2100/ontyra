@@ -2,7 +2,7 @@
 title: 本体
 ---
 
-本体是记忆所谈论的词汇：**概念**（`python`、`ubuntu`、`ci pipeline`），带有别名和有类型的关系（`is_a`、`part_of`、`same_as`、`alternative_to`、`depends_on`、`disjoint_with` 等）。记忆指向概念 id（`about`、限定条件）；召回会沿着关系扩展一次提及，所以一条关于 `ubuntu` 的记忆可以回答关于 `linux` 的问题。这里没有任何建议：建议存在于记忆里。
+本体定义记忆中使用的词汇，包括 **概念**（如 `python`、`ubuntu`、`ci pipeline`）、别名和有类型的关系（如 `is_a`、`part_of`、`same_as`、`alternative_to`、`depends_on`、`disjoint_with`）。记忆通过 `about` 和限定条件引用概念 id。调取时，Ontyra 会沿概念关系扩展查询，因此关于 `ubuntu` 的记忆也可以用于回答 `linux` 相关问题。本体只描述概念及其关系，具体建议仍保存在记忆中。
 
 ## 修改本体
 
@@ -21,7 +21,7 @@ title: 本体
 
 **编辑不得改变概念的含义。** 如果含义变了，请定义一个新概念并弃用旧的。守护进程无法检查这一点；由审核者来判断，与旧定义几乎没有共同之处的重写定义，会得到一行建议。
 
-**先预览**：`POST /v1/ontology/changes/preview`（MCP `preview_ontology_change`，full 档；控制台始终先预览）会列出一次变更将会做什么：涉及的概念、有多少条现存记忆与它们相关，以及建议。不会写入任何东西。
+提交前可以调用 `POST /v1/ontology/changes/preview` 预览变更。对应的 MCP 工具是 `preview_ontology_change`，位于 `full` 工具档；控制台始终会先显示预览。结果会列出受影响的概念、相关记忆数量和系统建议，但不会写入数据。
 
 ## 版本、墓碑，以及哪些仍然可见
 

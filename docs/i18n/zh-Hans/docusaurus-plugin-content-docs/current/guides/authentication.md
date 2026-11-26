@@ -2,7 +2,7 @@
 title: 认证与账户
 ---
 
-Ontyra 有三种运行方式，从最简单到最受控。无论选哪一种，**记忆的所有者从来不是请求参数**：关闭账户时它是全局记忆，开启账户时它是已认证的账户。
+Ontyra 提供三种认证模式。无论使用哪一种，**客户端都不能通过请求参数指定记忆所有者**。未启用账户时，记忆属于全局空间；启用账户后，所有者由经过认证的账户决定。
 
 | 模式 | 设置 | 谁可以调用 | 所有者 |
 |---|---|---|---|
@@ -13,14 +13,14 @@ Ontyra 有三种运行方式，从最简单到最受控。无论选哪一种，*
 令牌以 `Authorization: Bearer <token>` 发送，适用于 REST、MCP，以及（作为登录凭据）控制台。`/health` 和 API 文档保持开放。
 
 :::caution 公开部署需要完整的边界
-开放模式和单令牌模式不是面向互联网的多租户模式。公开部署请启用 `ONTYRA_SERVER__DEPLOYMENT=public`、启用多用户认证，并把 Ontyra 放在一个反向代理或负载均衡器之后，由它终止 TLS、启用 HSTS、设置速率和请求体大小限制，并控制受信任的转发头。请保持 SurrealDB 和模型适配器为私有。如果启用了控制台，请设置 `ONTYRA_AUTH__UI_ALLOWED_ORIGINS='["https://memory.example.com"]'`；公开模式会自动让 cookie 带上 Secure 属性。显式设置 `ONTYRA_AUTH__UI_COOKIE_SECURE=false` 会被拒绝。
+开放模式和单令牌模式不适合互联网多租户服务。公开部署时，请设置 `ONTYRA_SERVER__DEPLOYMENT=public` 并启用多用户认证。Ontyra 应放在反向代理或负载均衡器之后，由前置服务负责 TLS、HSTS、速率限制、请求体大小限制和可信转发头。SurrealDB 和模型适配器不应暴露到公网。如果启用了控制台，请设置 `ONTYRA_AUTH__UI_ALLOWED_ORIGINS='["https://memory.example.com"]'`。公开模式会自动为 cookie 添加 Secure 属性，并拒绝显式设置 `ONTYRA_AUTH__UI_COOKIE_SECURE=false`。
 :::
 
 本地模式是默认值。它支持回环地址、纯 HTTP，以及开放或单令牌的使用。在非回环地址上的开放监听会被拒绝，除非用 `ONTYRA_SERVER__ALLOW_OPEN_NON_LOOPBACK=true` 明确确认。这是为桥接网络中的容器准备的（其宿主机发布仍被限制在 `127.0.0.1`），而不是用于公开暴露。
 
 ## 开放与单令牌模式
 
-没有令牌时，任何能连上该端口的人都被信任，所以请让它保持在回环地址上。调用方仍然通过 `X-Ontyra-Actor`、`X-Ontyra-Actor-Kind` 和 `X-Ontyra-Harness` 自报身份，守护进程用它们来应用审核策略（`human` 可以自动提交，`agent` 要等待）。这些标签未经认证。
+未设置令牌时，任何能连接端口的人都会被信任，因此服务必须只监听回环地址。调用方仍可通过 `X-Ontyra-Actor`、`X-Ontyra-Actor-Kind` 和 `X-Ontyra-Harness` 声明身份，Ontyra 会据此应用审核策略，例如允许 `human` 自动提交、让 `agent` 等待审核。这些标签没有经过认证。
 
 要求令牌（至少 32 个字符）：
 
@@ -32,7 +32,7 @@ export ONTYRA_AUTH__TOKEN="$(python3 -c 'import secrets; print(secrets.token_url
 
 ## 多用户模式
 
-每个人有一个**账户**，拥有一份私有的记忆。一个账户可以有任意多个**凭据**，每个代表一个替他行动的主体：他本人在控制台中、他的 Codex、他的 Claude Code、他的 DSH 配置档，或一个脚本。每个凭据都有自己的令牌、名称和种类：
+每位用户都有一个**账户**和一份私有记忆。账户可以创建多个**凭据**，分别供控制台、Codex、Claude Code、DSH 配置档或脚本使用。每个凭据都有独立的令牌、名称和类型：
 
 - `human`：这个人。可以审核提案；如果你的策略允许人类，则立即提交。
 - `agent`：代表此人行动的智能体。它的写入遵循针对智能体的策略（默认被搁置，等这个人批准）。
@@ -44,7 +44,7 @@ export ONTYRA_AUTH__TOKEN="$(python3 -c 'import secrets; print(secrets.token_url
 - 提案由同一账户的人类凭据审核；全局提案由具有 `global_write` 的人类审核。智能体凭据从不审核。
 - `admin` 管理账户和凭据（并重新训练重排器）。只有管理员的人类凭据才能使用它。
 
-用内置 `admin` 账户的引导令牌启动守护进程：
+使用内置 `admin` 账户的初始令牌启动 Ontyra：
 
 ```bash
 export ONTYRA_AUTH__MULTI_USER=true
@@ -89,4 +89,4 @@ Ontyra 不会抓取请求中提供的锚点 URI。唯一的对外 HTTP 目标是
 | `reject`、`reject_ontology_change` | 否 | 否 | 关闭一个被搁置的条目，不提交任何东西 |
 | `approve`、`approve_ontology_change` | 否 | 是 | 提交一个被搁置的条目，这可能取代或撤回记忆，或更改共享的本体 |
 
-它们都不会触及守护进程之外（`openWorldHint` 为 false），并且每一个都有通俗易懂的标题。
+这些工具都不会操作 Ontyra 之外的系统（`openWorldHint` 为 false），并且都有便于阅读的标题。

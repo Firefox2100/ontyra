@@ -3,13 +3,13 @@ sidebar_position: 2
 title: 快速开始
 ---
 
-本页使用内置数据库运行守护进程：不需要 Docker，也不需要模型服务。检索质量只是基础水平（内置的词法嵌入器）；如需升级，见[嵌入](./guides/embeddings.md)。
+本指南使用内置数据库启动 Ontyra 服务，不需要 Docker 或模型服务。内置的词法嵌入器只提供基础检索能力；如需提高效果，请参阅[嵌入](./guides/embeddings.md)。
 
 ## 前提条件
 
 [uv](https://docs.astral.sh/uv/)（它会替你安装 Python 3.12）、`curl` 和 `jq`。
 
-## 1. 启动守护进程
+## 1. 启动 Ontyra 服务
 
 ```bash
 git clone https://github.com/Firefox2100/ontyra.git ontyra && cd ontyra
@@ -26,12 +26,12 @@ uv run ontyra serve                                            # http://127.0.0.
 检查一下：`curl -s localhost:8787/health`。交互式 API 文档在 `/docs`。
 
 :::tip 用审核代替自动提交
-`auto_commit` 在你自己的机器上很方便。默认值 `review` 会把每个提案都搁置，直到有人批准，在由智能体写入时应当使用它。见[审核与策略](./guides/review.md)。
+在个人设备上，`auto_commit` 用起来更省事。默认值 `review` 会暂存每项变更，等待人工批准。允许智能体写入时，建议保留默认值。详见[审核与策略](./guides/review.md)。
 :::
 
-## 2. 存一条记忆
+## 2. 保存一条记忆
 
-一次写入是一个由若干操作组成的*提案*。`X-Ontyra-Actor-Kind: human` 表示你是所有者（智能体使用默认值 `agent`）。
+每次写入都以*变更提案*的形式提交，其中可以包含多项操作。`X-Ontyra-Actor-Kind: human` 表示请求来自人类所有者；智能体默认使用 `agent`。
 
 ```bash
 curl -s -X POST localhost:8787/v1/proposals \
@@ -46,7 +46,7 @@ curl -s -X POST localhost:8787/v1/proposals \
 
 返回 `201` 且 `"status": "committed"`，就表示已存入。
 
-## 3. 读回来
+## 3. 读取记忆
 
 ```bash
 # 会话开始时适用的内容
@@ -58,11 +58,11 @@ curl -s -X POST localhost:8787/v1/recall -H 'content-type: application/json' \
   -d '{"query": "set up a new python project", "context": {"uris": [], "signals": []}}' | jq -r .rendered
 ```
 
-打开 `http://127.0.0.1:8787/ui/` 可以浏览记忆、带着位置信息试用召回，并审核提案。
+打开 `http://127.0.0.1:8787/ui/`，可以浏览记忆、根据位置信息测试调取结果，并审核变更提案。
 
 ## 4. 连接智能体
 
-智能体通过插件自动获得简报和召回，并可通过 MCP 写入：
+连接插件后，智能体会自动收到会话简报和相关记忆，也可以通过 MCP 写入：
 
 - [Claude Code](./agents/claude-code.md)
 - [Codex](./agents/codex.md)

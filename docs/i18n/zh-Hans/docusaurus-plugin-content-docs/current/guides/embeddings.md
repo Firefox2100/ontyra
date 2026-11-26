@@ -4,7 +4,7 @@ title: 嵌入、重排与决策
 
 ## 嵌入
 
-默认情况下 Ontyra 使用内置的 `hash` 嵌入器：不需要模型，也不需要网络，大致相当于词法检索。试用系统足够了。若要真正的语义召回，请通过 LangChain 指向一个嵌入模型；任何兼容 OpenAI 的服务器都可以（LocalAI、llama.cpp、vLLM、OpenAI API）：
+Ontyra 默认使用内置的 `hash` 嵌入器，不需要模型或网络，效果接近词法检索，适合初次试用。若要按语义查找记忆，请通过 LangChain 连接嵌入模型。LocalAI、llama.cpp、vLLM 和 OpenAI API 等兼容 OpenAI 接口的服务都可以使用：
 
 ```bash
 uv sync --extra openai          # 安装 langchain-openai
@@ -18,13 +18,13 @@ export ONTYRA_EMBEDDING__DIMENSION=4096        # 模型的输出维度
 
 有些模型希望在查询前面加一段指令。`ONTYRA_EMBEDDING__QUERY_PREFIX` 用来设置它（对 Qwen3-Embedding：`Instruct: Given a task or message from a developer, retrieve the stored notes that apply\nQuery:`）。
 
-## 召回引擎与弃权
+## 调取引擎与静默阈值
 
-`ONTYRA_RECALL__ENGINE=fusion` 是基准测试所青睐的引擎（代码中的默认值是 `legacy`）。当即使最佳匹配也不够相似时，它保持沉默：由 `ONTYRA_RECALL__ABSTAIN_COSINE` 控制，它取决于嵌入模型（0.452 是针对 qwen3-embedding-8b 校准的）。如果召回什么也不返回，或者返回噪声，请调整它。
+基准测试中，`ONTYRA_RECALL__ENGINE=fusion` 的效果更好，但代码默认仍使用 `legacy`。当最佳匹配的相似度也不足时，`fusion` 不会返回结果。这个行为由 `ONTYRA_RECALL__ABSTAIN_COSINE` 控制，具体数值取决于嵌入模型；qwen3-embedding-8b 的校准值为 0.452。如果系统经常没有结果或返回无关内容，请调整该值。
 
 ## 重排器（可选）
 
-`ONTYRA_RERANK__PROVIDER=http` 配合 `ONTYRA_RERANK__URL`，使用 `{url}/rerank` API（LocalAI、Jina）；它是托管的，不能重新训练。`worker` 是由我们自己的[重排器 worker](#the-reranker-worker) 提供的同一个 API，它可以根据反馈重新训练。如果重排器繁忙、缓慢（`ONTYRA_RERANK__TIMEOUT`）或宕机，召回就对该请求使用它自己的原始排序。
+将 `ONTYRA_RERANK__PROVIDER` 设为 `http` 并配置 `ONTYRA_RERANK__URL`，即可调用 LocalAI 或 Jina 等服务提供的 `{url}/rerank` API。这类托管服务不能由 Ontyra 重新训练。`worker` 使用同一套 API，但由 Ontyra 自带的[重排器 worker](#the-reranker-worker) 提供，并支持根据反馈重新训练。如果重排器繁忙、超时或不可用，本次请求会回退到 Ontyra 的原始排序。
 
 ### 重排器 worker {/* #the-reranker-worker */}
 
@@ -41,8 +41,8 @@ ONTYRA_RERANK__PROVIDER=worker  ONTYRA_RERANK__URL=http://127.0.0.1:8788/v1   # 
 
 ## 决策模型（可选）
 
-决策模型读取排名靠前的候选和当前情境，以概率的形式返回哪些重要。`ONTYRA_DECISION__PROVIDER=systemone` 配合 `ONTYRA_DECISION__URL`，会调用服务器的 `POST {url}/systemone`（例如部署在 LocalAI 或 llama.cpp 服务器之后的 [Kev-9B](https://huggingface.co/tt-hous/kev-9b)）。需要 `fusion` 引擎。它只是参考性的：如果无法连接，召回会返回确定性的结果。
+决策模型会读取排名靠前的候选和当前情境，并用概率表示各候选是否重要。设置 `ONTYRA_DECISION__PROVIDER=systemone` 和 `ONTYRA_DECISION__URL` 后，Ontyra 会调用 `POST {url}/systemone`，例如部署在 LocalAI 或 llama.cpp 后的 [Kev-9B](https://huggingface.co/tt-hous/kev-9b)。此功能需要 `fusion` 引擎。决策模型只是附加信号；连接失败时，系统仍会返回由确定性流程计算的结果。
 
-### 对寒暄跳过召回
+### 跳过纯寒暄消息
 
 设置 `ONTYRA_RECALL__FILLER_GATE=true` 后，会向同一个模型询问一次：一条短消息（最多 `ONTYRA_RECALL__FILLER_MAX_WORDS`，即 8 个词）是不是纯粹的寒暄（“thanks”“ok”“lol”）。当它的概率达到 `ONTYRA_RECALL__FILLER_THRESHOLD`（0.7）时，就跳过查找，召回保持沉默。向模型提问时不带任何对话历史，失败或拒绝都表示“不是寒暄”，寒暄之后带着真实请求的消息会照常查找。一个单独的“ok”或“yes”，如果是在回答智能体自己的问题，也会被读作寒暄（模型看不到对话）：通常没错，因为本来就没什么可查的，但在有风险的操作之前给出的许可，就不会再与某条规则匹配；智能体在这类操作之前自己做的 `check` 是安全网。在决策基准上（kev-9b，82 条消息，包括“先说谢谢再提请求”这类容易混淆的情况），0.7 跳过了 78% 的寒暄，且没有跳过任何真实请求。它默认关闭；好处是每次寒暄省掉一次查找，代价是每条短消息多一次 0.2 秒的模型调用。
