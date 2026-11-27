@@ -189,6 +189,31 @@ async def test_a_changed_source_opens_one_review_per_memory_and_recall_says_so(
     assert cited["check"]["state"] == "missing" and len(cited["memories"]) == 2
 
 
+async def test_source_reports_are_isolated_by_owner_and_global_reports_need_permission(
+    app: Application,
+) -> None:
+    ann_owner = await app.actors.ensure_owner("user", "ann")
+    bob_owner = await app.actors.ensure_owner("user", "bob")
+    ann = await app.actors.caller(kind="human", name="ann", owner=ann_owner)
+    bob = await app.actors.caller(kind="human", name="bob", owner=bob_owner)
+    await knowledge(app, ann, text="Gene X is relevant to Ann's pathway Y")
+    await knowledge(app, bob, text="Gene X is relevant to Bob's pathway Y")
+
+    changed = await app.sources.check(ann, SourceCheckRequest(uri=PAPER, state="changed"))
+    assert changed.memories == 1
+    ann_view = await app.sources.citing(ann, PAPER)
+    bob_view = await app.sources.citing(bob, PAPER)
+    assert ann_view["check"]["state"] == "changed"
+    assert bob_view["check"] is None
+    assert {item["owner"] for item in bob_view["memories"]} == {str(bob_owner)}
+
+    await app.sources.check(bob, SourceCheckRequest(uri=PAPER, state="ok"))
+    assert (await app.sources.citing(ann, PAPER))["check"]["state"] == "changed"
+    assert (await app.sources.citing(bob, PAPER))["check"]["state"] == "ok"
+    with pytest.raises(PermissionDeniedError):
+        await app.sources.check(ann, SourceCheckRequest(uri=PAPER, state="ok", space="global"))
+
+
 async def test_a_policy_rule_can_auto_commit_only_what_cites_a_quoted_source(
     make_app,
 ) -> None:

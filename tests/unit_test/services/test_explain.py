@@ -8,6 +8,7 @@ as a plain "not found", and a real trace that is simply absent must too.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any, cast
 
 import pytest
 
@@ -30,11 +31,11 @@ class _Store:
 
 
 def _service(store: _Store) -> ExplorationService:
-    return ExplorationService(  # type: ignore[arg-type]
-        store=store,
-        memory=None,
-        ontology=None,
-        recall=None,
+    return ExplorationService(
+        store=cast(Any, store),
+        memory=cast(Any, None),
+        ontology=cast(Any, None),
+        recall=cast(Any, None),
         now=lambda: datetime(2026, 1, 1, tzinfo=UTC),
     )
 
@@ -46,7 +47,9 @@ def _caller() -> Caller:
 async def test_a_foreign_table_is_not_found_and_the_store_is_not_asked() -> None:
     store = _Store()
     with pytest.raises(errors.NotFoundError):
-        await _service(store).ask(_caller(), AskRequest(question="explain", trace="trace:abc"))
+        await _service(store).ask(
+            _caller(), AskRequest(question="explain", trace=RecordId.parse("trace:abc"))
+        )
     assert store.asked == []
 
 
@@ -54,7 +57,7 @@ async def test_a_real_table_the_database_lacks_is_not_found() -> None:
     store = _Store()
     with pytest.raises(errors.NotFoundError):
         await _service(store).ask(
-            _caller(), AskRequest(question="explain", trace="recall_trace:abc")
+            _caller(), AskRequest(question="explain", trace=RecordId.parse("recall_trace:abc"))
         )
     assert [str(record) for record in store.asked] == ["recall_trace:abc"]
 

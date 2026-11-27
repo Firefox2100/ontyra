@@ -9,14 +9,14 @@ from collections import deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlsplit
 
 from ontyra.models import RecordId, new_id
 from ontyra.models.anchors import Anchor
 from ontyra.models.ontology import Resource, ResourceRequest
 from ontyra.models.proposals import ProposalRequest
-from ontyra.models.uri import _clean_path, canonical_uri, uri_ancestors
+from ontyra.models.uri import canonical_uri, clean_path, uri_ancestors
 from ontyra.ports import Create, Store
 from ontyra.services import errors
 from ontyra.services.ontology import OntologyService
@@ -39,9 +39,9 @@ def qualify(uri: str, machine: str) -> str:
     host = machine.strip().lower() or "localhost"
     drive = _DRIVE_AS_HOST.match(text)
     if drive is not None:
-        path = _clean_path(drive.group(2) or "/")
+        path = clean_path(drive.group(2) or "/")
         return f"file://{host}/{drive.group(1).upper()}:{path if path else ''}"
-    return f"file://{host}{_clean_path(urlsplit(text).path)}"
+    return f"file://{host}{clean_path(urlsplit(text).path)}"
 
 
 def anchored_to(body: ProposalRequest, machine: str) -> ProposalRequest:
@@ -52,18 +52,23 @@ def anchored_to(body: ProposalRequest, machine: str) -> ProposalRequest:
     """
     ops: list[Any] = []
     for op in body.ops:
-        fields = getattr(op, "fields", None)
+        raw_fields = getattr(op, "fields", None)
+        fields = cast("dict[str, Any]", raw_fields) if isinstance(raw_fields, dict) else None
         anchors = fields.get("anchors") if isinstance(fields, dict) else None
         if not isinstance(anchors, list) or not anchors:
             ops.append(op)
             continue
-        rewritten = [
-            Anchor(
-                uri=qualify(str(a.get("uri", "") if isinstance(a, dict) else a.uri), machine),
-                match=a.get("match", "subtree") if isinstance(a, dict) else a.match,
-            )
-            for a in anchors
-        ]
+        assert fields is not None
+        rewritten: list[Anchor] = []
+        for raw_anchor in cast("list[Any]", anchors):
+            if isinstance(raw_anchor, Anchor):
+                uri, match = raw_anchor.uri, raw_anchor.match
+            elif isinstance(raw_anchor, dict):
+                anchor = cast("dict[str, Any]", raw_anchor)
+                uri, match = str(anchor.get("uri", "")), anchor.get("match", "subtree")
+            else:
+                continue
+            rewritten.append(Anchor(uri=qualify(uri, machine), match=match))
         ops.append(op.model_copy(update={"fields": {**fields, "anchors": rewritten}}))
     return body.model_copy(update={"ops": ops})
 

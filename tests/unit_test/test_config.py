@@ -87,6 +87,19 @@ def test_open_non_loopback_needs_an_explicit_local_acknowledgement() -> None:
     assert settings.server.allow_open_non_loopback
 
 
+def test_worker_is_open_on_loopback_but_non_loopback_requires_a_strong_token() -> None:
+    settings = Settings.model_validate({})
+    assert settings.worker.host == "127.0.0.1" and settings.worker.token is None
+    with pytest.raises(ValueError, match="WORKER__TOKEN"):
+        Settings.model_validate({"worker": {"host": "0.0.0.0"}})
+    with pytest.raises(ValueError, match="WORKER__TOKEN"):
+        settings.for_worker_bind("0.0.0.0", 8788)
+    with pytest.raises(ValueError, match="at least 32"):
+        Settings.model_validate({"worker": {"token": "short"}})
+    protected = Settings.model_validate({"worker": {"host": "0.0.0.0", "token": "w" * 32}})
+    assert protected.worker.token is not None
+
+
 def test_public_deployment_requires_multi_user_auth_and_hardens_the_ui() -> None:
     with pytest.raises(ValueError, match="multi-user"):
         Settings.model_validate({"server": {"deployment": "public"}})

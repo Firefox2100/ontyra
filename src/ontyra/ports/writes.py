@@ -71,4 +71,12 @@ class ExpectCurrent:
     revision: RecordId
 
 
-Write = Create | Update | Upsert | Delete | Relate | ExpectCurrent
+@dataclass(frozen=True)
+class ExpectFields:
+    """Compare-and-set guard: abort the batch unless every field has the expected value."""
+
+    id: RecordId
+    expected: dict[str, Any]
+
+
+Write = Create | Update | Upsert | Delete | Relate | ExpectCurrent | ExpectFields

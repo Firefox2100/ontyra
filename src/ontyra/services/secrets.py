@@ -6,16 +6,15 @@ credentials *before* validation, and says so in the proposal's findings: the cal
 to see that what it sent is not what was stored, and to resend with `redaction: "off"` when the
 match is a false positive (a test fixture, a documented example).
 
-Only shapes that are unambiguous are matched — vendor prefixes and assigned passwords. Deciding
-whether an arbitrary sentence hides a secret is the decider model's job, not a regex's, and a
-wrong guess here silently removes something the user wanted kept.
+Only shapes that are unambiguous are matched — vendor prefixes and assigned passwords. Redaction
+is deliberately local and deterministic: proposal content is never sent to a decision model, and
+an uncertain model verdict can never silently rewrite persisted content.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Awaitable, Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from ontyra.models.base import Model
 from ontyra.models.proposals import (
@@ -27,12 +26,6 @@ from ontyra.models.proposals import (
 )
 
 Redaction = Literal["auto", "off"]
-
-# A judge is the optional decision model: text in, the fragments that look like credentials out.
-SecretJudge = Callable[[str], Awaitable[list[str]]]
-
-# Shorter strings are not worth a model round trip, and are rarely a credential on their own.
-_JUDGE_MIN_CHARS = 24
 
 
 class Mask(Model):
@@ -101,62 +94,22 @@ def _walk(value: Any, path: str, out: list[tuple[str, str, str]]) -> Any:
         out.extend((path, rule, preview) for rule, preview in found)
         return masked
     if isinstance(value, list):
-        return [_walk(item, f"{path}[{index}]", out) for index, item in enumerate(value)]
+        items = cast("list[Any]", value)
+        return [_walk(item, f"{path}[{index}]", out) for index, item in enumerate(items)]
     if isinstance(value, dict):
+        mapping = cast("dict[str, Any]", value)
         return {
             key: _walk(item, f"{path}.{key}" if path else str(key), out)
-            for key, item in value.items()
+            for key, item in mapping.items()
         }
     return value
 
 
-async def _walk_judged(
-    value: Any,
-    path: str,
-    out: list[tuple[str, str, str]],
-    judge: SecretJudge,
-) -> Any:
-    """Like `_walk`, then ask the decision model about what the patterns did not catch.
-
-    A regex knows key shapes; it cannot know that "the string we use for the billing portal is
-    hunter2-admin" hides a password. That question is the decider's, and it is asked only when one
-    is configured — with no model the patterns are the whole gate, which is the safe default."""
-    if isinstance(value, str):
-        masked, found = mask_text(value)
-        out.extend((path, rule, preview) for rule, preview in found)
-        if len(masked) >= _JUDGE_MIN_CHARS:
-            try:
-                suspected = await judge(masked)
-            except Exception:  # a model that cannot answer must not block the write
-                suspected = []
-            for fragment in suspected:
-                if not isinstance(fragment, str) or fragment == "" or fragment not in masked:
-                    continue
-                preview = _masked(fragment)
-                out.append((path, "model", preview))
-                masked = masked.replace(fragment, preview)
-        return masked
-    if isinstance(value, list):
-        return [
-            await _walk_judged(item, f"{path}[{index}]", out, judge)
-            for index, item in enumerate(value)
-        ]
-    if isinstance(value, dict):
-        return {
-            key: await _walk_judged(item, f"{path}.{key}" if path else str(key), out, judge)
-            for key, item in value.items()
-        }
-    return value
-
-
-async def redact_request(
-    request: ProposalRequest, judge: SecretJudge | None = None
-) -> tuple[ProposalRequest, list[Finding]]:
+async def redact_request(request: ProposalRequest) -> tuple[ProposalRequest, list[Finding]]:
     """Mask credentials in every op of `request`, and describe what was masked.
 
     The request is not modified: a new one is returned with masked fields, so the stored
-    proposal records exactly what was validated and committed. `judge` is the optional decision
-    model that catches what the patterns miss."""
+    proposal records exactly what was validated and committed."""
     if request.redaction == "off":
         return request, []
     findings: list[Finding] = []
@@ -167,18 +120,10 @@ async def redact_request(
             continue
         found: list[tuple[str, str, str]] = []
         if isinstance(op, Annotate):
-            text = (
-                await _walk_judged(op.text, "text", found, judge)
-                if judge
-                else _walk(op.text, "text", found)
-            )
+            text = _walk(op.text, "text", found)
             ops.append(op.model_copy(update={"text": text}))
         else:
-            fields = (
-                await _walk_judged(op.fields, "fields", found, judge)
-                if judge
-                else _walk(op.fields, "fields", found)
-            )
+            fields = _walk(op.fields, "fields", found)
             ops.append(op.model_copy(update={"fields": fields}))
         findings.extend(
             Finding(

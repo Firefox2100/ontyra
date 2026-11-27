@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Literal
 
-from ontyra.models import Record, RecordId, new_id
+from ontyra.models import RecordId, new_id
 from ontyra.models.core import Memory, RevState, Usage
 from ontyra.models.kinds import DirectiveRev, EventRev, RevisionBase, TaskRev
 from ontyra.models.recall import (
@@ -348,7 +348,14 @@ class RecallService:
         revs = await self.store.get_many(list(cands))
         states = await self.store.get_many([rev_state_id(r) for r in cands])
         docs = await self.store.get_many([doc_id(r) for r in cands])
-        checks = await self._source_checks(revs)
+        source_ids: set[RecordId] = set()
+        for rid, candidate in cands.items():
+            revision = revs.get(rid)
+            document = candidate.doc or docs.get(doc_id(rid))
+            if isinstance(revision, RevisionBase) and isinstance(document, SearchDoc):
+                source_ids.update(source_check_id(document.owner, s.uri) for s in revision.sources)
+        source_rows = await self.store.get_many(list(source_ids)) if source_ids else {}
+        checks = {k: v for k, v in source_rows.items() if isinstance(v, SourceCheck)}
         now = self.now()
         out: list[Candidate] = []
         for rid, c in cands.items():
@@ -369,9 +376,9 @@ class RecallService:
                 c.lanes["lexical"] *= coverage(query, c.doc.text)
             c.revision, c.state = rev, state
             c.source_state = {
-                s.uri: checks[source_check_id(s.uri)].state
+                s.uri: checks[source_check_id(c.doc.owner, s.uri)].state
                 for s in rev.sources
-                if source_check_id(s.uri) in checks
+                if c.doc is not None and source_check_id(c.doc.owner, s.uri) in checks
             }
             c.assessment = assess(rev, ctx)
             if only_applicable and (
@@ -382,17 +389,6 @@ class RecallService:
             if c.assessment.include or not only_applicable:
                 out.append(c)
         return out
-
-    async def _source_checks(self, revs: dict[RecordId, Record]) -> dict[RecordId, SourceCheck]:
-        """What clients last reported about the sources the candidates cite (one read)."""
-        ids = {
-            source_check_id(s.uri)
-            for rev in revs.values()
-            if isinstance(rev, RevisionBase)
-            for s in rev.sources
-        }
-        found = await self.store.get_many(list(ids)) if ids else {}
-        return {k: v for k, v in found.items() if isinstance(v, SourceCheck)}
 
     # ---- stage 5: ranking -------------------------------------------------------------------
 
@@ -514,7 +510,7 @@ class RecallService:
         kept: list[Candidate],
         *,
         redeliver: bool,
-        seen: list[str] = (),
+        seen: Sequence[str] = (),
         workspace: str | None = None,
         window: int = 0,
     ) -> tuple[list[Candidate], list[Notice], list[dict[str, Any]]]:

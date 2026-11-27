@@ -244,9 +244,15 @@ class ExplorationService:
             out.append(item)
         revision = await self.store.get(rev)
         if isinstance(revision, RevisionBase) and revision.sources:
-            checks = await self.store.get_many([source_check_id(s.uri) for s in revision.sources])
+            memory = await self.store.get(revision.memory)
+            owner = memory.owner if isinstance(memory, Memory) else None
+            checks = (
+                await self.store.get_many([source_check_id(owner, s.uri) for s in revision.sources])
+                if owner is not None
+                else {}
+            )
             for s in revision.sources:  # cited, not stored: the daemon never reads them
-                found = checks.get(source_check_id(s.uri))
+                found = checks.get(source_check_id(owner, s.uri)) if owner is not None else None
                 out.append(
                     {"source": s.uri}
                     | s.model_dump(mode="json", exclude={"uri"}, exclude_none=True)

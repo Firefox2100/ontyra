@@ -24,7 +24,7 @@ from ontyra.models.sources import (
 )
 from ontyra.models.uri import canonical_source
 from ontyra.ports import Create, Store, Update
-from ontyra.services.context import Caller
+from ontyra.services.context import GLOBAL_OWNER, Caller
 from ontyra.services.errors import InvalidRequestError, NotFoundError, PermissionDeniedError
 from ontyra.services.validation import rev_state_id
 
@@ -55,8 +55,12 @@ class SourceService:
         per live memory (visible to the caller) that cites it."""
         uri = self.canonical(request.uri)
         now = self.now()
-        check_id = source_check_id(uri)
+        owner = GLOBAL_OWNER if request.space == "global" else caller.owner
+        if not caller.can_write(owner):
+            raise PermissionDeniedError("you cannot report checks for this memory space")
+        check_id = source_check_id(owner, uri)
         row = SourceCheck(
+            owner=owner,
             uri=uri,
             state=request.state,
             checked_at=now,
@@ -69,7 +73,7 @@ class SourceService:
             if await self.store.get(check_id) is not None
             else Create.of(check_id, row)
         ]
-        docs = await self.store.docs(caller.visible_owners(), sources=[uri], limit=1000)
+        docs = await self.store.docs([owner], sources=[uri], limit=1000)
         opened = 0
         if request.state != "ok":
             revisions = await self.store.get_many([d.rev for d in docs])
@@ -129,24 +133,55 @@ class SourceService:
     async def citing(self, caller: Caller, uri: str) -> dict[str, Any]:
         """The memories that cite a source and what was last reported about it."""
         canonical = self.canonical(uri)
-        docs = await self.store.docs(caller.visible_owners(), sources=[canonical], limit=1000)
-        checked = await self.store.get(source_check_id(canonical))
+        owners = caller.visible_owners()
+        docs = await self.store.docs(owners, sources=[canonical], limit=1000)
+        found = await self.store.get_many([source_check_id(owner, canonical) for owner in owners])
+        checks = {
+            str(owner): checked.model_dump(mode="json")
+            for owner in owners
+            if isinstance((checked := found.get(source_check_id(owner, canonical))), SourceCheck)
+        }
+        preferred = checks.get(str(caller.owner)) or checks.get(str(GLOBAL_OWNER))
         return {
             "uri": canonical,
-            "check": checked.model_dump(mode="json") if isinstance(checked, SourceCheck) else None,
-            "memories": [{"memory": str(d.memory), "kind": d.kind, "text": d.text} for d in docs],
+            "check": preferred,
+            "checks": checks,
+            "memories": [
+                {"memory": str(d.memory), "owner": str(d.owner), "kind": d.kind, "text": d.text}
+                for d in docs
+            ],
         }
 
     async def reported(self, caller: Caller, limit: int = 100) -> list[dict[str, Any]]:
         """Sources last reported `changed` or `missing` that a visible memory still cites."""
         out: list[dict[str, Any]] = []
         for state in ("changed", "missing"):
-            for row in await self.store.select("source_check", {"state": state}, limit=limit):
+            for row in await self.store.select(
+                "source_check",
+                {"state": state},
+                where_in={"owner": caller.visible_owners()},
+                limit=limit,
+            ):
                 if not isinstance(row, SourceCheck):
                     continue
-                found = await self.citing(caller, row.uri)
-                if found["memories"]:
-                    out.append(found)
+                docs = await self.store.docs([row.owner], sources=[row.uri], limit=1000)
+                if docs:
+                    out.append(
+                        {
+                            "uri": row.uri,
+                            "check": row.model_dump(mode="json"),
+                            "checks": {str(row.owner): row.model_dump(mode="json")},
+                            "memories": [
+                                {
+                                    "memory": str(d.memory),
+                                    "owner": str(d.owner),
+                                    "kind": d.kind,
+                                    "text": d.text,
+                                }
+                                for d in docs
+                            ],
+                        }
+                    )
         return out[:limit]
 
     # -- vetting ----------------------------------------------------------------------------

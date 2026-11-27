@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 HIERARCHICAL = ("file", "ssh", "http", "https", "git+https", "git+ssh", "git+http")
 
 
-def _clean_path(path: str) -> str:
+def clean_path(path: str) -> str:
     if not path:
         return ""
     norm = posixpath.normpath("/" + path.lstrip("/"))
@@ -45,7 +45,7 @@ def canonical_uri(uri: str, machine: str = "localhost") -> str:
         raise ValueError(f"uri has no host: {uri!r}")
     user = f"{parts.username}@" if parts.username else ""
     port = f":{parts.port}" if parts.port else ""
-    path = _clean_path(parts.path)
+    path = clean_path(parts.path)
     if scheme.startswith("git+") and path.endswith(".git"):
         path = path[:-4]
     return f"{scheme}://{user}{host}{port}{path}"

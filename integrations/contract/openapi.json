@@ -5610,6 +5610,15 @@
             ],
             "title": "Note"
           },
+          "space": {
+            "default": "own",
+            "enum": [
+              "own",
+              "global"
+            ],
+            "title": "Space",
+            "type": "string"
+          },
           "state": {
             "enum": [
               "ok",

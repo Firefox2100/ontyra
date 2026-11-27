@@ -78,22 +78,9 @@ async def test_redaction_off_stores_what_was_sent() -> None:
     assert masked is request
 
 
-async def test_the_decision_model_catches_what_the_patterns_miss() -> None:
-    async def judge(text: str) -> list[str]:
-        return ["hunter2-admin"] if "hunter2-admin" in text else []
-
-    op = AddMemory(kind="fact", fields={"text": "the billing portal password is hunter2-admin"})
-    redacted, findings = await redact_request(ProposalRequest(ops=[op]), judge)
-    text = redacted.ops[0].fields["text"]  # type: ignore[union-attr]
-    assert "hunter2-admin" not in text
-    assert [f.data["rule"] for f in findings] == ["model"]
-
-
-async def test_a_judge_that_cannot_answer_leaves_the_patterns_in_charge() -> None:
-    async def judge(text: str) -> list[str]:
-        raise RuntimeError("no model today")
-
-    op = AddMemory(kind="fact", fields={"text": f"token {KEY}"})
-    redacted, findings = await redact_request(ProposalRequest(ops=[op]), judge)
-    assert KEY not in redacted.ops[0].fields["text"]  # type: ignore[union-attr]
-    assert [f.data["rule"] for f in findings] == ["openai-key"]
+async def test_unrecognised_long_values_are_not_sent_elsewhere_or_rewritten() -> None:
+    value = "ordinary-project-identifier-0123456789"
+    op = AddMemory(kind="fact", fields={"text": f"the deployment id is {value}"})
+    redacted, findings = await redact_request(ProposalRequest(ops=[op]))
+    assert redacted.ops[0].fields["text"].endswith(value)  # type: ignore[union-attr]
+    assert findings == []

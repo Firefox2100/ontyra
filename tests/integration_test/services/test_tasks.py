@@ -3,6 +3,8 @@ result, close themselves when their memories change, and stay inside their owner
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 from pydantic import SecretStr
 
@@ -66,6 +68,29 @@ async def test_claim_and_release(world, agent: Caller) -> None:
     with pytest.raises(errors.ConflictError):
         await app.tasks.claim(agent, task.id)
     assert (await app.tasks.release(agent, task.id)).status == "pending"
+
+
+async def test_concurrent_claims_have_one_winner_and_only_it_can_release(
+    world, agent: Caller
+) -> None:
+    app, _ = world
+    await app.tasks.detect(agent)
+    task = by_kind(await app.tasks.list(agent), "consolidate")
+    other = await app.actors.caller(kind="agent", name="other-worker")
+
+    outcomes = await asyncio.gather(
+        app.tasks.claim(agent, task.id),
+        app.tasks.claim(other, task.id),
+        return_exceptions=True,
+    )
+    winners = [result for result in outcomes if isinstance(result, TaskView)]
+    conflicts = [result for result in outcomes if isinstance(result, errors.ConflictError)]
+    assert len(winners) == 1 and len(conflicts) == 1
+    winner = agent if winners[0].claimed_by == agent.actor_id else other
+    loser = other if winner is agent else agent
+    with pytest.raises(errors.ConflictError, match="another actor"):
+        await app.tasks.release(loser, task.id)
+    assert (await app.tasks.release(winner, task.id)).status == "pending"
 
 
 async def test_merge_must_cite_a_real_proposal_and_a_choice_the_card_offers(

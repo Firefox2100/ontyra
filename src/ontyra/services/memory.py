@@ -42,7 +42,7 @@ from ontyra.services.prepared import (
     PreparedRevise,
     PreparedSupersede,
 )
-from ontyra.services.secrets import SecretJudge, redact_request
+from ontyra.services.secrets import redact_request
 from ontyra.services.validation import ProposalValidator, Validation, rev_state_id
 from ontyra.services.views import History, MemoryView, RevisionView, SupersessionReason
 
@@ -82,7 +82,6 @@ class MemoryService:
         on_commit: Callable[[list[RecordId]], Awaitable[object]] | None = None,
         max_attempts: int = 5,
         episodes: EpisodeSettings | None = None,
-        secret_judge: SecretJudge | None = None,
     ) -> None:
         self.store = store
         self.policy = policy
@@ -92,7 +91,6 @@ class MemoryService:
         self.episodes = episodes or EpisodeSettings()
         # The optional decision model that reads what the credential patterns did not match; the
         # patterns are the whole gate when none is configured.
-        self.secret_judge = secret_judge
         self._last_prune: datetime | None = None
         self.ontology = ontology
         self.validator = ProposalValidator(store, now, ontology, anchors, self.episodes)
@@ -146,7 +144,7 @@ class MemoryService:
                 now - timedelta(days=cfg.retention_days), limit=1000
             )
             if stale:
-                keep = await self._episodes_of_waiting_proposals()
+                keep = await self.store.episodes_in_waiting_proposals(stale)
                 stale = [rid for rid in stale if rid not in keep]
             if stale:
                 await self.store.apply([Delete(rid) for rid in stale])
@@ -154,27 +152,6 @@ class MemoryService:
             logging.getLogger(__name__).warning("episode retention sweep failed", exc_info=True)
             return 0
         return len(stale)
-
-    async def _episodes_of_waiting_proposals(self) -> set[RecordId]:
-        """Episodes the stored ops of waiting proposals cite as evidence: their `derived_from`
-        edge exists only after a commit, and the review may come after the retention."""
-        waiting = await self.store.select(
-            "proposal", where_in={"status": ["pending", "changes_requested"]}, limit=1000
-        )
-        found: set[RecordId] = set()
-        for p in waiting:
-            if not isinstance(p, Proposal):
-                continue
-            for op in p.ops:
-                cited: list[Any] = op.get("evidence") or []
-                for ev in cited:
-                    entry = cast("dict[str, Any]", ev) if isinstance(ev, dict) else {}
-                    if entry.get("episode"):
-                        try:
-                            found.add(RecordId.parse(str(entry["episode"])))
-                        except ValueError:
-                            continue
-        return found
 
     # ---- proposals ----------------------------------------------------------
 
@@ -207,7 +184,7 @@ class MemoryService:
         # Mask credentials before validation, so what is stored is what was validated and the
         # findings can name every masked field: the caller has to be able to tell that the
         # memory it gets back is not the text it sent.
-        request, masked = await redact_request(request, self.secret_judge)
+        request, masked = await redact_request(request)
         v = await self.validator.validate(caller, request)
         v.findings.extend(masked)
         decision, reason = self.policy.decide(caller, _summaries(v.prepared), v.findings)
@@ -734,16 +711,21 @@ class MemoryService:
         assert request.uri is not None
         prefix = request.uri.rstrip("/")
         views = await self.list_memories(caller, limit=500)
-        return [
-            view.memory
-            for view in views
-            if any(
-                str(anchor.get("uri", "")).rstrip("/") == prefix
-                or str(anchor.get("uri", "")).startswith(f"{prefix}/")
-                for anchor in view.content.get("anchors", [])
-                if isinstance(anchor, dict)
-            )
-        ][: request.limit]
+
+        def anchored(view: MemoryView) -> bool:
+            anchors = view.content.get("anchors", [])
+            if not isinstance(anchors, list):
+                return False
+            for raw in cast("list[Any]", anchors):
+                if not isinstance(raw, dict):
+                    continue
+                anchor = cast("dict[str, Any]", raw).get("uri", "")
+                uri = str(anchor).rstrip("/")
+                if uri == prefix or uri.startswith(f"{prefix}/"):
+                    return True
+            return False
+
+        return [view.memory for view in views if anchored(view)][: request.limit]
 
     async def history(self, caller: Caller, memory: RecordId) -> History:
         mem = await self.store.get(memory)

@@ -13,7 +13,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from ontyra.models.base import ActorRef, Indexed, Model, Record, RecordId
+from ontyra.models.base import ActorRef, Indexed, Model, OwnerRef, Record, RecordId
 from ontyra.models.registry import registry
 
 Medium = Literal["file", "web", "pdf", "code", "media", "data", "other"]
@@ -47,17 +47,19 @@ class SourceRef(Model):
     retrieved_at: datetime | None = Field(default=None, description="When it was read.")
 
 
-def source_check_id(uri: str) -> RecordId:
-    """The check record of a canonical URI has an id derived from it, so it can be read in batch."""
-    return RecordId("source_check", hashlib.sha1(uri.encode()).hexdigest()[:24])
+def source_check_id(owner: RecordId, uri: str) -> RecordId:
+    """Owner-scoped check id for a canonical URI, readable in batches without leaking tenants."""
+    key = f"{owner}\0{uri}"
+    return RecordId("source_check", hashlib.sha1(key.encode()).hexdigest()[:24])
 
 
 @registry.table("source_check")
 class SourceCheck(Record):
     """What a client last reported about a source (the daemon never looks). Mutable status, kept
-    apart from the memories that cite the source; one row per canonical URI."""
+    apart from the memories that cite the source; one row per owner and canonical URI."""
 
-    uri: Annotated[str, Indexed(unique=True)]
+    owner: Annotated[OwnerRef, Indexed()]
+    uri: Annotated[str, Indexed()]
     state: CheckState
     checked_at: datetime
     checked_by: ActorRef
@@ -74,6 +76,7 @@ class SourceCheckRequest(Model):
     state: CheckState
     content_hash: str | None = Field(default=None, max_length=200)
     note: str | None = Field(default=None, max_length=1000)
+    space: Literal["own", "global"] = "own"
 
 
 class SourceCheckResult(Model):

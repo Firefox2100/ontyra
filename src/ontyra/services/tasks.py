@@ -6,7 +6,7 @@ revisions it concerns, so it is queued once, a decision that two memories are `d
 asked again, and a change to any member makes it a new finding. A task whose memories are no
 longer live is closed as obsolete. The daemon never merges anything itself.
 
-Single-daemon assumption: a claim reads the status, then writes it (as the ontology does).
+Claims and task transitions use compare-and-set guards, so concurrent workers cannot steal work.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from ontyra.models.tasks import (
     TaskResult,
     TaskView,
 )
-from ontyra.ports import Create, Store, Update
+from ontyra.ports import Create, ExpectFields, Store, StoreConflictError, Update
 from ontyra.services import errors
 from ontyra.services.consolidation import ConsolidationService
 from ontyra.services.context import GLOBAL_OWNER, Caller
@@ -380,13 +380,10 @@ class TaskService:
         task = await self._workable(caller, task_id)
         if task.status != "pending":
             raise errors.ConflictError(f"{task_id} is {task.status}, not pending")
-        await self.store.apply(
-            [
-                Update(
-                    task_id,
-                    {"status": "claimed", "claimed_by": caller.actor_id, "updated_at": self.now()},
-                )
-            ]
+        await self._transition(
+            task_id,
+            {"status": "pending"},
+            {"status": "claimed", "claimed_by": caller.actor_id, "updated_at": self.now()},
         )
         return await self.get(caller, task_id)
 
@@ -394,8 +391,12 @@ class TaskService:
         task = await self._workable(caller, task_id)
         if task.status != "claimed":
             raise errors.ConflictError(f"{task_id} is {task.status}, not claimed")
-        await self.store.apply(
-            [Update(task_id, {"status": "pending", "claimed_by": None, "updated_at": self.now()})]
+        if task.claimed_by != caller.actor_id:
+            raise errors.ConflictError(f"{task_id} is claimed by another actor")
+        await self._transition(
+            task_id,
+            {"status": "claimed", "claimed_by": caller.actor_id},
+            {"status": "pending", "claimed_by": None, "updated_at": self.now()},
         )
         return await self.get(caller, task_id)
 
@@ -422,20 +423,28 @@ class TaskService:
             awaiting
         ):  # a held proposal may still be rejected: the finding stays open until it is not
             body["awaiting_review"] = True
-        await self.store.apply(
-            [
-                Update(
-                    task_id,
-                    {
-                        "status": status,
-                        "result": body,
-                        "claimed_by": caller.actor_id,
-                        "updated_at": self.now(),
-                    },
-                )
-            ]
+        expected: dict[str, Any] = {"status": task.status}
+        if task.status == "claimed":
+            expected["claimed_by"] = caller.actor_id
+        await self._transition(
+            task_id,
+            expected,
+            {
+                "status": status,
+                "result": body,
+                "claimed_by": caller.actor_id,
+                "updated_at": self.now(),
+            },
         )
         return await self.get(caller, task_id)
+
+    async def _transition(
+        self, task_id: RecordId, expected: dict[str, Any], patch: dict[str, Any]
+    ) -> None:
+        try:
+            await self.store.apply([ExpectFields(task_id, expected), Update(task_id, patch)])
+        except StoreConflictError as exc:
+            raise errors.ConflictError(f"{task_id} changed while it was being updated") from exc
 
     async def resolve(self, caller: Caller, task_id: RecordId, decision: str) -> TaskView:
         """Do what a `merge` or `supersede` decision means, as an ordinary proposal from the
@@ -474,6 +483,14 @@ class TaskService:
             raise errors.InvalidRequestError(
                 f"a {task.kind} task cannot be resolved with {decision!r}; complete it instead"
             )
+        if task.status in ("pending", "parked"):
+            await self._transition(
+                task_id,
+                {"status": task.status},
+                {"status": "claimed", "claimed_by": caller.actor_id, "updated_at": self.now()},
+            )
+        elif task.status == "claimed" and task.claimed_by != caller.actor_id:
+            raise errors.ConflictError(f"{task_id} is claimed by another actor")
         space = "global" if task.owner == GLOBAL_OWNER and caller.owner != GLOBAL_OWNER else "own"
         done = await self.memory.submit(
             caller,

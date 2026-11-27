@@ -104,7 +104,8 @@ async def test_status_reports_the_machine_and_the_reasons(
 
 async def test_a_token_protects_everything_but_health(make_scorer: Any) -> None:
     scorer = make_scorer()
-    cfg = WorkerSettings(token="secret")  # type: ignore[arg-type]
+    token = "s" * 32
+    cfg = WorkerSettings(token=token)  # type: ignore[arg-type]
     engine = Engine(scorer, cfg)
     app = create_worker_app(engine, cfg, HW, CAPS, MANIFEST)
     await engine.start()
@@ -116,7 +117,7 @@ async def test_a_token_protects_everything_but_health(make_scorer: Any) -> None:
             assert (await client.post("/rerank", json=body)).status_code == 401
             bad = {"authorization": "Bearer nope"}
             assert (await client.post("/rerank", json=body, headers=bad)).status_code == 401
-            good = {"authorization": "Bearer secret"}
+            good = {"authorization": f"Bearer {token}"}
             assert (await client.post("/rerank", json=body, headers=good)).status_code == 200
             assert (await client.get("/status")).status_code == 401
             assert (await client.get("/health")).status_code == 200

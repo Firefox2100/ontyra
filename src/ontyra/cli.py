@@ -235,6 +235,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         host = args.host or settings.worker.host
         port = args.port or settings.worker.port
+        settings = settings.for_worker_bind(host, port)
         uvicorn.run(build(settings), host=host, port=port, log_level=settings.log_level.lower())
         return 0
     if args.command == "calibrate" and args.own:

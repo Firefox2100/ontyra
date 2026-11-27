@@ -20,6 +20,13 @@ from ontyra.models.recall import RecallSettings
 from ontyra.models.tasks import TaskSettings
 
 
+def _is_loopback(host: str) -> bool:
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return host.casefold() == "localhost"
+
+
 class DbSettings(BaseModel):
     """SurrealDB connection (`ONTYRA_DB__*`)."""
 
@@ -128,6 +135,20 @@ class WorkerSettings(BaseModel):
     dtype: Literal["auto", "fp32", "fp16", "bf16"] = "auto"
     attention: str = "sdpa"
     serve: Literal["auto", "on", "off"] = "auto"
+
+    @field_validator("token", mode="before")
+    @classmethod
+    def _blank_token(cls, value: Any) -> Any:
+        return None if isinstance(value, str) and not value.strip() else value
+
+    @model_validator(mode="after")
+    def _bind_security(self) -> WorkerSettings:
+        if self.token is not None and len(self.token.get_secret_value()) < 32:
+            raise ValueError("worker token must contain at least 32 characters")
+        if not _is_loopback(self.host) and self.token is None:
+            raise ValueError("a non-loopback worker listener requires ONTYRA_WORKER__TOKEN")
+        return self
+
     train: Literal["auto", "on", "off"] = "auto"
     live_edit: bool = True  # allow head-only updates from feedback while serving
     max_length: int = 1024  # tokens per query + document pair
@@ -306,10 +327,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _deployment_security(self) -> Settings:
-        try:
-            loopback = ipaddress.ip_address(self.server.host).is_loopback
-        except ValueError:
-            loopback = self.server.host.casefold() == "localhost"
+        loopback = _is_loopback(self.server.host)
         auth_required = self.auth.multi_user or self.auth.token is not None
         if (
             self.server.deployment == "local"
@@ -339,6 +357,12 @@ class Settings(BaseSettings):
         """Revalidate command-line bind overrides against the deployment security policy."""
         values = self.model_dump(mode="python")
         values["server"] = {**values["server"], "host": host, "port": port}
+        return Settings.model_validate(values)
+
+    def for_worker_bind(self, host: str, port: int) -> Settings:
+        """Revalidate worker command-line bind overrides before opening the listener."""
+        values = self.model_dump(mode="python")
+        values["worker"] = {**values["worker"], "host": host, "port": port}
         return Settings.model_validate(values)
 
 

@@ -5,13 +5,22 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from ontyra.models import Record, RecordId, registry
 from ontyra.models.core import Episode, Memory
 from ontyra.models.search import SearchDoc
 from ontyra.ports.storage import Hit
-from ontyra.ports.writes import Create, Delete, ExpectCurrent, Relate, Update, Upsert, Write
+from ontyra.ports.writes import (
+    Create,
+    Delete,
+    ExpectCurrent,
+    ExpectFields,
+    Relate,
+    Update,
+    Upsert,
+    Write,
+)
 from ontyra.storage.codec import decode
 from ontyra.storage.database import Database
 
@@ -57,12 +66,24 @@ def compile_writes(writes: Sequence[Write]) -> tuple[list[str], dict[str, Any]]:
                 raise ValueError(f"not an edge table: {w.edge!r}")
             params[f"s{i}"], params[f"t{i}"], params[f"c{i}"] = w.source, w.target, w.content
             stmts.append(f"RELATE $s{i}->{_ident(w.edge)}->$t{i} CONTENT $c{i}")
-        else:  # ExpectCurrent
-            assert isinstance(w, ExpectCurrent)
+        elif isinstance(w, ExpectCurrent):
             params[f"m{i}"], params[f"e{i}"] = w.memory, w.revision
             stmts.append(
                 f"LET $g{i} = (SELECT VALUE current FROM ONLY $m{i}); "
                 f"IF $g{i} != $e{i} {{ THROW 'ontyra:conflict {w.memory}' }}"
+            )
+        else:
+            assert isinstance(w, ExpectFields)
+            params[f"i{i}"] = w.id
+            checks: list[str] = []
+            for n, (field, expected) in enumerate(w.expected.items()):
+                name = _ident(field)
+                params[f"e{i}_{n}"] = expected
+                checks.append(f"$g{i}.{name} != $e{i}_{n}")
+            condition = " OR ".join(checks) or "false"
+            stmts.append(
+                f"LET $g{i} = (SELECT * FROM ONLY $i{i}); "
+                f"IF {condition} {{ THROW 'ontyra:conflict {w.id}' }}"
             )
     return stmts, params
 
@@ -290,6 +311,45 @@ class SurrealStore:
             )
         )[0]
         return [decode(r)["id"] for r in rows]
+
+    async def episodes_in_waiting_proposals(self, candidates: Sequence[RecordId]) -> set[RecordId]:
+        if not candidates:
+            return set()
+        rows = (
+            await self.db.query(
+                "SELECT ops FROM proposal WHERE status IN ['pending', 'changes_requested']",
+                {},
+            )
+        )[0]
+        wanted = set(candidates)
+        found: set[RecordId] = set()
+        for raw in rows:
+            row = decode(raw)
+            operations = row.get("ops", [])
+            if not isinstance(operations, list):
+                continue
+            for raw_op in cast("list[Any]", operations):
+                op = cast("dict[str, Any]", raw_op) if isinstance(raw_op, dict) else None
+                if not isinstance(op, dict):
+                    continue
+                raw_evidence: Any = op.get("evidence")
+                if raw_evidence is None:
+                    evidence: list[Any] = []
+                elif isinstance(raw_evidence, list):
+                    evidence = cast("list[Any]", raw_evidence)
+                else:
+                    continue
+                for raw_item in evidence:
+                    item = cast("dict[str, Any]", raw_item) if isinstance(raw_item, dict) else None
+                    if not isinstance(item, dict) or not item.get("episode"):
+                        continue
+                    try:
+                        episode = RecordId.parse(str(item["episode"]))
+                    except ValueError:
+                        continue
+                    if episode in wanted:
+                        found.add(episode)
+        return found
 
     async def revision_states_at(self, at: datetime, limit: int) -> list[RecordId]:
         rows = (

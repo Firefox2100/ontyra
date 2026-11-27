@@ -31,24 +31,28 @@ _MONTH_NAMES = (
     "january february march april may june july august september october november december"
 )
 _MONTHS = {name: i for i, name in enumerate(_MONTH_NAMES.split(), 1)}
-_TOKEN = re.compile(r"(?>[a-z]+)|(?>\d+)(?:\.\d+)?|(?>[a-z]+)\d[a-z0-9.\-]*")
+_TOKEN = re.compile(r"[a-z0-9][a-z0-9.\-]*")
 
 
 def values(text: str) -> set[str]:
     """The numbers, versions, dates and identifiers with digits in a text, normalised
     (`450k` = `450,000`, `3rd` = `3`, `three` = `3`, `March` = `m3`)."""
-    t = text.lower()
-    t = re.sub(r"(?<=\d),(?=\d{3}\b)", "", t)
-    t = re.sub(r"((?>\d+))k\b", lambda m: str(int(m.group(1)) * 1000), t)
-    t = re.sub(r"((?>\d+))(?:st|nd|rd|th)\b", r"\1", t)
+    t = text.casefold().replace(",", "")
     out: set[str] = set()
-    for word in _TOKEN.findall(t):
-        if word in _NUMBER_WORDS:
-            out.add(_NUMBER_WORDS[word])
-        elif word in _MONTHS:
-            out.add(f"m{_MONTHS[word]}")
-        elif re.search(r"\d", word):
-            out.add(word)
+    for raw in _TOKEN.findall(t):
+        parts = raw.split("-") if "-" in raw and not any(char.isdigit() for char in raw) else [raw]
+        for part in parts:
+            word = part.strip(".-")
+            if word.endswith("k") and word[:-1].isdigit():
+                word = str(int(word[:-1]) * 1000)
+            elif len(word) > 2 and word[-2:] in {"st", "nd", "rd", "th"} and word[:-2].isdigit():
+                word = word[:-2]
+            if word in _NUMBER_WORDS:
+                out.add(_NUMBER_WORDS[word])
+            elif word in _MONTHS:
+                out.add(f"m{_MONTHS[word]}")
+            elif any(char.isdigit() for char in word):
+                out.add(word)
     return out
 
 

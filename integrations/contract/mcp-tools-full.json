@@ -1825,6 +1825,14 @@
               ],
               "default": null
             },
+            "space": {
+              "default": "own",
+              "enum": [
+                "own",
+                "global"
+              ],
+              "type": "string"
+            },
             "state": {
               "enum": [
                 "ok",
