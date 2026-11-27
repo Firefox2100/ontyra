@@ -89,10 +89,9 @@ class MemoryService:
         self.max_attempts = max_attempts
         self.on_commit = on_commit  # e.g. embed the new revisions (best effort)
         self.episodes = episodes or EpisodeSettings()
-        # The optional decision model that reads what the credential patterns did not match; the
-        # patterns are the whole gate when none is configured.
         self._last_prune: datetime | None = None
         self.ontology = ontology
+        self._anchors = anchors
         self.validator = ProposalValidator(store, now, ontology, anchors, self.episodes)
 
     # ---- episodes -----------------------------------------------------------
@@ -709,7 +708,10 @@ class MemoryService:
             visible = await self.get_memory(caller, request.memory)  # 404s when it is not there
             return [visible.memory]
         assert request.uri is not None
-        prefix = request.uri.rstrip("/")
+        # The anchors are stored canonical (`file://host/path`); a path typed bare, or with its host
+        # left out or in another case, names the same place only once it is canonical too.
+        uri = f"file://{request.uri}" if request.uri.startswith("/") else request.uri
+        prefix = self._anchors.canonical(uri).rstrip("/")
         views = await self.list_memories(caller, limit=500)
 
         def anchored(view: MemoryView) -> bool:

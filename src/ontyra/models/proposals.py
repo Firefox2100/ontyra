@@ -206,7 +206,7 @@ class ForgetRequest(Model):
 
 
 class ForgetResult(Model):
-    proposals: list[RecordId] = []  # one per target, in the order they were retracted
+    proposals: list[RecordId] = []  # the one proposal that carries every retraction (all or none)
     forgotten: list[RecordId] = []
     status: Literal["pending", "changes_requested", "committed", "rejected", "withdrawn"] = (
         "pending"

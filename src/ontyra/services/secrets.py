@@ -49,8 +49,8 @@ _RULES_BEFORE: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
     ("aws-access-key", re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")),
     ("github-token", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b")),
+    ("anthropic-key", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")),  # before the broader sk-
     ("openai-key", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
-    ("anthropic-key", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")),
     ("slack-token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}\b")),
     ("google-key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
     ("jwt", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b")),
@@ -81,7 +81,9 @@ def mask_text(text: str) -> tuple[str, list[tuple[str, str]]]:
         masked = pattern.sub(replace, masked)
     for match in _ASSIGNED.finditer(masked):
         value = match.group(4)
-        preview = _masked(value)
+        # A vendor prefix is public and names the key; the start of a chosen password is not, and
+        # four characters of an eight-character one is half of it.
+        preview = "[redacted]"
         found.append(("assigned-secret", preview))
         masked = masked.replace(value, preview, 1)
     return masked, found

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Header, Query
 
 from ontyra.models import RecordId
 from ontyra.models.proposals import (
@@ -11,6 +11,7 @@ from ontyra.models.proposals import (
     ForgetResult,
     ProposalResult,
 )
+from ontyra.services.anchors import forgotten_under
 from ontyra.services.views import History, MemoryView
 from ontyra.transports.rest.deps import CallerDep, MemoryServiceDep
 
@@ -80,5 +81,18 @@ async def correct(
     "anchored under that path. Nothing is deleted — each target is retracted with your reason, "
     "so the history stays and the policy still decides whether it commits now or waits.",
 )
-async def forget(body: ForgetRequest, caller: CallerDep, memory: MemoryServiceDep) -> ForgetResult:
+async def forget(
+    body: ForgetRequest,
+    caller: CallerDep,
+    memory: MemoryServiceDep,
+    x_ontyra_machine: Annotated[
+        str | None,
+        Header(
+            description="The machine the caller runs on: a `uri` is looked up against it, as "
+            "path anchors are recorded."
+        ),
+    ] = None,
+) -> ForgetResult:
+    if x_ontyra_machine:
+        body = forgotten_under(body, x_ontyra_machine)
     return await memory.forget(caller, body)

@@ -65,3 +65,10 @@ def test_anchors_apply_in_a_common_place() -> None:
     assert not anchors_compatible(
         ["file:///a/tide"], ["file:///a/tidewatch"]
     )  # not a prefix of a segment
+
+
+def test_a_comma_separates_unless_it_groups_thousands() -> None:
+    from ontyra.services.dedupe import values
+
+    assert values("a limit of 450,000 per year") == {"450000"}
+    assert values("versions 1,2,3 are affected") == {"1", "2", "3"}

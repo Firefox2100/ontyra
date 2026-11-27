@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 from ontyra.models import RecordId, new_id
 from ontyra.models.anchors import Anchor
 from ontyra.models.ontology import Resource, ResourceRequest
-from ontyra.models.proposals import ProposalRequest
+from ontyra.models.proposals import ForgetRequest, ProposalRequest
 from ontyra.models.uri import canonical_uri, clean_path, uri_ancestors
 from ontyra.ports import Create, Store
 from ontyra.services import errors
@@ -42,6 +42,15 @@ def qualify(uri: str, machine: str) -> str:
         path = clean_path(drive.group(2) or "/")
         return f"file://{host}/{drive.group(1).upper()}:{path if path else ''}"
     return f"file://{host}{clean_path(urlsplit(text).path)}"
+
+
+def forgotten_under(request: ForgetRequest, machine: str) -> ForgetRequest:
+    """The same request with its path recorded against `machine`, the way anchors were: a path
+    typed bare (`/home/me/proj`) or with another host is the place the anchors were stored."""
+    if request.uri is None:
+        return request
+    uri = f"file://{request.uri}" if request.uri.startswith("/") else request.uri
+    return request.model_copy(update={"uri": qualify(uri, machine)})
 
 
 def anchored_to(body: ProposalRequest, machine: str) -> ProposalRequest:

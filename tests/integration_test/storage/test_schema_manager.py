@@ -212,3 +212,27 @@ async def test_a_field_added_to_a_table_with_rows_migrates_them(
     row = (await database.query("SELECT * FROM actor"))[0][0]
     assert row["trust"] is not None and "meta" in row
     await schema.apply()
+
+
+async def test_a_required_field_nothing_can_fill_is_added_to_an_empty_table(
+    database: Database, schema: SchemaManager
+) -> None:
+    """`source_check.owner` is a record link: no value can be invented for existing rows, so a
+    table that has rows needs a hand-written migration, and one that has none just gets the field."""
+    await database.query("REMOVE FIELD owner ON source_check")
+    await schema.apply()
+    assert "owner" in (await database.info_table("source_check"))["fields"]
+
+
+async def test_a_required_field_nothing_can_fill_is_refused_when_rows_exist(
+    database: Database, schema: SchemaManager, seeded: RecordId
+) -> None:
+    del seeded  # the actor that checked_by points at
+    await database.query("REMOVE FIELD owner ON source_check")
+    await database.query(
+        "CREATE source_check:old SET uri = 'file://m/a', state = 'ok', "
+        "checked_at = time::now(), checked_by = actor:claude"
+    )
+    with pytest.raises(ValueError, match=r"source_check\.owner"):
+        await schema.apply()
+    assert (await database.query("SELECT count() FROM source_check GROUP ALL"))[0][0]["count"] == 1

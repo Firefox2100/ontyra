@@ -26,6 +26,7 @@ async def test_a_private_key_block_goes_whole() -> None:
 async def test_an_assigned_password_is_masked_but_a_short_placeholder_is_not() -> None:
     text, found = mask_text("password: hunter2hunter2 in the fixture")
     assert found and "hunter2hunter2" not in text
+    assert "hunt" not in text  # no part of a chosen password is kept as a preview
     # `password: x` is prose about configuring a database, not a credential.
     prose, none = mask_text("set password: x before connecting")
     assert none == [] and prose == "set password: x before connecting"
@@ -84,3 +85,8 @@ async def test_unrecognised_long_values_are_not_sent_elsewhere_or_rewritten() ->
     redacted, findings = await redact_request(ProposalRequest(ops=[op]))
     assert redacted.ops[0].fields["text"].endswith(value)  # type: ignore[union-attr]
     assert findings == []
+
+
+async def test_an_anthropic_key_is_named_as_one_not_as_an_openai_key() -> None:
+    _, found = mask_text("key sk-ant-api03-0123456789abcdefghijklmnop here")
+    assert [rule for rule, _ in found] == ["anthropic-key"]

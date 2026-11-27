@@ -101,3 +101,24 @@ test('a restarted Host finds what was queued before', async () => {
     [queued.key],
   )
 })
+
+test('overlapping flushes share one replay and lose nothing', async () => {
+  const store = memory()
+  const sent = []
+  const outbox = createOutbox({
+    persist: store.persist,
+    send: async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      sent.push(item.path)
+    },
+  })
+  await outbox.enqueue('ontyra_remember', '/a', {})
+  await outbox.enqueue('ontyra_remember', '/b', {})
+  await outbox.enqueue('ontyra_remember', '/c', {})
+  const results = await Promise.all([outbox.flush(), outbox.flush(), outbox.flush()])
+  assert.deepEqual(sent, ['/a', '/b', '/c'])
+  assert.deepEqual(results[0], { sent: 3, kept: 0 })
+  assert.equal(outbox.size(), 0)
+  await outbox.enqueue('ontyra_remember', '/d', {})
+  assert.deepEqual(await outbox.flush(), { sent: 1, kept: 0 }) // a finished replay does not stick
+})

@@ -169,3 +169,15 @@ test('the limit keeps a stray number from asking about the whole queue', () => {
   assert.equal(bounded('x', 20), 20)
   assert.equal(bounded(3, 20), 3)
 })
+
+test('a card names the ends of a link and the target of a note', () => {
+  const text = describeProposal({
+    ops: [
+      { op: 'link', relation: 'contradicts', source: 'memory:a', target: 'memory:b' },
+      { op: 'annotate', target: 'memory:c', kind: 'comment', text: 'Check this first.' },
+    ],
+  })
+  assert.match(text, /link memory:a contradicts memory:b/)
+  assert.match(text, /annotate memory:c: Check this first\./)
+  assert.doesNotMatch(text, /undefined/)
+})

@@ -37,7 +37,7 @@ _TOKEN = re.compile(r"[a-z0-9][a-z0-9.\-]*")
 def values(text: str) -> set[str]:
     """The numbers, versions, dates and identifiers with digits in a text, normalised
     (`450k` = `450,000`, `3rd` = `3`, `three` = `3`, `March` = `m3`)."""
-    t = text.casefold().replace(",", "")
+    t = re.sub(r"(?<=\d),(?=\d{3}\b)", "", text.casefold())  # 450,000 is one number; 1,2 is two
     out: set[str] = set()
     for raw in _TOKEN.findall(t):
         parts = raw.split("-") if "-" in raw and not any(char.isdigit() for char in raw) else [raw]

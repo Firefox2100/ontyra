@@ -9323,6 +9323,24 @@
         "operationId": "forget_v1_memories_forget_post",
         "parameters": [
           {
+            "description": "The machine the caller runs on: a `uri` is looked up against it, as path anchors are recorded.",
+            "in": "header",
+            "name": "x-ontyra-machine",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The machine the caller runs on: a `uri` is looked up against it, as path anchors are recorded.",
+              "title": "X-Ontyra-Machine"
+            }
+          },
+          {
             "description": "A name for the caller. Only a label: used when no account system is active (single-user mode); ignored when accounts are on.",
             "in": "header",
             "name": "x-ontyra-actor",

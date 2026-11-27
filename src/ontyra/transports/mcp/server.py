@@ -52,7 +52,7 @@ from ontyra.models.recall import (
 from ontyra.models.sources import SourceCheckRequest, SourceCheckResult
 from ontyra.models.tasks import DetectReport, ResolveRequest, TaskResult, TaskView
 from ontyra.services import Caller, errors
-from ontyra.services.anchors import anchored_to
+from ontyra.services.anchors import anchored_to, forgotten_under
 from ontyra.services.views import MemoryDetail, MemoryView, Neighbors
 from ontyra.transports.auth import resolve_caller
 from ontyra.transports.rest.deps import Services
@@ -283,6 +283,9 @@ def create_mcp(
         "gone from recall now, `pending` means a human must approve.",
     )
     async def forget(request: ForgetRequest) -> ForgetResult:
+        machine = declared_machine()
+        if machine:
+            request = forgotten_under(request, machine)
         return await run(lambda s, c: s.memory.forget(c, request))
 
     @mcp.tool(

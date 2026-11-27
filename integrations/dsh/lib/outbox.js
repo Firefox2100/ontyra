@@ -50,6 +50,25 @@ export function createOutbox({ persist, send, limit = LIMIT }) {
       // lesser failure compared with failing the model's tool call.
     }
   }
+  /** @type {Promise<{ sent: number, kept: number }> | undefined} */
+  let replaying
+  const replay = async () => {
+    const queue = all()
+    let sent = 0
+    while (queue.length > 0) {
+      const item = queue[0]
+      try {
+        await send(item)
+        sent += 1
+      } catch (error) {
+        const status = /** @type {TransportFailure} */ (error)?.status
+        if (status === undefined || status === 0) break // still down: keep it and stop
+      }
+      queue.shift()
+      keep()
+    }
+    return { sent, kept: queue.length }
+  }
   return {
     /**
      * Keep a write for later.
@@ -74,25 +93,16 @@ export function createOutbox({ persist, send, limit = LIMIT }) {
     },
     /**
      * Try every pending write once. A transport failure stops the run (the daemon is still down);
-     * an answer, success or not, drops the item.
+     * an answer, success or not, drops the item. Every tool call flushes first, so calls overlap:
+     * they share one replay. Two replays would both send the head and both drop one item, which
+     * discards the next write unsent.
      * @returns {Promise<{ sent: number, kept: number }>} what happened.
      */
-    async flush() {
-      const queue = all()
-      let sent = 0
-      while (queue.length > 0) {
-        const item = queue[0]
-        try {
-          await send(item)
-          sent += 1
-        } catch (error) {
-          const status = /** @type {TransportFailure} */ (error)?.status
-          if (status === undefined || status === 0) break // still down: keep it and stop
-        }
-        queue.shift()
-        keep()
-      }
-      return { sent, kept: queue.length }
+    flush() {
+      replaying ??= replay().finally(() => {
+        replaying = undefined
+      })
+      return replaying
     },
     /** @returns {number} how many writes are waiting. */
     size() {

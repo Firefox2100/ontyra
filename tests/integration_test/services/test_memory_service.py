@@ -677,3 +677,34 @@ async def test_forget_needs_exactly_one_target() -> None:
         ForgetRequest(reason="because")
     with pytest.raises(ValidationError):
         ForgetRequest(memory=RecordId("memory", "abc"), uri="file://m/proj", reason="both")
+
+
+async def test_forget_finds_what_is_anchored_whichever_way_the_path_is_written(
+    app: Application, agent: Caller
+) -> None:
+    from ontyra.models.proposals import ForgetRequest
+
+    for n, target in enumerate(
+        ("/proj/tools", "file:///proj/tools", "FILE://LOCALHOST/proj/tools/")
+    ):
+        await app.memory.submit(
+            agent,
+            req(
+                add_directive(
+                    f"pin the toolchain in CI {n}",
+                    anchors=[{"uri": "file:///proj/tools", "match": "subtree"}],
+                )
+            ),
+        )
+        result = await app.memory.forget(agent, ForgetRequest(uri=target, reason="moved"))
+        assert result.status == "committed" and len(result.forgotten) == 1, target
+
+
+def test_a_forget_path_is_recorded_against_the_declared_machine() -> None:
+    from ontyra.models.proposals import ForgetRequest
+    from ontyra.services.anchors import forgotten_under
+
+    bare = forgotten_under(ForgetRequest(uri="/home/me/proj", reason="x"), "Box-1")
+    assert bare.uri == "file://box-1/home/me/proj"
+    by_id = ForgetRequest(memory=RecordId("memory", "a"), reason="x")
+    assert forgotten_under(by_id, "box-1") is by_id

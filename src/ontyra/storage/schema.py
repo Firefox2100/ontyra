@@ -6,6 +6,7 @@ Reference implementation: spikes/schema_gen.
 from __future__ import annotations
 
 import types
+from collections.abc import Collection, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any, Literal, Union, get_args, get_origin
@@ -181,11 +182,11 @@ class SchemaGenerator:
             f"DEFINE FIELD OVERWRITE {f.path} ON {spec.name} TYPE {f.type}{flex}{dflt}{migrate}{ro}"
         )
 
-    def plan_migrations(self, table_infos: dict[str, dict[str, Any]]) -> list[str]:
-        """Definitions for fields a table in the database does not have yet, each saying what
-        existing rows hold (the field's default, or an empty value of its type). A field whose
-        type accepts no value that can be invented here is an error: write the migration by hand."""
-        stmts: list[tuple[int, str, str]] = []
+    def _missing_fields(
+        self, table_infos: dict[str, dict[str, Any]]
+    ) -> Iterator[tuple[str, TableSpec, FieldDef, Any]]:
+        """Required fields a table in the database lacks, with what existing rows would hold
+        (`None` when no value of the type can be invented)."""
         for name, spec in self.registry.tables.items():
             info = table_infos.get(name)
             if info is None:
@@ -193,13 +194,30 @@ class SchemaGenerator:
             have = set(info.get("fields", {}))
             fields, _ = self.collect_fields(spec.model)
             for f in fields:
-                path = f.path.replace("[*]", ".*")
-                if path in have or f.type.startswith("option<"):
+                if f.path.replace("[*]", ".*") in have or f.type.startswith("option<"):
                     continue
                 value = f.default if f.default is not None else _empty_value(f.type)
-                if value is None:
-                    raise ValueError(f"cannot migrate {name}.{f.path}: no value for type {f.type}")
-                stmts.append((f.path.count("[*]"), f.path, self.field_ddl(spec, f, value)))
+                yield name, spec, f, value
+
+    def unmigratable(self, table_infos: dict[str, dict[str, Any]]) -> set[str]:
+        """Tables with a required new field that existing rows cannot be given a value for."""
+        return {name for name, _, _, value in self._missing_fields(table_infos) if value is None}
+
+    def plan_migrations(
+        self, table_infos: dict[str, dict[str, Any]], empty: Collection[str] = ()
+    ) -> list[str]:
+        """Definitions for fields a table in the database does not have yet, each saying what
+        existing rows hold (the field's default, or an empty value of its type). A field whose
+        type accepts no value that can be invented here is an error when the table has rows:
+        write the migration by hand. A table named in `empty` has none to migrate, so it is left
+        to the full definitions, which add the field."""
+        stmts: list[tuple[int, str, str]] = []
+        for name, spec, f, value in self._missing_fields(table_infos):
+            if value is None:
+                if name in empty:
+                    continue
+                raise ValueError(f"cannot migrate {name}.{f.path}: no value for type {f.type}")
+            stmts.append((f.path.count("[*]"), f.path, self.field_ddl(spec, f, value)))
         return [ddl for _, _, ddl in sorted(stmts)]
 
     def table_ddl(self, spec: TableSpec) -> list[str]:
@@ -302,9 +320,14 @@ class SchemaManager:
         transaction that migrates its rows)."""
         info = await self.db.info_db()
         tables = {t: await self.db.info_table(t) for t in info.get("tables", {})}
-        for statement in self.generator.plan_migrations(tables):
+        empty = {t for t in self.generator.unmigratable(tables) if await self._is_empty(t)}
+        for statement in self.generator.plan_migrations(tables, empty):
             await self.db.run_atomic([statement])
         await self.db.run_atomic([*self.generator.ddl(), *search_ddl(self.embedding_dim)])
+
+    async def _is_empty(self, table: str) -> bool:
+        rows = (await self.db.query(f"SELECT count() AS n FROM {table} GROUP ALL LIMIT 1"))[0]
+        return not rows or int(rows[0]["n"]) == 0
 
     async def drift(self) -> list[str]:
         info = await self.db.info_db()

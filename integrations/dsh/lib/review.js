@@ -38,9 +38,9 @@ function opLine(op) {
     case 'retract':
       return `retract ${op.memory}: ${op.reason ?? ''}`.trim()
     case 'link':
-      return `link ${op.from} → ${op.to}`
+      return `link ${op.source} ${op.relation ?? '→'} ${op.target}`
     case 'annotate':
-      return `annotate ${op.memory}: ${firstSentence(op.text)}`
+      return `annotate ${op.target}: ${firstSentence(op.text)}`
     default:
       return String(op.op ?? 'op')
   }
