@@ -8,13 +8,21 @@ description: How to read and write Ontyra long-term memory (recall, remember, co
 Ontyra is a local memory daemon (REST + MCP, default `http://127.0.0.1:8787`). Memories reach
 you in two ways: injected context (a briefing at session start, recall on each prompt, when a
 plugin or hook is installed) and the `ontyra` MCP tools (`recall`, `check`, `briefing`, `ask`,
-`get`, `remember`, `consult`, `check_source`, `feedback`, `pending_proposals`, `amend`, `concepts`,
-`propose_ontology_change`). If you have no MCP tools, the same
+`get`, `remember`, `correct`, `forget`, `consult`, `check_source`, `feedback`,
+`pending_proposals`, `amend`, `concepts`, `propose_ontology_change`). If you have no MCP tools, the
+same
 operations are REST calls under `/v1` (`POST /v1/recall`, `/v1/check`, `/v1/proposals`, …; send
 headers `X-Ontyra-Actor: <your name>` and `X-Ontyra-Harness: <harness>`; the schema is at
 `/openapi.json`). If the daemon is unreachable, carry on without memory and tell the user once. Treat injected memories as advice about this user and
 project. **`Must follow` items are directives: obey them**, and tell the user if one conflicts
 with what they just asked.
+
+Two intents have their own call, so do not hand-build a `revise` for them: `correct` (memory id
+plus only the fields that change) and `forget` (a memory id, or a `uri` for everything anchored
+under that path; it retracts rather than deletes, and answers `status: pending` when a human must
+approve). A credential-looking value is masked before storing and the findings carry a
+`secret_redacted` warning naming the field: tell the user, and resend with `redaction: "off"` only
+when it is a test value rather than a key.
 
 ## When to recall
 

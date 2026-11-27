@@ -586,3 +586,94 @@ async def test_a_memory_can_be_linked_in_the_proposal_that_adds_it(
         ),
     )
     assert result.status == "committed", result.findings
+
+
+# ---- credentials on the way in ---------------------------------------------------------
+
+
+KEY = "sk-live-0123456789abcdefghijklmnop"
+
+
+def lesson(text: str) -> dict[str, Any]:
+    return {
+        "op": "add",
+        "kind": "lesson",
+        "fields": {"text": text, "situation": "deploying", "insight": "keep keys out of repos"},
+    }
+
+
+async def test_a_credential_in_a_memory_is_masked_before_storing(
+    app: Application, agent: Caller
+) -> None:
+    result = await app.memory.submit(agent, req(lesson(f"the deploy key is {KEY}")))
+    assert result.status == "committed", result.findings
+    notes = [f for f in result.findings if f.code == "secret_redacted"]
+    assert notes and notes[0].data["rule"] == "openai-key"
+    assert "redaction" in notes[0].message  # the caller learns how to override
+    stored = [m for m in await app.memory.list_memories(agent) if m.text.startswith("the deploy")]
+    assert stored and KEY not in stored[0].text and "sk-l…[redacted]" in stored[0].text
+
+
+async def test_redaction_can_be_turned_off_for_a_false_positive(
+    app: Application, agent: Caller
+) -> None:
+    request = ProposalRequest.model_validate(
+        {"ops": [lesson(f"the fixture key is {KEY}")], "redaction": "off"}
+    )
+    result = await app.memory.submit(agent, request)
+    assert result.status == "committed", result.findings
+    assert not [f for f in result.findings if f.code == "secret_redacted"]
+    stored = [m for m in await app.memory.list_memories(agent) if m.text.startswith("the fixture")]
+    assert stored and KEY in stored[0].text
+
+
+# ---- the two intents: correct and forget -----------------------------------------------
+
+
+async def test_correct_only_needs_the_fields_that_change(app: Application, agent: Caller) -> None:
+    from ontyra.models.proposals import CorrectionRequest
+
+    created = await app.memory.submit(agent, req(add_directive("run the tests with pytest")))
+    memory = created.created["op0"]
+    fixed = await app.memory.correct(
+        agent, memory, CorrectionRequest(fields={"text": "run the tests with pytest -q"})
+    )
+    assert fixed.status == "committed", fixed.findings
+    view = await app.memory.get_memory(agent, memory)
+    assert view.text == "run the tests with pytest -q"
+    assert view.content["rule"] == "run the tests with pytest"  # what was not sent survives
+
+
+async def test_forget_retracts_what_is_anchored_under_a_path(
+    app: Application, agent: Caller
+) -> None:
+    from ontyra.models.proposals import ForgetRequest
+
+    await app.memory.submit(
+        agent,
+        req(
+            add_directive(
+                "pin the toolchain in CI",
+                anchors=[{"uri": "file://m/proj/tools", "match": "subtree"}],
+            )
+        ),
+    )
+    result = await app.memory.forget(
+        agent, ForgetRequest(uri="file://m/proj/tools", reason="the toolchain moved")
+    )
+    assert result.status == "committed" and len(result.forgotten) == 1
+    active = [
+        m for m in await app.memory.list_memories(agent) if m.text == "pin the toolchain in CI"
+    ]
+    assert active == []
+
+
+async def test_forget_needs_exactly_one_target() -> None:
+    from pydantic import ValidationError
+
+    from ontyra.models.proposals import ForgetRequest
+
+    with pytest.raises(ValidationError):
+        ForgetRequest(reason="because")
+    with pytest.raises(ValidationError):
+        ForgetRequest(memory=RecordId("memory", "abc"), uri="file://m/proj", reason="both")

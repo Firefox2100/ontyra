@@ -267,6 +267,13 @@ export const TOOLS = [
       note: { type: 'string', description: 'Why this proposal, in one line' },
       space: { type: 'string', description: '`own` (default) or `global`' },
       idempotency_key: { type: 'string', description: 'Retry the same proposal safely with the same key' },
+      redaction: {
+        type: 'string',
+        description:
+          '`auto` (default) masks values that look like credentials before storing and says so '
+          + 'in the findings; `off` stores a false positive as sent (a test fixture, a '
+          + 'documented example) — never a real key',
+      },
     },
     request: (args) => ({
       method: 'POST',
@@ -276,6 +283,7 @@ export const TOOLS = [
         note: args.note ?? null,
         space: args.space ?? 'own',
         idempotency_key: args.idempotency_key ?? null,
+        redaction: args.redaction === 'off' ? 'off' : 'auto',
       },
     }),
     render: jsonText,
@@ -341,6 +349,65 @@ export const TOOLS = [
     render: jsonText,
   },
   {
+    name: 'ontyra_correct',
+    title: 'Correct a memory',
+    description:
+      'The one call to fix a memory: `fields` overlay its current revision, so send only what '
+      + 'changes. Use this instead of a hand-built `revise` when you know the id and the '
+      + 'correction. The result is an ordinary proposal — read its `status` and findings.',
+    parameters: {
+      memory: {
+        type: 'string',
+        required: true,
+        description: 'The memory to fix (`memory:abc` or `abc`)',
+      },
+      fields: {
+        type: 'json',
+        required: true,
+        description: 'Only what changes: `text`, and any of the kind\'s own fields',
+      },
+      reason: { type: 'string', description: 'Why it is wrong, kept with the revision' },
+    },
+    request: (args) => ({
+      method: 'POST',
+      path: `/v1/memories/${encodeURIComponent(idOf(args.memory))}/correct`,
+      body: {
+        fields: typeof args.fields === 'string' ? JSON.parse(args.fields) : args.fields ?? {},
+        reason: args.reason ?? null,
+      },
+    }),
+    render: jsonText,
+  },
+  {
+    name: 'ontyra_forget',
+    title: 'Forget memories',
+    description:
+      'Retire memories: give `memory` for one, or `uri` for everything anchored under that path '
+      + '(the project or files it applies to). Nothing is deleted — each target is retracted '
+      + 'with your reason, so the history stays. Read `status`: `committed` means gone from '
+      + 'recall now, `pending` means a human must approve.',
+    parameters: {
+      memory: { type: 'string', description: 'The one memory to retire (`memory:abc` or `abc`)' },
+      uri: {
+        type: 'string',
+        description: 'Retire everything anchored under this path (subtree)',
+      },
+      reason: { type: 'string', required: true, description: 'Why it should go; kept with each retraction' },
+      limit: { type: 'integer', description: 'Most memories to retire at once (default 50)' },
+    },
+    request: (args) => ({
+      method: 'POST',
+      path: '/v1/memories/forget',
+      body: {
+        memory: args.memory ? recordRef(args.memory, 'memory') : null,
+        uri: args.uri ?? null,
+        reason: args.reason,
+        limit: args.limit ?? 50,
+      },
+    }),
+    render: jsonText,
+  },
+  {
     name: 'ontyra_check_source',
     title: 'Report on a cited source',
     description:
@@ -383,6 +450,18 @@ export const TOOLS = [
       path: `/v1/proposals?limit=${encodeURIComponent(String(args.limit ?? 50))}`,
     }),
     render: jsonText,
+    // DSH-only: a replayable presentation hint, so a UI can show the waiting proposals as cards
+    // instead of parsing the text. Other tools have no such seam, so this one carries it alone.
+    meta: (value) => ({
+      card: 'ontyra-proposals',
+      proposals: (Array.isArray(value) ? value : []).slice(0, 20).map((proposal) => ({
+        id: String(proposal?.id ?? ''),
+        status: String(proposal?.status ?? ''),
+        note: String(proposal?.note ?? ''),
+        ops: Array.isArray(proposal?.ops) ? proposal.ops.length : 0,
+        version: proposal?.version ?? null,
+      })),
+    }),
   },
   {
     name: 'ontyra_amend',
@@ -440,6 +519,13 @@ export const TOOLS = [
 
 /** Tools only the `full` profile exposes (they reach the shared ontology). */
 export const FULL_ONLY = new Set(['ontyra_concepts', 'ontyra_propose_ontology_change'])
+
+/**
+ * The tools only this harness has, because they exist to use a seam the others do not: an approval
+ * needs a person, and only DSH can put a card in front of one. They have no daemon counterpart, so
+ * they stay out of `TOOLS` — the contract mirror and its tests describe the daemon's surface.
+ */
+export const LOCAL_ONLY = new Set(['ontyra_review'])
 
 /**
  * Whether this step should offer a tool, given the live settings. The plugin registers every tool

@@ -58,7 +58,7 @@ export function joinUrl(baseUrl, path) {
  *   settings: () => { baseUrl: string, harness: string, timeoutMs: number },
  *   resolveToken: () => Promise<{ value: string } | undefined>,
  * }} options - configuration and credential accessors.
- * @returns {{ call(call: { method: string, path: string, body?: unknown }, signal: AbortSignal, timeoutMs?: number): Promise<unknown> }} the client.
+ * @returns {{ call(call: { method: string, path: string, body?: unknown }, signal?: AbortSignal, timeoutMs?: number): Promise<unknown> }} the client.
  */
 export function createClient({ settings, resolveToken }) {
   return {
@@ -83,6 +83,9 @@ export function createClient({ settings, resolveToken }) {
       // name its own budget; without one, the settings' `timeoutMs` stands.
       const budget = timeoutMs === undefined ? config.timeoutMs : timeoutMs
       const timeout = AbortSignal.timeout(Math.max(1, Number(budget) || 1))
+      // A caller without a signal of its own (the tab's read routes) still gets the budget: an
+      // absent signal is not an aborted one, so give the combinable list a live member.
+      const caller = signal ?? new AbortController().signal
       /** @type {Response} */
       let response
       try {
@@ -90,7 +93,7 @@ export function createClient({ settings, resolveToken }) {
           method: call.method,
           headers,
           body: call.body === undefined ? undefined : JSON.stringify(call.body),
-          signal: AbortSignal.any([signal, timeout]),
+          signal: AbortSignal.any([caller, timeout]),
         })
       } catch (cause) {
         const reason = cause instanceof Error ? cause.message : String(cause)

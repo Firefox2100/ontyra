@@ -64,6 +64,15 @@ _BOOKKEEPING = {
 log = logging.getLogger(__name__)
 
 
+def revision_key(value: str) -> str:
+    """A record id without its table prefix, so `revision:abc` and `abc` compare equal.
+
+    Clients echo back what they were given, and the renderer shows bare ids; both shapes mean
+    the same revision, so the comparison must not depend on which one arrived."""
+    table, sep, ident = value.partition(":")
+    return ident if sep and table else value
+
+
 @dataclass
 class Resolved:
     chain: Chain
@@ -499,22 +508,51 @@ class RecallService:
         return kept, dropped
 
     async def _ledger(
-        self, caller: Caller, session: str | None, kept: list[Candidate], *, redeliver: bool
+        self,
+        caller: Caller,
+        session: str | None,
+        kept: list[Candidate],
+        *,
+        redeliver: bool,
+        seen: list[str] = (),
+        workspace: str | None = None,
+        window: int = 0,
     ) -> tuple[list[Candidate], list[Notice], list[dict[str, Any]]]:
-        if not session:
-            return kept, [], []
-        rows = await self.store.select(
-            "delivery", {"owner": caller.owner, "session": session}, limit=5000
-        )
-        deliveries = [d for d in rows if isinstance(d, Delivery)]
+        """Drop what this session was already shown, and what the caller says it has shown its
+        own model (`seen`). Both are skipped unless the caller asked to redeliver.
+
+        A workspace shares its recent deliveries with the other harnesses in it: opening the same
+        repository twice at once should not hand the second one the whole briefing again. The
+        window is what keeps that from meaning "never again" — a session a day later is a new
+        reader."""
+        deliveries: list[Delivery] = []
+        if session:
+            rows = await self.store.select(
+                "delivery", {"owner": caller.owner, "session": session}, limit=5000
+            )
+            deliveries = [d for d in rows if isinstance(d, Delivery)]
+        if workspace and window > 0:
+            cutoff = self.now() - timedelta(seconds=window)
+            rows = await self.store.select(
+                "delivery", {"owner": caller.owner, "workspace": workspace}, limit=5000
+            )
+            deliveries.extend(
+                d
+                for d in rows
+                if isinstance(d, Delivery) and d.session != session and d.delivered_at >= cutoff
+            )
         delivered_revs = {d.rev for d in deliveries}
-        notices = await self._notices(deliveries)
+        notices = await self._notices(deliveries) if deliveries else []
         dropped: list[dict[str, Any]] = []
         if not redeliver:
+            # A client echoes the ids it was given; accept them with or without the table prefix.
+            already_seen = {revision_key(value) for value in seen}
             fresh: list[Candidate] = []
             for c in kept:
                 if c.rev in delivered_revs:
                     dropped.append({"rev": str(c.rev), "reason": "already delivered this session"})
+                elif revision_key(str(c.rev)) in already_seen:
+                    dropped.append({"rev": str(c.rev), "reason": "the caller had already seen it"})
                 else:
                     fresh.append(c)
             kept = fresh
@@ -656,6 +694,7 @@ class RecallService:
                 )
             )
             if request.context.session:
+                workspace = request.context.workspace
                 key = f"{caller.owner}|{request.context.session}|{i.revision}"
                 writes.append(
                     Upsert.of(
@@ -663,6 +702,7 @@ class RecallService:
                         Delivery(
                             owner=caller.owner,
                             session=request.context.session,
+                            workspace=workspace,
                             memory=i.memory,
                             rev=i.revision,
                             delivered_at=now,
@@ -726,7 +766,9 @@ class RecallService:
                     {"rev": str(c.rev), "reason": f"below threshold ({c.relevance:.2f})"}
                 )
         relevant += await self.triggered_extras(caller, request, relevant)
-        return await self._finish(caller, request, "recall", relevant, [], ctx, dropped)
+        return await self._finish(
+            caller, request, "recall", relevant, [], ctx, dropped, saw_candidates=bool(cands)
+        )
 
     async def triggered_extras(
         self, caller: Caller, request: RecallRequest, have: list[Candidate]
@@ -793,7 +835,9 @@ class RecallService:
         scope: unanchored ones that are about something else are left out."""
         ctx, keep = await self.briefing_candidates(caller, request, topics)
         ranked = await self.rank(keep, query=None, ranked_by_text=False)
-        return await self._finish(caller, request, "briefing", ranked, [], ctx, [])
+        return await self._finish(
+            caller, request, "briefing", ranked, [], ctx, [], saw_candidates=True
+        )
 
     async def check(self, caller: Caller, intent: str, context: RecallContext) -> CheckResult:
         """Path E: about to do something with side effects. Applicable directives,
@@ -819,6 +863,8 @@ class RecallService:
         pack.must_follow = [*pack.must_follow, *musts]
         pack.path = "check"
         pack.silent = not pack.items()
+        pack.delivered = [i.revision for i in pack.items()]
+        pack.abstain = "no_match" if pack.silent else None  # nothing was written about this action
         pack.rendered = render_pack(pack, request.profile)  # the musts added above are in it
         pack.tokens = estimate_tokens(pack.rendered) if pack.rendered else 0
         pack.affordances = self._affordances(pack)
@@ -842,11 +888,19 @@ class RecallService:
         ctx: Resolved,
         dropped: list[dict[str, Any]],
         scoring: dict[str, Any] | None = None,
+        *,
+        saw_candidates: bool = False,
     ) -> RecallPack:
         kept, cautions, d1 = await self.precedence(ranked)
         kept, d2 = self.collapse(kept)
         kept, notices, d3 = await self._ledger(
-            caller, request.context.session, kept, redeliver=request.redeliver
+            caller,
+            request.context.session,
+            kept,
+            redeliver=request.redeliver,
+            seen=request.seen,
+            workspace=request.context.workspace,
+            window=self.cfg.workspace_window,
         )
         budget = request.budget_tokens or (
             self.cfg.briefing_budget_tokens
@@ -876,6 +930,21 @@ class RecallService:
         pack.notices = notices
         pack.unresolved = ctx.unresolved
         pack.silent = not pack.items() and not notices
+        pack.delivered = [i.revision for i in pack.items()]
+        if pack.silent:
+            # Name the silence, so a client can tell "nothing matches" from "nothing applies
+            # here" from "you already have it" — the third is not a failure, the first two are.
+            reasons = [str(d.get("reason", "")) for d in [*dropped, *d1, *d2, *d3]]
+            only_seen = bool(reasons) and all(
+                "already delivered" in r or "had already seen" in r for r in reasons
+            )
+            below = any(r.startswith("below threshold") for r in reasons)
+            if only_seen:
+                pack.abstain = "already_delivered"
+            elif below or not saw_candidates:
+                pack.abstain = "no_match"
+            else:
+                pack.abstain = "not_applicable_here"
         pack.affordances = self._affordances(pack)
         pack.rendered = render_pack(pack, request.profile)
         pack.tokens = estimate_tokens(pack.rendered) if pack.rendered else 0

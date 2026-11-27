@@ -48,6 +48,8 @@ async def test_lite_profile_lists_a_handful_of_tools(app: Application) -> None:
         "remember",
         "feedback",
         "consult",
+        "correct",
+        "forget",
         "check_source",
         "pending_proposals",
         "amend",

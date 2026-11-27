@@ -48,6 +48,10 @@ class RecallSettings(Model):
     decision_margin: float = 0.15  # keep candidates within this of the best blended score
     trace_candidates: int = 30  # candidates whose lane scores a recall trace keeps (0: none)
     trace_retention_days: int = 180  # traces older than this are deleted unless feedback cites them
+    # How long a workspace shares its ledger with another harness in it. Two agents opening the
+    # same repository at once should not each be handed the whole briefing; a session a day later
+    # should be. 0 turns the sharing off.
+    workspace_window: int = Field(default=1800, ge=0)
     # Skip the lookup for a pure pleasantry (needs the decision model): off until enabled.
     filler_gate: bool = False
     # p(filler) at or above this skips recall (no real request was skipped at 0.7 in the benchmark)
@@ -98,6 +102,10 @@ class RecallContext(Model):
     uris: list[str] = []  # cwd, repo root, files touched, `user@host`, harness id…
     signals: list[Signal] = []  # os, shell, language and version, tools present…
     session: str | None = None  # enables the no-repeat ledger and correction notices
+    # Which working copy this is (the repo root, say). Two harnesses in one workspace are one
+    # reader: a rule the first one already saw does not need delivering to the second, briefly.
+    # Without it, only the session id shares a ledger.
+    workspace: str | None = None
 
 
 class RecallRequest(Model):
@@ -112,6 +120,10 @@ class RecallRequest(Model):
     redeliver: bool = False  # ignore the ledger (e.g. after context compaction)
     decide: bool = True  # False: skip the decision model for this request even if configured
     gate: bool = True  # False: look up even a pleasantry (skips the filler gate)
+    # Revisions the caller already put in front of its model (`RecallPack.delivered` from an
+    # earlier answer). The daemon skips them even when the session id is new or missing, so a
+    # client never has to keep a ledger of its own and cannot lose one silently.
+    seen: list[str] = []
 
 
 class RecallItem(Model):
@@ -168,6 +180,12 @@ class RecallPack(Model):
     unresolved: list[str] = []  # context signals no concept could be found for
     affordances: list[str] = []
     silent: bool = True  # nothing cleared the threshold: inject nothing
+    # Why nothing was delivered: `no_match` (nothing cleared the relevance threshold),
+    # `not_applicable_here` (candidates existed but none applies in this context, and none was
+    # ranked well enough), `already_delivered` (the ledger or `seen` had them all). None when the
+    # pack carries something. A client that stays silent should still show this in its log.
+    abstain: Literal["no_match", "not_applicable_here", "already_delivered"] | None = None
+    delivered: list[RecordId] = []  # revisions in this pack: echo them back as `seen` next time
     tokens: int = 0
     rendered: str = ""
     trace: RecordId | None = None

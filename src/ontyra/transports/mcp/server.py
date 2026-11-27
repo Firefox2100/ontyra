@@ -27,6 +27,9 @@ from ontyra.models.ontology_change import (
 from ontyra.models.proposals import (
     AmendRequest,
     ApproveRequest,
+    CorrectionRequest,
+    ForgetRequest,
+    ForgetResult,
     LiteProposalRequest,
     ProposalRequest,
     ProposalResult,
@@ -255,6 +258,32 @@ def create_mcp(
         "retracted (history is kept). Memories go to your own space; `space: global` writes to "
         "the shared memory and needs permission.",
     )(remember)
+
+    @mcp.tool(
+        title="Correct a memory",
+        annotations=PROPOSE,
+        description="The one call to fix a memory: `fields` overlay its current revision, so "
+        "send only what changes. Use this instead of a hand-built `revise` when you know the id "
+        "and the correction. The result is an ordinary proposal — read its `status` and findings.",
+    )
+    async def correct(
+        memory: str, fields: dict[str, Any], reason: str | None = None
+    ) -> ProposalResult:
+        rid = RecordId("memory", memory.removeprefix("memory:"))
+        return await run(
+            lambda s, c: s.memory.correct(c, rid, CorrectionRequest(fields=fields, reason=reason))
+        )
+
+    @mcp.tool(
+        title="Forget memories",
+        annotations=PROPOSE,
+        description="Retire memories: give `memory` for one, or `uri` for everything anchored "
+        "under that path (the project or files it applies to). Nothing is deleted — each target "
+        "is retracted with your reason, so the history stays. Read `status`: `committed` means "
+        "gone from recall now, `pending` means a human must approve.",
+    )
+    async def forget(request: ForgetRequest) -> ForgetResult:
+        return await run(lambda s, c: s.memory.forget(c, request))
 
     @mcp.tool(
         title="Look up concepts",

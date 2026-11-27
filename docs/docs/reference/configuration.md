@@ -195,6 +195,7 @@ objects are JSON. The defaults are what the code uses when nothing is set.
 | `ONTYRA_RECALL__DECISION_MARGIN` | float | `0.15` |
 | `ONTYRA_RECALL__TRACE_CANDIDATES` | int | `30` |
 | `ONTYRA_RECALL__TRACE_RETENTION_DAYS` | int | `180` |
+| `ONTYRA_RECALL__WORKSPACE_WINDOW` | int | `1800` |
 | `ONTYRA_RECALL__FILLER_GATE` | bool | `False` |
 | `ONTYRA_RECALL__FILLER_THRESHOLD` | float | `0.7` |
 | `ONTYRA_RECALL__FILLER_MAX_WORDS` | int | `8` |

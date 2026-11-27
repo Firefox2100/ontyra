@@ -223,18 +223,35 @@ function controlIds(tree) {
     .sort()
 }
 
-test('the browser half registers one card in the bundle slot', () => {
+/**
+ * The settings card among the registrations the client half makes.
+ * @param {Array<{ options: any, component: any }>} registered - what the fake slot service recorded.
+ * @returns {{ options: any, component: any }} the card registration.
+ */
+function cardOf(registered) {
+  const card = registered.find((entry) => entry.options.name === 'settings.section')
+  assert.ok(card, 'the settings card is registered')
+  return card
+}
+
+test('the browser half registers the settings card and the Memory tab', () => {
   const exports = loadClientHalf()
   const { ctx, registered } = fakeContext({})
   // Every service the card touches must be declared: cordis throws on an undeclared read, and the
   // token buttons read `remote.credentials`.
   assert.deepEqual(exports.inject, ['slots', 'locale', 'configForms', 'remote', 'remote.credentials'])
   exports.apply(ctx)
-  assert.equal(registered.length, 1)
-  assert.equal(registered[0].options.name, 'settings.section')
-  assert.equal(registered[0].options.id, 'dsh-ontyra-memory')
-  assert.equal(registered[0].options.locale, 'settings.ontyra')
-  assert.equal(typeof registered[0].component, 'function')
+  const card = cardOf(registered)
+  assert.equal(card.options.id, 'dsh-ontyra-memory')
+  assert.equal(card.options.locale, 'settings.ontyra')
+  assert.equal(typeof card.component, 'function')
+  const tab = registered.find((entry) => entry.options.name === 'conversation.view')
+  assert.ok(tab, 'the Memory tab is registered on the conversation view row')
+  assert.equal(tab.options.id, 'ontyra-memories')
+  assert.equal(tab.options.order, 31)
+  assert.equal(tab.options.locale, 'settings.ontyra')
+  assert.equal(typeof tab.component, 'function')
+  assert.equal(registered.length, 2)
 })
 
 test('the card renders one control per setting plus the token field', () => {
@@ -255,7 +272,7 @@ test('the card renders one control per setting plus the token field', () => {
     subagents: false,
   })
   exports.apply(ctx)
-  const tree = render(registered[0].component)
+  const tree = render(cardOf(registered).component)
   const inputs = elements(tree).filter((node) => node.type === 'input')
   const byType = (type) => inputs.filter((node) => node.props.type === type)
   assert.equal(byType('checkbox').length, 6, 'boolean settings')
@@ -303,7 +320,7 @@ test('the card is inert when the namespace is not served', () => {
     ensure: async () => {},
   })
   exports.apply(ctx)
-  const tree = render(registered[0].component)
+  const tree = render(cardOf(registered).component)
   assert.equal(elements(tree).filter((node) => node.type === 'input').length, 0)
   assert.equal(elements(tree).filter((node) => node.type === 'button').length, 0)
   const text = elements(tree).map((node) => labelOf(node)).join(' ')
@@ -315,7 +332,7 @@ test('the card renders while the settings mirror has no answer yet', () => {
   const exports = loadClientHalf()
   const { ctx, registered } = fakeContext({}, { served: false, error: 'not connected' })
   exports.apply(ctx)
-  const tree = render(registered[0].component)
+  const tree = render(cardOf(registered).component)
   assert.equal(elements(tree).filter((node) => node.type === 'input').length, 0)
   assert.match(elements(tree).map((node) => labelOf(node)).join(' '), /loading.*not connected/)
 })
@@ -324,7 +341,7 @@ test('saving writes only the staged field', async () => {
   const exports = loadClientHalf()
   const { ctx, registered, writes } = fakeContext({ baseUrl: 'http://127.0.0.1:8787', captureEvery: 10 })
   exports.apply(ctx)
-  const Card = registered[0].component
+  const Card = cardOf(registered).component
   const number = elements(render(Card)).find((node) => node.props.id === 'ontyra-setting-captureEvery')
   number.props.onChange({ target: { value: '25' } })
   const save = elements(render(Card)).find((node) => node.type === 'button' && labelOf(node) === 'save')
@@ -336,7 +353,7 @@ test('a rejected number leaves the field staged and says why', async () => {
   const exports = loadClientHalf()
   const { ctx, registered, writes } = fakeContext({ captureEvery: 10 })
   exports.apply(ctx)
-  const Card = registered[0].component
+  const Card = cardOf(registered).component
   const number = elements(render(Card)).find((node) => node.props.id === 'ontyra-setting-captureEvery')
   number.props.onChange({ target: { value: '2.5' } })
   const save = elements(render(Card)).find((node) => node.type === 'button' && labelOf(node) === 'save')
@@ -349,4 +366,173 @@ test('the card edits exactly the fields the host declares', () => {
   const source = readFileSync(join(here, '..', 'lib', 'client.js'), 'utf8')
   const edited = [...source.matchAll(/\{\s*key: '([A-Za-z]+)'/g)].map((match) => match[1])
   assert.deepEqual([...edited].sort(), [...Object.keys(DEFAULTS)].sort())
+})
+
+test('the Memory tab reads its own route and renders what came back', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => key
+  const asked = []
+  const request = async (url) => {
+    asked.push(url)
+    return {
+      json: async () => ({
+        ok: true,
+        items: [{ id: 'memory:01a', kind: 'directive', text: 'Never force-push to main', status: 'active', anchors: [] }],
+      }),
+    }
+  }
+  const state = await exports.fetchMemories(t, request)
+  assert.equal(asked[0], '/ontyra/memories?limit=200')
+  assert.equal(state.status, 'ready')
+  assert.equal(state.items.length, 1)
+  assert.equal(state.items[0].kind, 'directive')
+})
+
+test('a failing route becomes an error the panel can show', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => key
+  const refused = await exports.fetchMemories(t, async () => ({ json: async () => ({ ok: false, error: 'Ontyra is unreachable' }) }))
+  assert.equal(refused.status, 'error')
+  assert.match(refused.error, /unreachable/)
+  const broken = await exports.fetchMemories(t, async () => {
+    throw new Error('connection refused')
+  })
+  assert.equal(broken.status, 'error')
+  assert.match(broken.error, /connection refused/)
+})
+
+test('the Memory tab renders its heading and a loading line before data arrives', () => {
+  const exports = loadClientHalf()
+  const { ctx, registered } = fakeContext({})
+  exports.apply(ctx)
+  const tab = registered.find((entry) => entry.options.name === 'conversation.view')
+  const tree = render(tab.component)
+  const buttons = elements(tree).filter((node) => node.type === 'button')
+  assert.equal(buttons.length, 1, 'a refresh button')
+  assert.match([].concat(buttons[0].props.children).join(''), /refresh/)
+})
+
+test('an edit in the tab is a correct proposal carrying only the new text', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => ({ editReason: 'edited in the Memory tab' })[key] ?? key
+  const seen = []
+  const request = async (url, init) => {
+    seen.push({ url, init })
+    return { json: async () => ({ ok: true, result: { status: 'pending' } }) }
+  }
+  const result = await exports.correctMemory(t, { memory: 'memory:01a', text: 'shorter rule' }, request)
+  assert.equal(seen[0].url, '/ontyra/correct')
+  assert.equal(seen[0].init.method, 'POST')
+  assert.equal(seen[0].init.headers['x-ontyra-client'], 'tab')
+  assert.deepEqual(JSON.parse(seen[0].init.body), {
+    memory: 'memory:01a',
+    fields: { text: 'shorter rule' },
+    reason: 'edited in the Memory tab',
+  })
+  assert.equal(result.ok, true)
+  assert.equal(result.pending, true, 'a review policy still has to approve it')
+})
+
+test('a refusal from the route reaches the tab as the reason it failed', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => key
+  const refused = await exports.correctMemory(t, { memory: 'memory:01a', text: 'x' }, async () => ({
+    json: async () => ({ ok: false, error: 'proposal already decided' }),
+  }))
+  assert.equal(refused.ok, false)
+  assert.match(refused.error, /already decided/)
+  const broken = await exports.forgetMemory(t, { memory: 'memory:01a' }, async () => {
+    throw new Error('connection refused')
+  })
+  assert.equal(broken.ok, false)
+  assert.match(broken.error, /connection refused/)
+})
+
+test('forget in the tab sends the memory it is retiring', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => ({ forgotReason: 'forgotten from the Memory tab' })[key] ?? key
+  const seen = []
+  const result = await exports.forgetMemory(t, { memory: 'memory:01b' }, async (url, init) => {
+    seen.push({ url, init })
+    return { json: async () => ({ ok: true, result: { status: 'committed' } }) }
+  })
+  assert.equal(seen[0].url, '/ontyra/forget')
+  assert.deepEqual(JSON.parse(seen[0].init.body), { memory: 'memory:01b', reason: 'forgotten from the Memory tab' })
+  assert.equal(result.ok, true)
+  assert.equal(result.pending, false)
+})
+
+test('the connection probe reports what the host half actually saw', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => key
+  const healthy = await exports.testConnection(t, async () => ({ json: async () => ({ ok: true, daemon: { ok: true, version: '0.1.dev1' } }) }))
+  assert.deepEqual(healthy, { ok: true, version: '0.1.dev1', error: '' })
+  const down = await exports.testConnection(t, async () => ({ json: async () => ({ ok: true, daemon: { ok: false, error: 'unreachable', status: 0 } }) }))
+  assert.equal(down.ok, false)
+  assert.match(down.error, /unreachable/)
+  const broken = await exports.testConnection(t, async () => { throw new Error('offline') })
+  assert.equal(broken.ok, false)
+  assert.match(broken.error, /offline/)
+})
+
+test('the queue is read and replayed through the host half', async () => {
+  const exports = loadClientHalf()
+  const t = (key) => ({ unreachable: 'not reachable' })[key] ?? key
+  const seen = []
+  const queue = await exports.fetchOutbox(async (url, init) => {
+    seen.push({ url, method: init?.method ?? 'GET' })
+    return { json: async () => ({ ok: true, count: 2, items: [{ tool: 'ontyra_remember' }] }) }
+  })
+  assert.equal(seen[0].url, '/ontyra/outbox')
+  assert.equal(queue.count, 2)
+  const sent = await exports.retryOutbox(t, async (url, init) => {
+    seen.push({ url, method: init?.method })
+    return { json: async () => ({ ok: true, sent: 1, left: 1 }) }
+  })
+  assert.equal(seen[1].method, 'POST')
+  assert.equal(sent.sent, 1)
+  assert.equal(sent.left, 1)
+  const refused = await exports.retryOutbox(t, async () => ({ json: async () => ({ ok: false, error: 'still down' }) }))
+  assert.equal(refused.ok, false)
+  assert.match(refused.error, /still down/)
+})
+
+test('a row detail is fetched by id and a refusal stays a refusal', async () => {
+  const exports = loadClientHalf()
+  const seen = []
+  const ok = await exports.fetchDetail('memory:01a', async (url) => {
+    seen.push(url)
+    return { json: async () => ({ ok: true, memory: { memory: 'memory:01a', evidence: [] } }) }
+  })
+  assert.equal(seen[0], '/ontyra/memories/memory%3A01a')
+  assert.equal(ok.ok, true)
+  assert.equal(ok.memory.memory, 'memory:01a')
+  const refused = await exports.fetchDetail('memory:01b', async () => ({ json: async () => ({ ok: false, error: 'gone' }) }))
+  assert.equal(refused.ok, false)
+  assert.match(refused.error, /gone/)
+})
+
+test('the settings card offers a connection test beside the saved target', () => {
+  const exports = loadClientHalf()
+  const { ctx, registered } = fakeContext({
+    baseUrl: 'http://127.0.0.1:8787',
+    tokenRef: 'ONTYRA_TOKEN',
+    harness: 'dsh',
+    briefing: true,
+    recall: true,
+    budgetTokens: 1200,
+    timeoutMs: 1500,
+    toolTimeoutMs: 20000,
+    tools: true,
+    toolsProfile: 'lite',
+    episodes: true,
+    capture: false,
+    captureEvery: 10,
+    subagents: false,
+  })
+  exports.apply(ctx)
+  const tree = render(cardOf(registered).component)
+  const buttons = elements(tree).filter((node) => node.type === 'button')
+  assert.ok(buttons.some((node) => labelOf(node) === 'testConnection'), 'the card can probe the daemon')
+  assert.ok(buttons.some((node) => labelOf(node) === 'save'), 'and still saves settings')
 })

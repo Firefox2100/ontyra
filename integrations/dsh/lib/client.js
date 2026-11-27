@@ -22,6 +22,8 @@ window.__ModuleLoader__.load({
     const ENTRY = 'ontyra'
     /** Id of this card in the `settings.section` list: the package name. */
     const CARD = 'dsh-ontyra-memory'
+    /** Id of the Memory tab in the `conversation.view` row. */
+    const TAB = 'ontyra-memories'
 
     /** English copy. */
     const en = {
@@ -65,15 +67,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: 'Prompts between capture reminders.',
       subagents: 'Subagents too',
       subagentsHint: 'Inject and record inside subagent sessions as well.',
-      save: 'Save',
       saving: 'Saving…',
-      saved: 'Saved',
       reset: 'Reset',
       unavailable: 'This deployment does not offer the Ontyra settings entry.',
   loading: 'Reading the Ontyra settings…',
       readOnly: 'This deployment stores settings read-only.',
       failed: 'The deployment did not accept these values.',
       invalidNumber: 'Enter a whole number, or leave it empty for the default.',
+      tab: "Memory",
+      refresh: "Refresh",
+      empty: "Nothing remembered yet.",
+      loadFailed: "Could not load memories.",
+      filter: "Kind",
+      save: 'Save',
+      saved: 'Saved.',
+      edit: 'Edit',
+      cancel: 'Cancel',
+      forget: 'Forget',
+      forgetConfirm: 'Forget it?',
+      pending: 'Waiting for approval.',
+      saveFailed: 'Could not save.',
+      editReason: 'edited in the Memory tab',
+      forgotReason: 'forgotten from the Memory tab',
+      testConnection: 'Test connection',
+      testing: 'Testing…',
+      connected: 'Connected',
+      unreachable: 'Not reachable',
+      details: 'Details',
+      hide: 'Hide',
+      pendingWrites: 'write(s) not sent yet',
+      retry: 'Send now',
     }
 
     /** Simplified Chinese copy, keyed against the English one. */
@@ -118,15 +141,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: '两次提醒之间相隔的 prompt 数。',
       subagents: '包含子代理',
       subagentsHint: '子代理会话里也做注入与记录。',
-      save: '保存',
       saving: '保存中…',
-      saved: '已保存',
       reset: '恢复默认',
       unavailable: '本部署没有提供 Ontyra 设置项。',
   loading: '正在读取 Ontyra 设置…',
       readOnly: '本部署的设置为只读。',
       failed: '本部署没有接受这些值。',
       invalidNumber: '请填整数；留空表示使用默认值。',
+      tab: "记忆",
+      refresh: "刷新",
+      empty: "还没有任何记忆。",
+      loadFailed: "无法加载记忆。",
+      filter: "类型",
+      save: '保存',
+      saved: '已保存。',
+      edit: '编辑',
+      cancel: '取消',
+      forget: '遗忘',
+      forgetConfirm: '确定遗忘？',
+      pending: '等待批准。',
+      saveFailed: '无法保存。',
+      editReason: '在记忆标签页中编辑',
+      forgotReason: '从记忆标签页遗忘',
+      testConnection: '测试连接',
+      testing: '正在测试…',
+      connected: '已连接',
+      unreachable: '无法连接',
+      details: '详情',
+      hide: '收起',
+      pendingWrites: '条写入尚未发出',
+      retry: '立即发送',
     }
 
     /** Japanese copy, keyed against the English one. */
@@ -171,15 +215,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: '促しの間に挟むプロンプト数。',
       subagents: 'サブエージェントも含める',
       subagentsHint: 'サブエージェントのセッションでも注入と記録を行います。',
-      save: '保存',
       saving: '保存中…',
-      saved: '保存しました',
       reset: 'リセット',
       unavailable: 'このデプロイは Ontyra 設定項目を提供していません。',
       loading: 'Ontyra 設定を読み込んでいます…',
       readOnly: 'このデプロイの設定は読み取り専用です。',
       failed: 'このデプロイは値を受け付けませんでした。',
       invalidNumber: '整数を入力するか、空欄のままにしてください。',
+      tab: "メモリ",
+      refresh: "更新",
+      empty: "まだ記憶はありません。",
+      loadFailed: "記憶を読み込めませんでした。",
+      filter: "種類",
+      save: '保存',
+      saved: '保存しました。',
+      edit: '編集',
+      cancel: 'キャンセル',
+      forget: '忘れる',
+      forgetConfirm: '忘れますか？',
+      pending: '承認待ちです。',
+      saveFailed: '保存できませんでした。',
+      editReason: 'メモリタブで編集',
+      forgotReason: 'メモリタブから忘れる',
+      testConnection: '接続をテスト',
+      testing: 'テスト中…',
+      connected: '接続済み',
+      unreachable: '接続できません',
+      details: '詳細',
+      hide: '閉じる',
+      pendingWrites: '件の書き込みが未送信',
+      retry: '今すぐ送信',
     }
 
     /** Spanish copy, keyed against the English one. */
@@ -224,15 +289,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: 'Prompts entre recordatorios de captura.',
       subagents: 'También subagentes',
       subagentsHint: 'Inyecta y registra también en sesiones de subagentes.',
-      save: 'Guardar',
       saving: 'Guardando…',
-      saved: 'Guardado',
       reset: 'Restablecer',
       unavailable: 'Este despliegue no ofrece la entrada de ajustes de Ontyra.',
       loading: 'Leyendo los ajustes de Ontyra…',
       readOnly: 'Este despliegue guarda los ajustes como solo lectura.',
       failed: 'El despliegue no aceptó estos valores.',
       invalidNumber: 'Introduce un número entero o déjalo vacío para usar el valor por defecto.',
+      tab: "Memoria",
+      refresh: "Actualizar",
+      empty: "Todavía no hay recuerdos.",
+      loadFailed: "No se pudieron cargar los recuerdos.",
+      filter: "Tipo",
+      save: 'Guardar',
+      saved: 'Guardado.',
+      edit: 'Editar',
+      cancel: 'Cancelar',
+      forget: 'Olvidar',
+      forgetConfirm: '¿Olvidarlo?',
+      pending: 'Esperando aprobación.',
+      saveFailed: 'No se pudo guardar.',
+      editReason: 'editado en la pestaña Memoria',
+      forgotReason: 'olvidado desde la pestaña Memoria',
+      testConnection: 'Probar conexión',
+      testing: 'Probando…',
+      connected: 'Conectado',
+      unreachable: 'No disponible',
+      details: 'Detalles',
+      hide: 'Ocultar',
+      pendingWrites: 'escritura(s) sin enviar',
+      retry: 'Enviar ahora',
     }
 
     /** French copy, keyed against the English one. */
@@ -277,15 +363,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: 'Prompts entre deux rappels de capture.',
       subagents: 'Sous-agents aussi',
       subagentsHint: 'Injecte et enregistre aussi dans les sessions de sous-agents.',
-      save: 'Enregistrer',
       saving: 'Enregistrement…',
-      saved: 'Enregistré',
       reset: 'Réinitialiser',
       unavailable: 'Ce déploiement ne propose pas l’entrée de réglages Ontyra.',
       loading: 'Lecture des réglages Ontyra…',
       readOnly: 'Ce déploiement stocke les réglages en lecture seule.',
       failed: 'Le déploiement n’a pas accepté ces valeurs.',
       invalidNumber: 'Saisissez un entier, ou laissez vide pour la valeur par défaut.',
+      tab: "Mémoire",
+      refresh: "Actualiser",
+      empty: "Aucun souvenir pour l'instant.",
+      loadFailed: "Impossible de charger les souvenirs.",
+      filter: "Type",
+      save: 'Enregistrer',
+      saved: 'Enregistré.',
+      edit: 'Modifier',
+      cancel: 'Annuler',
+      forget: 'Oublier',
+      forgetConfirm: 'Oublier ?',
+      pending: 'En attente d’approbation.',
+      saveFailed: 'Impossible d’enregistrer.',
+      editReason: 'modifié dans l’onglet Mémoire',
+      forgotReason: 'oublié depuis l’onglet Mémoire',
+      testConnection: 'Tester la connexion',
+      testing: 'Test en cours…',
+      connected: 'Connecté',
+      unreachable: 'Injoignable',
+      details: 'Détails',
+      hide: 'Masquer',
+      pendingWrites: 'écriture(s) non envoyée(s)',
+      retry: 'Envoyer maintenant',
     }
 
     /** German copy, keyed against the English one. */
@@ -330,15 +437,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: 'Prompts zwischen zwei Capture-Erinnerungen.',
       subagents: 'Auch Subagenten',
       subagentsHint: 'Fügt auch in Subagenten-Sitzungen ein und zeichnet dort auf.',
-      save: 'Speichern',
       saving: 'Speichern…',
-      saved: 'Gespeichert',
       reset: 'Zurücksetzen',
       unavailable: 'Diese Installation bietet keinen Ontyra-Einstellungseintrag.',
       loading: 'Ontyra-Einstellungen werden gelesen…',
       readOnly: 'Diese Installation speichert Einstellungen schreibgeschützt.',
       failed: 'Die Installation hat diese Werte nicht angenommen.',
       invalidNumber: 'Ganze Zahl eingeben oder leer lassen für den Standardwert.',
+      tab: "Gedächtnis",
+      refresh: "Aktualisieren",
+      empty: "Noch nichts gespeichert.",
+      loadFailed: "Erinnerungen konnten nicht geladen werden.",
+      filter: "Art",
+      save: 'Speichern',
+      saved: 'Gespeichert.',
+      edit: 'Bearbeiten',
+      cancel: 'Abbrechen',
+      forget: 'Vergessen',
+      forgetConfirm: 'Wirklich vergessen?',
+      pending: 'Wartet auf Freigabe.',
+      saveFailed: 'Konnte nicht speichern.',
+      editReason: 'im Speicher-Tab bearbeitet',
+      forgotReason: 'aus dem Speicher-Tab vergessen',
+      testConnection: 'Verbindung testen',
+      testing: 'Wird getestet…',
+      connected: 'Verbunden',
+      unreachable: 'Nicht erreichbar',
+      details: 'Details',
+      hide: 'Ausblenden',
+      pendingWrites: 'Schreibvorgänge nicht gesendet',
+      retry: 'Jetzt senden',
     }
 
     /** Russian copy, keyed against the English one. */
@@ -383,15 +511,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: 'Сколько запросов между напоминаниями.',
       subagents: 'И субагенты',
       subagentsHint: 'Вставлять и записывать также в сессиях субагентов.',
-      save: 'Сохранить',
       saving: 'Сохранение…',
-      saved: 'Сохранено',
       reset: 'Сбросить',
       unavailable: 'В этом развёртывании нет раздела настроек Ontyra.',
       loading: 'Чтение настроек Ontyra…',
       readOnly: 'В этом развёртывании настройки только для чтения.',
       failed: 'Развёртывание не приняло эти значения.',
       invalidNumber: 'Введите целое число или оставьте пусто для значения по умолчанию.',
+      tab: "Память",
+      refresh: "Обновить",
+      empty: "Пока ничего не запомнено.",
+      loadFailed: "Не удалось загрузить воспоминания.",
+      filter: "Тип",
+      save: 'Сохранить',
+      saved: 'Сохранено.',
+      edit: 'Изменить',
+      cancel: 'Отмена',
+      forget: 'Забыть',
+      forgetConfirm: 'Забыть?',
+      pending: 'Ожидает одобрения.',
+      saveFailed: 'Не удалось сохранить.',
+      editReason: 'изменено на вкладке памяти',
+      forgotReason: 'забыто на вкладке памяти',
+      testConnection: 'Проверить подключение',
+      testing: 'Проверка…',
+      connected: 'Подключено',
+      unreachable: 'Недоступно',
+      details: 'Подробности',
+      hide: 'Скрыть',
+      pendingWrites: 'записей не отправлено',
+      retry: 'Отправить сейчас',
     }
 
     /** Portuguese copy, keyed against the English one. */
@@ -436,15 +585,36 @@ window.__ModuleLoader__.load({
       captureEveryHint: 'Prompts entre lembretes de captura.',
       subagents: 'Também subagentes',
       subagentsHint: 'Injeta e registra também em sessões de subagentes.',
-      save: 'Guardar',
       saving: 'A guardar…',
-      saved: 'Guardado',
       reset: 'Repor',
       unavailable: 'Esta instalação não oferece a entrada de definições do Ontyra.',
       loading: 'A ler as definições do Ontyra…',
       readOnly: 'Esta instalação guarda as definições só para leitura.',
       failed: 'A instalação não aceitou estes valores.',
       invalidNumber: 'Introduza um número inteiro ou deixe vazio para o valor predefinido.',
+      tab: "Memória",
+      refresh: "Atualizar",
+      empty: "Nada memorizado ainda.",
+      loadFailed: "Não foi possível carregar as memórias.",
+      filter: "Tipo",
+      save: 'Salvar',
+      saved: 'Salvo.',
+      edit: 'Editar',
+      cancel: 'Cancelar',
+      forget: 'Esquecer',
+      forgetConfirm: 'Esquecer mesmo?',
+      pending: 'Aguardando aprovação.',
+      saveFailed: 'Não foi possível salvar.',
+      editReason: 'editado na aba Memória',
+      forgotReason: 'esquecido da aba Memória',
+      testConnection: 'Testar conexão',
+      testing: 'Testando…',
+      connected: 'Conectado',
+      unreachable: 'Inacessível',
+      details: 'Detalhes',
+      hide: 'Ocultar',
+      pendingWrites: 'gravação(ões) não enviada(s)',
+      retry: 'Enviar agora',
     }
 
     /** Every dictionary this card registers. */
@@ -619,6 +789,13 @@ window.__ModuleLoader__.load({
         const [status, setStatus] = React.useState('')
         const [tokenDraft, setTokenDraft] = React.useState('')
         const [tokenState, setTokenState] = React.useState(/** @type {any} */ (undefined))
+        /**
+         * The last connection probe: `null` before anyone asked, `{ testing: true }` while asking,
+         * otherwise what the Host half saw. Nothing is inferred from a saved base URL — a daemon can
+         * be configured and unreachable.
+         * @type {[any, (next: any) => void]}
+         */
+        const [probe, setProbe] = React.useState(/** @type {any} */ (null))
 
         const value = section.value ?? {}
         const tokenRef = String(drafts.tokenRef ?? value.tokenRef ?? 'ONTYRA_TOKEN')
@@ -725,6 +902,13 @@ window.__ModuleLoader__.load({
           }
         }
 
+        /** Ask the Host half to try the daemon, and show what it saw. */
+        async function check() {
+          setProbe({ testing: true })
+          const result = await testConnection(t)
+          setProbe(result)
+        }
+
         /** One labelled control. */
         function control(field) {
           const id = `ontyra-setting-${field.key}`
@@ -801,10 +985,32 @@ window.__ModuleLoader__.load({
             : status === 'invalidNumber' ? t('invalidNumber')
               : ''
 
+        /**
+         * The connection line: saved settings say what should be reached, this says what was.
+         * @returns {any} one paragraph plus a button.
+         */
+        function statusLine() {
+          const text = probe === null ? ''
+            : probe.testing === true ? t('testing')
+              : probe.ok === true ? `${t('connected')}${probe.version === '' ? '' : ` — ${probe.version}`}`
+                : `${t('unreachable')}: ${probe.error}`
+          return React.createElement(
+            'div',
+            { style: styles.field },
+            React.createElement(
+              'div',
+              { style: styles.row },
+              React.createElement('button', { type: 'button', style: styles.quiet, onClick: check, disabled: probe !== null && probe.testing === true }, t('testConnection')),
+              text === '' ? null : React.createElement('span', { style: probe?.ok === true ? styles.note : styles.error }, text),
+            ),
+          )
+        }
+
         return React.createElement(
           'div',
           { style: styles.root },
           React.createElement('p', { style: styles.lead }, t('description')),
+          statusLine(),
           ...groups.map((group) => React.createElement(
             'div',
             { style: styles.group, key: group.id },
@@ -870,9 +1076,388 @@ window.__ModuleLoader__.load({
       ctx.effect(() => ctx.configForms.whileServed([ENTRY], () => ctx.slots.inject('settings.section', () => ctx.slots.register({
         name: 'settings.section', id: CARD, order: 45, label: () => t('title'), locale: NS,
       }, Card))), 'ontyra: settings section')
+      // The Memory tab sits beside Chat and Trajectory: the library, read-only for now, with the
+      // same data the tools see. It waits for the conversation UI to offer the slot.
+      const Panel = makePanel(t)
+      ctx.effect(() => ctx.slots.inject('conversation.view', () => ctx.slots.register({
+        name: 'conversation.view', id: TAB, order: 31, label: () => t('tab'), locale: NS,
+      }, Panel)), 'ontyra: memories view')
     }
 
-    module.exports = { apply, inject, name: 'dsh-ontyra-memory', dictionaries: DICTS }
+    /**
+     * Read the library through this plugin's own route.
+     *
+     * The Host half is the only side that knows the daemon URL and holds its token, so the tab
+     * asks `/ontyra/memories` and gets a small, already-shaped payload back.
+     * @param {(key: string) => string} t - translator for the failure copy.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ status: string, items: any[], error: string }>} what the panel renders.
+     */
+    async function fetchMemories(t, request = fetch) {
+      try {
+        const response = await request('/ontyra/memories?limit=200', { headers: { 'x-ontyra-client': 'tab' } })
+        const body = await response.json()
+        if (body?.ok === true) return { status: 'ready', items: body.items ?? [], error: '' }
+        return { status: 'error', items: [], error: body?.error ?? t('loadFailed') }
+      } catch (error) {
+        return { status: 'error', items: [], error: String(error?.message ?? error) }
+      }
+    }
+
+    /**
+     * Ask the Host half to correct one memory.
+     *
+     * `fields` overlays the current revision, so only the text is sent: a correction through the
+     * tab goes through the same proposal path as the `ontyra_correct` tool, and comes back
+     * `pending` under a review policy like any other write.
+     * @param {(key: string) => string} t - translator for the failure copy.
+     * @param {{ memory: string, text: string, reason?: string }} change - what to correct.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ ok: boolean, error: string, pending: boolean }>} whether it landed.
+     */
+    async function correctMemory(t, { memory, text, reason }, request = fetch) {
+      try {
+        const response = await request('/ontyra/correct', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-ontyra-client': 'tab' },
+          body: JSON.stringify({ memory, fields: { text }, reason: reason ?? t('editReason') }),
+        })
+        const body = await response.json()
+        if (body?.ok === true) return { ok: true, error: '', pending: body.result?.status === 'pending' }
+        return { ok: false, error: body?.error ?? t('saveFailed'), pending: false }
+      } catch (error) {
+        return { ok: false, error: String(error?.message ?? error), pending: false }
+      }
+    }
+
+    /**
+     * Ask the Host half to retire one memory, or everything under a uri.
+     * @param {(key: string) => string} t - translator for the copy.
+     * @param {{ memory?: string, uri?: string }} target - exactly one of the two.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ ok: boolean, error: string, pending: boolean }>} whether it landed.
+     */
+    async function forgetMemory(t, target, request = fetch) {
+      try {
+        const response = await request('/ontyra/forget', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-ontyra-client': 'tab' },
+          body: JSON.stringify({ ...target, reason: t('forgotReason') }),
+        })
+        const body = await response.json()
+        if (body?.ok === true) return { ok: true, error: '', pending: body.result?.status === 'pending' }
+        return { ok: false, error: body?.error ?? t('saveFailed'), pending: false }
+      } catch (error) {
+        return { ok: false, error: String(error?.message ?? error), pending: false }
+      }
+    }
+
+    /**
+     * Ask the Host half whether the daemon answers right now.
+     *
+     * The card cannot call the daemon itself (no token, different origin), so "connected" is
+     * something the Host half reports after an actual request, not something the card infers.
+     * @param {(key: string) => string} t - translator for the failure copy.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ ok: boolean, version: string, error: string }>} the probe result.
+     */
+    async function testConnection(t, request = fetch) {
+      try {
+        const response = await request('/ontyra/ping', { headers: { 'x-ontyra-client': 'tab' } })
+        const body = await response.json()
+        const daemon = body?.daemon
+        if (daemon?.ok === true) return { ok: true, version: String(daemon.version ?? ''), error: '' }
+        return { ok: false, version: '', error: daemon?.error ?? t('unreachable') }
+      } catch (error) {
+        return { ok: false, version: '', error: String(error?.message ?? error) }
+      }
+    }
+
+    /**
+     * What the queue still holds: writes the daemon never accepted.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ count: number, items: any[] }>} the pending writes.
+     */
+    async function fetchOutbox(request = fetch) {
+      try {
+        const response = await request('/ontyra/outbox', { headers: { 'x-ontyra-client': 'tab' } })
+        const body = await response.json()
+        return { count: Number(body?.count ?? 0), items: Array.isArray(body?.items) ? body.items : [] }
+      } catch {
+        return { count: 0, items: [] }
+      }
+    }
+
+    /**
+     * Ask the Host half to replay the queue now, rather than on the next tool call.
+     * @param {(key: string) => string} t - translator for the failure copy.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ ok: boolean, sent: number, left: number, error: string }>} what happened.
+     */
+    async function retryOutbox(t, request = fetch) {
+      try {
+        const response = await request('/ontyra/outbox/retry', {
+          method: 'POST',
+          headers: { 'x-ontyra-client': 'tab' },
+        })
+        const body = await response.json()
+        return {
+          ok: body?.ok === true,
+          sent: Number(body?.sent ?? 0),
+          left: Number(body?.left ?? 0),
+          error: body?.error ?? (body?.ok === true ? '' : t('unreachable')),
+        }
+      } catch (error) {
+        return { ok: false, sent: 0, left: 0, error: String(error?.message ?? error) }
+      }
+    }
+
+    /**
+     * One memory with what it rests on, for the row someone expanded.
+     * @param {string} id - the memory id.
+     * @param {typeof fetch} [request] - the transport, injectable for tests.
+     * @returns {Promise<{ ok: boolean, memory: any, error: string }>} the detail.
+     */
+    async function fetchDetail(id, request = fetch) {
+      try {
+        const response = await request(`/ontyra/memories/${encodeURIComponent(id)}`, { headers: { 'x-ontyra-client': 'tab' } })
+        const body = await response.json()
+        if (body?.ok === true) return { ok: true, memory: body.memory, error: '' }
+        return { ok: false, memory: null, error: body?.error ?? 'could not load the detail' }
+      } catch (error) {
+        return { ok: false, memory: null, error: String(error?.message ?? error) }
+      }
+    }
+
+    /**
+     * A memory's detail as text a person can read without a schema.
+     *
+     * Bounded on purpose: the row is a peek, not an export, and an unbounded history would make
+     * the conversation panel scroll for pages.
+     * @param {any} memory - the detail response body.
+     * @returns {string} printable text.
+     */
+    function printable(memory) {
+      if (memory === null || memory === undefined) return ''
+      try {
+        const text = typeof memory === 'string' ? memory : JSON.stringify(memory, null, 1)
+        return text.length > 4000 ? `${text.slice(0, 4000)}\n…` : text
+      } catch {
+        return String(memory)
+      }
+    }
+
+    /**
+     * The Memory tab: the library the daemon holds, read through the Host half.
+     *
+     * The browser never sees the daemon URL's token: it asks this plugin's own route, which runs
+     * beside the credential store. Reading the library does not touch the delivery ledger, so a
+     * look around cannot make recall think a memory was already handed to the agent.
+     * @param {(key: string) => string} t - translator for the panel's own strings.
+     * @returns {Function} the React component the tab renders.
+     */
+    function makePanel(t) {
+      const style = {
+        page: { display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', padding: '16px', overflow: 'auto', boxSizing: 'border-box' },
+        bar: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' },
+        heading: { margin: 0, fontSize: '15px', fontWeight: 600 },
+        count: { fontSize: '12px', opacity: 0.6 },
+        grow: { flex: 1 },
+        row: { border: '1px solid var(--dsw-alias-border, #30363d)', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' },
+        rowHead: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', opacity: 0.75 },
+        kind: { textTransform: 'uppercase', letterSpacing: '0.04em' },
+        text: { fontSize: '13px', lineHeight: 1.45, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' },
+        meta: { fontSize: '11px', opacity: 0.55, overflowWrap: 'anywhere' },
+        notice: { fontSize: '13px', opacity: 0.7 },
+        error: { fontSize: '13px', color: 'var(--dsw-alias-danger, #d1242f)' },
+        action: { padding: '2px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: 'transparent', color: 'inherit', border: '1px solid var(--dsw-alias-border, #30363d)' },
+        input: { width: '100%', minHeight: '64px', padding: '6px 8px', borderRadius: '6px', font: 'inherit', fontSize: '13px', background: 'transparent', color: 'inherit', border: '1px solid var(--dsw-alias-border, #30363d)', boxSizing: 'border-box' },
+        detail: { margin: 0, maxHeight: '260px', overflow: 'auto', padding: '8px', borderRadius: '6px', fontSize: '11px', lineHeight: 1.4, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', background: 'var(--dsw-alias-surface-sunken, rgba(127, 127, 127, 0.08))' },
+        banner: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--dsw-alias-border, #30363d)' },
+      }
+
+      /** One memory row, with its edit, forget and detail affordances. */
+      function Row({ item, editing, confirming, detail, busy, onEdit, onConfirm, onDraft, onSave, onCancel, onForget, onDetail }) {
+        const anchors = Array.isArray(item.anchors) ? item.anchors : []
+        const isEditing = editing !== null && editing.id === item.id
+        const shown = detail === undefined ? null : detail
+        return React.createElement('div', { style: style.row },
+          React.createElement('div', { style: style.rowHead },
+            React.createElement('span', { style: style.kind }, item.kind ?? ''),
+            React.createElement('span', null, item.status ?? ''),
+            item.scope ? React.createElement('span', null, item.scope) : null,
+            React.createElement('span', { style: style.grow }),
+            isEditing
+              ? null
+              : React.createElement('button', {
+                type: 'button',
+                style: style.action,
+                disabled: busy,
+                onClick: () => onDetail(item, shown === null),
+              }, shown === null ? t('details') : t('hide')),
+            isEditing
+              ? null
+              : React.createElement('button', { type: 'button', style: style.action, disabled: busy, onClick: () => onEdit(item) }, t('edit')),
+            isEditing
+              ? null
+              : React.createElement('button', {
+                type: 'button',
+                style: style.action,
+                disabled: busy,
+                onClick: () => (confirming === item.id ? onForget(item) : onConfirm(item.id)),
+              }, confirming === item.id ? t('forgetConfirm') : t('forget'))),
+          isEditing
+            ? React.createElement('div', { style: style.meta },
+              React.createElement('textarea', {
+                style: style.input,
+                value: editing.text,
+                onChange: (event) => onDraft(event.target.value),
+              }),
+              React.createElement('div', { style: style.rowHead },
+                React.createElement('button', { type: 'button', style: style.action, disabled: busy, onClick: onSave }, t('save')),
+                React.createElement('button', { type: 'button', style: style.action, disabled: busy, onClick: onCancel }, t('cancel'))))
+            : React.createElement('div', { style: style.text }, item.text ?? ''),
+          anchors.length > 0
+            ? React.createElement('div', { style: style.meta }, anchors.map((anchor) => `${anchor.uri} (${anchor.match})`).join(' · '))
+            : null,
+          shown === null
+            ? null
+            : shown.status === 'loading'
+              ? React.createElement('div', { style: style.meta }, t('loading'))
+              : shown.status === 'error'
+                ? React.createElement('div', { style: style.error }, shown.error)
+                : React.createElement('pre', { style: style.detail }, shown.text))
+      }
+
+      return function Panel() {
+        const [state, setState] = React.useState({ status: 'loading', items: [], error: '', kind: '' })
+        const [editing, setEditing] = React.useState(null)
+        const [confirming, setConfirming] = React.useState('')
+        const [flash, setFlash] = React.useState('')
+        const [busy, setBusy] = React.useState(false)
+        /** @type {[Record<string, any>, (next: any) => void]} expanded row details, keyed by id */
+        const [details, setDetails] = React.useState(/** @type {any} */ ({}))
+        /** @type {[{ count: number, items: any[] }, (next: any) => void]} writes still waiting */
+        const [outbox, setOutbox] = React.useState({ count: 0, items: [] })
+
+        const load = React.useCallback(() => {
+          setState((current) => ({ ...current, status: 'loading', error: '' }))
+          fetchMemories(t).then((next) => setState({ ...next, kind: '' }))
+          // A write that never reached the daemon is invisible to `GET /v1/memories`, so the queue
+          // is read alongside the library: otherwise the tab would look complete while work waits.
+          fetchOutbox().then(setOutbox)
+        }, [])
+
+        React.useEffect(() => { load() }, [load])
+
+        const retry = React.useCallback(() => {
+          setBusy(true)
+          retryOutbox(t).then((result) => {
+            setBusy(false)
+            setFlash(result.ok ? `${t('saved')} (${result.sent})` : result.error)
+            load()
+          })
+        }, [load])
+
+        const detail = React.useCallback((item, open) => {
+          if (!open) {
+            setDetails((current) => {
+              const next = { ...current }
+              delete next[item.id]
+              return next
+            })
+            return
+          }
+          setDetails((current) => ({ ...current, [item.id]: { status: 'loading', text: '', error: '' } }))
+          fetchDetail(item.id).then((result) => {
+            setDetails((current) => ({
+              ...current,
+              [item.id]: result.ok
+                ? { status: 'ready', text: printable(result.memory), error: '' }
+                : { status: 'error', text: '', error: result.error },
+            }))
+          })
+        }, [])
+
+        const announce = React.useCallback((result) => {
+          setFlash(result.ok ? (result.pending ? t('pending') : t('saved')) : result.error)
+          if (result.ok) load()
+        }, [load])
+
+        const save = React.useCallback(() => {
+          if (editing === null) return
+          setBusy(true)
+          correctMemory(t, { memory: editing.id, text: editing.text }).then((result) => {
+            setBusy(false)
+            setEditing(null)
+            announce(result)
+          })
+        }, [editing, announce])
+
+        const forget = React.useCallback((item) => {
+          setBusy(true)
+          forgetMemory(t, { memory: item.id }).then((result) => {
+            setBusy(false)
+            setConfirming('')
+            announce(result)
+          })
+        }, [announce])
+
+        const kinds = React.useMemo(
+          () => Array.from(new Set(state.items.map((item) => item?.kind).filter((kind) => typeof kind === 'string'))).sort(),
+          [state.items],
+        )
+        const shown = state.kind === '' ? state.items : state.items.filter((item) => item.kind === state.kind)
+
+        return React.createElement('div', { style: style.page },
+          React.createElement('div', { style: style.bar },
+            React.createElement('h3', { style: style.heading }, t('title')),
+            React.createElement('span', { style: style.count }, `${shown.length}`),
+            React.createElement('span', { style: style.grow }),
+            kinds.length > 1
+              ? React.createElement('select', {
+                'aria-label': t('filter'),
+                value: state.kind,
+                style: { padding: '4px 6px', borderRadius: '6px', background: 'transparent', color: 'inherit', border: '1px solid var(--dsw-alias-border, #30363d)' },
+                onChange: (event) => setState((current) => ({ ...current, kind: event.target.value })),
+              },
+              React.createElement('option', { value: '' }, t('filter')),
+              ...kinds.map((kind) => React.createElement('option', { key: kind, value: kind }, kind)))
+              : null,
+            React.createElement('button', {
+              type: 'button',
+              onClick: load,
+              style: { padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: 'transparent', color: 'inherit', border: '1px solid var(--dsw-alias-border, #30363d)' },
+            }, t('refresh'))),
+          outbox.count > 0
+            ? React.createElement('div', { style: style.banner },
+              React.createElement('span', null, `${outbox.count} ${t('pendingWrites')}`),
+              React.createElement('span', { style: style.grow }),
+              React.createElement('button', { type: 'button', style: style.action, disabled: busy, onClick: retry }, t('retry')))
+            : null,
+          state.status === 'loading' ? React.createElement('div', { style: style.notice }, t('loading')) : null,
+          flash !== '' ? React.createElement('div', { style: style.notice }, flash) : null,
+          state.status === 'error' ? React.createElement('div', { style: style.error }, state.error) : null,
+          state.status === 'ready' && shown.length === 0 ? React.createElement('div', { style: style.notice }, t('empty')) : null,
+          ...shown.map((item) => React.createElement(Row, {
+            key: item.id,
+            item,
+            editing,
+            confirming,
+            detail: details[item.id],
+            busy,
+            onDetail: detail,
+            onEdit: (target) => { setConfirming(''); setEditing({ id: target.id, text: target.text ?? '' }) },
+            onConfirm: (id) => { setEditing(null); setConfirming(id) },
+            onDraft: (text) => setEditing((current) => (current === null ? current : { ...current, text })),
+            onSave: save,
+            onCancel: () => setEditing(null),
+            onForget: forget,
+          })))
+      }
+    }
+
+    module.exports = { apply, correctMemory, fetchDetail, fetchMemories, fetchOutbox, forgetMemory, inject, name: 'dsh-ontyra-memory', retryOutbox, testConnection, dictionaries: DICTS }
     return module.exports
   },
 })

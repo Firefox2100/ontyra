@@ -14,12 +14,17 @@ from ontyra.models.kinds import RevisionBase
 from ontyra.models.proposals import (
     AmendRequest,
     ApproveRequest,
+    CorrectionRequest,
     Evidence,
     Finding,
+    ForgetRequest,
+    ForgetResult,
     OverlayRequest,
     ProposalRequest,
     ProposalResult,
     RequestChanges,
+    RetractMemory,
+    ReviseMemory,
     WithdrawRequest,
 )
 from ontyra.ports import Create, Delete, Store, StoreConflictError, Update, Write
@@ -37,6 +42,7 @@ from ontyra.services.prepared import (
     PreparedRevise,
     PreparedSupersede,
 )
+from ontyra.services.secrets import SecretJudge, redact_request
 from ontyra.services.validation import ProposalValidator, Validation, rev_state_id
 from ontyra.services.views import History, MemoryView, RevisionView, SupersessionReason
 
@@ -76,6 +82,7 @@ class MemoryService:
         on_commit: Callable[[list[RecordId]], Awaitable[object]] | None = None,
         max_attempts: int = 5,
         episodes: EpisodeSettings | None = None,
+        secret_judge: SecretJudge | None = None,
     ) -> None:
         self.store = store
         self.policy = policy
@@ -83,6 +90,9 @@ class MemoryService:
         self.max_attempts = max_attempts
         self.on_commit = on_commit  # e.g. embed the new revisions (best effort)
         self.episodes = episodes or EpisodeSettings()
+        # The optional decision model that reads what the credential patterns did not match; the
+        # patterns are the whole gate when none is configured.
+        self.secret_judge = secret_judge
         self._last_prune: datetime | None = None
         self.ontology = ontology
         self.validator = ProposalValidator(store, now, ontology, anchors, self.episodes)
@@ -194,7 +204,12 @@ class MemoryService:
     async def _submit_once(self, caller: Caller, request: ProposalRequest) -> ProposalResult:
         key = request.idempotency_key
 
+        # Mask credentials before validation, so what is stored is what was validated and the
+        # findings can name every masked field: the caller has to be able to tell that the
+        # memory it gets back is not the text it sent.
+        request, masked = await redact_request(request, self.secret_judge)
         v = await self.validator.validate(caller, request)
+        v.findings.extend(masked)
         decision, reason = self.policy.decide(caller, _summaries(v.prepared), v.findings)
         pid = RecordId("proposal", new_id())
         now = self.now()
@@ -666,6 +681,69 @@ class MemoryService:
             "memory", where, where_in={"owner": owners}, limit=limit, order_by="created_at"
         )
         return [await self._view(m) for m in rows if isinstance(m, Memory)]
+
+    # ---- the two intents every harness needs by name -------------------------------------
+
+    async def correct(
+        self, caller: Caller, memory: RecordId, request: CorrectionRequest
+    ) -> ProposalResult:
+        """One call for "this is wrong": the fields overlay the current revision, so a caller
+        that only knows better wording does not have to restate the whole memory."""
+        current = await self.get_memory(caller, memory)  # exists and is visible, or NotFoundError
+        return await self.submit(
+            caller,
+            ProposalRequest(
+                ops=[
+                    ReviseMemory(
+                        memory=current.memory,
+                        fields=request.fields,
+                        reason_code=request.reason_code,
+                        reason=request.reason,
+                    )
+                ],
+                note=f"correct {current.memory}",
+            ),
+        )
+
+    async def forget(self, caller: Caller, request: ForgetRequest) -> ForgetResult:
+        """Retire what one memory, or everything anchored under one path, says.
+
+        Retraction, not deletion: the history and the reason survive, and the policy still
+        decides whether the caller may commit it alone."""
+        targets = await self._forget_targets(caller, request)
+        if not targets:
+            raise errors.NotFoundError(f"nothing is anchored under {request.uri}")
+        result = await self.submit(
+            caller,
+            ProposalRequest(
+                ops=[RetractMemory(memory=target, reason=request.reason) for target in targets],
+                note=f"forget {len(targets)} memor{'y' if len(targets) == 1 else 'ies'}",
+            ),
+        )
+        return ForgetResult(
+            forgotten=targets,
+            status=result.status,
+            findings=result.findings,
+            proposals=[result.proposal],
+        )
+
+    async def _forget_targets(self, caller: Caller, request: ForgetRequest) -> list[RecordId]:
+        if request.memory is not None:
+            visible = await self.get_memory(caller, request.memory)  # 404s when it is not there
+            return [visible.memory]
+        assert request.uri is not None
+        prefix = request.uri.rstrip("/")
+        views = await self.list_memories(caller, limit=500)
+        return [
+            view.memory
+            for view in views
+            if any(
+                str(anchor.get("uri", "")).rstrip("/") == prefix
+                or str(anchor.get("uri", "")).startswith(f"{prefix}/")
+                for anchor in view.content.get("anchors", [])
+                if isinstance(anchor, dict)
+            )
+        ][: request.limit]
 
     async def history(self, caller: Caller, memory: RecordId) -> History:
         mem = await self.store.get(memory)

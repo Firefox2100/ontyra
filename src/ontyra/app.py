@@ -102,6 +102,10 @@ class Application:
             episodes=settings.episodes,
         )
         decider = build_decider(settings.decision)
+        # The decision model also reads what the credential patterns miss — only when it can.
+        judge = getattr(decider, "secrets", None)
+        if judge is not None:
+            memory.secret_judge = judge
         if settings.recall.filler_gate and not isinstance(decider, MessageClassifier):
             log.warning(
                 "ONTYRA_RECALL__FILLER_GATE is on but no decision model that can classify "

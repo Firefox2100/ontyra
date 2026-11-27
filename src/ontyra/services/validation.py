@@ -391,6 +391,24 @@ class _Ctx:
             and isinstance(model, DirectiveRev)
             and not (model.anchors or model.qualifiers or model.about)
         ):
+            # The fix as a ready-made op: a model that has to compose one from prose usually adds
+            # the rule a second time instead of correcting the one it just wrote.
+            data: dict[str, Any] = {
+                "next_ops": (
+                    [
+                        {
+                            "op": "revise",
+                            "memory": str(memory),
+                            "fields": {"scope": "universal"},
+                            "reason_code": "refined",
+                            "reason": "this rule holds everywhere",
+                        }
+                    ]
+                    if memory is not None
+                    else []
+                ),
+                "alternatives": ["anchors", "qualifiers", "about", "scope: universal"],
+            }
             self.warn(
                 i,
                 "unscoped_directive",
@@ -403,6 +421,7 @@ class _Ctx:
                     if memory
                     else ""
                 ),
+                **data,
             )
 
     async def add(self, i: int, op: AddMemory, mem: RecordId, rev: RecordId) -> None:
@@ -442,7 +461,7 @@ class _Ctx:
                 sources.append(src[1])
         self._unscoped(i, model, mem)
         self._topical(i, model)
-        await self._similar(i, op.kind, model)
+        await self._similar(i, op.kind, model, ref=op.ref or f"op{i}")
         self.v.prepared.append(
             PreparedAdd(
                 i,
@@ -506,7 +525,13 @@ class _Ctx:
         return model
 
     async def _similar(
-        self, i: int, kind: str, model: Record, *, exclude: RecordId | None = None
+        self,
+        i: int,
+        kind: str,
+        model: Record,
+        *,
+        exclude: RecordId | None = None,
+        ref: str | None = None,
     ) -> None:
         if not isinstance(model, RevisionBase):
             return
@@ -520,6 +545,21 @@ class _Ctx:
                 scored.append((score, mem, rev))
         for score, mem, rev in sorted(scored, key=lambda t: -t[0])[:5]:
             dup = score >= DUPLICATE_THRESHOLD
+            # The whole fix, ready to send: supersede needs the twin's id and a ref to this one,
+            # and a model that has to look both up usually just stores the second copy.
+            next_ops = (
+                [
+                    {
+                        "op": "supersede",
+                        "new": ref or f"op{i}",
+                        "target": str(mem.id),
+                        "reason_code": "merged",
+                        "reason": f"replaces {mem.id}, which says the same thing",
+                    }
+                ]
+                if dup and ref
+                else []
+            )
             (self.warn if dup else self.info)(
                 i,
                 "possible_duplicate" if dup else "similar_memory",
@@ -527,6 +567,7 @@ class _Ctx:
                 memory=str(mem.id),
                 similarity=round(score, 2),
                 hint="supersede, revise or link it with a reason, or ignore if distinct",
+                next_ops=next_ops,
             )
 
     async def revise(self, i: int, op: ReviseMemory) -> None:

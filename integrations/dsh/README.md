@@ -10,7 +10,8 @@ What the model gets:
 - **recall** injected once per turn, on the first prompt that turn carries, when something clears
   the relevance bar;
 - the **memory tools** (`ontyra_recall`, `ontyra_check`, `ontyra_briefing`, `ontyra_ask`,
-  `ontyra_get`, `ontyra_remember`, `ontyra_feedback`, `ontyra_consult`, `ontyra_check_source`,
+  `ontyra_get`, `ontyra_remember`, `ontyra_correct`, `ontyra_forget`, `ontyra_feedback`,
+  `ontyra_consult`, `ontyra_check_source`,
   `ontyra_pending_proposals`, `ontyra_amend`, and with the `full` profile `ontyra_concepts`,
   `ontyra_propose_ontology_change`) as native harness tools, not MCP tools;
 - **episodes** (on by default; prompt and answer sent to the daemon as session history) and, also on
@@ -114,6 +115,29 @@ Everything the plugin sends is best-effort: an unreachable daemon, a timeout or 
 logs nothing into the transcript and never blocks a turn. The capture
 reminder is a line in the context injected before a step, so it costs no extra turn.
 
+## Memories tab and approval card
+
+Two things exist only here, because only DSH can put them in front of a person:
+
+- **The Memories tab** (next to Trajectory, in the conversation header) lists what is remembered,
+  with kind, scope and anchors; a row can expand to its detail, edit the text of a memory, or
+  retire one. It reads and writes through the plugin's own `/ontyra` routes, so the token stays in
+  the credential store and the browser never talks to the daemon directly. Browsing does **not**
+  mark anything delivered — looking does not cost you the next recall.
+- **`ontyra_review`** puts one card per waiting proposal in front of the user, with the ops and the
+  reason: Approve, Reject, or Request changes (the free-text box becomes the reason). It is
+  deliberately not part of the contract mirror: the daemon has no such tool, and an approval needs
+  a human, which is exactly what DSH can supply.
+- **A connection test and a queue banner.** `Test connection` in Settings asks the Host half to
+  call `/health` right now and reports the version it saw, because a saved URL is not a reachable
+  daemon. When writes could not reach the daemon they wait in `.dsh/ontyra-outbox.json`; the tab
+  says how many and offers `Send now` instead of making you wait for the next tool call.
+
+The write routes (`/ontyra/correct`, `/ontyra/forget`, `/ontyra/outbox/retry`) are `POST`, need an
+`x-ontyra-client` header and a JSON body, and only exist while the plugin is mounted. The read
+routes (`/ontyra/memories`, `/ontyra/memories/{id}`, `/ontyra/outbox`, `/ontyra/last`,
+`/ontyra/services`, `/ontyra/ping`) are `GET`.
+
 ## Layout
 
 ```
@@ -199,3 +223,27 @@ injection rules and the settings card, and need no browser and no daemon.
   `GET /plugins/events` (SSE) and look for an entry whose `id` is `dsh-ontyra-memory`, then fetch its
   `url` (`plugins/??dsh-ontyra-memory/client.js&rev=…`) — a 200 with JavaScript means the Host has the
   artifact, so only the open page is stale.
+
+## Two agents in one workspace
+
+A briefing is delivered once. `context.workspace` (the working copy, which the plugin sends as the
+cwd's `file:` URI) extends that ledger to the *other* harnesses in the same repository for
+`ONTYRA_RECALL__WORKSPACE_WINDOW` seconds (default 1800): a second agent opening the same checkout
+right away is handed what it has not seen, not the whole pack again. A session a day later is a new
+reader. Set the window to `0` to keep the ledger per session only.
+
+## When the daemon is unreachable
+
+A write (`ontyra_remember`, `ontyra_correct`, `ontyra_forget`) that cannot reach the daemon is not
+lost and not failed: the Host half keeps it in `$DSH_HOME/ontyra-outbox.json` (at most 20), tells
+the model it is queued, and replays it — with the same `idempotency_key` — before the next tool
+call. An answer from the daemon, even an error, drops the queued item: waiting would not change a
+4xx, and replaying it forever would hide the finding.
+
+## Credentials the patterns miss
+
+`services/secrets.py` masks recognised key shapes; when a decision model is configured
+(`ONTYRA_DECISION__*`, `LangChainDecider`), the daemon also asks it about long tokens the patterns
+did not catch, and masks what it calls a credential. With no model, the patterns are the whole
+gate. Either way the proposal's findings name the field and the preview, and `redaction: "off"`
+resends a false positive unchanged.

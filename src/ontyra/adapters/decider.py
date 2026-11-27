@@ -4,6 +4,7 @@ model) and any LangChain decision model (`langchain_core.decisions.BaseDecisionM
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -20,6 +21,13 @@ SAME = (
 )
 
 MESSAGE_KIND = "What kind of message is the user's new message?"
+CREDENTIAL = (
+    "Does this string look like a credential (an API key, a token, a password, a private key)? "
+    "A path, a host name, an identifier or a checksum of public data is not."
+)
+CREDENTIAL_LIKELY = 0.7
+SECRET_CHARS = 2000
+SECRET_TOKENS = re.compile(r"[A-Za-z0-9_+/.=:\-]{16,}")
 MESSAGE_OPTIONS = {
     "standalone": "A request or question that can be understood on its own, without the earlier "
     "conversation.",
@@ -283,3 +291,42 @@ class LangChainDecider:
         if score is None:
             raise DecisionError(f"{self._name} gave no score")
         return score
+
+    async def secrets(self, text: str) -> list[str]:
+        """Which long tokens in `text` look like credentials: the decider's half of redaction.
+
+        The patterns in `services/secrets.py` know key shapes; they cannot know that "the string
+        we use for the billing portal is hunter2-admin" hides a password. Asking is a choice
+        question per token, so one call covers the message and the answers are probabilities.
+        """
+        from langchain_core.decisions import Choice
+
+        tokens = [t for t in SECRET_TOKENS.findall(clip(text, SECRET_CHARS)) if not _ordinary(t)]
+        tokens = list(dict.fromkeys(tokens))[:6]
+        if not tokens:
+            return []
+        questions: dict[str, Any] = {
+            f"t{i}": Choice(
+                instructions=CREDENTIAL,
+                criteria={"credential": t, "ordinary": "an ordinary value: a path, a name, an id"},
+            )
+            for i, t in enumerate(tokens)
+        }
+        try:
+            response = await self._model.ainvoke(
+                {"state": clip(text, SECRET_CHARS), "questions": questions}
+            )
+            probabilities = [response.choices[f"t{i}"].probabilities for i in range(len(tokens))]
+        except Exception as exc:  # the integration's own errors: any of them means "no verdict"
+            raise DecisionError(f"{self._name} could not decide: {exc!r}") from exc
+        return [
+            token
+            for token, p in zip(tokens, probabilities, strict=True)
+            if (_number(p.get("credential")) or 0.0) >= CREDENTIAL_LIKELY
+        ]
+
+
+def _ordinary(token: str) -> bool:
+    """A path, a host or a URL is not a credential, however long it is."""
+    lowered = token.lower()
+    return "/" in token or "\\" in token or lowered.startswith(("http", "file:", "doi:"))

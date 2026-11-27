@@ -133,6 +133,10 @@ class ProposalRequest(Model):
     space: Literal["own", "global"] = "own"
     idempotency_key: Annotated[str | None, Field(max_length=200)] = None
     note: Annotated[str | None, Field(max_length=2000)] = None
+    # `auto`: values that look like credentials are masked before storing, and a warning finding
+    # names what was masked. `off`: store them as sent — for a false positive (a test fixture, a
+    # documented example), not for a real key.
+    redaction: Literal["auto", "off"] = "auto"
 
 
 class LiteProposalRequest(ProposalRequest):
@@ -171,6 +175,43 @@ class ProposalResult(Model):
     duplicate_of_idempotency_key: bool = False
     version: int | None = None  # the proposal's version after this operation
     rejected_ops: list[int] = []  # op numbers (of the version reviewed) that were not committed
+
+
+class CorrectionRequest(Model):
+    """Correct one memory in a single call: `fields` overlay its current revision, so send only
+    what changes. The result is an ordinary proposal — validated, then committed or held."""
+
+    fields: dict[str, Any] = Field(
+        min_length=1, description="Only what changes: `text`, and any of the kind's own fields."
+    )
+    reason_code: ReasonCode = "corrected"
+    reason: Annotated[str | None, Field(max_length=2000)] = None
+
+
+class ForgetRequest(Model):
+    """Retire memories: one by id, or every active memory anchored under a path.
+
+    Nothing is deleted: each target gets a `retract` op, so the reason and the history stay."""
+
+    memory: MemoryRef | None = None
+    uri: Annotated[str | None, Field(min_length=3)] = None  # subtree: forget what applies here
+    reason: Annotated[str, Field(min_length=1, max_length=2000)]
+    limit: Annotated[int, Field(ge=1, le=100)] = 50
+
+    @model_validator(mode="after")
+    def _one_target(self) -> ForgetRequest:
+        if (self.memory is None) == (self.uri is None):
+            raise ValueError("give exactly one of `memory` or `uri`")
+        return self
+
+
+class ForgetResult(Model):
+    proposals: list[RecordId] = []  # one per target, in the order they were retracted
+    forgotten: list[RecordId] = []
+    status: Literal["pending", "changes_requested", "committed", "rejected", "withdrawn"] = (
+        "pending"
+    )
+    findings: list[Finding] = []
 
 
 class AmendRequest(Model):

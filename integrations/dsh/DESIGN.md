@@ -93,12 +93,16 @@ integrations/dsh/
 ### 4.2 原生工具
 
 `ontyra_recall`、`ontyra_check`、`ontyra_briefing`、`ontyra_ask`、`ontyra_get`、`ontyra_remember`、
-`ontyra_feedback`、`ontyra_consult`、`ontyra_check_source`、`ontyra_pending_proposals`、`ontyra_amend`；
+`ontyra_correct`、`ontyra_forget`、`ontyra_feedback`、`ontyra_consult`、`ontyra_check_source`、
+`ontyra_pending_proposals`、`ontyra_amend`；
 `ontyra_concepts` 与 `ontyra_propose_ontology_change` 仅 `full`。
 
+- `ontyra_correct` 与 `ontyra_forget` 是意图级入口：前者只带改动的字段（`revise` 的 overlay 语义），
+  后者按 id 或按锚点路径 `retract`（历史保留，策略照旧决定是否立即生效）。服务端对应
+  `POST /v1/memories/{id}/correct` 与 `POST /v1/memories/forget`，MCP 同名工具在 lite 档就有。
 - 名称、描述、参数与路由写死在 `lib/tools.js`，由 `test/contract.test.js` 对着 MCP 契约逐条断言
   （见 §6）；不生成代码，也不引入构建步骤。
-- 全部 13 个工具**都注册**，可见性由 `defineTool` 的 `when: () => toolVisible(settingsNow(), name)`
+- 全部 15 个工具**都注册**，可见性由 `defineTool` 的 `when: () => toolVisible(settingsNow(), name)`
   每步判定。注册期就筛掉子集会让 `tools`/`toolsProfile` 改动要等重载，而设置卡承诺下一步生效。
 - id 映射：模型给的 `table:id` 前缀一律**替换**（`idOf()` 剥任意前缀，`recordRef()` 补回正确的表），
   所以 `proposal:abc` 贴进 amend 路径得到 `/v1/proposals/abc/amend`，`trace:abc` 变成
@@ -196,6 +200,17 @@ daemon 不可达、超时、非 2xx、JSON 意外：注入静默跳过（一条 
 `parseSkill()` 拆出 frontmatter 的 `name`/`description` 与正文，`ctx.effect(() => ctx.skills.register({
 name, description, content }))`；部署没有技能服务、或文件读不到时静默跳过。`test/skill.test.js`
 反向校验：技能里出现的每个 `ontyra_*` 都必须是本插件真的注册了的工具。
+
+### 4.8 DSH 专有面：记忆标签页、写路由、审批卡片
+
+这三样只在 DSH 存在，因为它们用的是别的 harness 没有的缝。共同约束：**动作一律经 Host 半**，客户端半从不直接打 daemon（跨源 CORS、token 不出凭据库）。
+
+- **读**：`lib/http.js` 用 `ctx.webServer.register({ kind: 'prefix', path: '/ontyra', resource })` 注册 `/ping`、`/services`、`/memories`、`/memories/{id}`（展开单条的来源）、`/outbox`（待发写入）、`/last`（最近一次注入给某会话的分段，只读镜像，绝不回灌进提示词）。Host 的 `resource` 路由**只服务 GET/HEAD**（`dsh-host-webserver` 的 `RESOURCE_METHODS`），别的方法在匹配前就 405。
+- **写**：`/ontyra/correct`、`/ontyra/forget`、`/ontyra/outbox/retry` 是 `kind: 'exact'` 的 `handler` 路由（`(req: IncomingMessage, res: ServerResponse)`），自己读 body（上限 64 KiB）、校验 `x-ontyra-client` 头与 `content-type`，再把 daemon 的 4xx 原样透出、5xx 归一为 502。
+- **标签页**：客户端半注册 `conversation.view`（`id: 'ontyra-memories'`、`order: 31`、八语言 label）；只读浏览不读写投递账本，避免「看一眼就被算作已交付」。行内可展开详情、改 text、retire；顶部在 outbox 有积压时显示条数与 `Send now`。
+- **审批卡片**：`lib/review.js` 把待审提案变成 `ctx.userQuestions.ask()` 的问题（每题 Approve / Reject / Request changes，`custom` 作理由），答案落到 `POST /v1/proposals/{id}/approve|reject|request-changes`。工具是 `ontyra_review`，`ctx.inject(['userQuestions'])` 取得，超时 10 分钟（人在读），且**不在 `TOOLS` 里**：daemon 没有这个工具，契约镜像与它的测试只描述 daemon 的面。`tools.js` 用 `LOCAL_ONLY` 标注，技能测试据此放行。
+- **原生工具能力（只有 DSH 有）**：`ontyra_pending_proposals` 的 `output.presentationMeta` 产出 `{ card: 'ontyra-proposals', proposals: [...] }`——一段可重放的展示提示，UI 可以选择把它画成卡片；其它工具没有这个缝，故只有它带。稳定性守则（注入块是参考、`Must follow:` 例外、只有 `committed` 才算存下、路径锚点不写 host、不批准自己的提案、有人在场时用 `ontyra_review`）走 `ctx.systemPrompt.section({ name: 'ontyra-memory', order: 60 })`，不进每轮注入，前缀缓存才不会被稳定的字重复打断。
+- **子 agent**：默认不是完全不注入，而是「只读窄片」——只给 recall（它自己的 prompt 需要），不给 briefing、不给 capture 提醒、不记 episode；开关 `subagents: true` 恢复全量。
 
 ## 5. 客户端设置卡
 

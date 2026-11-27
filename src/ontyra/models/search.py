@@ -58,10 +58,13 @@ class Embedding(Record):
 
 @registry.table("delivery")
 class Delivery(Record):
-    """Session recall ledger: what was already delivered to a session."""
+    """Recall ledger: what was already delivered to a session, and recently to a workspace."""
 
     owner: Annotated[OwnerRef, Indexed()]
     session: Annotated[str, Indexed()]
+    # The working copy the delivery happened in. A second harness in the same workspace shares
+    # these rows for a while, so it is not handed the briefing the first one already has.
+    workspace: Annotated[str | None, Indexed()] = None
     memory: MemoryRef
     rev: RevRef
     delivered_at: datetime

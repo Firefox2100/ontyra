@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { parseSkill } from '../lib/skill.js'
-import { toolsFor } from '../lib/tools.js'
+import { LOCAL_ONLY, toolsFor } from '../lib/tools.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const source = readFileSync(join(root, 'skills', 'ontyra-memory', 'SKILL.md'), 'utf8')
@@ -35,7 +35,11 @@ test('a file without frontmatter keeps its text and falls back to the default na
 })
 
 test('every tool the skill names is one the plugin registers', () => {
-  const registered = new Set([...toolsFor('lite'), ...toolsFor('full')].map(tool => tool.name))
+  const registered = new Set([
+    ...toolsFor('lite'),
+    ...toolsFor('full'),
+    ...[...LOCAL_ONLY].map((name) => ({ name })),
+  ].map((tool) => tool.name))
   const named = new Set(source.match(/ontyra_[a-z_]+/g) ?? [])
   assert.ok(named.size > 0, 'the skill names tools')
   for (const name of named) assert.ok(registered.has(name), `${name} is not a registered tool`)

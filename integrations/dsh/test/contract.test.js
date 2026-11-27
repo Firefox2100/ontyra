@@ -27,10 +27,22 @@ test('lite registers the daemon’s lite tools, prefixed', () => {
     'ontyra_remember',
     'ontyra_feedback',
     'ontyra_consult',
+    'ontyra_correct',
+    'ontyra_forget',
     'ontyra_check_source',
     'ontyra_pending_proposals',
     'ontyra_amend',
   ])
+  // and the daemon offers exactly the same set, so nothing here is invented or left behind
+  const fullOnly = new Set(['concepts', 'propose_ontology_change'])
+  assert.deepEqual(
+    [...LITE].sort(),
+    contract
+      .map((tool) => tool.name)
+      .filter((name) => !fullOnly.has(name))
+      .map((name) => `ontyra_${name}`)
+      .sort(),
+  )
 })
 
 test('full adds the ontology tools', () => {
@@ -116,6 +128,8 @@ const ROUTES = {
   ontyra_remember: ['POST', '/v1/proposals'],
   ontyra_feedback: ['POST', '/v1/feedback'],
   ontyra_consult: ['POST', '/v1/consult'],
+  ontyra_correct: ['POST', /^\/v1\/memories\/[^/]+\/correct$/],
+  ontyra_forget: ['POST', '/v1/memories/forget'],
   ontyra_check_source: ['POST', '/v1/sources/check'],
   ontyra_pending_proposals: ['GET', /^\/v1\/proposals\?limit=\d+$/],
   ontyra_amend: ['POST', /^\/v1\/proposals\/[^/]+\/amend$/],
@@ -133,6 +147,8 @@ test('every tool calls a route the daemon serves', () => {
     ontyra_remember: { ops: [] },
     ontyra_feedback: { memory: 'abc', query: 'x', label: 'helpful', trace: 'def' },
     ontyra_consult: { query: 'x', topic: 'esp32' },
+    ontyra_correct: { memory: 'abc', fields: { text: 'x' } },
+    ontyra_forget: { memory: 'abc', reason: 'x' },
     ontyra_check_source: { uri: 'file:///a', state: 'changed' },
     ontyra_pending_proposals: {},
     ontyra_amend: { proposal: 'abc', request: { ops: [], why: 'x' } },
@@ -204,4 +220,14 @@ test('the remember ops list the daemon’s per-kind fields', () => {
   assert.equal(lines.length, 7)
   const ops = TOOLS.find((tool) => tool.name === 'ontyra_remember').parameters.ops.description
   for (const line of lines) assert.ok(ops.includes(line), `ops description lacks: ${line}`)
+})
+
+test('only the proposals tool carries a presentation hint, and it never invents one', () => {
+  const withMeta = toolsFor('lite').filter((tool) => typeof tool.meta === 'function').map((tool) => tool.name)
+  assert.deepEqual(withMeta, ['ontyra_pending_proposals'])
+  const tool = toolsFor('lite').find((candidate) => candidate.name === 'ontyra_pending_proposals')
+  const meta = tool.meta([{ id: 'proposal:01a', status: 'pending', note: 'why', ops: [{}, {}], version: 3 }])
+  assert.equal(meta.card, 'ontyra-proposals')
+  assert.deepEqual(meta.proposals, [{ id: 'proposal:01a', status: 'pending', note: 'why', ops: 2, version: 3 }])
+  assert.deepEqual(tool.meta(undefined), { card: 'ontyra-proposals', proposals: [] })
 })

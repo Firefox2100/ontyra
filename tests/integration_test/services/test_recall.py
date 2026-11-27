@@ -677,3 +677,78 @@ async def test_a_trigger_fires_in_input_driven_recall_whatever_the_message_says(
         agent, RecallRequest(query="what is the weather like on thursday", context=ctx)
     )
     assert pack.items() and pack.items()[0].flags == ["triggered"]
+
+
+# ---- delivery ids and named silences (the client owns no ledger) ------------------------
+
+
+async def test_a_caller_that_says_it_saw_a_revision_is_not_shown_it_again(
+    app: Application, agent: Caller, remember
+) -> None:
+    await remember("directive", "run the test suite with pytest, never unittest", strength="must")
+    first = await recall(app, agent, "how do I run the tests?")
+    assert first.delivered and not first.silent and first.abstain is None
+    # No session id at all: the caller's own list is enough to suppress it.
+    again = await recall(app, agent, "how do I run the tests?", seen=[str(first.delivered[0])])
+    assert again.silent and again.abstain == "already_delivered"
+    assert not again.items()
+
+
+async def test_the_bare_revision_id_counts_as_the_same_revision(
+    app: Application, agent: Caller, remember
+) -> None:
+    await remember("directive", "restart the worker after changing its config", strength="must")
+    first = await recall(app, agent, "when do I restart the worker?")
+    bare = str(first.delivered[0]).partition(":")[2]
+    again = await recall(app, agent, "when do I restart the worker?", seen=[bare])
+    assert again.silent and again.abstain == "already_delivered"
+
+
+async def test_an_explicit_redelivery_ignores_the_callers_list(
+    app: Application, agent: Caller, remember
+) -> None:
+    await remember("directive", "tag releases with the commit sha", strength="must")
+    first = await recall(app, agent, "how do I tag a release?")
+    shown = [str(first.delivered[0])]
+    again = await recall(app, agent, "how do I tag a release?", seen=shown, redeliver=True)
+    assert again.items() and again.abstain is None
+
+
+async def test_silence_names_no_match(app: Application, agent: Caller, remember) -> None:
+    await remember("fact", "the staging postgres runs on port 5433")
+    pack = await recall(app, agent, "how do I rotate a certificate?")
+    assert pack.silent and pack.abstain == "no_match"
+
+
+async def test_silence_names_a_memory_that_does_not_apply_here(
+    app: Application, agent: Caller, remember
+) -> None:
+    await remember(
+        "directive",
+        "run experiments against the staging cluster",
+        strength="must",
+        anchors=[{"uri": "file://m/other/proj", "match": "subtree"}],
+    )
+    pack = await recall(app, agent, "which cluster do I run experiments against?", ctx=HERE)
+    assert pack.silent and pack.abstain == "not_applicable_here"
+
+
+async def test_a_second_harness_in_the_same_workspace_is_not_handed_it_again(
+    app: Application, agent: Caller, remember
+) -> None:
+    await remember(
+        "directive", "run the linter before every commit", strength="must", scope="universal"
+    )
+    first = await app.recall.briefing(
+        agent, RecallRequest(context=RecallContext(session="first", workspace="repo"))
+    )
+    assert first.items()
+    second = await app.recall.briefing(
+        agent, RecallRequest(context=RecallContext(session="second", workspace="repo"))
+    )
+    assert second.silent and second.abstain == "already_delivered"
+    # A different workspace is a different reader, and so is one that came much later.
+    other = await app.recall.briefing(
+        agent, RecallRequest(context=RecallContext(session="third", workspace="elsewhere"))
+    )
+    assert other.items()

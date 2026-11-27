@@ -44,19 +44,25 @@ const stateSchema = { parse: (value) => value }
  * @param {Record<string, unknown>} body - request body.
  * @param {AbortSignal} signal - the step's signal.
  * @param {number} timeoutMs - the configured budget for this call.
- * @returns {Promise<string | undefined>} the rendered text, or undefined when there is none.
+ * @returns {Promise<{ text: string, delivered: string[] } | undefined>} the rendered text and the
+ *   revisions it carries, or undefined when there is none.
  */
 async function rendered(client, path, body, signal, timeoutMs) {
   try {
     const timeout = AbortSignal.timeout(Math.max(1, Math.trunc(Number(timeoutMs)) || 1500))
     const reply = await client.call({ method: 'POST', path, body }, AbortSignal.any([signal, timeout]))
+    const delivered = Array.isArray(reply?.delivered) ? reply.delivered.map(String) : []
     if (reply?.silent === true || typeof reply?.rendered !== 'string') return undefined
     const text = reply.rendered.trim()
     if (text === '') return undefined
     // a recall's id goes with its memories, so a verdict on one can cite it
-    return path === '/v1/recall' && typeof reply.trace === 'string'
-      ? `${text}\n(recall trace: ${reply.trace})`
-      : text
+    return {
+      text:
+        path === '/v1/recall' && typeof reply.trace === 'string'
+          ? `${text}\n(recall trace: ${reply.trace})`
+          : text,
+      delivered,
+    }
   } catch {
     return undefined
   }
@@ -133,9 +139,11 @@ async function waitingProposals(client, signal, timeoutMs) {
  * @param {() => any} deps.settingsNow - the live settings.
  * @param {{ call(call: any, signal: AbortSignal): Promise<any> }} deps.client - daemon client.
  * @param {(session: any) => string | undefined} deps.cwdOf - the session's working directory.
+ * @param {((sessionId: string, parts: Array<{ name: string, text: string }>) => void)} [deps.remember]
+ *   - keeps the last injected pack per session, for the settings card to show.
  * @returns {Promise<void>} when the projection is registered and the listeners are mounted.
  */
-export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
+export async function registerInjection(ctx, { settingsNow, client, cwdOf, remember }) {
   const projection = await trackBriefing(ctx)
   /**
    * Turn numbers are per session, so both dedupe sets are keyed by session id: a plugin-global
@@ -146,9 +154,25 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
   const recalledTurn = new Map()
   /** @type {Map<string, Set<string>>} briefing cycles already asked for, empty answer included */
   const attempted = new Map()
+  /**
+   * Revisions this session was already shown, echoed back as `seen`. The daemon already keeps a
+   * ledger per session; this covers the case where the session id changes (fork, resume) and the
+   * plugin has no durable record of what went into the transcript.
+   * @type {Map<string, string[]>}
+   */
+  const seen = new Map()
+  const seenFor = (sessionId) => seen.get(sessionId) ?? []
+  const noteSeen = (sessionId, delivered) => {
+    if (!Array.isArray(delivered) || delivered.length === 0) return
+    const kept = [...seenFor(sessionId), ...delivered]
+    // A cap, not a ledger: the daemon forgets what a session was shown anyway, and an unbounded
+    // list would grow with every step of a long session.
+    seen.set(sessionId, kept.slice(-200))
+  }
   const forget = (sessionId) => {
     recalledTurn.delete(sessionId)
     attempted.delete(sessionId)
+    seen.delete(sessionId)
   }
   // Sessions come and go; the two maps only hold what an in-flight session needs.
   ctx.on('agent/disposed', (payload) => {
@@ -169,7 +193,10 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
 
     const session = agent.session
     const sessionId = String(session.id)
-    if (isSubagent(session.header) && settings.subagents !== true) return decision
+    // A subagent is a narrower reader: it gets the recall its own prompt needs, but not the
+    // briefing (a child did not start a session the user opened), not the capture nudge (its
+    // transcript belongs to the parent) and not an episode log of its own.
+    const narrow = isSubagent(session.header) && settings.subagents !== true
     const state = projection.stateOf(session)
     const context = recallContext({ cwd: cwdOf(session), session: session.id })
     const budget = Number(settings.budgetTokens) || 1200
@@ -179,7 +206,7 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     const cycle = briefingCycle(sessionId, state.compactions)
     const cycles = attempted.get(sessionId) ?? new Set()
     attempted.set(sessionId, cycles)
-    if (settings.briefing === true && state.needsBrief === true && !cycles.has(cycle)) {
+    if (settings.briefing === true && !narrow && state.needsBrief === true && !cycles.has(cycle)) {
       cycles.add(cycle)
       // Both asks are about the same step and neither needs the other's answer, so a slow daemon
       // should cost one round trip, not two.
@@ -190,10 +217,14 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
           redeliver: state.briefings > 0,
           budget_tokens: budget,
           profile: 'compact',
+          seen: seenFor(sessionId),
         }, signal, settings.timeoutMs),
         waitingProposals(client, signal, settings.timeoutMs),
       ])
-      if (briefing !== undefined) parts.push({ name: 'briefing', text: briefing })
+      if (briefing !== undefined) {
+        parts.push({ name: 'briefing', text: briefing.text })
+        noteSeen(sessionId, briefing.delivered)
+      }
       const note = needsChangesNote(waiting)
       if (note !== undefined) parts.push({ name: 'proposals', text: note })
     }
@@ -202,7 +233,7 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
     // a prompt queued while the previous turn ran. Later steps carry tool results instead.
     const query = unclaimedTurn(recalledTurn, sessionId, turn) ? humanPrompt(decision.messages) : undefined
     if (query !== undefined) claimTurn(recalledTurn, sessionId, turn)
-    if (query !== undefined) {
+    if (query !== undefined && !narrow) {
       // The episode log is history, not a precondition: the recall below must not wait on it.
       void episode(client, settings, session, 'user', query, signal)
     }
@@ -213,16 +244,24 @@ export async function registerInjection(ctx, { settingsNow, client, cwdOf }) {
         redeliver: false,
         budget_tokens: budget,
         profile: 'compact',
+        seen: seenFor(sessionId),
       }, signal, settings.timeoutMs)
-      if (recall !== undefined) parts.push({ name: 'recall', text: recall })
+      if (recall !== undefined) {
+        parts.push({ name: 'recall', text: recall.text })
+        noteSeen(sessionId, recall.delivered)
+      }
     }
 
-    if (settings.capture !== false && query !== undefined && captureDue(state, settings.captureEvery, query)) {
+    if (!narrow && settings.capture !== false && query !== undefined && captureDue(state, settings.captureEvery, query)) {
       parts.push({ name: CAPTURE, text: capturePrompt() })
     }
 
     if (parts.length === 0) return decision
     const text = render(parts)
+    // What the model was just handed, kept in memory for the settings card and the tab: a
+    // debugging view ("what did it actually get?") that costs one map entry per session and is
+    // never re-injected, so a stale copy can never masquerade as fresh context.
+    remember?.(sessionId, parts)
     return {
       ...decision,
       messages: [

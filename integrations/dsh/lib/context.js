@@ -121,18 +121,27 @@ export function projectSignals(dir) {
 }
 
 /**
- * The `context` body field for a recall, check or briefing call.
- * @param {{ cwd?: string, session?: string | null }} where - the Host's working directory and session.
- * @returns {{ uris: string[], signals: Array<{ concept: string }>, session: string | null }} the context.
+ * The context a recall or briefing is asked for: where the agent works, what it works on, which
+ * session it is, and which working copy — two harnesses in one repository are one reader.
+ * @param {{ cwd?: string, session?: string | null, workspace?: string | null }} where - the
+ *   session's directory and id.
+ * @returns {Record<string, unknown>} the `RecallContext` body field.
  */
-export function recallContext({ cwd, session }) {
+export function recallContext({ cwd, session, workspace }) {
+  const shared = workspace ?? null
   if (cwd === undefined || cwd === '') {
-    return { uris: [], signals: [{ concept: platformConcept() }], session: session ?? null }
+    return {
+      uris: [],
+      signals: [{ concept: platformConcept() }],
+      session: session ?? null,
+      workspace: shared,
+    }
   }
   return {
     uris: [fileUri(cwd)],
     signals: projectSignals(cwd),
     session: session ?? null,
+    workspace: shared ?? fileUri(cwd),
   }
 }
 

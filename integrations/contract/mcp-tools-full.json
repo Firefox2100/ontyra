@@ -1333,7 +1333,8 @@
               "default": {
                 "session": null,
                 "signals": [],
-                "uris": []
+                "uris": [],
+                "workspace": null
               },
               "description": "Where and in what circumstances the agent is working. All parts are optional.",
               "properties": {
@@ -1399,6 +1400,17 @@
                     "type": "string"
                   },
                   "type": "array"
+                },
+                "workspace": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
                 }
               },
               "type": "object"
@@ -1510,7 +1522,8 @@
               "default": {
                 "session": null,
                 "signals": [],
-                "uris": []
+                "uris": [],
+                "workspace": null
               },
               "description": "Where and in what circumstances the agent is working. All parts are optional.",
               "properties": {
@@ -1576,6 +1589,17 @@
                     "type": "string"
                   },
                   "type": "array"
+                },
+                "workspace": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
                 }
               },
               "type": "object"
@@ -1636,6 +1660,13 @@
             "redeliver": {
               "default": false,
               "type": "boolean"
+            },
+            "seen": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             }
           },
           "type": "object"
@@ -1658,7 +1689,8 @@
           "default": {
             "session": null,
             "signals": [],
-            "uris": []
+            "uris": [],
+            "workspace": null
           },
           "description": "Where and in what circumstances the agent is working. All parts are optional.",
           "properties": {
@@ -1724,6 +1756,17 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "workspace": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             }
           },
           "type": "object"
@@ -1937,7 +1980,8 @@
               "default": {
                 "session": null,
                 "signals": [],
-                "uris": []
+                "uris": [],
+                "workspace": null
               },
               "description": "Where and in what circumstances the agent is working. All parts are optional.",
               "properties": {
@@ -2003,6 +2047,17 @@
                     "type": "string"
                   },
                   "type": "array"
+                },
+                "workspace": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
                 }
               },
               "type": "object"
@@ -2041,6 +2096,38 @@
       "type": "object"
     },
     "name": "consult"
+  },
+  {
+    "description": "The one call to fix a memory: `fields` overlay its current revision, so send only what changes. Use this instead of a hand-built `revise` when you know the id and the correction. The result is an ordinary proposal \u2014 read its `status` and findings.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "memory": {
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "memory",
+        "fields"
+      ],
+      "type": "object"
+    },
+    "name": "correct"
   },
   {
     "description": "Scan for duplicates and updates and queue each finding once as a task. Side effect: task records are created (and tasks whose memories changed are closed); no memory is changed.",
@@ -2215,6 +2302,67 @@
     "name": "find_duplicates"
   },
   {
+    "description": "Retire memories: give `memory` for one, or `uri` for everything anchored under that path (the project or files it applies to). Nothing is deleted \u2014 each target is retracted with your reason, so the history stays. Read `status`: `committed` means gone from recall now, `pending` means a human must approve.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": false,
+          "description": "Retire memories: one by id, or every active memory anchored under a path.\n\nNothing is deleted: each target gets a `retract` op, so the reason and the history stay.",
+          "properties": {
+            "limit": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "memory": {
+              "anyOf": [
+                {
+                  "description": "A record id as `table:id`.",
+                  "examples": [
+                    "memory:0194f3a1b2c3d4e5f6a7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "reason": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "uri": {
+              "anyOf": [
+                {
+                  "minLength": 3,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "reason"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "type": "object"
+    },
+    "name": "forget"
+  },
+  {
     "description": "One memory by id (`memory:abc` or `abc`), optionally with `expand`: history, links, evidence, applies.",
     "input_schema": {
       "additionalProperties": false,
@@ -2224,7 +2372,8 @@
           "default": {
             "session": null,
             "signals": [],
-            "uris": []
+            "uris": [],
+            "workspace": null
           },
           "description": "Where and in what circumstances the agent is working. All parts are optional.",
           "properties": {
@@ -2290,6 +2439,17 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "workspace": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             }
           },
           "type": "object"
@@ -2494,6 +2654,17 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "workspace": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             }
           },
           "type": "object"
@@ -3726,7 +3897,8 @@
               "default": {
                 "session": null,
                 "signals": [],
-                "uris": []
+                "uris": [],
+                "workspace": null
               },
               "description": "Where and in what circumstances the agent is working. All parts are optional.",
               "properties": {
@@ -3792,6 +3964,17 @@
                     "type": "string"
                   },
                   "type": "array"
+                },
+                "workspace": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
                 }
               },
               "type": "object"
@@ -3852,6 +4035,13 @@
             "redeliver": {
               "default": false,
               "type": "boolean"
+            },
+            "seen": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             }
           },
           "type": "object"
@@ -4558,6 +4748,14 @@
               "minItems": 1,
               "type": "array"
             },
+            "redaction": {
+              "default": "auto",
+              "enum": [
+                "auto",
+                "off"
+              ],
+              "type": "string"
+            },
             "space": {
               "default": "own",
               "enum": [
@@ -4707,7 +4905,8 @@
               "default": {
                 "session": null,
                 "signals": [],
-                "uris": []
+                "uris": [],
+                "workspace": null
               },
               "description": "Where and in what circumstances the agent is working. All parts are optional.",
               "properties": {
@@ -4773,6 +4972,17 @@
                     "type": "string"
                   },
                   "type": "array"
+                },
+                "workspace": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
                 }
               },
               "type": "object"
