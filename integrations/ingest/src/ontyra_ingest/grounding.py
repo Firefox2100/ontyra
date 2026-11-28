@@ -27,6 +27,12 @@ def find_quote(quote: str, text: str) -> str | None:
     start = where[at]
     end = where[min(at + len(wanted), len(where)) - 1] + 1
     found = " ".join(text[start:end].split())
+    if len(found) < MIN_QUOTE:
+        # A list item or a table cell quoted alone ("SPI,") says nothing by itself: the line it
+        # sits on is the document's own context for it.
+        start = text.rfind("\n", 0, start) + 1
+        end = text.find("\n", end)
+        found = " ".join(text[start : end if end >= 0 else len(text)].split())
     if not MIN_QUOTE <= len(found) <= MAX_QUOTE:
         return None
     return found

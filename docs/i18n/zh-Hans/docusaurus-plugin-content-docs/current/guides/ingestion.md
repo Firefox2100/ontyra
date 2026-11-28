@@ -62,7 +62,7 @@ curl -X POST $ONTYRA_URL/v1/resources -H "Authorization: Bearer $ONTYRA_TOKEN" \
 
 | 选择 | 可选值 |
 |---|---|
-| 解析器（`--parser`） | `builtin`（txt、md、html、带文字层的 PDF；不需要服务）、`mineru`（通过 MinerU 的 API 做版面感知的 PDF 解析，`--mineru-url`）、`auto`（配置了 MinerU 时，PDF 用 MinerU）。更多解析器通过 `ontyra_ingest.parsers` 入口点组注册。 |
+| 解析器（`--parser`） | `builtin`（txt、md、html、带文字层的 PDF；不需要服务）、`mineru`（通过 MinerU 4.1 及以上版本的 API 做版面感知的 PDF 解析，`--mineru-url`；用 `ONTYRA_INGEST_MINERU_TIER` 选择 flash、basic、standard 或 advanced）、`auto`（配置了 MinerU 时，PDF 用 MinerU）。更多解析器通过 `ontyra_ingest.parsers` 入口点组注册。 |
 | 配置档（`-p`） | `claims`（自成一体的陈述）、`datasets`（文档所引入或使用的数据集，按可复用性打 0-5 分，`--min-usefulness`） |
 | 身份识别（`--identity`） | `file`、`basic`（取自文本中的 DOI / arXiv）；更多通过 `ontyra_ingest.identity` 组注册 |
 | 概念（`--concepts`） | `existing`（复用本体中已有的概念，否则用文档自己的概念）或 `create`（定义新的主体）。数据集总是得到它自己的概念，位于 `dataset` 之下。 |

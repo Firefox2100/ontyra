@@ -80,7 +80,7 @@ recallable by their text again, which is rarely what you want for documentation.
 
 | Choice | Options |
 |---|---|
-| Parser (`--parser`) | `builtin` (txt, md, html, text-layer PDF; no service), `mineru` (layout-aware PDF through MinerU's API, `--mineru-url`), `auto` (MinerU for PDFs when configured). More register through the `ontyra_ingest.parsers` entry-point group. |
+| Parser (`--parser`) | `builtin` (txt, md, html, text-layer PDF; no service), `mineru` (layout-aware PDF through the API of MinerU 4.1 or later, `--mineru-url`; `ONTYRA_INGEST_MINERU_TIER` picks flash, basic, standard or advanced), `auto` (MinerU for PDFs when configured). More register through the `ontyra_ingest.parsers` entry-point group. |
 | Profiles (`-p`) | `claims` (self-contained statements), `datasets` (datasets a document introduces or uses, scored 0-5 for reuse, `--min-usefulness`) |
 | Identity (`--identity`) | `file`, `basic` (DOI / arXiv from the text); more via the `ontyra_ingest.identity` group |
 | Concepts (`--concepts`) | `existing` (reuse a concept the ontology already has, else the document's own concept) or `create` (define new subjects). Datasets always get a concept of their own, under `dataset`. |

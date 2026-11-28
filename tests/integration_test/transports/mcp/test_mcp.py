@@ -98,6 +98,16 @@ async def test_the_lite_remember_offers_only_the_ops_an_agent_needs(app: Applica
             )
 
 
+async def test_result_schemas_allow_fields_a_later_version_adds(app: Application) -> None:
+    """A client that keeps the schema from when it connected must not reject a newer answer."""
+    async with server(app, "full") as client:
+        tools = await client.list_tools()
+    schemas = [json.dumps(t.output_schema) for t in tools if t.output_schema]
+    assert schemas
+    assert all('"additionalProperties": false' not in s for s in schemas)
+    assert any('"properties"' in s for s in schemas)  # the shape is still published
+
+
 async def test_a_service_error_becomes_a_tool_error(app: Application) -> None:
     async with server(app) as client:
         with pytest.raises(ToolError, match=r"not found|no such|memory"):

@@ -783,5 +783,86 @@
   "say": "List the ontology changes that were applied recently.",
   "split": "tune",
   "expect": "ontology_history"
+ },
+ {
+  "id": "t-consult-spec",
+  "tags": [
+   "consult"
+  ],
+  "why": "a precise spec from reference material (a datasheet) that recall does not deliver",
+  "say": "What is the deep-sleep current of the ESP32-S3-WROOM-1 module? Look it up in the datasheet notes.",
+  "split": "tune",
+  "expect": "consult",
+  "contains": [
+   "deep-sleep"
+  ]
+ },
+ {
+  "id": "t-consult-after-pointer",
+  "tags": [
+   "consult"
+  ],
+  "why": "a memory said there is reference material on a topic; the details need consult, not another recall",
+  "say": "Recall said there is datasheet material on the ESP32-S3 strapping pins. Which GPIOs select the boot mode?",
+  "split": "holdout",
+  "expect": "consult",
+  "accept": [
+   "recall"
+  ],
+  "contains": [
+   "strapping"
+  ]
+ },
+ {
+  "id": "t-correct-one",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "fix one memory by id: correct, not a hand-built revise",
+  "say": "Memory memory:01abc says the staging host is stage-1, but it is now stage-2. Fix it.",
+  "split": "tune",
+  "expect": "correct",
+  "accept": [
+   "remember"
+  ],
+  "contains": [
+   "stage-2"
+  ]
+ },
+ {
+  "id": "t-forget-one",
+  "tags": [
+   "lifecycle"
+  ],
+  "why": "retire a memory the user says is wrong",
+  "say": "Forget memory:01abc, it was a mistake and no longer applies.",
+  "split": "holdout",
+  "expect": "forget",
+  "contains": [
+   "01abc"
+  ]
+ },
+ {
+  "id": "t-check-source-changed",
+  "tags": [
+   "source"
+  ],
+  "why": "after reading a cited file that differs from the citation, report it",
+  "say": "I opened file:///home/mira/docs/runbook.md that memory:01abc cites; the text there no longer says that, it was rewritten. Report it.",
+  "split": "tune",
+  "expect": "check_source",
+  "contains": [
+   "runbook.md"
+  ]
+ },
+ {
+  "id": "t-feedback-outliers",
+  "tags": [
+   "feedback"
+  ],
+  "why": "asked which recorded feedback may be mistaken",
+  "say": "Which of the feedback I recorded looks like a mistake?",
+  "split": "holdout",
+  "expect": "feedback_outliers"
  }
 ]

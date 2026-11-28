@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping, MutableMapping
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, cast
 
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_http_request
+from fastmcp.server.middleware import Middleware
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -157,11 +158,37 @@ def _message(exc: Exception) -> str:
     return str(exc)
 
 
+def _open(schema: Any) -> Any:
+    """The schema without `additionalProperties: false`. Our models refuse unknown fields on the
+    way in; on the way out a client that keeps the schema from an earlier connection would reject
+    every answer once the daemon gains a field, so what is published for results allows more."""
+    if isinstance(schema, dict):
+        items = cast(dict[str, Any], schema)
+        return {
+            key: _open(value)
+            for key, value in items.items()
+            if not (key == "additionalProperties" and value is False)
+        }
+    if isinstance(schema, list):
+        return [_open(value) for value in cast(list[Any], schema)]
+    return schema
+
+
+class _OpenResults(Middleware):
+    async def on_list_tools(self, context: Any, call_next: Any) -> Any:
+        tools = await call_next(context)
+        return [
+            t.model_copy(update={"output_schema": _open(t.output_schema)}) if t.output_schema else t
+            for t in tools
+        ]
+
+
 def create_mcp(
     get_services: Callable[[], Services], *, profile: Profile = "lite", name: str = "ontyra"
 ) -> FastMCP:
     """The MCP server. `get_services` is called per request (services exist after startup)."""
     mcp = FastMCP(name, instructions=INSTRUCTIONS)
+    mcp.add_middleware(_OpenResults())
 
     async def run[T](action: Callable[[Services, Caller], Awaitable[T]]) -> T:
         services = get_services()

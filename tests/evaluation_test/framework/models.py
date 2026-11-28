@@ -110,3 +110,27 @@ def load_presentation_cases() -> list[PresentationCase]:
 
 def load_decision_cases() -> list[DecisionCase]:
     return _load("decisions", DecisionCase)
+
+
+class KnowledgeCase(Strict):
+    """A question about an ingested document. `must` is a list of groups: a group is met when
+    any of its strings occurs in the retrieved entries, and every group must be met. An `absent`
+    case has no answer in the source: retrieval cannot be scored on it, an answering model can."""
+
+    id: str
+    kind: Literal["lookup", "filter", "multihop", "absent"]
+    q: str
+    answer: str
+    must: list[list[str]]
+    absent: bool = False
+    page: int | None = None
+    split: Literal["tune", "holdout"] = "tune"
+
+
+def load_knowledge_cases() -> list[KnowledgeCase]:
+    out: list[KnowledgeCase] = []
+    for path in sorted((DATA / "cases" / "knowledge").glob("*.json")):
+        out += [
+            KnowledgeCase.model_validate(c) for c in json.loads(path.read_text("utf-8"))["cases"]
+        ]
+    return out

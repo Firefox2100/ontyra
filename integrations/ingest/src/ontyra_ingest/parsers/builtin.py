@@ -96,6 +96,7 @@ def _pdf_blocks(path: Path) -> list[Block]:
 
 class BuiltinParser:
     name = "builtin"
+    version = "1"
     suffixes = frozenset({".txt", ".md", ".markdown", ".rst", ".html", ".htm", ".pdf"})
 
     async def parse(self, path: Path) -> ParsedDocument:

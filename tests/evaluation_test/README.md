@@ -79,3 +79,13 @@ compared run against run. Any OpenAI-compatible server works: LocalAI for the lo
 LiteLLM proxy in front of a hosted one (the API key stays in the proxy's configuration; only the
 model name is needed here). A hosted model bills per call: the scenario suite makes up to about
 100 runs of several model calls each, so run one arm first (`BENCH_ARMS=none,both`).
+
+## Knowledge retrieval (ingested documents)
+
+`test_knowledge.py` asks `consult` the questions in `data/cases/knowledge/*.json` (lookups,
+numeric filters, multi-hop, and "not stated" questions about one document, each with the page the
+answer is on) and scores whether the returned entries contain what the answer needs (`hit@1/3/8`).
+No model is called. It needs a daemon that has the document ingested:
+`BENCH_KNOWLEDGE_URL=http://127.0.0.1:8787 BENCH_KNOWLEDGE_TOKEN=... uv run pytest tests/evaluation_test/test_knowledge.py -s`.
+Absent-fact questions are for an answering model and are not scored here. First corpus: the
+ESP32-S3-WROOM-1 datasheet (plan 28, A7/A8).

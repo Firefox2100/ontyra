@@ -109,3 +109,22 @@ async def test_presentation_scenarios_get_the_memory_they_need(profile: str, wor
         if lost:
             missing[case.id] = lost
     assert not missing, f"packs lack the memories their scenarios need: {missing}"
+
+
+def test_knowledge_cases_are_well_formed() -> None:
+    from evaluation_test.framework.knowledge import fold, missing_groups
+    from evaluation_test.framework.models import load_knowledge_cases
+
+    cases = load_knowledge_cases()
+    assert len({c.id for c in cases}) == len(cases)
+    assert {c.kind for c in cases} == {"lookup", "filter", "multihop", "absent"}
+    assert {c.split for c in cases} == {"tune", "holdout"}
+    for c in cases:
+        assert c.absent == (c.kind == "absent"), c.id
+        assert bool(c.must) != c.absent, f"{c.id}: answerable cases need `must`, absent ones none"
+        assert all(g and all(s.strip() for s in g) for g in c.must), c.id
+    # the scorer folds dash and spacing variants and needs every group
+    sample = next(c for c in cases if c.id == "fl-n16r8-temp")
+    assert missing_groups(sample, ["ESP32-S3-WROOM-1-N16R8: Ambient Temp.: \u201340 ~ 65"]) == []
+    assert missing_groups(sample, ["N16R8 only"]) == [["65"]]
+    assert fold("A \u201340\u00a0~  85") == "a -40 ~ 85"

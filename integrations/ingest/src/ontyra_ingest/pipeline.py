@@ -18,7 +18,7 @@ from ontyra_ingest.daemon import ApiError, Daemon, Outcome
 from ontyra_ingest.grounding import find_quote
 from ontyra_ingest.llm import Llm, LlmError
 from ontyra_ingest.models import Candidate, Chunk, Grounded, ParsedDocument, Rejected
-from ontyra_ingest.parsers import choose
+from ontyra_ingest.parsers import Parser, choose
 from ontyra_ingest.profiles import Profile, all_profiles, prompt
 from ontyra_ingest.state import RunState, Store, file_hash, short
 
@@ -69,6 +69,12 @@ def ground(candidates: list[Candidate], chunk: Chunk) -> tuple[list[Grounded], l
     return good, bad
 
 
+def chunk_key(profile: Profile, chunk: Chunk) -> str:
+    """Where a chunk's extraction is remembered: by what the chunk says and where it is, not by
+    its position, so a parser or chunking change redoes only the chunks whose text changed."""
+    return f"{profile.name}:{short(chunk.locator, chunk.text)}"
+
+
 class Pipeline:
     def __init__(
         self, settings: Settings, llm: Llm, daemon: Daemon | None, store: Store | None = None
@@ -101,7 +107,7 @@ class Pipeline:
                 profile.system, profile.rework(chunk, title, [r.candidate for r in bad])
             )
             again = profile.read(payload, self.settings)
-            total += len(again)
+            total += len(again) - len(bad)  # the reworked entries replace the ones that failed
             fixed, bad = ground(again, chunk)
             good += fixed
         return good, bad, total
@@ -115,7 +121,7 @@ class Pipeline:
         report: Report,
         gate: asyncio.Semaphore,
     ) -> None:
-        key = f"{profile.name}:{chunk.index}"
+        key = chunk_key(profile, chunk)
         if key in run.chunks:
             return
         async with gate:
@@ -132,11 +138,11 @@ class Pipeline:
             }
             run.save()
 
-    async def _parse(self, path: Path, content_hash: str, run: RunState) -> ParsedDocument:
+    async def _parse(self, parser: Parser, path: Path, run: RunState) -> ParsedDocument:
         cached = run.data.get("parsed")
         if cached is not None:
             return ParsedDocument.model_validate(cached)
-        parsed = await choose(self.settings, path).parse(path)
+        parsed = await parser.parse(path)
         run.data["parsed"] = parsed.model_dump(mode="json")
         run.save()
         return parsed
@@ -200,13 +206,19 @@ class Pipeline:
         report = Report(path=str(path))
         content_hash = file_hash(path)
         s = self.settings
+        try:
+            parser = choose(s, path)
+        except Exception as exc:  # no parser for this file: reported, the batch goes on
+            report.errors.append(f"parse: {exc}")
+            return report
         run_key = short(
-            content_hash, s.parser, s.llm_model, str(s.chunk_chars), str(s.overlap_chars),
-            ",".join(s.profiles), str(s.min_usefulness), s.identity,
+            content_hash, parser.name, getattr(parser, "version", ""), s.llm_model,
+            str(s.chunk_chars), str(s.overlap_chars), ",".join(s.profiles),
+            str(s.min_usefulness), s.identity,
         )  # fmt: skip
         run = self.store.run(run_key)
         try:
-            parsed = await self._parse(path, content_hash, run)
+            parsed = await self._parse(parser, path, run)
         except Exception as exc:  # a parser's own failure must not stop a batch
             report.errors.append(f"parse: {exc}")
             return report
@@ -232,7 +244,7 @@ class Pipeline:
         grounded: list[Grounded] = []
         seen: set[str] = set()
         rejected: list[Rejected] = []
-        kept = {f"{p.name}:{c.index}" for c in chunks for p in self.profiles}
+        kept = {chunk_key(p, c) for c in chunks for p in self.profiles}
         for key, entry in run.chunks.items():
             if key not in kept:
                 continue

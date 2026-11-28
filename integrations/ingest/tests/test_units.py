@@ -12,7 +12,13 @@ from ontyra_ingest.llm import LlmError, parse_json
 from ontyra_ingest.models import Block, ParsedDocument
 from ontyra_ingest.parsers import ParserError, choose
 from ontyra_ingest.parsers.builtin import BuiltinParser
-from ontyra_ingest.parsers.mineru import blocks_from, content_list
+from ontyra_ingest.parsers.mineru import blocks_from
+
+
+def test_a_short_quote_is_widened_to_its_line() -> None:
+    text = "- GPIO, SPI, LCD interface,\n\nUART, I2C, I2S, remote control,\n\nLED PWM, USB OTG"
+    assert find_quote("I2C,", text) == "UART, I2C, I2S, remote control,"
+    assert find_quote("nowhere,", text) is None
 
 
 def test_quote_is_found_across_whitespace_and_returned_literally() -> None:
@@ -20,7 +26,7 @@ def test_quote_is_found_across_whitespace_and_returned_literally() -> None:
     assert find_quote("beta gamma   delta.", text) == "beta gamma delta."
 
 
-@pytest.mark.parametrize("quote", ["not here at all", "", "short"])
+@pytest.mark.parametrize("quote", ["not here at all", ""])
 def test_quote_must_occur_and_be_long_enough(quote: str) -> None:
     assert find_quote(quote, "short text that is here, but not the quote.") is None
 
@@ -59,19 +65,27 @@ def test_parse_json_tolerates_fences_and_reasoning() -> None:
         parse_json("no json")
 
 
-def test_mineru_envelopes_and_blocks() -> None:
-    items = [
-        {"type": "text", "text": "Title", "text_level": 1, "page_idx": 0},
-        {"type": "text", "text": "Body.", "page_idx": 1},
-        {"type": "list", "list_items": ["one", "two"], "page_idx": 1},
-        {"type": "table", "table_caption": ["Table 1."], "page_idx": 2},
-        {"type": "image"},
-    ]
-    assert content_list({"results": {"x": {"content_list": items}}}) == items
-    assert content_list({"content_list": '[{"type": "text"}]'}) == [{"type": "text"}]
-    blocks = blocks_from(items)
+def test_mineru_structured_content_becomes_blocks() -> None:
+    pages = [
+        {"page_idx": 0, "blocks": [
+            {"type": "doc_title", "content": "Datasheet"},
+            {"type": "page_number", "content": "1"},
+            {"type": "header", "content": "Running head"},
+        ]},
+        {"page_idx": 1, "blocks": [
+            {"type": "paragraph_title", "content": "4 Electrical"},
+            {"type": "paragraph_title", "content": "4.5.3 Wi-Fi RX"},
+            {"type": "paragraph_title", "content": "Note:"},
+            {"type": "text", "content": "Body."},
+            {"type": "index", "content": "- 1 Intro 2"},
+            {"type": "image", "content": "", "captions": [{"content": "Figure 3: Layout"}]},
+            {"type": "table", "content": "", "captions": [{"content": "Table 1."}]},
+        ]},
+    ]  # fmt: skip
+    blocks = blocks_from(pages)
     assert [(b.text, b.level, b.page) for b in blocks] == [
-        ("Title", 1, 1), ("Body.", 0, 2), ("one", 0, 2), ("two", 0, 2), ("Table 1.", 0, 3),
+        ("Datasheet", 1, 1), ("4 Electrical", 2, 2), ("4.5.3 Wi-Fi RX", 4, 2), ("Note:", 0, 2),
+        ("Body.", 0, 2), ("Figure 3: Layout", 0, 2), ("Table 1.", 0, 2),
     ]  # fmt: skip
 
 
@@ -122,7 +136,7 @@ def test_mineru_table_rows_are_self_describing() -> None:
         "<tr><td>GND</td><td>1</td><td>Ground</td></tr>"
         "<tr><td>EN</td><td>3</td><td></td></tr></table>"
     )
-    blocks = blocks_from([{"type": "table", "table_body": html, "page_idx": 4}])
+    blocks = blocks_from([{"page_idx": 4, "blocks": [{"type": "table", "content": html}]}])
     assert [b.text for b in blocks] == [
         "Name: GND; No.: 1; Function: Ground",
         "Name: EN; No.: 3",
@@ -145,6 +159,22 @@ def test_quote_tolerates_spacing_and_case_and_returns_the_documents_words() -> N
     assert find_quote("the module draws 250 µA in light-sleep mode.", text) is None
 
 
+def test_a_spanned_cell_is_repeated_under_every_row_it_covers() -> None:
+    from ontyra_ingest.parsers.mineru import table_lines
+
+    html = (
+        "<table><tr><td>Mode</td><td>MHz</td><td>mA</td></tr>"
+        "<tr><td rowspan=2>Sleep</td><td>40</td><td>13</td></tr>"
+        "<tr><td>80</td><td>22</td></tr>"
+        "<tr><td>Idle</td><td colspan=2>0</td></tr></table>"
+    )
+    assert table_lines(html) == [
+        "Mode: Sleep; MHz: 40; mA: 13",
+        "Mode: Sleep; MHz: 80; mA: 22",
+        "Mode: Idle; MHz: 0; mA: 0",
+    ]
+
+
 def test_mineru_formulas_become_plain_text() -> None:
     from ontyra_ingest.parsers.mineru import plain_math
 
@@ -154,11 +184,48 @@ def test_mineru_formulas_become_plain_text() -> None:
 
 
 def test_label_headings_do_not_open_sections() -> None:
-    items = [
-        {"type": "text", "text": "4.1 Limits", "text_level": 1, "page_idx": 0},
-        {"type": "text", "text": "Note:", "text_level": 1, "page_idx": 0},
-        {"type": "text", "text": "Mind the limit.", "page_idx": 0},
-    ]
-    assert [(b.text, b.level) for b in blocks_from(items)] == [
-        ("4.1 Limits", 1), ("Note:", 0), ("Mind the limit.", 0),
+    page = {"page_idx": 0, "blocks": [
+        {"type": "paragraph_title", "content": "4.1 Limits"},
+        {"type": "paragraph_title", "content": "Note:"},
+        {"type": "text", "content": "Mind the limit."},
+    ]}  # fmt: skip
+    assert [(b.text, b.level) for b in blocks_from([page])] == [
+        ("4.1 Limits", 3), ("Note:", 0), ("Mind the limit.", 0),
     ]  # fmt: skip
+
+
+def test_a_markdown_table_becomes_one_line_per_row() -> None:
+    from ontyra_ingest.parsers.mineru import table_lines
+
+    md = (
+        "| Symbol | Parameter | Min | Max | Unit |\n| --- | --- | --- | --- | --- |\n"
+        "| VDD33 | Power supply voltage | -0.3 | 3.6 | V |\n"
+        "| T<sub>STORE</sub> | Storage temperature | -40 | 105 | \u00b0C |"
+    )
+    assert table_lines(md) == [
+        "Symbol: VDD33; Parameter: Power supply voltage; Min: -0.3; Max: 3.6; Unit: V",
+        "Symbol: TSTORE; Parameter: Storage temperature; Min: -40; Max: 105; Unit: \u00b0C",
+    ]
+    assert table_lines("| Boot | GPIO0 |\n| --- | --- |\n| Download Boot<sup>1</sup> | 0 |") == [
+        "Boot: Download Boot^1; GPIO0: 0"
+    ]
+
+
+def test_a_chunks_saved_result_follows_its_text_not_its_position() -> None:
+    from ontyra_ingest.models import Chunk
+    from ontyra_ingest.pipeline import chunk_key
+    from ontyra_ingest.profiles import all_profiles
+
+    profile = all_profiles()["claims"]
+    a = Chunk(index=3, text="Flash up to 16 MB", section=["Overview"], page=1)
+    moved = a.model_copy(update={"index": 4})  # new content ahead of it shifted the index
+    edited = a.model_copy(update={"text": "Flash up to 16 MB, PSRAM up to 8 MB"})
+    assert chunk_key(profile, a) == chunk_key(profile, moved)
+    assert chunk_key(profile, a) != chunk_key(profile, edited)
+
+
+def test_a_parser_fix_does_not_reuse_results_saved_with_the_old_reading() -> None:
+    from ontyra_ingest.parsers.mineru import MinerUParser
+
+    assert MinerUParser("http://x", "basic", 1).version != MinerUParser("http://x", None, 1).version
+    assert MinerUParser("http://x", "basic", 1).version.startswith(MinerUParser.reading + ":")

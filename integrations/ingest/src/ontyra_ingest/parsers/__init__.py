@@ -15,6 +15,9 @@ from ontyra_ingest.models import ParsedDocument
 class Parser(Protocol):
     name: str
     suffixes: frozenset[str]
+    # Identifies how the parser reads: bump it when a fix changes its output. It is part of a
+    # run's key, so saved results made with an older reading are not reused. Optional.
+    version: str
 
     async def parse(self, path: Path) -> ParsedDocument: ...
 
@@ -37,7 +40,7 @@ def _mineru(settings: Settings) -> Parser:
 
     if not settings.mineru_url:
         raise ParserError("the mineru parser needs ONTYRA_INGEST_MINERU_URL (or --mineru-url)")
-    return MinerUParser(settings.mineru_url, settings.mineru_backend, settings.mineru_timeout)
+    return MinerUParser(settings.mineru_url, settings.mineru_tier, settings.mineru_timeout)
 
 
 def factories() -> dict[str, ParserFactory]:

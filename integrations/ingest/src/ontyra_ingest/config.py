@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Parsing.
     parser: str = "auto"
     mineru_url: str | None = None
-    mineru_backend: str | None = "pipeline"
+    mineru_tier: str | None = None  # flash | basic | standard | advanced; unset: the service picks
     mineru_timeout: float = 900.0
     identity: str = "none"
 
